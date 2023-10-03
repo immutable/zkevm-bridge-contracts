@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.17;
 
 // TODO: This is likely able to become a generic bridge adaptor, not just for ERC20 tokens.

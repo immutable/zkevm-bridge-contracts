@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.17;
 
 // @dev A contract for ensuring the Axelar gas service is called correctly during unit tests.

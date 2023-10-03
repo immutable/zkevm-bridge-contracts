@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
 // slither-disable-start naming-convention
 // Adapted from OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/EIP712.sol)
 
