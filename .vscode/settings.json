@@ -5,5 +5,7 @@
         "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
         "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
         "@axelar-cgp-solidity/=lib/axelar-cgp-solidity/",
+        "@axelar-gmp-sdk-solidity=lib/axelar-gmp-sdk-solidity",
+        "@axelar-network/axelar-gmp-sdk-solidity/=lib/axelar-gmp-sdk-solidity/",
     ],
 }

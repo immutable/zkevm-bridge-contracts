@@ -29,6 +29,8 @@ contract RootERC20Bridge is
     using SafeERC20 for IERC20Metadata;
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+    bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    address public constant NATIVE_TOKEN = address(0xeee);
 
     IRootERC20BridgeAdaptor public bridgeAdaptor;
     /// @dev The address that will be minting tokens on the child chain.
@@ -65,6 +67,36 @@ contract RootERC20Bridge is
      *      first bridges break and we might then have to separate them and wait for the map to be confirmed.
      */
     function mapToken(IERC20Metadata rootToken) external payable override returns (address) {
+
+        return _mapToken(rootToken);
+    }
+
+    /**
+     * TODO
+     */
+    function deposit(IERC20Metadata rootToken, uint256 amount) external override {
+        _depositERC20(rootToken, msg.sender, amount);
+    }
+
+    /**
+     * TODO
+     */
+    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external override {
+        _depositERC20(rootToken, receiver, amount);
+    }
+
+
+    // TODO update all with custom errors
+
+    function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
+        _deposit(rootToken, receiver, amount);
+        // invariant check to ensure that the root token balance has increased by the amount deposited
+        // slither-disable-next-line incorrect-equality
+        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
+    }
+
+    function _mapToken(IERC20Metadata rootToken) private returns (address) {
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -86,6 +118,30 @@ contract RootERC20Bridge is
 
         emit L1TokenMapped(address(rootToken), childToken);
         return childToken;
+    }
+
+    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        require(receiver != address(0), "RootERC20Predicate: INVALID_RECEIVER");
+        address childToken = rootTokenToChildToken[address(rootToken)];
+
+        // The native token does not need to be mapped since it should have been mapped on initialization
+        // The native token also cannot be transferred since it was received in the payable function call
+        if (address(rootToken) != NATIVE_TOKEN) {
+            if (childToken == address(0)) {
+                childToken = _mapToken(rootToken);
+            }
+            // ERC20 must be transferred explicitly
+            rootToken.safeTransferFrom(msg.sender, address(this), amount);
+        }
+        assert(childToken != address(0));
+        bytes memory payload =
+            abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
+        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
+        bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
+        // TODO replace with adaptor call
+        // stateSender.syncState(childERC20Predicate, abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount));
+        // slither-disable-next-line reentrancy-events
+        emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
     }
 
     function updateBridgeAdaptor(address newBridgeAdaptor) external onlyOwner {

@@ -39,6 +39,10 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, address(token));
     }
 
+    /**
+     * INITIALIZE
+     */
+
     function test_InitializeBridge() public {
         assertEq(address(rootBridge.bridgeAdaptor()), address(mockAxelarAdaptor));
         assertEq(rootBridge.childERC20Bridge(), CHILD_BRIDGE);
@@ -55,6 +59,10 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(address(0), address(0), address(0));
     }
+
+    /**
+     * MAP TOKEN
+     */
 
     function test_mapToken_EmitsTokenMappedEvent() public {
         uint256 mapTokenFee = 300;
@@ -141,4 +149,33 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         vm.expectRevert(ZeroAddress.selector);
         rootBridge.updateBridgeAdaptor(address(0));
     }
+
+    /**
+     * DEPOSIT TOKEN
+     */
+
+    function test_deposit() public {
+        uint256 amount = 100;
+        address receiver = address(12345);
+        address refundRecipient = address(1234567);
+        address childToken =
+            Clones.predictDeterministicAddress(address(token), keccak256(abi.encodePacked(token)), CHILD_BRIDGE);
+        bytes predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(token), address(this), receiver, amount);
+
+        rootBridge.mapToken{value: 300}(token);
+
+        token.mint(address(this), amount);
+        token.approve(address(rootBridge), amount);
+
+        vm.expectCall(
+            address(mockAxelarGateway),
+            0,
+            abi.encodeWithSelector(mockAxelarGateway.sendMessage.selector, predictedPayload, refundRecipient)
+        );
+
+        rootBridge.deposit(token, amount);
+    }
+    
+
+    // TODO also test deposit when it maps too.
 }
