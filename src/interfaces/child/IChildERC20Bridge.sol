@@ -22,11 +22,22 @@ interface IChildERC20Bridge {
 
 interface IChildERC20BridgeEvents {
     event L2TokenMapped(address rootToken, address childToken);
+
+    event ERC20Deposit(
+        address indexed rootToken,
+        address indexed childToken,
+        address depositor,
+        address indexed receiver,
+        uint256 amount
+    );
 }
 
 interface IChildERC20BridgeErrors {
     error ZeroAddress();
     error AlreadyMapped();
+    error EmptyTokenContract();
+    error MintFailed();
+    error NotMapped();
     error NotBridgeAdaptor();
     error InvalidData();
     error InvalidSourceChain();

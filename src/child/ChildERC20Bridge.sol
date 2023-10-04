@@ -43,6 +43,7 @@ contract ChildERC20Bridge is
     mapping(address => address) public rootTokenToChildToken;
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+    bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -99,21 +100,24 @@ contract ChildERC20Bridge is
         }
 
         if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
-            _mapToken(data);
+            _mapToken(data[32:]);
+
+        } else if(bytes32(data[:32]) == DEPOSIT_SIG) {
+            _deposit(data[32:]);
         } else {
             revert InvalidData();
         }
     }
 
     function _mapToken(bytes calldata data) private {
-        (, address rootToken, string memory name, string memory symbol, uint8 decimals) =
-            abi.decode(data, (bytes32, address, string, string, uint8));
+        (address rootToken, string memory name, string memory symbol, uint8 decimals) =
+            abi.decode(data, (address, string, string, uint8));
 
-        if (address(rootToken) == address(0)) {
+        if (rootToken == address(0)) {
             revert ZeroAddress();
         }
 
-        if (rootTokenToChildToken[address(rootToken)] != address(0)) {
+        if (rootTokenToChildToken[rootToken] != address(0)) {
             revert AlreadyMapped();
         }
 
@@ -123,7 +127,36 @@ contract ChildERC20Bridge is
         rootTokenToChildToken[rootToken] = address(childToken);
         childToken.initialize(rootToken, name, symbol, decimals);
 
-        emit L2TokenMapped(address(rootToken), address(childToken));
+        emit L2TokenMapped(rootToken, address(childToken));
+    }
+
+    function _deposit(bytes calldata data) private {
+        (address rootToken, address sender, address receiver, uint256 amount) =
+            abi.decode(data, (address, address, address, uint256));
+
+        if (rootToken == address(0)) {
+            revert ZeroAddress();
+        }
+
+        if (receiver == address(0)) {
+            revert ZeroAddress();
+        }
+
+        if (rootTokenToChildToken[rootToken] == address(0)) {
+            revert NotMapped();
+        }
+
+        address childToken = rootTokenToChildToken[rootToken];
+
+        if(address(childToken).code.length == 0) {
+            revert EmptyTokenContract();
+        }
+
+        if(!IChildERC20(childToken).mint(receiver, amount)){
+            revert MintFailed();
+        }
+
+        emit ERC20Deposit(rootToken, childToken, sender, receiver, amount);
     }
 
     function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
