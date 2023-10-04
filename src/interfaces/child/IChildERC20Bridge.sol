@@ -25,6 +25,7 @@ interface IChildERC20BridgeEvents {
     event L2TokenMapped(address rootToken, address childToken);
 }
 
+// TODO add parameters to errors if it makes sense
 interface IChildERC20BridgeErrors {
     /// @notice Error when the given root chain name is invalid.
     error InvalidRootChain();
