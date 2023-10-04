@@ -131,8 +131,9 @@ contract RootERC20Bridge is
 
         // The native token does not need to be mapped since it should have been mapped on initialization
         // The native token also cannot be transferred since it was received in the payable function call
-        // TODO We can't call _mapToken here because ordering in the GMP is not guaranteed.
-        //      Add this decision to the design doc.
+        // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
+        //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
+        //      Discuss this, and add this decision to the design doc.
         // TODO NATIVE TOKEN BRIDGING NOT YET SUPPORTED
         if (address(rootToken) != NATIVE_TOKEN) {
             if (childToken == address(0)) {

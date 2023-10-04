@@ -21,16 +21,25 @@ interface IChildERC20Bridge {
 }
 
 interface IChildERC20BridgeEvents {
+    /// @notice Emitted when a map token message is received from the root chain and executed successfully.
     event L2TokenMapped(address rootToken, address childToken);
 }
 
 interface IChildERC20BridgeErrors {
-    error ZeroAddress();
-    error AlreadyMapped();
-    error NotBridgeAdaptor();
-    error InvalidData();
-    error InvalidSourceChain();
-    error InvalidSourceAddress();
+    /// @notice Error when the given root chain name is invalid.
     error InvalidRootChain();
+    /// @notice Error when the given bridge adaptor is invalid.
     error InvalidRootERC20BridgeAdaptor();
+    /// @notice Error when a zero address is given when not valid.
+    error ZeroAddress();
+    /// @notice Error when a token is already mapped.
+    error AlreadyMapped();
+    /// @notice Error when a message is given to the bridge from an address not the designated bridge adaptor.
+    error NotBridgeAdaptor();
+    /// @notice Error when the message's payload is not valid.
+    error InvalidData();
+    /// @notice Error when the message's source chain is not valid.
+    error InvalidSourceChain();
+    /// @notice Error when the source chain's message sender is not a recognised address.
+    error InvalidSourceAddress();
 }
