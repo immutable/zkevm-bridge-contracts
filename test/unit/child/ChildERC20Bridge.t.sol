@@ -35,10 +35,10 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_Initialize() public {
-        assertEq(address(childBridge.bridgeAdaptor()), address(address(this)));
-        assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR);
-        assertEq(childBridge.childTokenTemplate(), address(token));
-        assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME);
+        assertEq(address(childBridge.bridgeAdaptor()), address(address(this)), "bridgeAdaptor not set");
+        assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR, "rootERC20BridgeAdaptor not set");
+        assertEq(childBridge.childTokenTemplate(), address(token), "childTokenTemplate not set");
+        assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
     }
 
     function test_RevertIfInitializeTwice() public {
@@ -89,7 +89,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         );
 
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
-        assertEq(childBridge.rootTokenToChildToken(address(rootToken)), childToken);
+        assertEq(childBridge.rootTokenToChildToken(address(rootToken)), childToken, "rootTokenToChildToken mapping not set");
     }
 
     function test_onMessageReceive_DeploysERC20() public {
@@ -103,7 +103,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
 
-        assertEq(ChildERC20(childToken).symbol(), rootToken.symbol());
+        assertEq(ChildERC20(childToken).symbol(), rootToken.symbol(), "token symbol not set");
     }
 
     function test_RevertIf_onMessageReceiveCalledWithMsgSenderNotBridgeAdaptor() public {
@@ -169,9 +169,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_updateBridgeAdaptor() public {
         address newAdaptorAddress = address(0x11111);
 
-        assertEq(address(childBridge.bridgeAdaptor()), address(this));
+        assertEq(address(childBridge.bridgeAdaptor()), address(this), "bridgeAdaptor not set");
         childBridge.updateBridgeAdaptor(newAdaptorAddress);
-        assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress);
+        assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
     }
 
     function test_RevertIf_updateBridgeAdaptorCalledByNonOwner() public {

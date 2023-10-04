@@ -55,12 +55,12 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         // vm.prank(ROOT_ADAPTOR_ADDRESS);
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
 
-        assertEq(childERC20Bridge.rootTokenToChildToken(rootTokenAddress), predictedAddress);
+        assertEq(childERC20Bridge.rootTokenToChildToken(rootTokenAddress), predictedAddress, "rootTokenToChildToken mapping not set");
 
         IChildERC20 childToken = IChildERC20(predictedAddress);
-        assertEq(childToken.name(), name);
-        assertEq(childToken.symbol(), symbol);
-        assertEq(childToken.decimals(), decimals);
+        assertEq(childToken.name(), name, "token name not set");
+        assertEq(childToken.symbol(), symbol, "token symbol not set");
+        assertEq(childToken.decimals(), decimals, "token decimals not set");
     }
 
     function test_RevertIf_payloadDataNotValid() public {

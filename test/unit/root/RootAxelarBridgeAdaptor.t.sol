@@ -39,11 +39,11 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     }
 
     function test_Constructor() public {
-        assertEq(axelarAdaptor.ROOT_BRIDGE(), address(this));
-        assertEq(axelarAdaptor.childBridgeAdaptor(), Strings.toHexString(CHILD_BRIDGE_ADAPTOR));
-        assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME);
-        assertEq(address(axelarAdaptor.AXELAR_GATEWAY()), address(mockAxelarGateway));
-        assertEq(address(axelarAdaptor.GAS_SERVICE()), address(axelarGasService));
+        assertEq(axelarAdaptor.ROOT_BRIDGE(), address(this), "rootBridge not set");
+        assertEq(axelarAdaptor.childBridgeAdaptor(), Strings.toHexString(CHILD_BRIDGE_ADAPTOR), "childBridgeAdaptor not set");
+        assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
+        assertEq(address(axelarAdaptor.AXELAR_GATEWAY()), address(mockAxelarGateway), "axelarGateway not set");
+        assertEq(address(axelarAdaptor.GAS_SERVICE()), address(axelarGasService), "axelarGasService not set");
     }
 
     function test_RevertWhen_ConstructorGivenZeroAddress() public {
@@ -128,8 +128,8 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
 
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
 
-        assertEq(address(this).balance, thisPreBal - callValue);
-        assertEq(address(axelarGasService).balance, axelarGasServicePreBal + callValue);
+        assertEq(address(this).balance, thisPreBal - callValue, "ETH balance not decreased");
+        assertEq(address(axelarGasService).balance, axelarGasServicePreBal + callValue, "ETH not paid to gas service");
     }
 
     function test_sendMessage_GivesCorrectRefundRecipient() public {

@@ -45,7 +45,7 @@ contract Utils is Test {
         return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, address(this));
     }
 
-    function setupDeposit(ERC20PresetMinterPauser token, RootERC20Bridge rootBridge, uint256 gasPrice, uint256 tokenAmount, address to)
+    function setupDepositTo(ERC20PresetMinterPauser token, RootERC20Bridge rootBridge, uint256 gasPrice, uint256 tokenAmount, address to)
         public
         returns (address childToken, bytes memory predictedPayload)
     {

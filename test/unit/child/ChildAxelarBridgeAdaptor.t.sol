@@ -24,8 +24,8 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_Constructor_SetsValues() public {
-        assertEq(address(childAxelarBridgeAdaptor.CHILD_BRIDGE()), address(mockChildERC20Bridge));
-        assertEq(address(childAxelarBridgeAdaptor.gateway()), address(mockChildAxelarGateway));
+        assertEq(address(childAxelarBridgeAdaptor.CHILD_BRIDGE()), address(mockChildERC20Bridge), "childBridge not set");
+        assertEq(address(childAxelarBridgeAdaptor.gateway()), address(mockChildAxelarGateway), "gateway not set");
     }
 
     function test_RevertIf_ConstructorGivenZeroAddress() public {
