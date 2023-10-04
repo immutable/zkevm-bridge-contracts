@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.17; // TODO hardhat config compiles with 0.8.17. We should investigate upgrading this.
+pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -10,8 +10,6 @@ import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarG
 import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
-
-import {console2} from "forge-std/Test.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
@@ -73,20 +71,18 @@ contract RootERC20Bridge is
     }
 
     /**
-     * TODO
+     * @inheritdoc IRootERC20Bridge
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
         _depositERC20(rootToken, msg.sender, amount);
     }
 
     /**
-     * TODO
+     * @inheritdoc IRootERC20Bridge
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
         _depositERC20(rootToken, receiver, amount);
     }
-
-    // TODO update all with custom errors
 
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;

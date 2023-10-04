@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
 // @dev A contract for ensuring the Axelar Gateway is called correctly during unit tests.
 contract MockAxelarGateway {

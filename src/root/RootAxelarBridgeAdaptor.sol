@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -74,8 +74,6 @@ contract RootAxelarBridgeAdaptor is
         string memory _childBridgeAdaptor = childBridgeAdaptor;
         string memory _childChain = childChain;
 
-        // console2.logBytes("ACTUAL PAYLOAD");
-        // console2.logBytes(payload);
         // TODO For `sender` (first param), should likely be refundRecipient (and in which case refundRecipient should be renamed to sender and used as refund recipient)
         GAS_SERVICE.payNativeGasForContractCall{value: msg.value}(
             address(this), _childChain, _childBridgeAdaptor, payload, refundRecipient
