@@ -74,7 +74,6 @@ contract RootAxelarBridgeAdaptor is
         string memory _childBridgeAdaptor = childBridgeAdaptor;
         string memory _childChain = childChain;
 
-
         // console2.logBytes("ACTUAL PAYLOAD");
         // console2.logBytes(payload);
         // TODO For `sender` (first param), should likely be refundRecipient (and in which case refundRecipient should be renamed to sender and used as refund recipient)

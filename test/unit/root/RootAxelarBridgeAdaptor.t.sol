@@ -40,7 +40,9 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
 
     function test_Constructor() public {
         assertEq(axelarAdaptor.ROOT_BRIDGE(), address(this), "rootBridge not set");
-        assertEq(axelarAdaptor.childBridgeAdaptor(), Strings.toHexString(CHILD_BRIDGE_ADAPTOR), "childBridgeAdaptor not set");
+        assertEq(
+            axelarAdaptor.childBridgeAdaptor(), Strings.toHexString(CHILD_BRIDGE_ADAPTOR), "childBridgeAdaptor not set"
+        );
         assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
         assertEq(address(axelarAdaptor.AXELAR_GATEWAY()), address(mockAxelarGateway), "axelarGateway not set");
         assertEq(address(axelarAdaptor.GAS_SERVICE()), address(axelarGasService), "axelarGasService not set");

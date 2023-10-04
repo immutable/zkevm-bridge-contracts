@@ -236,7 +236,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.deposit(token, amount * 2);
     }
 
-
     /**
      * DEPOSITTO
      */

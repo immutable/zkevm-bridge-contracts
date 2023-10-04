@@ -89,7 +89,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         );
 
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
-        assertEq(childBridge.rootTokenToChildToken(address(rootToken)), childToken, "rootTokenToChildToken mapping not set");
+        assertEq(
+            childBridge.rootTokenToChildToken(address(rootToken)), childToken, "rootTokenToChildToken mapping not set"
+        );
     }
 
     function test_onMessageReceive_DeploysERC20() public {

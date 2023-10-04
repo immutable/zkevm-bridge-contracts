@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
@@ -38,24 +38,32 @@ contract Utils is Test {
         rootBridge.initialize(address(axelarAdaptor), childBridge, address(token));
     }
 
-    function setupDeposit(ERC20PresetMinterPauser token, RootERC20Bridge rootBridge, uint256 gasPrice, uint256 tokenAmount)
-        public
-        returns (address childToken, bytes memory predictedPayload)
-    {
+    function setupDeposit(
+        ERC20PresetMinterPauser token,
+        RootERC20Bridge rootBridge,
+        uint256 gasPrice,
+        uint256 tokenAmount
+    ) public returns (address childToken, bytes memory predictedPayload) {
         return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, address(this));
     }
 
-    function setupDepositTo(ERC20PresetMinterPauser token, RootERC20Bridge rootBridge, uint256 gasPrice, uint256 tokenAmount, address to)
-        public
-        returns (address childToken, bytes memory predictedPayload)
-    {
+    function setupDepositTo(
+        ERC20PresetMinterPauser token,
+        RootERC20Bridge rootBridge,
+        uint256 gasPrice,
+        uint256 tokenAmount,
+        address to
+    ) public returns (address childToken, bytes memory predictedPayload) {
         return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, to);
     }
 
-    function _setupDeposit(ERC20PresetMinterPauser token, RootERC20Bridge rootBridge, uint256 gasPrice, uint256 tokenAmount, address to)
-        public
-        returns (address childToken, bytes memory predictedPayload)
-    {
+    function _setupDeposit(
+        ERC20PresetMinterPauser token,
+        RootERC20Bridge rootBridge,
+        uint256 gasPrice,
+        uint256 tokenAmount,
+        address to
+    ) public returns (address childToken, bytes memory predictedPayload) {
         predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(token), address(this), to, tokenAmount);
 
         childToken = rootBridge.mapToken{value: gasPrice}(token);
@@ -65,5 +73,4 @@ contract Utils is Test {
 
         return (childToken, predictedPayload);
     }
-
 }

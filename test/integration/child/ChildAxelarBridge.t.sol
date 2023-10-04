@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
@@ -55,7 +55,11 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         // vm.prank(ROOT_ADAPTOR_ADDRESS);
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
 
-        assertEq(childERC20Bridge.rootTokenToChildToken(rootTokenAddress), predictedAddress, "rootTokenToChildToken mapping not set");
+        assertEq(
+            childERC20Bridge.rootTokenToChildToken(rootTokenAddress),
+            predictedAddress,
+            "rootTokenToChildToken mapping not set"
+        );
 
         IChildERC20 childToken = IChildERC20(predictedAddress);
         assertEq(childToken.name(), name, "token name not set");
