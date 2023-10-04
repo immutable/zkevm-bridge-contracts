@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
@@ -35,10 +35,10 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_Initialize() public {
-        assertEq(address(childBridge.bridgeAdaptor()), address(address(this)));
-        assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR);
-        assertEq(childBridge.childTokenTemplate(), address(token));
-        assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME);
+        assertEq(address(childBridge.bridgeAdaptor()), address(address(this)), "bridgeAdaptor not set");
+        assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR, "rootERC20BridgeAdaptor not set");
+        assertEq(childBridge.childTokenTemplate(), address(token), "childTokenTemplate not set");
+        assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
     }
 
     function test_RevertIfInitializeTwice() public {
@@ -89,7 +89,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         );
 
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
-        assertEq(childBridge.rootTokenToChildToken(address(rootToken)), childToken);
+        assertEq(
+            childBridge.rootTokenToChildToken(address(rootToken)), childToken, "rootTokenToChildToken mapping not set"
+        );
     }
 
     function test_onMessageReceive_DeploysERC20() public {
@@ -103,10 +105,10 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
 
-        assertEq(ChildERC20(childToken).symbol(), rootToken.symbol());
+        assertEq(ChildERC20(childToken).symbol(), rootToken.symbol(), "token symbol not set");
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithMsgSenderNotBridgeAdaptor() public {
+    function test_RevertIf_onMessageReceiveCalledWithMsgSenderNotBridgeAdaptor() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -116,7 +118,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithSourceChainNotRootChain() public {
+    function test_RevertIf_onMessageReceiveCalledWithSourceChainNotRootChain() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -125,7 +127,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive("FAKE_CHAIN", ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithSourceAddressNotRootAdaptor() public {
+    function test_RevertIf_onMessageReceiveCalledWithSourceAddressNotRootAdaptor() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -134,13 +136,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, Strings.toHexString(address(456)), data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithDataLengthZero() public {
+    function test_RevertIf_onMessageReceiveCalledWithDataLengthZero() public {
         bytes memory data = "";
         vm.expectRevert(InvalidData.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithDataInvalid() public {
+    function test_RevertIf_onMessageReceiveCalledWithDataInvalid() public {
         bytes memory data =
             abi.encode("FAKEDATA", address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals());
 
@@ -148,7 +150,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithZeroAddress() public {
+    function test_RevertIf_onMessageReceiveCalledWithZeroAddress() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(0), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -157,7 +159,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledTwice() public {
+    function test_RevertIf_onMessageReceiveCalledTwice() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -169,18 +171,18 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_updateBridgeAdaptor() public {
         address newAdaptorAddress = address(0x11111);
 
-        assertEq(address(childBridge.bridgeAdaptor()), address(this));
+        assertEq(address(childBridge.bridgeAdaptor()), address(this), "bridgeAdaptor not set");
         childBridge.updateBridgeAdaptor(newAdaptorAddress);
-        assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress);
+        assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
     }
 
-    function test_RevertsIf_updateBridgeAdaptorCalledByNonOwner() public {
+    function test_RevertIf_updateBridgeAdaptorCalledByNonOwner() public {
         vm.prank(address(0xf00f00));
         vm.expectRevert("Ownable: caller is not the owner");
         childBridge.updateBridgeAdaptor(address(0x11111));
     }
 
-    function test_RevertsIf_updateBridgeAdaptorCalledWithZeroAddress() public {
+    function test_RevertIf_updateBridgeAdaptorCalledWithZeroAddress() public {
         vm.expectRevert(ZeroAddress.selector);
         childBridge.updateBridgeAdaptor(address(0));
     }
