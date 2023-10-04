@@ -34,6 +34,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
      *      not consider it sufficient.
      */
     function test_mapToken() public {
+        // TODO split this up into multiple tests.
         uint256 mapTokenFee = 300;
         address childToken =
             Clones.predictDeterministicAddress(address(token), keccak256(abi.encodePacked(token)), CHILD_BRIDGE);
@@ -89,5 +90,51 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         assertEq(address(axelarGasService).balance, axelarGasServicePreBal + mapTokenFee);
 
         assertEq(rootBridge.rootTokenToChildToken(address(token)), childToken);
+    }
+
+    function test_depositToken() public {
+        uint256 tokenAmount = 300;
+        uint256 gasPrice = 100;
+        string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
+        (address childToken, bytes memory predictedPayload) = setupDeposit(token, rootBridge, gasPrice, tokenAmount);
+
+        vm.expectEmit(address(axelarAdaptor));
+        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
+        vm.expectEmit(address(rootBridge));
+        emit ERC20Deposit(address(token), childToken, address(this), address(this), tokenAmount);
+
+        // Expect to call the axelar adaptor
+        vm.expectCall(
+            address(axelarAdaptor),
+            gasPrice,
+            abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
+        );
+
+        vm.expectCall(
+            address(axelarGasService),
+            gasPrice,
+            abi.encodeWithSelector(
+                axelarGasService.payNativeGasForContractCall.selector,
+                address(axelarAdaptor),
+                CHILD_CHAIN_NAME,
+                childBridgeAdaptorString,
+                predictedPayload,
+                address(this)
+            )
+        );
+
+        // Expect the adaptor to call the gateway
+        vm.expectCall(
+            address(mockAxelarGateway),
+            0,
+            abi.encodeWithSelector(
+                mockAxelarGateway.callContract.selector,
+                CHILD_CHAIN_NAME,
+                childBridgeAdaptorString,
+                predictedPayload
+            )
+        );
+
+        rootBridge.deposit{value:gasPrice}(token, tokenAmount);
     }
 }

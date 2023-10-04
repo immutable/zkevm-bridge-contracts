@@ -63,7 +63,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         assertEq(childToken.decimals(), decimals);
     }
 
-    function test_RevertsIf_payloadDataNotValid() public {
+    function test_RevertIf_payloadDataNotValid() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode("invalid payload");
 
@@ -71,7 +71,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
-    function test_RevertsIf_rootTokenAddressIsZero() public {
+    function test_RevertIf_rootTokenAddressIsZero() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode(childERC20Bridge.MAP_TOKEN_SIG(), address(0), "test name", "TSTNME", 17);
 
@@ -79,7 +79,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
-    function test_RevertsIf_MapTwice() public {
+    function test_RevertIf_MapTwice() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode(childERC20Bridge.MAP_TOKEN_SIG(), address(456), "test name", "TSTNME", 17);
 
@@ -89,7 +89,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
-    function test_RevertsIf_EmptyData() public {
+    function test_RevertIf_EmptyData() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = "";
 
@@ -97,7 +97,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
-    function test_RevertsIf_InvalidSourceChain() public {
+    function test_RevertIf_InvalidSourceChain() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode(childERC20Bridge.MAP_TOKEN_SIG(), address(456), "test name", "TSTNME", 17);
 

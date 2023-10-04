@@ -12,7 +12,7 @@ import {
     IRootAxelarBridgeAdaptorErrors
 } from "../interfaces/root/IRootAxelarBridgeAdaptor.sol";
 
-// TODO Note: this will have to be an AxelarExecutable contract in order to receive messages
+// TODO Note: this will have to be an AxelarExecutable contract in order to receive messages from child chain
 
 /**
  * @notice RootAxelarBridgeAdaptor is a bridge adaptor that allows the RootERC20Bridge to communicate with the Axelar Gateway.
@@ -74,7 +74,10 @@ contract RootAxelarBridgeAdaptor is
         string memory _childBridgeAdaptor = childBridgeAdaptor;
         string memory _childChain = childChain;
 
-        // TODO For other functions (depositing to chain), the refund recipient should be the user doing the deposit
+
+        // console2.logBytes("ACTUAL PAYLOAD");
+        // console2.logBytes(payload);
+        // TODO For `sender` (first param), should likely be refundRecipient (and in which case refundRecipient should be renamed to sender and used as refund recipient)
         GAS_SERVICE.payNativeGasForContractCall{value: msg.value}(
             address(this), _childChain, _childBridgeAdaptor, payload, refundRecipient
         );

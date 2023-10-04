@@ -106,7 +106,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(ChildERC20(childToken).symbol(), rootToken.symbol());
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithMsgSenderNotBridgeAdaptor() public {
+    function test_RevertIf_onMessageReceiveCalledWithMsgSenderNotBridgeAdaptor() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -116,7 +116,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithSourceChainNotRootChain() public {
+    function test_RevertIf_onMessageReceiveCalledWithSourceChainNotRootChain() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -125,7 +125,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive("FAKE_CHAIN", ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithSourceAddressNotRootAdaptor() public {
+    function test_RevertIf_onMessageReceiveCalledWithSourceAddressNotRootAdaptor() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -134,13 +134,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, Strings.toHexString(address(456)), data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithDataLengthZero() public {
+    function test_RevertIf_onMessageReceiveCalledWithDataLengthZero() public {
         bytes memory data = "";
         vm.expectRevert(InvalidData.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithDataInvalid() public {
+    function test_RevertIf_onMessageReceiveCalledWithDataInvalid() public {
         bytes memory data =
             abi.encode("FAKEDATA", address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals());
 
@@ -148,7 +148,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledWithZeroAddress() public {
+    function test_RevertIf_onMessageReceiveCalledWithZeroAddress() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(0), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -157,7 +157,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
-    function test_RevertsIf_onMessageReceiveCalledTwice() public {
+    function test_RevertIf_onMessageReceiveCalledTwice() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
         );
@@ -174,13 +174,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress);
     }
 
-    function test_RevertsIf_updateBridgeAdaptorCalledByNonOwner() public {
+    function test_RevertIf_updateBridgeAdaptorCalledByNonOwner() public {
         vm.prank(address(0xf00f00));
         vm.expectRevert("Ownable: caller is not the owner");
         childBridge.updateBridgeAdaptor(address(0x11111));
     }
 
-    function test_RevertsIf_updateBridgeAdaptorCalledWithZeroAddress() public {
+    function test_RevertIf_updateBridgeAdaptorCalledWithZeroAddress() public {
         vm.expectRevert(ZeroAddress.selector);
         childBridge.updateBridgeAdaptor(address(0));
     }

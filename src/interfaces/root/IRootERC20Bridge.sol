@@ -6,8 +6,8 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 interface IRootERC20Bridge {
     // TODO natspecs
     function mapToken(IERC20Metadata rootToken) external payable returns (address);
-    function deposit(IERC20Metadata rootToken, uint256 amount) external;
-    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external;
+    function deposit(IERC20Metadata rootToken, uint256 amount) external payable;
+    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable;
 }
 
 interface IRootERC20BridgeEvents {
@@ -25,4 +25,6 @@ interface IRootERC20BridgeEvents {
 interface IRootERC20BridgeErrors {
     error ZeroAddress();
     error AlreadyMapped();
+    error NotMapped();
+    error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
 }

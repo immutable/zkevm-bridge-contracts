@@ -46,7 +46,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         assertEq(address(axelarAdaptor.GAS_SERVICE()), address(axelarGasService));
     }
 
-    function test_RevertsWhen_ConstructorGivenZeroAddress() public {
+    function test_RevertWhen_ConstructorGivenZeroAddress() public {
         vm.expectRevert(ZeroAddresses.selector);
         new RootAxelarBridgeAdaptor(
             address(0),
@@ -57,7 +57,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         );
     }
 
-    function test_RevertsWhen_ConstructorGivenEmptyChildChainName() public {
+    function test_RevertWhen_ConstructorGivenEmptyChildChainName() public {
         vm.expectRevert(InvalidChildChain.selector);
         new RootAxelarBridgeAdaptor(
             address(this),
@@ -154,7 +154,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.sendMessage{value: callValue}(payload, refundRecipient);
     }
 
-    function test_RevertsIf_mapTokenCalledByNonRootBridge() public {
+    function test_RevertIf_mapTokenCalledByNonRootBridge() public {
         address payable prankster = payable(address(0x33));
         uint256 value = 300;
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
@@ -166,7 +166,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.sendMessage{value: value}(payload, address(123));
     }
 
-    function test_RevertsIf_mapTokenCalledWithNoValue() public {
+    function test_RevertIf_mapTokenCalledWithNoValue() public {
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
         vm.expectRevert(NoGas.selector);
         axelarAdaptor.sendMessage{value: 0}(payload, address(123));
