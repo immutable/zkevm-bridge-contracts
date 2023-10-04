@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
@@ -39,14 +39,16 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     }
 
     function test_Constructor() public {
-        assertEq(axelarAdaptor.ROOT_BRIDGE(), address(this));
-        assertEq(axelarAdaptor.childBridgeAdaptor(), Strings.toHexString(CHILD_BRIDGE_ADAPTOR));
-        assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME);
-        assertEq(address(axelarAdaptor.AXELAR_GATEWAY()), address(mockAxelarGateway));
-        assertEq(address(axelarAdaptor.GAS_SERVICE()), address(axelarGasService));
+        assertEq(axelarAdaptor.ROOT_BRIDGE(), address(this), "rootBridge not set");
+        assertEq(
+            axelarAdaptor.childBridgeAdaptor(), Strings.toHexString(CHILD_BRIDGE_ADAPTOR), "childBridgeAdaptor not set"
+        );
+        assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
+        assertEq(address(axelarAdaptor.AXELAR_GATEWAY()), address(mockAxelarGateway), "axelarGateway not set");
+        assertEq(address(axelarAdaptor.GAS_SERVICE()), address(axelarGasService), "axelarGasService not set");
     }
 
-    function test_RevertsWhen_ConstructorGivenZeroAddress() public {
+    function test_RevertWhen_ConstructorGivenZeroAddress() public {
         vm.expectRevert(ZeroAddresses.selector);
         new RootAxelarBridgeAdaptor(
             address(0),
@@ -57,7 +59,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         );
     }
 
-    function test_RevertsWhen_ConstructorGivenEmptyChildChainName() public {
+    function test_RevertWhen_ConstructorGivenEmptyChildChainName() public {
         vm.expectRevert(InvalidChildChain.selector);
         new RootAxelarBridgeAdaptor(
             address(this),
@@ -128,8 +130,8 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
 
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
 
-        assertEq(address(this).balance, thisPreBal - callValue);
-        assertEq(address(axelarGasService).balance, axelarGasServicePreBal + callValue);
+        assertEq(address(this).balance, thisPreBal - callValue, "ETH balance not decreased");
+        assertEq(address(axelarGasService).balance, axelarGasServicePreBal + callValue, "ETH not paid to gas service");
     }
 
     function test_sendMessage_GivesCorrectRefundRecipient() public {
@@ -154,7 +156,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.sendMessage{value: callValue}(payload, refundRecipient);
     }
 
-    function test_RevertsIf_mapTokenCalledByNonRootBridge() public {
+    function test_RevertIf_mapTokenCalledByNonRootBridge() public {
         address payable prankster = payable(address(0x33));
         uint256 value = 300;
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
@@ -166,7 +168,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.sendMessage{value: value}(payload, address(123));
     }
 
-    function test_RevertsIf_mapTokenCalledWithNoValue() public {
+    function test_RevertIf_mapTokenCalledWithNoValue() public {
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
         vm.expectRevert(NoGas.selector);
         axelarAdaptor.sendMessage{value: 0}(payload, address(123));

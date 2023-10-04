@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
 contract MockChildAxelarGateway {
     function validateContractCall(bytes32, string calldata, string calldata, bytes32) external pure returns (bool) {

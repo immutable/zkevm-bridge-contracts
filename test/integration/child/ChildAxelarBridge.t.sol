@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
@@ -55,15 +55,19 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         // vm.prank(ROOT_ADAPTOR_ADDRESS);
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
 
-        assertEq(childERC20Bridge.rootTokenToChildToken(rootTokenAddress), predictedAddress);
+        assertEq(
+            childERC20Bridge.rootTokenToChildToken(rootTokenAddress),
+            predictedAddress,
+            "rootTokenToChildToken mapping not set"
+        );
 
         IChildERC20 childToken = IChildERC20(predictedAddress);
-        assertEq(childToken.name(), name);
-        assertEq(childToken.symbol(), symbol);
-        assertEq(childToken.decimals(), decimals);
+        assertEq(childToken.name(), name, "token name not set");
+        assertEq(childToken.symbol(), symbol, "token symbol not set");
+        assertEq(childToken.decimals(), decimals, "token decimals not set");
     }
 
-    function test_RevertsIf_payloadDataNotValid() public {
+    function test_RevertIf_payloadDataNotValid() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode("invalid payload");
 
@@ -71,7 +75,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
-    function test_RevertsIf_rootTokenAddressIsZero() public {
+    function test_RevertIf_rootTokenAddressIsZero() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode(childERC20Bridge.MAP_TOKEN_SIG(), address(0), "test name", "TSTNME", 17);
 
@@ -79,7 +83,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
-    function test_RevertsIf_MapTwice() public {
+    function test_RevertIf_MapTwice() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode(childERC20Bridge.MAP_TOKEN_SIG(), address(456), "test name", "TSTNME", 17);
 
@@ -89,7 +93,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
-    function test_RevertsIf_EmptyData() public {
+    function test_RevertIf_EmptyData() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = "";
 
@@ -97,7 +101,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
-    function test_RevertsIf_InvalidSourceChain() public {
+    function test_RevertIf_InvalidSourceChain() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode(childERC20Bridge.MAP_TOKEN_SIG(), address(456), "test name", "TSTNME", 17);
 

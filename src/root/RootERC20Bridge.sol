@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.17; // TODO hardhat config compiles with 0.8.17. We should investigate upgrading this.
+pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -67,33 +67,31 @@ contract RootERC20Bridge is
      *      first bridges break and we might then have to separate them and wait for the map to be confirmed.
      */
     function mapToken(IERC20Metadata rootToken) external payable override returns (address) {
-
         return _mapToken(rootToken);
     }
 
     /**
-     * TODO
+     * @inheritdoc IRootERC20Bridge
      */
-    function deposit(IERC20Metadata rootToken, uint256 amount) external override {
+    function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
         _depositERC20(rootToken, msg.sender, amount);
     }
 
     /**
-     * TODO
+     * @inheritdoc IRootERC20Bridge
      */
-    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external override {
+    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
         _depositERC20(rootToken, receiver, amount);
     }
-
-
-    // TODO update all with custom errors
 
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
         _deposit(rootToken, receiver, amount);
         // invariant check to ensure that the root token balance has increased by the amount deposited
         // slither-disable-next-line incorrect-equality
-        require((rootToken.balanceOf(address(this)) == expectedBalance), "RootERC20Predicate: UNEXPECTED_BALANCE");
+        if (rootToken.balanceOf(address(this)) != expectedBalance) {
+            revert BalanceInvariantCheckFailed(rootToken.balanceOf(address(this)), expectedBalance);
+        }
     }
 
     function _mapToken(IERC20Metadata rootToken) private returns (address) {
@@ -121,26 +119,29 @@ contract RootERC20Bridge is
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
-        require(receiver != address(0), "RootERC20Predicate: INVALID_RECEIVER");
+        if (receiver == address(0) || address(rootToken) == address(0)) {
+            revert ZeroAddress();
+        }
+
         address childToken = rootTokenToChildToken[address(rootToken)];
 
         // The native token does not need to be mapped since it should have been mapped on initialization
         // The native token also cannot be transferred since it was received in the payable function call
+        // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
+        //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
+        //      Discuss this, and add this decision to the design doc.
+        // TODO NATIVE TOKEN BRIDGING NOT YET SUPPORTED
         if (address(rootToken) != NATIVE_TOKEN) {
             if (childToken == address(0)) {
-                childToken = _mapToken(rootToken);
+                revert NotMapped();
             }
             // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
         }
-        assert(childToken != address(0));
-        bytes memory payload =
-            abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
+        // Deposit sig, root token address, depositor, receiver, amount
+        bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
-        // TODO replace with adaptor call
-        // stateSender.syncState(childERC20Predicate, abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount));
-        // slither-disable-next-line reentrancy-events
         emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
     }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
 import {AxelarExecutable} from "@axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
 import {IChildERC20Bridge} from "../interfaces/child/IChildERC20Bridge.sol";
