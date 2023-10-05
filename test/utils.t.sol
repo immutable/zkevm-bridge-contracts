@@ -6,7 +6,9 @@ import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/prese
 import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
-import {IChildERC20} from "../src/child/ChildERC20.sol";
+import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
+
+import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
 contract Utils is Test {
@@ -72,6 +74,21 @@ contract Utils is Test {
         token.approve(address(rootBridge), tokenAmount);
 
         return (childToken, predictedPayload);
+    }
+
+    function setupChildDeposit(
+        ChildERC20 token,
+        ChildERC20Bridge childBridge,
+        string memory sourceChain,
+        string memory sourceAddress
+    ) public {
+        string memory name = "TEST";
+        string memory symbol = "TST";
+        uint8 decimals = 18;
+
+        bytes memory payload = abi.encode(childBridge.MAP_TOKEN_SIG(), address(token), name, symbol, decimals);
+
+        childBridge.onMessageReceive(sourceChain, sourceAddress, payload);
     }
 
     function getMappingStorageSlotFor(address key, uint256 position) public pure returns (bytes32 slot) {
