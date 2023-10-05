@@ -13,8 +13,9 @@ import {
 } from "../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20, ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {MockChildAxelarGateway} from "../../../src/test/child/MockChildAxelarGateway.sol";
+import {Utils} from "../../utils.t.sol";
 
-contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors {
+contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
     string public ROOT_CHAIN_NAME = "ROOT_CHAIN";
 
@@ -127,7 +128,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         address sender = address(0xff);
         address receiver = address(0xee);
         uint256 amount = 100;
-        address childToken = map(rootTokenAddress);
+        address childToken = mapToken(rootTokenAddress);
         bytes32 commandId = bytes32("testCommandId");
 
         vm.expectEmit(address(childERC20Bridge));
@@ -146,7 +147,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         address sender = address(0xff);
         address receiver = address(0xee);
         uint256 amount = 100;
-        address childToken = map(rootTokenAddress);
+        address childToken = mapToken(rootTokenAddress);
         bytes32 commandId = bytes32("testCommandId");
 
         uint256 receiverPreBal = ChildERC20(childToken).balanceOf(receiver);
@@ -166,7 +167,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         address sender = address(0xff);
         address receiver = address(0xee);
         uint256 amount = 100;
-        address childToken = map(rootTokenAddress);
+        address childToken = mapToken(rootTokenAddress);
         bytes32 commandId = bytes32("testCommandId");
 
         uint256 totalSupplyPre = ChildERC20(childToken).totalSupply();

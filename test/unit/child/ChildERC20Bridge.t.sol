@@ -19,7 +19,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
 
-    ChildERC20 public childToken;
+    ChildERC20 public childTokenTemplate;
     ChildERC20 public rootToken;
     ChildERC20Bridge public childBridge;
 
@@ -27,24 +27,24 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         rootToken = new ChildERC20();
         rootToken.initialize(address(456), "Test", "TST", 18);
 
-        childToken = new ChildERC20();
-        childToken.initialize(address(123), "Test", "TST", 18);
+        childTokenTemplate = new ChildERC20();
+        childTokenTemplate.initialize(address(123), "Test", "TST", 18);
 
         childBridge = new ChildERC20Bridge();
 
-        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childToken), ROOT_CHAIN_NAME);
+        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME);
     }
 
     function test_Initialize() public {
         assertEq(address(childBridge.bridgeAdaptor()), address(address(this)), "bridgeAdaptor not set");
         assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR, "rootERC20BridgeAdaptor not set");
-        assertEq(childBridge.childTokenTemplate(), address(childToken), "childTokenTemplate not set");
+        assertEq(childBridge.childTokenTemplate(), address(childTokenTemplate), "childTokenTemplate not set");
         assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
     }
 
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childToken), ROOT_CHAIN_NAME);
+        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME);
     }
 
     function test_RevertIf_InitializeWithAZeroAddress() public {
@@ -56,18 +56,18 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_RevertIf_InitializeWithAnEmptyBridgeAdaptorString() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(InvalidRootERC20BridgeAdaptor.selector);
-        bridge.initialize(address(this), "", address(childToken), ROOT_CHAIN_NAME);
+        bridge.initialize(address(this), "", address(childTokenTemplate), ROOT_CHAIN_NAME);
     }
 
     function test_RevertIf_InitializeWithAnEmptyChainNameString() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(InvalidRootChain.selector);
-        bridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childToken), "");
+        bridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), "");
     }
 
     function test_onMessageReceive_EmitsTokenMappedEvent() public {
         address predictedChildToken = Clones.predictDeterministicAddress(
-            address(childToken), keccak256(abi.encodePacked(rootToken)), address(childBridge)
+            address(childTokenTemplate), keccak256(abi.encodePacked(rootToken)), address(childBridge)
         );
 
         bytes memory data = abi.encode(
@@ -82,7 +82,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_onMessageReceive_SetsTokenMapping() public {
         address predictedChildToken = Clones.predictDeterministicAddress(
-            address(childToken), keccak256(abi.encodePacked(rootToken)), address(childBridge)
+            address(childTokenTemplate), keccak256(abi.encodePacked(rootToken)), address(childBridge)
         );
 
         bytes memory data = abi.encode(
@@ -99,7 +99,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_onMessageReceive_DeploysERC20() public {
         address predictedChildToken = Clones.predictDeterministicAddress(
-            address(childToken), keccak256(abi.encodePacked(rootToken)), address(childBridge)
+            address(childTokenTemplate), keccak256(abi.encodePacked(rootToken)), address(childBridge)
         );
 
         bytes memory data = abi.encode(
@@ -201,10 +201,10 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(rootToken), sender, receiver, amount);
 
-        address childTokenFromMap = childBridge.rootTokenToChildToken(address(rootToken));
+        address childToken = childBridge.rootTokenToChildToken(address(rootToken));
 
         vm.expectEmit(address(childBridge));
-        emit ERC20Deposit(address(rootToken), childTokenFromMap, sender, receiver, amount);
+        emit ERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 
@@ -217,10 +217,31 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(rootToken), sender, receiver, amount);
 
-        address childTokenFromMap = childBridge.rootTokenToChildToken(address(rootToken));
+        address childToken = childBridge.rootTokenToChildToken(address(rootToken));
 
-        // vm.expectCall(address(childTokenFromMap), 0, abi.encodeWithSelector(childTokenFromMap.transfer.selector, receiver, amount));
+        uint256 receiverPreBal = ChildERC20(childTokenTemplate).balanceOf(receiver);
+
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+
+        assertEq(ChildERC20(childToken).balanceOf(receiver), receiverPreBal + amount, "receiver balance not increased");
+    }
+
+    function test_onMessageReceive_Deposit_IncreasesTotalSupply() public {
+        setupChildDeposit(rootToken, childBridge, ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR);
+
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1000;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(rootToken), sender, receiver, amount);
+
+        address childToken = childBridge.rootTokenToChildToken(address(rootToken));
+
+        uint256 totalSupplyPre = ChildERC20(childToken).totalSupply();
+
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+
+        assertEq(ChildERC20(childToken).totalSupply(), totalSupplyPre + amount, "totalSupply not increased");
     }
 
     function test_RevertIf_onMessageReceive_Deposit_NotMapped() public {
@@ -242,6 +263,38 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(0), sender, receiver, amount);
 
         vm.expectRevert(ZeroAddress.selector);
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+    }
+
+    function test_RevertIf_onMessageReceive_Deposit_ReceiverZeroAddress() public {
+        address sender = address(100);
+        address receiver = address(0);
+        uint256 amount = 1000;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(rootToken), sender, receiver, amount);
+
+        vm.expectRevert(ZeroAddress.selector);
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+    }
+
+    function test_RevertIf_onMessageReceive_DepositWithEmptyContract() public {
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1000;
+
+        address rootAddress = address(0x123);
+        {
+            // Slot is 6 because of the Ownable, Initializable contracts coming first.
+            uint256 rootTokenToChildTokenMappingSlot = 6;
+            address childAddress = address(444444);
+            bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);
+            bytes32 data = bytes32(uint256(uint160(childAddress)));
+            vm.store(address(childBridge), slot, data);
+        }
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), rootAddress, sender, receiver, amount);
+
+        vm.expectRevert(EmptyTokenContract.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 }
