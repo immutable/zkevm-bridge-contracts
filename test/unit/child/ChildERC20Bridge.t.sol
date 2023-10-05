@@ -192,24 +192,11 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     //Deposit
 
-    function test_RevertIf_onMessageReceive_Deposit_NotMapped() public {
-        address sender = address(100);
-        address receiver = address(200);
-
-        uint256 amount = 1000;
-
-        bytes memory data = abi.encode(childBridge.DEPOSIT_SIG(), address(rootToken), sender, receiver, amount);
-
-        vm.expectRevert(NotMapped.selector);
-        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
-    }
-
     function test_onMessageReceive_Deposit_EmitsERC20DepositEvent() public {
         setupChildDeposit(rootToken, childBridge, ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR);
 
         address sender = address(100);
         address receiver = address(200);
-
         uint256 amount = 1000;
 
         bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(rootToken), sender, receiver, amount);
@@ -221,10 +208,35 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 
+    function test_onMessageReceive_Deposit_TransfersTokensToReceiver() public {
+        setupChildDeposit(rootToken, childBridge, ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR);
+
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1000;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(rootToken), sender, receiver, amount);
+
+        address childTokenFromMap = childBridge.rootTokenToChildToken(address(rootToken));
+
+        // vm.expectCall(address(childTokenFromMap), 0, abi.encodeWithSelector(childTokenFromMap.transfer.selector, receiver, amount));
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+    }
+
+    function test_RevertIf_onMessageReceive_Deposit_NotMapped() public {
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1000;
+
+        bytes memory data = abi.encode(childBridge.DEPOSIT_SIG(), address(rootToken), sender, receiver, amount);
+
+        vm.expectRevert(NotMapped.selector);
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
+    }
+
     function test_RevertIf_onMessageReceive_Deposit_RootZeroAddress() public {
         address sender = address(100);
         address receiver = address(200);
-
         uint256 amount = 1000;
 
         bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(0), sender, receiver, amount);
