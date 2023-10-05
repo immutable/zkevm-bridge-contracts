@@ -52,7 +52,6 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         vm.expectEmit(true, true, false, false, address(childERC20Bridge));
         emit L2TokenMapped(rootTokenAddress, predictedAddress);
 
-        // vm.prank(ROOT_ADAPTOR_ADDRESS);
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
 
         assertEq(

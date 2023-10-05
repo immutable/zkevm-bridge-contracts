@@ -100,7 +100,7 @@ contract ChildERC20Bridge is
         }
 
         if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
-            _mapToken(data[32:]);
+            _mapToken(data);
 
         } else if(bytes32(data[:32]) == DEPOSIT_SIG) {
             _deposit(data[32:]);
@@ -110,8 +110,8 @@ contract ChildERC20Bridge is
     }
 
     function _mapToken(bytes calldata data) private {
-        (address rootToken, string memory name, string memory symbol, uint8 decimals) =
-            abi.decode(data, (address, string, string, uint8));
+        (,address rootToken, string memory name, string memory symbol, uint8 decimals) =
+            abi.decode(data, (bytes32, address, string, string, uint8));
 
         if (rootToken == address(0)) {
             revert ZeroAddress();
