@@ -107,4 +107,155 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         vm.expectRevert(InvalidSourceChain.selector);
         childAxelarBridgeAdaptor.execute(commandId, "FAKE_CHAIN", ROOT_ADAPTOR_ADDRESS, payload);
     }
+
+    function mapToken(address root) public returns (address childToken) {
+        bytes32 mapTokenSig = childERC20Bridge.MAP_TOKEN_SIG();
+        vm.prank(address(childAxelarBridgeAdaptor));
+        childERC20Bridge.onMessageReceive(
+            ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, abi.encode(mapTokenSig, root, "test name", "TSTNME", 17)
+        );
+        return Clones.predictDeterministicAddress(
+            address(childERC20), keccak256(abi.encodePacked(root)), address(childERC20Bridge)
+        );
+    }
+
+    /*
+     * DEPOSIT
+     */
+    function test_deposit_EmitsERC20Deposit() public {
+        address rootTokenAddress = address(456);
+        address sender = address(0xff);
+        address receiver = address(0xee);
+        uint256 amount = 100;
+        address childToken = map(rootTokenAddress);
+        bytes32 commandId = bytes32("testCommandId");
+
+        vm.expectEmit(address(childERC20Bridge));
+        emit ERC20Deposit(rootTokenAddress, childToken, sender, receiver, amount);
+
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(childERC20Bridge.DEPOSIT_SIG(), rootTokenAddress, sender, receiver, amount)
+        );
+    }
+
+    function test_deposit_TransfersTokenToReceiver() public {
+        address rootTokenAddress = address(456);
+        address sender = address(0xff);
+        address receiver = address(0xee);
+        uint256 amount = 100;
+        address childToken = map(rootTokenAddress);
+        bytes32 commandId = bytes32("testCommandId");
+
+        uint256 receiverPreBal = ChildERC20(childToken).balanceOf(receiver);
+
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(childERC20Bridge.DEPOSIT_SIG(), rootTokenAddress, sender, receiver, amount)
+        );
+
+        assertEq(ChildERC20(childToken).balanceOf(receiver), receiverPreBal + amount, "receiver balance not increased");
+    }
+
+    function test_deposit_IncreasesTotalSupply() public {
+        address rootTokenAddress = address(456);
+        address sender = address(0xff);
+        address receiver = address(0xee);
+        uint256 amount = 100;
+        address childToken = map(rootTokenAddress);
+        bytes32 commandId = bytes32("testCommandId");
+
+        uint256 totalSupplyPre = ChildERC20(childToken).totalSupply();
+
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(childERC20Bridge.DEPOSIT_SIG(), rootTokenAddress, sender, receiver, amount)
+        );
+
+        assertEq(ChildERC20(childToken).totalSupply(), totalSupplyPre + amount, "total supply not increased");
+    }
+
+    function test_RevertIf_depositWithRootTokenNotMapped() public {
+        address rootTokenAddress = address(456);
+        address sender = address(0xff);
+        address receiver = address(0xee);
+        uint256 amount = 100;
+        bytes32 commandId = bytes32("testCommandId");
+        bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
+
+        vm.expectRevert(NotMapped.selector);
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(depositSig, rootTokenAddress, sender, receiver, amount)
+        );
+    }
+
+    function test_RevertIf_depositWithRootTokenZeroAddress() public {
+        address rootTokenAddress = address(0);
+        address sender = address(0xff);
+        address receiver = address(0xee);
+        uint256 amount = 100;
+        bytes32 commandId = bytes32("testCommandId");
+        bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
+
+        vm.expectRevert(ZeroAddress.selector);
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(depositSig, rootTokenAddress, sender, receiver, amount)
+        );
+    }
+
+    function test_RevertIf_depositWithReceiverZeroAddress() public {
+        address rootTokenAddress = address(456);
+        address sender = address(0xff);
+        address receiver = address(0);
+        uint256 amount = 100;
+        bytes32 commandId = bytes32("testCommandId");
+        bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
+
+        vm.expectRevert(ZeroAddress.selector);
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(depositSig, rootTokenAddress, sender, receiver, amount)
+        );
+    }
+
+    // Manually storage slot of a token in the rootTokenToChildToken mapping, but since it
+    // is not a smart contract, it's code length will be 0.
+    function test_RevertIf_depositWithEmptyContract() public {
+        address sender = address(0xff);
+        address receiver = address(12345);
+        uint256 amount = 100;
+        bytes32 commandId = bytes32("testCommandId");
+        bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
+        address rootAddress = address(0x123);
+        {
+            // Slot is 6 because of the Ownable, Initializable contracts coming first.
+            uint256 rootTokenToChildTokenMappingSlot = 6;
+            address childAddress = address(444444);
+            bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);
+            bytes32 data = bytes32(uint256(uint160(childAddress)));
+            vm.store(address(childERC20Bridge), slot, data);
+        }
+
+        vm.expectRevert(EmptyTokenContract.selector);
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(depositSig, rootAddress, sender, receiver, amount)
+        );
+    }
 }

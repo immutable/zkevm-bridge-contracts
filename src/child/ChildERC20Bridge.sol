@@ -101,8 +101,7 @@ contract ChildERC20Bridge is
 
         if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
-
-        } else if(bytes32(data[:32]) == DEPOSIT_SIG) {
+        } else if (bytes32(data[:32]) == DEPOSIT_SIG) {
             _deposit(data[32:]);
         } else {
             revert InvalidData();
@@ -110,7 +109,7 @@ contract ChildERC20Bridge is
     }
 
     function _mapToken(bytes calldata data) private {
-        (,address rootToken, string memory name, string memory symbol, uint8 decimals) =
+        (, address rootToken, string memory name, string memory symbol, uint8 decimals) =
             abi.decode(data, (bytes32, address, string, string, uint8));
 
         if (rootToken == address(0)) {
@@ -134,11 +133,7 @@ contract ChildERC20Bridge is
         (address rootToken, address sender, address receiver, uint256 amount) =
             abi.decode(data, (address, address, address, uint256));
 
-        if (rootToken == address(0)) {
-            revert ZeroAddress();
-        }
-
-        if (receiver == address(0)) {
+        if (rootToken == address(0) || receiver == address(0)) {
             revert ZeroAddress();
         }
 
@@ -148,11 +143,11 @@ contract ChildERC20Bridge is
 
         address childToken = rootTokenToChildToken[rootToken];
 
-        if(address(childToken).code.length == 0) {
+        if (address(childToken).code.length == 0) {
             revert EmptyTokenContract();
         }
 
-        if(!IChildERC20(childToken).mint(receiver, amount)){
+        if (!IChildERC20(childToken).mint(receiver, amount)) {
             revert MintFailed();
         }
 

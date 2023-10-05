@@ -73,4 +73,8 @@ contract Utils is Test {
 
         return (childToken, predictedPayload);
     }
+
+    function getMappingStorageSlotFor(address key, uint256 position) public pure returns (bytes32 slot) {
+        slot = keccak256(abi.encode(key, position));
+    }
 }
