@@ -199,6 +199,8 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         );
     }
 
+    // TODO add mapToken calls to these to isolate the specific error we are testing for vvvv
+
     function test_RevertIf_depositWithRootTokenZeroAddress() public {
         address rootTokenAddress = address(0);
         address sender = address(0xff);
