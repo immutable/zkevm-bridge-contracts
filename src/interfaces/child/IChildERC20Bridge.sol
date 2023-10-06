@@ -23,16 +23,30 @@ interface IChildERC20Bridge {
 interface IChildERC20BridgeEvents {
     /// @notice Emitted when a map token message is received from the root chain and executed successfully.
     event L2TokenMapped(address rootToken, address childToken);
+
+    event ERC20Deposit(
+        address indexed rootToken,
+        address indexed childToken,
+        address depositor,
+        address indexed receiver,
+        uint256 amount
+    );
 }
 
 // TODO add parameters to errors if it makes sense
 interface IChildERC20BridgeErrors {
+    /// @notice Error when the contract to mint had no bytecode.
+    error EmptyTokenContract();
+    /// @notice Error when the mint operation failed.
+    error MintFailed();
     /// @notice Error when the given root chain name is invalid.
     error InvalidRootChain();
     /// @notice Error when the given bridge adaptor is invalid.
     error InvalidRootERC20BridgeAdaptor();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
+    /// @notice Error when a token is not mapped.
+    error NotMapped();
     /// @notice Error when a token is already mapped.
     error AlreadyMapped();
     /// @notice Error when a message is given to the bridge from an address not the designated bridge adaptor.
