@@ -5,6 +5,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
@@ -32,7 +33,10 @@ contract RootERC20Bridge is
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     address public constant NATIVE_TOKEN = address(0xeee);
 
-    IRootERC20BridgeAdaptor public bridgeAdaptor;
+    IRootERC20BridgeAdaptor public rootBridgeAdaptor;
+    /// @dev Used to verify source address in messages sent from child chain.
+    /// @dev Stringified version of address.
+    string public childBridgeAdaptor;
     /// @dev The address that will be minting tokens on the child chain.
     address public childERC20Bridge;
     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
@@ -41,22 +45,28 @@ contract RootERC20Bridge is
 
     /**
      * @notice Initilization function for RootERC20Bridge.
-     * @param newBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
+     * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
      * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
+     * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @dev Can only be called once.
      */
-    function initialize(address newBridgeAdaptor, address newChildERC20Bridge, address newChildTokenTemplate)
-        public
-        initializer
-    {
-        if (newBridgeAdaptor == address(0) || newChildERC20Bridge == address(0) || newChildTokenTemplate == address(0))
-        {
+    function initialize(
+        address newRootBridgeAdaptor,
+        address newChildERC20Bridge,
+        address newChildBridgeAdaptor,
+        address newChildTokenTemplate
+    ) public initializer {
+        if (
+            newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
+                || newChildBridgeAdaptor == address(0) || newChildTokenTemplate == address(0)
+        ) {
             revert ZeroAddress();
         }
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
-        bridgeAdaptor = IRootERC20BridgeAdaptor(newBridgeAdaptor);
+        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
+        childBridgeAdaptor = Strings.toHexString(newChildBridgeAdaptor);
     }
 
     /**
@@ -112,7 +122,7 @@ contract RootERC20Bridge is
         bytes memory payload =
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
-        bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
+        rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
         emit L1TokenMapped(address(rootToken), childToken);
         return childToken;
@@ -141,14 +151,14 @@ contract RootERC20Bridge is
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
-        bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
+        rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
         emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
     }
 
-    function updateBridgeAdaptor(address newBridgeAdaptor) external onlyOwner {
-        if (newBridgeAdaptor == address(0)) {
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
+        if (newRootBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
-        bridgeAdaptor = IRootERC20BridgeAdaptor(newBridgeAdaptor);
+        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
     }
 }

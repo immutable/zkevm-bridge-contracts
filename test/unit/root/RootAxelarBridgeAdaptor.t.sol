@@ -12,10 +12,11 @@ import {
     IRootAxelarBridgeAdaptorEvents,
     IRootAxelarBridgeAdaptorErrors
 } from "../../../src/root/RootAxelarBridgeAdaptor.sol";
+import {StubRootBridge} from "../../../src/test/root/StubRootBridge.sol";
 
 contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IRootAxelarBridgeAdaptorErrors {
     address constant CHILD_BRIDGE = address(3);
-    address constant CHILD_BRIDGE_ADAPTOR = address(4);
+    string public childBridgeAdaptor;
     string constant CHILD_CHAIN_NAME = "test";
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
 
@@ -23,26 +24,28 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     RootAxelarBridgeAdaptor public axelarAdaptor;
     MockAxelarGateway public mockAxelarGateway;
     MockAxelarGasService public axelarGasService;
+    StubRootBridge public stubRootBridge;
 
     function setUp() public {
         token = new ERC20PresetMinterPauser("Test", "TST");
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
+        stubRootBridge = new StubRootBridge();
+        childBridgeAdaptor = stubRootBridge.childBridgeAdaptor();
 
         axelarAdaptor = new RootAxelarBridgeAdaptor(
-            address(this), // set rootBridge to address(this) for unit testing
-            CHILD_BRIDGE_ADAPTOR,
+            address(stubRootBridge),
             CHILD_CHAIN_NAME,
             address(mockAxelarGateway),
             address(axelarGasService)
         );
+        axelarAdaptor.setChildBridgeAdaptor();
+        vm.deal(address(stubRootBridge), 99999999999);
     }
 
     function test_Constructor() public {
-        assertEq(axelarAdaptor.ROOT_BRIDGE(), address(this), "rootBridge not set");
-        assertEq(
-            axelarAdaptor.childBridgeAdaptor(), Strings.toHexString(CHILD_BRIDGE_ADAPTOR), "childBridgeAdaptor not set"
-        );
+        assertEq(axelarAdaptor.ROOT_BRIDGE(), address(stubRootBridge), "rootBridge not set");
+        assertEq(axelarAdaptor.childBridgeAdaptor(), childBridgeAdaptor, "childBridgeAdaptor not set");
         assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
         assertEq(address(axelarAdaptor.AXELAR_GATEWAY()), address(mockAxelarGateway), "axelarGateway not set");
         assertEq(address(axelarAdaptor.GAS_SERVICE()), address(axelarGasService), "axelarGasService not set");
@@ -52,7 +55,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         vm.expectRevert(ZeroAddresses.selector);
         new RootAxelarBridgeAdaptor(
             address(0),
-            CHILD_BRIDGE_ADAPTOR,
             CHILD_CHAIN_NAME,
             address(mockAxelarGateway),
             address(axelarGasService)
@@ -63,7 +65,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         vm.expectRevert(InvalidChildChain.selector);
         new RootAxelarBridgeAdaptor(
             address(this),
-            CHILD_BRIDGE_ADAPTOR,
             "",
             address(mockAxelarGateway),
             address(axelarGasService)
@@ -83,12 +84,13 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
                 CHILD_CHAIN_NAME,
-                Strings.toHexString(CHILD_BRIDGE_ADAPTOR),
+                childBridgeAdaptor,
                 payload,
                 refundRecipient
             )
         );
 
+        vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, refundRecipient);
     }
 
@@ -99,13 +101,11 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         vm.expectCall(
             address(mockAxelarGateway),
             abi.encodeWithSelector(
-                mockAxelarGateway.callContract.selector,
-                CHILD_CHAIN_NAME,
-                Strings.toHexString(CHILD_BRIDGE_ADAPTOR),
-                payload
+                mockAxelarGateway.callContract.selector, CHILD_CHAIN_NAME, childBridgeAdaptor, payload
             )
         );
 
+        vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }
 
@@ -114,23 +114,25 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         uint256 callValue = 300;
 
         vm.expectEmit(true, true, true, false, address(axelarAdaptor));
-        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, Strings.toHexString(CHILD_BRIDGE_ADAPTOR), payload);
-
+        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptor, payload);
+        vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }
 
     function testFuzz_sendMessage_PaysGasToGasService(uint256 callValue) public {
         vm.assume(callValue < address(this).balance);
         vm.assume(callValue > 0);
+        vm.deal(address(stubRootBridge), callValue);
 
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
 
-        uint256 thisPreBal = address(this).balance;
+        uint256 bridgePreBal = address(stubRootBridge).balance;
         uint256 axelarGasServicePreBal = address(axelarGasService).balance;
 
+        vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
 
-        assertEq(address(this).balance, thisPreBal - callValue, "ETH balance not decreased");
+        assertEq(address(stubRootBridge).balance, bridgePreBal - callValue, "ETH balance not decreased");
         assertEq(address(axelarGasService).balance, axelarGasServicePreBal + callValue, "ETH not paid to gas service");
     }
 
@@ -147,12 +149,13 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
                 CHILD_CHAIN_NAME,
-                Strings.toHexString(CHILD_BRIDGE_ADAPTOR),
+                childBridgeAdaptor,
                 payload,
                 refundRecipient
             )
         );
 
+        vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, refundRecipient);
     }
 
@@ -171,6 +174,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     function test_RevertIf_mapTokenCalledWithNoValue() public {
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
         vm.expectRevert(NoGas.selector);
+        vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: 0}(payload, address(123));
     }
 }
