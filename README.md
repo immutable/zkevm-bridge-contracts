@@ -60,8 +60,8 @@ Note that we set the ports and chain IDs to be unique.
 ```
 ROOT_RPC_URL="http://127.0.0.1:8545"
 CHILD_RPC_URL="http://127.0.0.1:8546"
-ROOT_CHAIN_ID="31338"
-CHILD_CHAIN_ID="31337"
+ROOT_CHAIN_ID="31337"
+CHILD_CHAIN_ID="31338"
 ROOT_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 CHILD_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 ```
