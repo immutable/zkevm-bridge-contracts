@@ -44,7 +44,7 @@ $ forge snapshot
 
 ### Local Deployment
 
-To set up the contracts on two separate local networks, you need to start running the local networks, then run `./deploy.sh`, which will run all four Forge scripts to deploy and initialize the contracts.
+To set up the contracts on two separate local networks, we need to start running the local networks, then run `./deploy.sh`, which will run all four Forge scripts to deploy and initialize the contracts.
 
 1. Set up the two local networks. e.g:
 `anvil -p 8545 --chain-id 31337`
@@ -74,9 +74,17 @@ CHILD_CHAIN_NAME="CHILD"
 ```
 where `{ROOT,CHILD}_{GATEWAY,GAS_SERVICE}_ADDRESS` refers to the gateway and gas service addresses used by Axelar.
 
-You can just deploy with dummy gateway/gas service addresses if you only want to test the deployment, and not bridging functionality.
+We can just use dummy gateway/gas service addresses if we only want to test the deployment, and not bridging functionality.
 
 4. Run the deploy script.
 `deploy.sh`
 
 5. Get contract addresses from `output.json`.
+
+### Remote Deployment
+
+When deploying these contracts on remote networks (i.e. testnets or mainnets), the instructions are the same as above, but:
+- step 1 (deploying the networks) should be skipped.
+- in step 2:
+    - The RPC URLs and Chain IDs should be set for the targetted networks.
+    - The private keys should be for addresses with which the contracts are to be deployed.
