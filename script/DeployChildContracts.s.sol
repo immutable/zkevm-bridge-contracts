@@ -11,7 +11,7 @@ import {ChildERC20} from "../src/child/ChildERC20.sol";
 
 contract DeployChildContracts is Script {
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("CHILD_PRIVATE_KEY");
         address childGateway = vm.envAddress("CHILD_GATEWAY_ADDRESS");
         address childGasService = vm.envAddress("CHILD_GAS_SERVICE_ADDRESS"); // Not yet used.
         string memory childRpcUrl = vm.envString("CHILD_RPC_URL");
