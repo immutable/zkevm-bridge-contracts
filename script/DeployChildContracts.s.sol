@@ -10,8 +10,6 @@ import {ChildERC20} from "../src/child/ChildERC20.sol";
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
 contract DeployChildContracts is Script {
-    function setUp() public {}
-
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address childGateway = vm.envAddress("CHILD_GATEWAY_ADDRESS");
@@ -30,9 +28,6 @@ contract DeployChildContracts is Script {
             childGateway, // child gateway
             address(childBridge) // child bridge
         );
-        // TODO make sure we set bridge adaptors everywhere
-
-        // rootBridge.initialize(address(rootBridgeAdaptor), address(456), address(789));
 
         vm.stopBroadcast();
 

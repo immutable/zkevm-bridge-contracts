@@ -20,7 +20,10 @@ contract ChildAxelarBridgeAdaptor is AxelarExecutable, IChildAxelarBridgeAdaptor
 
     // TODO tests for this
     // TODO does this need to be permissioned?
-    // TODO natspec
+    /**
+     * @notice Sets the root bridge adaptor address.
+     * @dev Always sets it to whatever the rootERC20BridgeAdaptor of the bridge contract is.
+     */
     function setRootBridgeAdaptor() external {
         rootBridgeAdaptor = CHILD_BRIDGE.rootERC20BridgeAdaptor();
     }

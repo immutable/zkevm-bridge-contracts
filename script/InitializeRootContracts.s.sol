@@ -13,8 +13,6 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
 contract InitializeRootContracts is Script {
-    function setUp() public {}
-
     function run() public {
         RootERC20Bridge rootERC20Bridge = RootERC20Bridge(vm.envAddress("ROOT_ERC20_BRIDGE"));
         RootAxelarBridgeAdaptor rootBridgeAdaptor = RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR"));

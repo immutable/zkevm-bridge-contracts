@@ -48,7 +48,7 @@ function main() {
         \"child_bridge_address\": \"$child_erc20_bridge\",
         \"child_bridge_adaptor\": \"$child_bridge_adaptor\",
         \"child_chain_child_token_template\": \"$child_chain_child_token_template\"
-    }" | jq . > output.json
+    }" | jq . > addresses.json
 
     return
 }

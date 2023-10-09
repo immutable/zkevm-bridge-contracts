@@ -74,17 +74,11 @@ contract RootAxelarBridgeAdaptor is
         emit MapTokenAxelarMessage(_childChain, _childBridgeAdaptor, payload);
     }
 
-    // TODO natspec
+    /**
+     * @notice Sets the child bridge adaptor address.
+     * @dev Always sets it to whatever the childBridgeAdaptor of the bridge contract is.
+     */
     function setChildBridgeAdaptor() external {
         childBridgeAdaptor = IRootERC20Bridge(ROOT_BRIDGE).childBridgeAdaptor();
-    }
-
-    // TODO future tickets
-    function receiveWithdrawMessage(bytes calldata payload) external {
-        // TODO
-    }
-
-    function sendDepositMessage(address l1Token, address recipient, uint256 amount) external {
-        // TODO
     }
 }

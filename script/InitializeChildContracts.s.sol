@@ -10,8 +10,6 @@ import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.so
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
 contract InitializeChildContracts is Script {
-    function setUp() public {}
-
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         ChildERC20Bridge childERC20Bridge = ChildERC20Bridge(vm.envAddress("CHILD_ERC20_BRIDGE"));

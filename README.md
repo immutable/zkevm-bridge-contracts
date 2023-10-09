@@ -42,7 +42,41 @@ $ forge fmt
 $ forge snapshot
 ```
 
-### Deploy
+### Local Deployment
 
-TODO
+To set up the contracts on two separate local networks, you need to start running the local networks, then run `./deploy.sh`, which will run all four Forge scripts to deploy and initialize the contracts.
 
+1. Set up the two local networks. e.g:
+`anvil -p 8545 --chain-id 31337`
+and in another terminal:
+`anvil -p 8546 --chain-id 31338`
+Note that we set the ports and chain IDs to be unique.
+
+2. Update environment variables with RPC URLs, chain IDs, and private keys. Using the networks set up in step 1, our .env file will include the following lines:
+```
+ROOT_RPC_URL="http://127.0.0.1:8545"
+CHILD_RPC_URL="http://127.0.0.1:8546"
+ROOT_CHAIN_ID="31338"
+CHILD_CHAIN_ID="31337"
+ROOT_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+CHILD_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+```
+The private keys used are the default `anvil` keys.
+
+3. Fill other environment variables. The variables needed are:
+```
+ROOT_GATEWAY_ADDRESS=
+CHILD_GATEWAY_ADDRESS=
+ROOT_GAS_SERVICE_ADDRESS=
+CHILD_GAS_SERVICE_ADDRESS=
+ROOT_CHAIN_NAME="ROOT"
+CHILD_CHAIN_NAME="CHILD"
+```
+where `{ROOT,CHILD}_{GATEWAY,GAS_SERVICE}_ADDRESS` refers to the gateway and gas service addresses used by Axelar.
+
+You can just deploy with dummy gateway/gas service addresses if you only want to test the deployment, and not bridging functionality.
+
+4. Run the deploy script.
+`deploy.sh`
+
+5. Get contract addresses from `output.json`.

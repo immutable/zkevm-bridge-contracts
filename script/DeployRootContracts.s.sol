@@ -13,8 +13,6 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
 contract DeployRootContracts is Script {
-    function setUp() public {}
-
     function run() public {
         uint256 rootPrivateKey = vm.envUint("ROOT_PRIVATE_KEY");
         string memory rootRpcUrl = vm.envString("ROOT_RPC_URL");
@@ -45,5 +43,7 @@ contract DeployRootContracts is Script {
         console2.log("Root ERC20 Bridge: %s", address(rootERC20Bridge));
         console2.log("Root Axelar Bridge Adaptor: %s", address(rootBridgeAdaptor));
         console2.log("ROOT CHAIN childTokenTemplate: %s", address(rootChainChildTokenTemplate));
+
+        vm.stopBroadcast();
     }
 }
