@@ -18,6 +18,11 @@ Foundry consists of:
 
 ## Usage
 
+### Install Dependencies
+```shell
+$ forge install
+```
+
 ### Build
 
 ```shell
@@ -46,6 +51,8 @@ $ forge snapshot
 
 ##### Pre-requisites
 `jq` will need to be installed before running the scripts. This can be done with `brew install jq` on a mac, or see [here](https://codeahoy.com/learn/introtobash/ch15/#installing-jq) for an online guide.
+
+You will also need to run `forge install` to install dependencies.
 
 ##### Instructions
 To set up the contracts on two separate local networks, we need to start running the local networks, then run `./deploy.sh`, which will run all four Forge scripts to deploy and initialize the contracts.
@@ -83,7 +90,7 @@ We can just use dummy gateway/gas service addresses if we only want to test the 
 4. Run the deploy script.
 `deploy.sh`
 
-5. Get contract addresses from `output.json`.
+5. Get contract addresses from `addresses.json`.
 
 ### Remote Deployment
 
