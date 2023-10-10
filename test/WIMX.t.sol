@@ -8,10 +8,10 @@ contract WIMXTest is Test {
     string constant DEFAULT_WIMX_NAME = "Wrapped IMX";
     string constant DEFAULT_WIMX_SYMBOL = "WIMX";
 
-    event Approval(address indexed src, address indexed guy, uint wad);
-    event Transfer(address indexed src, address indexed dst, uint wad);
-    event Deposit(address indexed dst, uint wad);
-    event Withdrawal(address indexed src, uint wad);
+    event Approval(address indexed src, address indexed guy, uint256 wad);
+    event Transfer(address indexed src, address indexed dst, uint256 wad);
+    event Deposit(address indexed dst, uint256 wad);
+    event Withdrawal(address indexed src, uint256 wad);
 
     WIMX public wIMX;
 
@@ -30,7 +30,7 @@ contract WIMXTest is Test {
         address user = address(1234);
         uint256 imxAmt = 1 ether;
         vm.deal(user, imxAmt);
-        
+
         // Before deposit, user should have 0 wIMX
         assertEq(user.balance, imxAmt, "User should have 1 IMX");
         assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
@@ -50,7 +50,7 @@ contract WIMXTest is Test {
         address user = address(1234);
         uint256 imxAmt = 1 ether;
         vm.deal(user, imxAmt);
-        
+
         // Before deposit, user should have 0 wIMX
         assertEq(user.balance, imxAmt, "User should have 1 IMX");
         assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
@@ -59,7 +59,7 @@ contract WIMXTest is Test {
         // Deposit should revert because user has only 1 IMX
         vm.expectRevert();
         address(wIMX).call{value: imxAmt + 1}("");
-        
+
         // After deposit, user should have 0 wIMX
         assertEq(user.balance, imxAmt, "User should have 1 IMX");
         assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
@@ -70,7 +70,7 @@ contract WIMXTest is Test {
         address user = address(1234);
         uint256 imxAmt = 1 ether;
         vm.deal(user, imxAmt);
-        
+
         // Before deposit, user should have 0 wIMX
         assertEq(user.balance, imxAmt, "User should have 1 IMX");
         assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
@@ -91,7 +91,7 @@ contract WIMXTest is Test {
         address user = address(1234);
         uint256 imxAmt = 1 ether;
         vm.deal(user, imxAmt);
-        
+
         // Before deposit, user should have 0 wIMX
         assertEq(user.balance, imxAmt, "User should have 1 IMX");
         assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
@@ -101,7 +101,7 @@ contract WIMXTest is Test {
         vm.expectEmit(address(wIMX));
         emit Deposit(user, depositAmt);
         address(wIMX).call{value: depositAmt}("");
-        
+
         // After deposit, user should have 0.1 wIMX
         assertEq(user.balance, imxAmt - depositAmt, "User should have 0.9 wIMX");
         assertEq(wIMX.balanceOf(user), depositAmt, "User should have 0.1 IMX");
@@ -181,13 +181,21 @@ contract WIMXTest is Test {
         uint256 depositAmt2 = 0.5 ether;
         vm.startPrank(user2);
         wIMX.deposit{value: depositAmt2}();
-        assertEq(wIMX.totalSupply(), depositAmt1 - withdrawlAmt1 + depositAmt2, "Token supply should be 0.55 after 2nd deposit");
+        assertEq(
+            wIMX.totalSupply(),
+            depositAmt1 - withdrawlAmt1 + depositAmt2,
+            "Token supply should be 0.55 after 2nd deposit"
+        );
 
         // Withdraw 0.5 IMX
         uint256 withdrawlAmt2 = 0.5 ether;
         vm.startPrank(user2);
         wIMX.withdraw(withdrawlAmt2);
-        assertEq(wIMX.totalSupply(), depositAmt1 - withdrawlAmt1 + depositAmt2 - withdrawlAmt2, "Token supply should be 0.05 after 2nd withdraw");
+        assertEq(
+            wIMX.totalSupply(),
+            depositAmt1 - withdrawlAmt1 + depositAmt2 - withdrawlAmt2,
+            "Token supply should be 0.05 after 2nd withdraw"
+        );
     }
 
     function test_RevertIf_TransferAmountExceedingBalance() public {
@@ -232,7 +240,7 @@ contract WIMXTest is Test {
         vm.expectEmit(address(wIMX));
         emit Transfer(user, recipient, transferredAmt);
         wIMX.transfer(recipient, transferredAmt);
-        
+
         vm.stopPrank();
 
         assertEq(wIMX.balanceOf(user), depositAmt - transferredAmt, "User should have 0.05 wIMX");

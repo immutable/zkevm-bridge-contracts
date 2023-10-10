@@ -6,17 +6,17 @@ pragma solidity ^0.8.21;
  * @dev This contract is adapted from the official Wrapped ETH contract.
  */
 contract WIMX {
-    string public name     = "Wrapped IMX";
-    string public symbol   = "WIMX";
-    uint8  public decimals = 18;
+    string public name = "Wrapped IMX";
+    string public symbol = "WIMX";
+    uint8 public decimals = 18;
 
-    event  Approval(address indexed src, address indexed guy, uint wad);
-    event  Transfer(address indexed src, address indexed dst, uint wad);
-    event  Deposit(address indexed dst, uint wad);
-    event  Withdrawal(address indexed src, uint wad);
+    event Approval(address indexed src, address indexed guy, uint256 wad);
+    event Transfer(address indexed src, address indexed dst, uint256 wad);
+    event Deposit(address indexed dst, uint256 wad);
+    event Withdrawal(address indexed src, uint256 wad);
 
-    mapping (address => uint)                       public  balanceOf;
-    mapping (address => mapping (address => uint))  public  allowance;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
 
     /**
      * @notice Fallback function on recieving native IMX.
@@ -24,7 +24,7 @@ contract WIMX {
     receive() external payable {
         deposit();
     }
-    
+
     /**
      * @notice Deposit native IMX in the function call and mint the equal amount of wrapped IMX to msg.sender.
      */
@@ -37,10 +37,10 @@ contract WIMX {
      * @notice Withdraw given amount of native IMX to msg.sender and burn the equal amount of wrapped IMX.
      * @param wad The amount to withdraw.
      */
-    function withdraw(uint wad) public {
+    function withdraw(uint256 wad) public {
         require(balanceOf[msg.sender] >= wad, "Wrapped IMX: Insufficient balance");
         balanceOf[msg.sender] -= wad;
-        
+
         payable(msg.sender).transfer(wad);
         emit Withdrawal(msg.sender, wad);
     }
@@ -49,7 +49,7 @@ contract WIMX {
      * @notice Obtain the current total supply of wrapped IMX.
      * @return uint The amount of supplied wrapped IMX.
      */
-    function totalSupply() public view returns (uint) {
+    function totalSupply() public view returns (uint256) {
         return address(this).balance;
     }
 
@@ -59,7 +59,7 @@ contract WIMX {
      * @param wad Amount of allowance.
      * @return bool Returns true if function call is successful.
      */
-    function approve(address guy, uint wad) public returns (bool) {
+    function approve(address guy, uint256 wad) public returns (bool) {
         allowance[msg.sender][guy] = wad;
         emit Approval(msg.sender, guy, wad);
         return true;
@@ -71,7 +71,7 @@ contract WIMX {
      * @param wad Amount of this transfer.
      * @return bool Returns true if function call is successful.
      */
-    function transfer(address dst, uint wad) public returns (bool) {
+    function transfer(address dst, uint256 wad) public returns (bool) {
         return transferFrom(msg.sender, dst, wad);
     }
 
@@ -82,10 +82,7 @@ contract WIMX {
      * @param wad Amount of this transfer.
      * @return bool Returns true if function call is successful.
      */
-    function transferFrom(address src, address dst, uint wad)
-        public
-        returns (bool)
-    {
+    function transferFrom(address src, address dst, uint256 wad) public returns (bool) {
         require(balanceOf[src] >= wad, "Wrapped IMX: Insufficient balance");
 
         if (src != msg.sender && allowance[src][msg.sender] != type(uint256).max) {
