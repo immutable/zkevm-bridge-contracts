@@ -31,8 +31,8 @@ contract WIMXTest is Test {
         vm.deal(user, 1 ether);
         
         // Before deposit, user should have 0 wIMX
-        assertEq(user.balance, 1 ether, "User shoud have 1 IMX");
-        assertEq(wIMX.balanceOf(user), 0, "User shoud have 0 wIMX");
+        assertEq(user.balance, 1 ether, "User should have 1 IMX");
+        assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
 
         vm.prank(user);
         // Deposit should revert because user has only 1 IMX
@@ -40,8 +40,8 @@ contract WIMXTest is Test {
         wIMX.deposit{value: 2 ether}();
 
         // After deposit, user should have 0 wIMX
-        assertEq(user.balance, 1 ether, "User shoud have 1 IMX");
-        assertEq(wIMX.balanceOf(user), 0, "User shoud have 0 wIMX");
+        assertEq(user.balance, 1 ether, "User should have 1 IMX");
+        assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
     }
 
     function test_RevertIf_TransferWithInsufficientBalance() public {
@@ -50,8 +50,8 @@ contract WIMXTest is Test {
         vm.deal(user, 1 ether);
         
         // Before deposit, user should have 0 wIMX
-        assertEq(user.balance, 1 ether, "User shoud have 1 IMX");
-        assertEq(wIMX.balanceOf(user), 0, "User shoud have 0 wIMX");
+        assertEq(user.balance, 1 ether, "User should have 1 IMX");
+        assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
 
         vm.prank(user);
         // Deposit should revert because user has only 1 IMX
@@ -59,8 +59,8 @@ contract WIMXTest is Test {
         address(wIMX).call{value: 2 ether}("");
         
         // After deposit, user should have 0 wIMX
-        assertEq(user.balance, 1 ether, "User shoud have 1 IMX");
-        assertEq(wIMX.balanceOf(user), 0, "User shoud have 0 wIMX");
+        assertEq(user.balance, 1 ether, "User should have 1 IMX");
+        assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
     }
 
     function test_SucceedIf_DepositWithSufficientBalance() public {
@@ -69,8 +69,8 @@ contract WIMXTest is Test {
         vm.deal(user, 1 ether);
         
         // Before deposit, user should have 0 wIMX
-        assertEq(user.balance, 1 ether, "User shoud have 1 IMX");
-        assertEq(wIMX.balanceOf(user), 0, "User shoud have 0 wIMX");
+        assertEq(user.balance, 1 ether, "User should have 1 IMX");
+        assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
 
         vm.prank(user);
         vm.expectEmit(address(wIMX));
@@ -78,8 +78,8 @@ contract WIMXTest is Test {
         wIMX.deposit{value: 0.1 ether}();
 
         // After deposit, user should have 0.1 wIMX
-        assertEq(user.balance, 0.9 ether, "User shoud have 0.9 IMX");
-        assertEq(wIMX.balanceOf(user), 0.1 ether, "User shoud have 0.1 wIMX");
+        assertEq(user.balance, 0.9 ether, "User should have 0.9 IMX");
+        assertEq(wIMX.balanceOf(user), 0.1 ether, "User should have 0.1 wIMX");
     }
 
     function test_SucceedIf_TransferWithSufficientBalance() public {
@@ -88,8 +88,8 @@ contract WIMXTest is Test {
         vm.deal(user, 1 ether);
         
         // Before deposit, user should have 0 wIMX
-        assertEq(user.balance, 1 ether, "User shoud have 1 IMX");
-        assertEq(wIMX.balanceOf(user), 0, "User shoud have 0 wIMX");
+        assertEq(user.balance, 1 ether, "User should have 1 IMX");
+        assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
 
         vm.prank(user);
         vm.expectEmit(address(wIMX));
@@ -97,8 +97,8 @@ contract WIMXTest is Test {
         address(wIMX).call{value: 0.1 ether}("");
         
         // After deposit, user should have 0.1 wIMX
-        assertEq(user.balance, 0.9 ether, "User shoud have 0.9 wIMX");
-        assertEq(wIMX.balanceOf(user), 0.1 ether, "User shoud have 0.1 IMX");
+        assertEq(user.balance, 0.9 ether, "User should have 0.9 wIMX");
+        assertEq(wIMX.balanceOf(user), 0.1 ether, "User should have 0.1 IMX");
     }
 
     function test_RevertIf_OverWithdraw() public {
@@ -116,8 +116,8 @@ contract WIMXTest is Test {
         vm.stopPrank();
 
         // User should still have 0.1 wIMX and 0.9 IMX
-        assertEq(user.balance, 0.9 ether, "User shoud have 0.9 IMX");
-        assertEq(wIMX.balanceOf(user), 0.1 ether, "User shoud have 0.1 wIMX");
+        assertEq(user.balance, 0.9 ether, "User should have 0.9 IMX");
+        assertEq(wIMX.balanceOf(user), 0.1 ether, "User should have 0.1 wIMX");
     }
 
     function test_SucceedIf_WithdrawWithinLimit() public {
@@ -136,8 +136,8 @@ contract WIMXTest is Test {
         vm.stopPrank();
 
         // User should have 0.05 wIMX and 0.95 IMX
-        assertEq(user.balance, 0.95 ether, "User shoud have 0.95 IMX");
-        assertEq(wIMX.balanceOf(user), 0.05 ether, "User shoud have 0.05 wIMX");
+        assertEq(user.balance, 0.95 ether, "User should have 0.95 IMX");
+        assertEq(wIMX.balanceOf(user), 0.05 ether, "User should have 0.05 wIMX");
     }
 
     function test_SupplyUpdated_OnDepositAndWithdraw() public {
@@ -198,15 +198,15 @@ contract WIMXTest is Test {
         // Create a recipient
         address recipient = address(1235);
 
-        assertEq(wIMX.balanceOf(user), 0, "User shoud have 0 wIMX");
-        assertEq(wIMX.balanceOf(recipient), 0, "Recipient shoud have 0 wIMX");
+        assertEq(wIMX.balanceOf(user), 0, "User should have 0 wIMX");
+        assertEq(wIMX.balanceOf(recipient), 0, "Recipient should have 0 wIMX");
 
         // Deposit 0.1 IMX
         vm.startPrank(user);
         wIMX.deposit{value: 0.1 ether}();
 
-        assertEq(wIMX.balanceOf(user), 0.1 ether, "User shoud have 0.1 wIMX");
-        assertEq(wIMX.balanceOf(recipient), 0, "Recipient shoud have 0 wIMX");
+        assertEq(wIMX.balanceOf(user), 0.1 ether, "User should have 0.1 wIMX");
+        assertEq(wIMX.balanceOf(recipient), 0, "Recipient should have 0 wIMX");
 
         // Transfer 0.05 wIMX to recipient should revert
         vm.expectEmit(address(wIMX));
@@ -215,8 +215,8 @@ contract WIMXTest is Test {
         
         vm.stopPrank();
 
-        assertEq(wIMX.balanceOf(user), 0.05 ether, "User shoud have 0.05 wIMX");
-        assertEq(wIMX.balanceOf(recipient), 0.05 ether, "Recipient shoud have 0.05 wIMX");
+        assertEq(wIMX.balanceOf(user), 0.05 ether, "User should have 0.05 wIMX");
+        assertEq(wIMX.balanceOf(recipient), 0.05 ether, "Recipient should have 0.05 wIMX");
     }
 
     function test_RevertIf_TransferFromWithNoAllowance() public {
