@@ -12,7 +12,11 @@ import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
 contract Utils is Test {
-    function integrationSetup(address childBridge, address childBridgeAdaptor, string memory childBridgeName)
+    function integrationSetup(
+        address childBridge, 
+        address childBridgeAdaptor, 
+        string memory childBridgeName,
+        address imxTokenAddress)
         public
         returns (
             ERC20PresetMinterPauser token,
@@ -37,16 +41,17 @@ contract Utils is Test {
             address(axelarGasService)
         );
 
-        rootBridge.initialize(address(axelarAdaptor), childBridge, address(token));
+        rootBridge.initialize(address(axelarAdaptor), childBridge, address(token), imxTokenAddress);
     }
 
     function setupDeposit(
         ERC20PresetMinterPauser token,
         RootERC20Bridge rootBridge,
         uint256 gasPrice,
-        uint256 tokenAmount
+        uint256 tokenAmount,
+        bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
-        return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, address(this));
+        return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, address(this), saveTokenMapping);
     }
 
     function setupDepositTo(
@@ -54,9 +59,10 @@ contract Utils is Test {
         RootERC20Bridge rootBridge,
         uint256 gasPrice,
         uint256 tokenAmount,
-        address to
+        address to,
+        bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
-        return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, to);
+        return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, to, saveTokenMapping);
     }
 
     function _setupDeposit(
@@ -64,11 +70,14 @@ contract Utils is Test {
         RootERC20Bridge rootBridge,
         uint256 gasPrice,
         uint256 tokenAmount,
-        address to
+        address to,
+        bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
         predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(token), address(this), to, tokenAmount);
 
-        childToken = rootBridge.mapToken{value: gasPrice}(token);
+        if (saveTokenMapping) {
+            childToken = rootBridge.mapToken{value: gasPrice}(token);
+        }
 
         token.mint(address(this), tokenAmount);
         token.approve(address(rootBridge), tokenAmount);
