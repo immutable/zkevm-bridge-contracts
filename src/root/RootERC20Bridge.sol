@@ -39,7 +39,7 @@ contract RootERC20Bridge is
     address public childTokenTemplate;
     mapping(address => address) public rootTokenToChildToken;
 
-    address private _imxToken;
+    address public imxToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -67,7 +67,7 @@ contract RootERC20Bridge is
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
         bridgeAdaptor = IRootERC20BridgeAdaptor(newBridgeAdaptor);
-        _imxToken = newIMXToken;
+        imxToken = newIMXToken;
     }
 
     /**
@@ -109,7 +109,7 @@ contract RootERC20Bridge is
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
-        if (address(rootToken) == _imxToken) {
+        if (address(rootToken) == imxToken) {
             revert WontMap();
         }
         if (rootTokenToChildToken[address(rootToken)] != address(0)) {
@@ -137,7 +137,7 @@ contract RootERC20Bridge is
             revert ZeroAddress();
         }
 
-        address childToken = rootTokenToChildToken[address(rootToken)];
+        address childToken;
 
         // The native token does not need to be mapped since it should have been mapped on initialization
         // The native token also cannot be transferred since it was received in the payable function call
@@ -145,10 +145,15 @@ contract RootERC20Bridge is
         //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         //      Discuss this, and add this decision to the design doc.
         // TODO NATIVE TOKEN BRIDGING NOT YET SUPPORTED
-        if (address(rootToken) != NATIVE_TOKEN) {            
-            if (address(rootToken) != _imxToken && childToken == address(0)) {
-                revert NotMapped();
-            }
+        if (address(rootToken) != NATIVE_TOKEN) {  
+
+            if (address(rootToken) != imxToken) {
+                childToken = rootTokenToChildToken[address(rootToken)];
+                if (childToken == address(0)) {
+                    revert NotMapped();
+                }
+            }        
+            
             // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
         }
@@ -160,8 +165,8 @@ contract RootERC20Bridge is
         if (address(rootToken) == NATIVE_TOKEN) {
             // not used yet
             emit NativeDeposit(address(rootToken), childToken, msg.sender, receiver, amount);
-        } else if (address(rootToken) == _imxToken) {
-            emit IMXDeposit(address(rootToken), childToken, msg.sender, receiver, amount);
+        } else if (address(rootToken) == imxToken) {
+            emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
         } else {
             emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
         }

@@ -20,9 +20,9 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
+    address constant IMX_TOKEN = address(99);
 
     ERC20PresetMinterPauser public token;
-    ERC20PresetMinterPauser public imxToken;
     RootERC20Bridge public rootBridge;
     MockAdaptor public mockAxelarAdaptor;
     MockAxelarGateway public mockAxelarGateway;
@@ -30,7 +30,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function setUp() public {
         token = new ERC20PresetMinterPauser("Test", "TST");
-        imxToken = new ERC20PresetMinterPauser("ImmutableX", "IMX");
+        deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), IMX_TOKEN);
 
         rootBridge = new RootERC20Bridge();
         mockAxelarGateway = new MockAxelarGateway();
@@ -39,7 +39,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         mockAxelarAdaptor = new MockAdaptor();
 
         // The specific ERC20 token template does not matter for these unit tests
-        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, address(token), address(imxToken));
+        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, address(token), IMX_TOKEN);
     }
 
     /**
@@ -54,7 +54,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, address(token), address(imxToken));
+        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, address(token), IMX_TOKEN);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdapter() public {
@@ -160,7 +160,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIf_mapTokenCalledWithIMXAddress() public {
         vm.expectRevert(WontMap.selector);
-        rootBridge.mapToken{value: 300}(IERC20Metadata(address(imxToken)));
+        rootBridge.mapToken{value: 300}(IERC20Metadata(IMX_TOKEN));
     }
 
     function test_updateBridgeAdaptor() public {
@@ -211,11 +211,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_depositIMXEmitsIMXDepositEvent() public {
         uint256 amount = 100;
 
-        setupDeposit(imxToken, rootBridge, 0, amount, false);
+        setupDeposit(ERC20PresetMinterPauser(IMX_TOKEN), rootBridge, 0, amount, false);
 
         vm.expectEmit();
-        emit IMXDeposit(address(imxToken), address(0), address(this), address(this), amount);
-        rootBridge.deposit(IERC20Metadata(address(imxToken)), amount);
+        emit IMXDeposit(IMX_TOKEN, address(this), address(this), amount);
+        rootBridge.deposit(IERC20Metadata(IMX_TOKEN), amount);
     }
 
     function test_depositTransfersTokens() public {
@@ -312,11 +312,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
         address receiver = address(12345);
 
-        setupDepositTo(imxToken, rootBridge, 0, amount, receiver, false);
+        setupDepositTo(ERC20PresetMinterPauser(IMX_TOKEN), rootBridge, 0, amount, receiver, false);
 
         vm.expectEmit();
-        emit IMXDeposit(address(imxToken), address(0), address(this), receiver, amount);
-        rootBridge.depositTo(IERC20Metadata(address(imxToken)), receiver, amount);
+        emit IMXDeposit(IMX_TOKEN, address(this), receiver, amount);
+        rootBridge.depositTo(IERC20Metadata(IMX_TOKEN), receiver, amount);
     }
 
     function test_depositToTransfersTokens() public {

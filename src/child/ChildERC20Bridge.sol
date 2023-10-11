@@ -44,7 +44,7 @@ contract ChildERC20Bridge is
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
-    address private _imxToken;
+    address public imxToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -80,7 +80,7 @@ contract ChildERC20Bridge is
         childTokenTemplate = newChildTokenTemplate;
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
         rootChain = newRootChain;
-        _imxToken = newIMXToken;
+        imxToken = newIMXToken;
     }
 
     /**
