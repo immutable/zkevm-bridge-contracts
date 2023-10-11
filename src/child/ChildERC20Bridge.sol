@@ -44,6 +44,7 @@ contract ChildERC20Bridge is
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    address private _imxToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -51,15 +52,19 @@ contract ChildERC20Bridge is
      * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootChain A stringified representation of the chain that this bridge is connected to. Used for validation.
+     * @param newIMXToken Address of ECR20 IMX on the root chain.
      * @dev Can only be called once.
      */
     function initialize(
         address newBridgeAdaptor,
         string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
-        string memory newRootChain
+        string memory newRootChain,
+        address newIMXToken
     ) public initializer {
-        if (newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0)) {
+        if (newBridgeAdaptor == address(0) 
+        || newChildTokenTemplate == address(0)
+        || newIMXToken == address(0)) {
             revert ZeroAddress();
         }
 
@@ -75,6 +80,7 @@ contract ChildERC20Bridge is
         childTokenTemplate = newChildTokenTemplate;
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
         rootChain = newRootChain;
+        _imxToken = newIMXToken;
     }
 
     /**
