@@ -48,10 +48,28 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, IMX_TOKEN);
     }
 
-    function test_RevertIf_InitializeWithAZeroAddress() public {
+    function test_RevertIf_InitializeWithAZeroAddressAdapter() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, IMX_TOKEN);
+        bridge.initialize(address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressChildTemplate() public {
+        ChildERC20Bridge bridge = new ChildERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(1));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
+        ChildERC20Bridge bridge = new ChildERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(0));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressAll() public {
+        ChildERC20Bridge bridge = new ChildERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(0), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(0));
     }
 
     function test_RevertIf_InitializeWithAnEmptyBridgeAdaptorString() public {
