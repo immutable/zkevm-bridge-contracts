@@ -19,7 +19,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
 
-    address constant IMX_TOKEN = address(9);
+    address constant IMX_TOKEN = address(99);
     ChildERC20 public childTokenTemplate;
     ChildERC20 public rootToken;
     ChildERC20Bridge public childBridge;
