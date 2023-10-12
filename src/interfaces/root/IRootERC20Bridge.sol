@@ -65,7 +65,7 @@ interface IRootERC20BridgeErrors {
     error AlreadyMapped();
     /// @notice Error when a token is not mapped when it should be.
     error NotMapped();
-    /// @notice Error when a token is already mapped.
+    /// @notice Error when attempting to map IMX.
     error WontMap();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
