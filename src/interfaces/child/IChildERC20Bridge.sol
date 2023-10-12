@@ -4,6 +4,7 @@ pragma solidity ^0.8.21;
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IChildERC20Bridge {
+    function rootERC20BridgeAdaptor() external view returns (string memory);
     /**
      * @notice Receives a bridge message from root chain, parsing the message type then executing.
      * @param sourceChain The chain the message originated from.
