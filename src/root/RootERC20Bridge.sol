@@ -110,7 +110,7 @@ contract RootERC20Bridge is
             revert ZeroAddress();
         }
         if (address(rootToken) == imxToken) {
-            revert WontMap();
+            revert CantMapIMX();
         }
         if (rootTokenToChildToken[address(rootToken)] != address(0)) {
             revert AlreadyMapped();

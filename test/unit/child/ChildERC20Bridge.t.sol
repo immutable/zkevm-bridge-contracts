@@ -185,7 +185,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), IMX_TOKEN, "ImmutableX", "IMX", 18
         );
-        vm.expectRevert(WontMap.selector);
+        vm.expectRevert(CantMapIMX.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 

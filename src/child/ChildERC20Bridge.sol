@@ -123,7 +123,7 @@ contract ChildERC20Bridge is
         }
 
         if (address(rootToken) == imxToken) {
-            revert WontMap();
+            revert CantMapIMX();
         }
 
         if (rootTokenToChildToken[rootToken] != address(0)) {

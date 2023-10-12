@@ -159,7 +159,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_mapTokenCalledWithIMXAddress() public {
-        vm.expectRevert(WontMap.selector);
+        vm.expectRevert(CantMapIMX.selector);
         rootBridge.mapToken{value: 300}(IERC20Metadata(IMX_TOKEN));
     }
 
