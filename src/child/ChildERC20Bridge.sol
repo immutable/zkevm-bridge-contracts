@@ -122,6 +122,10 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
+        if (address(rootToken) == imxToken) {
+            revert WontMap();
+        }
+
         if (rootTokenToChildToken[rootToken] != address(0)) {
             revert AlreadyMapped();
         }
@@ -143,21 +147,25 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
-        if (rootTokenToChildToken[rootToken] == address(0)) {
-            revert NotMapped();
-        }
+        address childToken;
 
-        address childToken = rootTokenToChildToken[rootToken];
+        if (address(rootToken) != imxToken) {
+            childToken = rootTokenToChildToken[address(rootToken)];
+            if (childToken == address(0)) {
+                revert NotMapped();
+            }
+            if (address(childToken).code.length == 0) {
+                revert EmptyTokenContract();
+            }
 
-        if (address(childToken).code.length == 0) {
-            revert EmptyTokenContract();
-        }
-
-        if (!IChildERC20(childToken).mint(receiver, amount)) {
-            revert MintFailed();
-        }
-
-        emit ERC20Deposit(rootToken, childToken, sender, receiver, amount);
+            if (!IChildERC20(childToken).mint(receiver, amount)) {
+                revert MintFailed();
+            }
+            emit ERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
+        } else {
+            Address.sendValue(payable(receiver), amount);
+            emit IMXDeposit(address(rootToken), sender, receiver, amount);
+        }                
     }
 
     function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {

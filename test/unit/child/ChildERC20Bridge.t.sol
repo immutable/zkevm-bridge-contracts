@@ -181,6 +181,14 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
+    function test_RevertIf_mapTokenCalledWithIMXAddress() public {
+        bytes memory data = abi.encode(
+            childBridge.MAP_TOKEN_SIG(), IMX_TOKEN, "ImmutableX", "IMX", 18
+        );
+        vm.expectRevert(WontMap.selector);
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
+    }
+
     function test_RevertIf_onMessageReceiveCalledTwice() public {
         bytes memory data = abi.encode(
             childBridge.MAP_TOKEN_SIG(), address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals()
@@ -210,6 +218,52 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     //Deposit
+
+    function test_onMessageReceive_DepositIMX_EmitsIMXDepositEvent() public {
+
+        uint256 fundedAmount = 10 ether;
+        vm.deal(address(childBridge), fundedAmount);
+
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1 ether;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), IMX_TOKEN, sender, receiver, amount);
+
+        vm.expectEmit(address(childBridge));
+        emit IMXDeposit(IMX_TOKEN, sender, receiver, amount);
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+    }
+
+    function test_onMessageReceive_DepositIMX_BalancesChanged() public {
+        uint256 fundedAmount = 10 ether;
+        vm.deal(address(childBridge), fundedAmount);
+
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1 ether;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), IMX_TOKEN, sender, receiver, amount);
+
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+
+        assertEq(address(childBridge).balance, fundedAmount - amount, "contract balance not decreased");
+        assertEq(receiver.balance, amount, "receiver balance not increased");
+    }
+
+     function test_RevertIf_onMessageReceive_DepositIMX_InsufficientBalance() public {
+        uint256 fundedAmount = 1 ether;
+        vm.deal(address(childBridge), fundedAmount);
+
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 10 ether;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), IMX_TOKEN, sender, receiver, amount);
+
+        vm.expectRevert("Address: insufficient balance");
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+    }
 
     function test_onMessageReceive_Deposit_EmitsERC20DepositEvent() public {
         setupChildDeposit(rootToken, childBridge, ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR);

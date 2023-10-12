@@ -31,6 +31,19 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+    event IMXDeposit(
+        address indexed rootToken,
+        address depositor,
+        address indexed receiver,
+        uint256 amount
+    );
+    event NativeDeposit(
+        address indexed rootToken,
+        address indexed childToken,
+        address depositor,
+        address indexed receiver,
+        uint256 amount
+    );
 }
 
 // TODO add parameters to errors if it makes sense
@@ -47,6 +60,8 @@ interface IChildERC20BridgeErrors {
     error ZeroAddress();
     /// @notice Error when a token is not mapped.
     error NotMapped();
+    /// @notice Error when a token is already mapped.
+    error WontMap();
     /// @notice Error when a token is already mapped.
     error AlreadyMapped();
     /// @notice Error when a message is given to the bridge from an address not the designated bridge adaptor.
