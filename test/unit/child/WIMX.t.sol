@@ -2,7 +2,7 @@
 pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
-import {WIMX} from "../src/WIMX.sol";
+import {WIMX} from "../../../src/child/WIMX.sol";
 
 contract WIMXTest is Test {
     string constant DEFAULT_WIMX_NAME = "Wrapped IMX";
@@ -58,7 +58,8 @@ contract WIMXTest is Test {
         vm.prank(user);
         // Deposit should revert because user has only 1 IMX
         vm.expectRevert();
-        address(wIMX).call{value: imxAmt + 1}("");
+        (bool success, ) = address(wIMX).call{value: imxAmt + 1}("");
+        require(success);
 
         // After deposit, user should have 0 wIMX
         assertEq(user.balance, imxAmt, "User should have 1 IMX");
@@ -100,7 +101,8 @@ contract WIMXTest is Test {
         vm.prank(user);
         vm.expectEmit(address(wIMX));
         emit Deposit(user, depositAmt);
-        address(wIMX).call{value: depositAmt}("");
+        (bool success, ) = address(wIMX).call{value: depositAmt}("");
+        require(success);
 
         // After deposit, user should have 0.1 wIMX
         assertEq(user.balance, imxAmt - depositAmt, "User should have 0.9 wIMX");
