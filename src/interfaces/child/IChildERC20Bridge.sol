@@ -60,7 +60,7 @@ interface IChildERC20BridgeErrors {
     error ZeroAddress();
     /// @notice Error when a token is not mapped.
     error NotMapped();
-    /// @notice Error when a token is already mapped.
+    /// @notice Error when attempting to map IMX.
     error WontMap();
     /// @notice Error when a token is already mapped.
     error AlreadyMapped();
