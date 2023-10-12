@@ -13,5 +13,5 @@ docs/
 # Dotenv file
 .env
 
-# IDE settings
+# VS Code settings
 .vscode/
