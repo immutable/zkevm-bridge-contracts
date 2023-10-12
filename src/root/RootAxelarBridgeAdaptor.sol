@@ -11,6 +11,7 @@ import {
     IRootAxelarBridgeAdaptorEvents,
     IRootAxelarBridgeAdaptorErrors
 } from "../interfaces/root/IRootAxelarBridgeAdaptor.sol";
+import {IRootERC20Bridge} from "../interfaces/root/IRootERC20Bridge.sol";
 
 // TODO Note: this will have to be an AxelarExecutable contract in order to receive messages from child chain
 
@@ -26,25 +27,16 @@ contract RootAxelarBridgeAdaptor is
     using SafeERC20 for IERC20Metadata;
 
     address public immutable ROOT_BRIDGE;
-    /// @dev childBridgeAdaptor & childChain could be immutable, but as of writing this Solidity does not support immutable strings.
-    ///      see: https://ethereum.stackexchange.com/questions/127622/typeerror-immutable-variables-cannot-have-a-non-value-type
     string public childBridgeAdaptor;
+    /// @dev childChain could be immutable, but as of writing this Solidity does not support immutable strings.
+    ///      see: https://ethereum.stackexchange.com/questions/127622/typeerror-immutable-variables-cannot-have-a-non-value-type
     string public childChain;
     IAxelarGateway public immutable AXELAR_GATEWAY;
     IAxelarGasService public immutable GAS_SERVICE;
     mapping(uint256 => string) public chainIdToChainName;
 
-    constructor(
-        address _rootBridge,
-        address _childBridgeAdaptor,
-        string memory _childChain,
-        address _axelarGateway,
-        address _gasService
-    ) {
-        if (
-            _rootBridge == address(0) || _childBridgeAdaptor == address(0) || _axelarGateway == address(0)
-                || _gasService == address(0)
-        ) {
+    constructor(address _rootBridge, string memory _childChain, address _axelarGateway, address _gasService) {
+        if (_rootBridge == address(0) || _axelarGateway == address(0) || _gasService == address(0)) {
             revert ZeroAddresses();
         }
 
@@ -52,7 +44,6 @@ contract RootAxelarBridgeAdaptor is
             revert InvalidChildChain();
         }
         ROOT_BRIDGE = _rootBridge;
-        childBridgeAdaptor = Strings.toHexString(_childBridgeAdaptor);
         childChain = _childChain;
         AXELAR_GATEWAY = IAxelarGateway(_axelarGateway);
         GAS_SERVICE = IAxelarGasService(_gasService);
@@ -83,12 +74,11 @@ contract RootAxelarBridgeAdaptor is
         emit MapTokenAxelarMessage(_childChain, _childBridgeAdaptor, payload);
     }
 
-    // TODO future tickets
-    function receiveWithdrawMessage(bytes calldata payload) external {
-        // TODO
-    }
-
-    function sendDepositMessage(address l1Token, address recipient, uint256 amount) external {
-        // TODO
+    /**
+     * @notice Sets the child bridge adaptor address.
+     * @dev Always sets it to whatever the childBridgeAdaptor of the bridge contract is.
+     */
+    function setChildBridgeAdaptor() external {
+        childBridgeAdaptor = IRootERC20Bridge(ROOT_BRIDGE).childBridgeAdaptor();
     }
 }

@@ -4,6 +4,8 @@ pragma solidity ^0.8.21;
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IRootERC20Bridge {
+    function childBridgeAdaptor() external view returns (string memory);
+
     /**
      * @notice Initiate sending a mapToken message to the child chain.
      * @notice This is done when a token hasn't been mapped before.

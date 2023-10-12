@@ -8,6 +8,7 @@ import {IChildAxelarBridgeAdaptorErrors} from "../interfaces/child/IChildAxelarB
 contract ChildAxelarBridgeAdaptor is AxelarExecutable, IChildAxelarBridgeAdaptorErrors {
     /// @notice Address of bridge to relay messages to.
     IChildERC20Bridge public immutable CHILD_BRIDGE;
+    string public rootBridgeAdaptor;
 
     constructor(address _gateway, address _childBridge) AxelarExecutable(_gateway) {
         if (_childBridge == address(0)) {
@@ -15,6 +16,16 @@ contract ChildAxelarBridgeAdaptor is AxelarExecutable, IChildAxelarBridgeAdaptor
         }
 
         CHILD_BRIDGE = IChildERC20Bridge(_childBridge);
+    }
+
+    // TODO tests for this
+    // TODO does this need to be permissioned?
+    /**
+     * @notice Sets the root bridge adaptor address.
+     * @dev Always sets it to whatever the rootERC20BridgeAdaptor of the bridge contract is.
+     */
+    function setRootBridgeAdaptor() external {
+        rootBridgeAdaptor = CHILD_BRIDGE.rootERC20BridgeAdaptor();
     }
 
     /**

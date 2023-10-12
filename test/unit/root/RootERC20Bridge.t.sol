@@ -39,7 +39,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         mockAxelarAdaptor = new MockAdaptor();
 
         // The specific ERC20 token template does not matter for these unit tests
-        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, address(token), IMX_TOKEN);
+        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN);
     }
 
     /**
@@ -47,44 +47,50 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      */
 
     function test_InitializeBridge() public {
-        assertEq(address(rootBridge.bridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
+        assertEq(address(rootBridge.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
         assertEq(rootBridge.childERC20Bridge(), CHILD_BRIDGE, "childERC20Bridge not set");
         assertEq(rootBridge.childTokenTemplate(), address(token), "childTokenTemplate not set");
     }
 
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, address(token), IMX_TOKEN);
+        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN);
     }
 
-    function test_RevertIf_InitializeWithAZeroAddressAdapter() public {
+    function test_RevertIf_InitializeWithAZeroAddressRootAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(address(0), address(1), address(1), address(1));
     }
 
-    function test_RevertIf_InitializeWithAZeroAddressChild() public {
+    function test_RevertIf_InitializeWithAZeroAddressChildBridge() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(0), address(1), address(1));
+        bridge.initialize(address(1), address(0), address(1), address(1), address(1));
     }
 
-    function test_RevertIf_InitializeWithAZeroAddressChildTemplate() public {
+    function test_RevertIf_InitializeWithAZeroAddressChildAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(0), address(1));
+        bridge.initialize(address(1), address(1), address(0), address(1), address(1));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressTokenTemplate() public {
+        RootERC20Bridge bridge = new RootERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(1), address(1), address(1), address(0), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(1), address(0));
+        bridge.initialize(address(1), address(1), address(1), address(1), address(0));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(0), address(0), address(0));
+        bridge.initialize(address(0), address(0), address(0), address(0), address(0));
     }
 
     /**
@@ -163,23 +169,23 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.mapToken{value: 300}(IERC20Metadata(IMX_TOKEN));
     }
 
-    function test_updateBridgeAdaptor() public {
+    function test_updateRootBridgeAdaptor() public {
         address newAdaptorAddress = address(0x11111);
 
-        assertEq(address(rootBridge.bridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
-        rootBridge.updateBridgeAdaptor(newAdaptorAddress);
-        assertEq(address(rootBridge.bridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
+        assertEq(address(rootBridge.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
+        rootBridge.updateRootBridgeAdaptor(newAdaptorAddress);
+        assertEq(address(rootBridge.rootBridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
     }
 
-    function test_RevertIf_updateBridgeAdaptorCalledByNonOwner() public {
+    function test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner() public {
         vm.prank(address(0xf00f00));
         vm.expectRevert("Ownable: caller is not the owner");
-        rootBridge.updateBridgeAdaptor(address(0x11111));
+        rootBridge.updateRootBridgeAdaptor(address(0x11111));
     }
 
-    function test_RevertIf_updateBridgeAdaptorCalledWithZeroAddress() public {
+    function test_RevertIf_updateRootBridgeAdaptorCalledWithZeroAddress() public {
         vm.expectRevert(ZeroAddress.selector);
-        rootBridge.updateBridgeAdaptor(address(0));
+        rootBridge.updateRootBridgeAdaptor(address(0));
     }
 
     /**
