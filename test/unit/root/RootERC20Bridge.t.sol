@@ -20,6 +20,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
+    address constant IMX_TOKEN = address(99);
 
     ERC20PresetMinterPauser public token;
     RootERC20Bridge public rootBridge;
@@ -29,6 +30,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function setUp() public {
         token = new ERC20PresetMinterPauser("Test", "TST");
+        deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), IMX_TOKEN);
 
         rootBridge = new RootERC20Bridge();
         mockAxelarGateway = new MockAxelarGateway();
@@ -37,7 +39,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         mockAxelarAdaptor = new MockAdaptor();
 
         // The specific ERC20 token template does not matter for these unit tests
-        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token));
+        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN);
     }
 
     /**
@@ -52,14 +54,43 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token));
+        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN);
     }
 
-    // TODO this test should be split into different address(0) tests instead of just one with all 0s
-    function test_RevertIf_InitializeWithAZeroAddress() public {
+    function test_RevertIf_InitializeWithAZeroAddressRootAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(0), address(0), address(0));
+        bridge.initialize(address(0), address(1), address(1), address(1), address(1));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressChildBridge() public {
+        RootERC20Bridge bridge = new RootERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(1), address(0), address(1), address(1), address(1));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressChildAdapter() public {
+        RootERC20Bridge bridge = new RootERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(1), address(1), address(0), address(1), address(1));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressTokenTemplate() public {
+        RootERC20Bridge bridge = new RootERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(1), address(1), address(1), address(0), address(1));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
+        RootERC20Bridge bridge = new RootERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(1), address(1), address(1), address(1), address(0));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressAll() public {
+        RootERC20Bridge bridge = new RootERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(0), address(0), address(0), address(0), address(0));
     }
 
     /**
@@ -133,6 +164,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.mapToken{value: 300}(token);
     }
 
+    function test_RevertIf_mapTokenCalledWithIMXAddress() public {
+        vm.expectRevert(CantMapIMX.selector);
+        rootBridge.mapToken{value: 300}(IERC20Metadata(IMX_TOKEN));
+    }
+
     function test_updateRootBridgeAdaptor() public {
         address newAdaptorAddress = address(0x11111);
 
@@ -158,7 +194,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_depositCallsSendMessage() public {
         uint256 amount = 100;
-        (, bytes memory predictedPayload) = setupDeposit(token, rootBridge, 0, amount);
+        (, bytes memory predictedPayload) = setupDeposit(token, rootBridge, 0, amount, true);
 
         vm.expectCall(
             address(mockAxelarAdaptor),
@@ -171,17 +207,27 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_depositEmitsERC20DepositEvent() public {
         uint256 amount = 100;
-        (address childToken,) = setupDeposit(token, rootBridge, 0, amount);
+        (address childToken,) = setupDeposit(token, rootBridge, 0, amount, true);
 
         vm.expectEmit();
         emit ERC20Deposit(address(token), childToken, address(this), address(this), amount);
         rootBridge.deposit(token, amount);
     }
 
+    function test_depositIMXEmitsIMXDepositEvent() public {
+        uint256 amount = 100;
+
+        setupDeposit(ERC20PresetMinterPauser(IMX_TOKEN), rootBridge, 0, amount, false);
+
+        vm.expectEmit();
+        emit IMXDeposit(IMX_TOKEN, address(this), address(this), amount);
+        rootBridge.deposit(IERC20Metadata(IMX_TOKEN), amount);
+    }
+
     function test_depositTransfersTokens() public {
         uint256 amount = 100;
 
-        setupDeposit(token, rootBridge, 0, amount);
+        setupDeposit(token, rootBridge, 0, amount, true);
 
         uint256 thisPreBal = token.balanceOf(address(this));
         uint256 bridgePreBal = token.balanceOf(address(rootBridge));
@@ -196,7 +242,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_depositTransfersNativeAsset() public {
         uint256 gasPrice = 300;
         uint256 amount = 100;
-        setupDeposit(token, rootBridge, 0, amount);
+        setupDeposit(token, rootBridge, 0, amount, true);
 
         uint256 thisNativePreBal = address(this).balance;
         uint256 adaptorNativePreBal = address(mockAxelarAdaptor).balance;
@@ -211,7 +257,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIf_depositCalledWithZeroAddress() public {
         uint256 amount = 100;
-        setupDeposit(token, rootBridge, 0, amount);
+        setupDeposit(token, rootBridge, 0, amount, true);
 
         // Will fail when it tries to call balanceOf
         vm.expectRevert();
@@ -220,7 +266,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIf_depositCalledWithUnmappedToken() public {
         uint256 amount = 100;
-        setupDeposit(token, rootBridge, 0, amount);
+        setupDeposit(token, rootBridge, 0, amount, true);
 
         ERC20PresetMinterPauser newToken = new ERC20PresetMinterPauser("Test", "TST");
 
@@ -231,7 +277,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     // We want to ensure that messages don't get sent when they are not supposed to
     function test_RevertIf_depositCalledWhenTokenApprovalNotProvided() public {
         uint256 amount = 100;
-        setupDeposit(token, rootBridge, 0, amount);
+        setupDeposit(token, rootBridge, 0, amount, true);
 
         vm.expectRevert();
         rootBridge.deposit(token, amount * 2);
@@ -245,7 +291,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         uint256 amount = 100;
         address receiver = address(12345);
 
-        (, bytes memory predictedPayload) = setupDepositTo(token, rootBridge, 0, amount, receiver);
+        (, bytes memory predictedPayload) = setupDepositTo(token, rootBridge, 0, amount, receiver, true);
 
         vm.expectCall(
             address(mockAxelarAdaptor),
@@ -260,18 +306,30 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         uint256 amount = 100;
         address receiver = address(12345);
 
-        (address childToken,) = setupDepositTo(token, rootBridge, 0, amount, receiver);
+        (address childToken,) = setupDepositTo(token, rootBridge, 0, amount, receiver, true);
 
         vm.expectEmit();
         emit ERC20Deposit(address(token), childToken, address(this), receiver, amount);
         rootBridge.depositTo(token, receiver, amount);
     }
 
+    function test_depositToIMXEmitsIMXDepositEvent() public {
+        uint256 amount = 100;
+
+        address receiver = address(12345);
+
+        setupDepositTo(ERC20PresetMinterPauser(IMX_TOKEN), rootBridge, 0, amount, receiver, false);
+
+        vm.expectEmit();
+        emit IMXDeposit(IMX_TOKEN, address(this), receiver, amount);
+        rootBridge.depositTo(IERC20Metadata(IMX_TOKEN), receiver, amount);
+    }
+
     function test_depositToTransfersTokens() public {
         uint256 amount = 100;
         address receiver = address(12345);
 
-        setupDepositTo(token, rootBridge, 0, amount, receiver);
+        setupDepositTo(token, rootBridge, 0, amount, receiver, true);
 
         uint256 thisPreBal = token.balanceOf(address(this));
         uint256 bridgePreBal = token.balanceOf(address(rootBridge));
@@ -288,7 +346,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         uint256 amount = 100;
         address receiver = address(12345);
 
-        setupDepositTo(token, rootBridge, gasPrice, amount, receiver);
+        setupDepositTo(token, rootBridge, gasPrice, amount, receiver, true);
 
         uint256 thisNativePreBal = address(this).balance;
         uint256 adaptorNativePreBal = address(mockAxelarAdaptor).balance;
@@ -305,7 +363,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_RevertIf_depositToCalledWhenTokenApprovalNotProvided() public {
         uint256 amount = 100;
         address receiver = address(12345);
-        setupDepositTo(token, rootBridge, 0, amount, receiver);
+        setupDepositTo(token, rootBridge, 0, amount, receiver, true);
 
         vm.expectRevert();
         rootBridge.depositTo(token, receiver, amount * 2);
@@ -315,7 +373,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         uint256 amount = 100;
         address receiver = address(12345);
 
-        setupDepositTo(token, rootBridge, 0, amount, receiver);
+        setupDepositTo(token, rootBridge, 0, amount, receiver, true);
 
         // Will fail when it tries to call balanceOf
         vm.expectRevert();
@@ -326,7 +384,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         uint256 amount = 100;
         address receiver = address(12345);
 
-        setupDepositTo(token, rootBridge, 0, amount, receiver);
+        setupDepositTo(token, rootBridge, 0, amount, receiver, true);
 
         ERC20PresetMinterPauser newToken = new ERC20PresetMinterPauser("Test", "TST");
 

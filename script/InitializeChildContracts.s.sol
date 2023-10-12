@@ -18,6 +18,7 @@ contract InitializeChildContracts is Script {
         address rootERC20BridgeAdaptor = vm.envAddress("ROOT_BRIDGE_ADAPTOR");
         string memory childRpcUrl = vm.envString("CHILD_RPC_URL");
         string memory rootChainName = vm.envString("ROOT_CHAIN_NAME");
+        address rootIMXToken = vm.envAddress("ROOT_IMX_ADDRESS");
 
         /**
          * INITIALIZE CHILD CONTRACTS
@@ -29,7 +30,8 @@ contract InitializeChildContracts is Script {
             address(childAxelarBridgeAdaptor), 
             Strings.toHexString(rootERC20BridgeAdaptor), 
             childTokenTemplate,
-            rootChainName
+            rootChainName,
+            rootIMXToken
         );
 
         childAxelarBridgeAdaptor.setRootBridgeAdaptor();

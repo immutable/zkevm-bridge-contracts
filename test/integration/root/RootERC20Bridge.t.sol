@@ -16,6 +16,8 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+    address constant IMX_TOKEN_ADDRESS = address(9);
+
 
     ERC20PresetMinterPauser public token;
     RootERC20Bridge public rootBridge;
@@ -25,7 +27,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
     function setUp() public {
         (token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) =
-            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME);
+            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS);
     }
 
     /**
@@ -97,7 +99,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         uint256 tokenAmount = 300;
         uint256 gasPrice = 100;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
-        (address childToken, bytes memory predictedPayload) = setupDeposit(token, rootBridge, gasPrice, tokenAmount);
+        (address childToken, bytes memory predictedPayload) = setupDeposit(token, rootBridge, gasPrice, tokenAmount, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
@@ -154,7 +156,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         address recipient = address(9876);
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
         (address childToken, bytes memory predictedPayload) =
-            setupDepositTo(token, rootBridge, gasPrice, tokenAmount, recipient);
+            setupDepositTo(token, rootBridge, gasPrice, tokenAmount, recipient, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);

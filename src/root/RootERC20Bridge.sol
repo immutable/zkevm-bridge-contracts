@@ -43,28 +43,37 @@ contract RootERC20Bridge is
     address public childTokenTemplate;
     mapping(address => address) public rootTokenToChildToken;
 
+    address public rootIMXToken;
+
     /**
      * @notice Initilization function for RootERC20Bridge.
      * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
      * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
+     * @param newRootIMXToken Address of ECR20 IMX on the root chain.
      * @dev Can only be called once.
      */
     function initialize(
         address newRootBridgeAdaptor,
         address newChildERC20Bridge,
         address newChildBridgeAdaptor,
-        address newChildTokenTemplate
-    ) public initializer {
-        if (
-            newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
-                || newChildBridgeAdaptor == address(0) || newChildTokenTemplate == address(0)
-        ) {
+        address newChildTokenTemplate, 
+        address newRootIMXToken)
+        public
+        initializer
+    {
+        if (newRootBridgeAdaptor == address(0) 
+        || newChildERC20Bridge == address(0) 
+        || newChildTokenTemplate == address(0)
+        || newChildBridgeAdaptor == address(0) 
+        || newRootIMXToken == address(0))
+        {
             revert ZeroAddress();
         }
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
+        rootIMXToken = newRootIMXToken;
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
         childBridgeAdaptor = Strings.toHexString(newChildBridgeAdaptor);
     }
@@ -108,6 +117,9 @@ contract RootERC20Bridge is
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
+        if (address(rootToken) == rootIMXToken) {
+            revert CantMapIMX();
+        }
         if (rootTokenToChildToken[address(rootToken)] != address(0)) {
             revert AlreadyMapped();
         }
@@ -133,7 +145,7 @@ contract RootERC20Bridge is
             revert ZeroAddress();
         }
 
-        address childToken = rootTokenToChildToken[address(rootToken)];
+        address childToken;
 
         // The native token does not need to be mapped since it should have been mapped on initialization
         // The native token also cannot be transferred since it was received in the payable function call
@@ -141,10 +153,15 @@ contract RootERC20Bridge is
         //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         //      Discuss this, and add this decision to the design doc.
         // TODO NATIVE TOKEN BRIDGING NOT YET SUPPORTED
-        if (address(rootToken) != NATIVE_TOKEN) {
-            if (childToken == address(0)) {
-                revert NotMapped();
-            }
+        if (address(rootToken) != NATIVE_TOKEN) {  
+
+            if (address(rootToken) != rootIMXToken) {
+                childToken = rootTokenToChildToken[address(rootToken)];
+                if (childToken == address(0)) {
+                    revert NotMapped();
+                }
+            }        
+            
             // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
         }
@@ -152,7 +169,15 @@ contract RootERC20Bridge is
         bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
-        emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
+
+        if (address(rootToken) == NATIVE_TOKEN) {
+            // not used yet
+            emit NativeDeposit(address(rootToken), childToken, msg.sender, receiver, amount);
+        } else if (address(rootToken) == rootIMXToken) {
+            emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
+        } else {
+            emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
+        }
     }
 
     function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {

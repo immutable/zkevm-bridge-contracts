@@ -44,6 +44,7 @@ contract ChildERC20Bridge is
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    address public imxToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -51,15 +52,19 @@ contract ChildERC20Bridge is
      * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootChain A stringified representation of the chain that this bridge is connected to. Used for validation.
+     * @param newIMXToken Address of ECR20 IMX on the root chain.
      * @dev Can only be called once.
      */
     function initialize(
         address newBridgeAdaptor,
         string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
-        string memory newRootChain
+        string memory newRootChain,
+        address newIMXToken
     ) public initializer {
-        if (newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0)) {
+        if (newBridgeAdaptor == address(0) 
+        || newChildTokenTemplate == address(0)
+        || newIMXToken == address(0)) {
             revert ZeroAddress();
         }
 
@@ -75,6 +80,7 @@ contract ChildERC20Bridge is
         childTokenTemplate = newChildTokenTemplate;
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
         rootChain = newRootChain;
+        imxToken = newIMXToken;
     }
 
     /**
@@ -116,6 +122,10 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
+        if (address(rootToken) == imxToken) {
+            revert CantMapIMX();
+        }
+
         if (rootTokenToChildToken[rootToken] != address(0)) {
             revert AlreadyMapped();
         }
@@ -137,21 +147,25 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
-        if (rootTokenToChildToken[rootToken] == address(0)) {
-            revert NotMapped();
-        }
+        address childToken;
 
-        address childToken = rootTokenToChildToken[rootToken];
+        if (address(rootToken) != imxToken) {
+            childToken = rootTokenToChildToken[address(rootToken)];
+            if (childToken == address(0)) {
+                revert NotMapped();
+            }
+            if (address(childToken).code.length == 0) {
+                revert EmptyTokenContract();
+            }
 
-        if (address(childToken).code.length == 0) {
-            revert EmptyTokenContract();
-        }
-
-        if (!IChildERC20(childToken).mint(receiver, amount)) {
-            revert MintFailed();
-        }
-
-        emit ERC20Deposit(rootToken, childToken, sender, receiver, amount);
+            if (!IChildERC20(childToken).mint(receiver, amount)) {
+                revert MintFailed();
+            }
+            emit ERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
+        } else {
+            Address.sendValue(payable(receiver), amount);
+            emit IMXDeposit(address(rootToken), sender, receiver, amount);
+        }                
     }
 
     function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {

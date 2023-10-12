@@ -18,6 +18,7 @@ import {Utils} from "../../utils.t.sol";
 contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
     string public ROOT_CHAIN_NAME = "ROOT_CHAIN";
+    address constant IMX_TOKEN = address(9);
 
     ChildERC20Bridge public childERC20Bridge;
     ChildERC20 public childERC20;
@@ -34,7 +35,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(childERC20Bridge));
 
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), ROOT_ADAPTOR_ADDRESS, address(childERC20), ROOT_CHAIN_NAME
+            address(childAxelarBridgeAdaptor), ROOT_ADAPTOR_ADDRESS, address(childERC20), ROOT_CHAIN_NAME, IMX_TOKEN
         );
     }
 
