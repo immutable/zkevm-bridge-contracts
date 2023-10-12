@@ -55,8 +55,8 @@ contract RootERC20Bridge is
      * @dev Can only be called once.
      */
     function initialize(
-        address newRootBridgeAdaptor, 
-        address newChildERC20Bridge, 
+        address newRootBridgeAdaptor,
+        address newChildERC20Bridge,
         address newChildBridgeAdaptor,
         address newChildTokenTemplate, 
         address newRootIMXToken)
