@@ -58,7 +58,7 @@ contract WIMXTest is Test {
         vm.prank(user);
         // Deposit should revert because user has only 1 IMX
         vm.expectRevert();
-        (bool success, ) = address(wIMX).call{value: imxAmt + 1}("");
+        (bool success,) = address(wIMX).call{value: imxAmt + 1}("");
         require(success);
 
         // After deposit, user should have 0 wIMX
@@ -101,7 +101,7 @@ contract WIMXTest is Test {
         vm.prank(user);
         vm.expectEmit(address(wIMX));
         emit Deposit(user, depositAmt);
-        (bool success, ) = address(wIMX).call{value: depositAmt}("");
+        (bool success,) = address(wIMX).call{value: depositAmt}("");
         require(success);
 
         // After deposit, user should have 0.1 wIMX

@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.21;
 
+import {IWIMX} from "../interfaces/child/IWIMX.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+
 /**
  * @notice WIMX is a wrapped IMX contract that allows users to wrap their native IMX.
  * @dev This contract is adapted from the official Wrapped ETH contract.
  */
-contract WIMX {
+contract WIMX is IWIMX {
     string public name = "Wrapped IMX";
     string public symbol = "WIMX";
     uint8 public decimals = 18;
-
-    event Approval(address indexed src, address indexed guy, uint256 wad);
-    event Transfer(address indexed src, address indexed dst, uint256 wad);
-    event Deposit(address indexed dst, uint256 wad);
-    event Withdrawal(address indexed src, uint256 wad);
 
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -41,7 +39,7 @@ contract WIMX {
         require(balanceOf[msg.sender] >= wad, "Wrapped IMX: Insufficient balance");
         balanceOf[msg.sender] -= wad;
 
-        payable(msg.sender).transfer(wad);
+        Address.sendValue(payable(msg.sender), wad);
         emit Withdrawal(msg.sender, wad);
     }
 
