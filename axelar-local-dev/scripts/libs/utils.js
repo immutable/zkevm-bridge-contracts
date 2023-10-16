@@ -25,6 +25,8 @@ function getEVMChains(env, chains = []) {
 
     const selectedChains = chains.length > 0 ? chains : getDefaultChains(env);
 
+    console.log('selectedChains', selectedChains)
+
     if (env === 'local') {
         return fs
             .readJsonSync(path.join(__dirname, '../../chain-config/local.json'))

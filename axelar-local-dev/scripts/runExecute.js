@@ -15,7 +15,7 @@ const example = require(getExamplePath(exampleName));
 // Get the wallet.
 const wallet = getWallet();
 
-console.log('execute');
+console.log('run execute');
 
 
 // This will execute an example script. The example script must have an `execute` function.

@@ -19,9 +19,14 @@
         "function executeWithToken(bytes32 commandId, string sourceChain, string sourceAddress, bytes payload, string tokenSymbol, uint256 amount)",
         "function gasService() view returns (address)",
         "function gateway() view returns (address)",
-        "function sendToMany(string destinationChain, string destinationAddress, address[] destinationAddresses, string symbol, uint256 amount) payable"
+        "function setRemoteValue(string destinationChain, string destinationAddress, string value_) payable",
+        "function sourceAddress() view returns (string)",
+        "function sourceChain() view returns (string)",
+        "function value() view returns (string)",
+        "function mapToken(address rootToken) external payable returns (address)",
+        "function deposit(address rootToken, uint256 amount) external payable"
       ],
-      "address": "0x05504e9c3644949e997Ba150785938d2B9393c07"
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
     },
     "usdc": {
       "abi": [
@@ -39,10 +44,10 @@
     }
   },
   {
-    "name": "Immutable zkEVM",
+    "name": "Polygon",
     "chainId": 2501,
-    "gateway": "0x1B6e7Bbe69aC158427B20B5E1174f770D629FC52",
-    "gasService": "0x9A0f8201dd447d5155AD7bdC2EA3fF8F0bb05616",
+    "gateway": "0xc7B788E88BAaB770A6d4936cdcCcd5250E1bbAd8",
+    "gasService": "0xC573c722e21eD7fadD38A8f189818433e01Ae466",
     "constAddressDeployer": "0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a",
     "create3Deployer": "0x783E7717fD4592814614aFC47ee92568a495Ce0B",
     "tokens": {
@@ -58,9 +63,13 @@
         "function executeWithToken(bytes32 commandId, string sourceChain, string sourceAddress, bytes payload, string tokenSymbol, uint256 amount)",
         "function gasService() view returns (address)",
         "function gateway() view returns (address)",
-        "function sendToMany(string destinationChain, string destinationAddress, address[] destinationAddresses, string symbol, uint256 amount) payable"
+        "function setRemoteValue(string destinationChain, string destinationAddress, string value_) payable",
+        "function sourceAddress() view returns (string)",
+        "function sourceChain() view returns (string)",
+        "function value() view returns (string)",
+        "function rootTokenToChildToken(address rootToken) external view returns (address)"
       ],
-      "address": "0x05504e9c3644949e997Ba150785938d2B9393c07"
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
     },
     "usdc": {
       "abi": [
@@ -74,13 +83,7 @@
         "function transfer(address recipient, uint256 amount) returns (bool)",
         "function transferFrom(address sender, address recipient, uint256 amount) returns (bool)"
       ],
-      "address": "0x5d8C7D94B16a1Ba4865acC6bc039e2877925dC4F"
-    },
-    "contract2": {
-      "abi": [
-        "function rootTokenToChildToken(address rootToken) external view returns (address)"
-      ],
-      "address": "0x3238331E3F32DC1376Cc6aB399dA3e41592ea4B0"
+      "address": "0xC1a50e3611C2c500562803945C0a746c9cFb1939"
     }
   }
 ]

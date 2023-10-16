@@ -22,16 +22,18 @@ async function execute(chains, wallet, options) {
     const message = args[2] || `Hello ${destination.name} from ${source.name}, it is ${new Date().toLocaleTimeString()}.`;
 
     async function logValue() {
-        console.log(destination.contract2.address)
+        //console.log(destination.contract2)
         console.log(destination.name)
-        console.log(`value at ${destination.name} is "${await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")}"`);
-        console.log(await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4"));
+        console.log(`value at ${destination.name} is "${await destination.contract.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")}"`);
+        //console.log(await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4"));
     }
 
     console.log('--- Initially ---');
     await logValue();
 
     const fee = await calculateBridgeFee(source, destination);
+
+    console.log('fee',fee);
 
     // const tx = await source.contract.setRemoteValue(destination.name, destination.contract.address, message, {
         // value: fee,
@@ -45,9 +47,10 @@ async function execute(chains, wallet, options) {
 
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    // while ((await destination.contract.value()) !== message) {
+    while ((await destination.contract.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")) == "0x0000000000000000000000000000000000000000") {
+        console.log('Waiting...');
         await sleep(3000);
-    // }
+    }
 
     console.log('--- After ---');
     await logValue();
