@@ -10,4 +10,4 @@ jobs:
       - uses: crytic/slither-action@v0.3.0
         with:
           fail-on: high
-          filter-paths: lib,test
+          slither-args: --filter-paths "./lib|./test"
