@@ -96,18 +96,18 @@ contract RootERC20Bridge is
         return _mapToken(rootToken);
     }
 
-    function depositETH() external payable { //override removed?
+    function depositETH(uint256 gasAmount) external payable { //override removed?
         _depositETH(msg.sender, msg.value);
     }
 
-    function depositToETH(address receiver) external payable { //override removed?
+    function depositToETH(address receiver, uint256 gasAmount) external payable { //override removed?
         _depositETH(receiver, msg.value);
     }
 
-    function _depositETH(address receiver, uint256 amount) private {
+    function _depositETH(address receiver, uint256 amount, uint256 gasAmount) private {
         console2.log('start balance');
         console2.logUint(address(this).balance);
-        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, amount);
+        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, amount, gasAmount);
         //@TODO can we do an invariant check here?
         console2.log('end balance');
 
@@ -145,6 +145,9 @@ contract RootERC20Bridge is
     }
 
     function _mapToken(IERC20Metadata rootToken) private returns (address) {
+        if(msg.value == 0) {
+            revert NoGas();
+        }
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -173,7 +176,10 @@ contract RootERC20Bridge is
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         console2.log("_deposit ---------------");
-        
+        if(msg.value == 0) {
+            revert NoGas();
+        }
+
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -210,8 +216,16 @@ contract RootERC20Bridge is
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
-        
+
         console2.logBytes(payload);
+
+        gasService.payNativeGasForContractCall{ value: msg.value }(
+            address(this),
+            destinationChain,
+            destinationAddress,
+            payload,
+            msg.sender
+        );
 
         //@TODO need to minus the bridge amount from the gas otherwise we're sending the whole amount to axelar
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);

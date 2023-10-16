@@ -61,6 +61,8 @@ interface IRootERC20BridgeEvents {
 }
 
 interface IRootERC20BridgeErrors {
+    /// @notice Error when no gas payment has been received.
+    error NoGas();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
     /// @notice Error when a token is already mapped.
