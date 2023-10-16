@@ -1,0 +1,9 @@
+{
+  "name": "@axelar-network/axelar-cgp-aptos",
+  "version": "1.0.5",
+  "description": "",
+  "files": [
+    "aptos/modules/axelar"
+  ],
+  "license": "ISC"
+}

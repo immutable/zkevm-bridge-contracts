@@ -1,0 +1,48 @@
+{
+	"name": "standard-http-error",
+	"version": "2.0.1",
+	"description": "Standard HTTP error class. Proper serialization, no bloat. Extensible.",
+	"keywords": [
+		"error",
+		"errors",
+		"http",
+    "exception"
+	],
+	"homepage": "https://github.com/moll/js-standard-http-error",
+	"bugs": "https://github.com/moll/js-standard-http-error/issues",
+
+	"author": {
+		"name": "Andri Möll",
+		"email": "andri@dot.ee",
+		"url": "http://themoll.com"
+	},
+
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/moll/js-standard-http-error.git"
+	},
+
+	"licenses": [{
+		"type": "LAGPL",
+		"url": "https://github.com/moll/js-standard-http-error/blob/master/LICENSE"
+	}],
+
+	"main": "index.js",
+	"scripts": {"test": "make test"},
+
+	"browser": {
+		"./codes.js": "./codes.json"
+	},
+
+	"dependencies": {
+		"standard-error": ">= 1.1.0 < 2"
+	},
+
+	"devDependencies": {
+		"mocha": ">= 2.1.0 < 3",
+		"must": ">= 0.12.0 < 0.13",
+		"oolong": ">= 1.7.0 < 2",
+		"http-codes": ">= 1.0.0 < 2",
+		"semver": ">= 5 < 6"
+	}
+}

@@ -1,0 +1,58 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ITimeLock",
+  "sourceName": "contracts/interfaces/ITimeLock.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "InvalidTimeLockHash",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "TimeLockAlreadyScheduled",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "TimeLockNotReady",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "hash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getTimeLock",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minimumTimeLockDelay",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

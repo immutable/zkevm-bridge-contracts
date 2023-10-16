@@ -1,0 +1,66 @@
+{
+  "name": "@axelar-network/axelar-cgp-solidity",
+  "version": "6.1.2",
+  "description": "EVM Smart Contracts for Axelar Network",
+  "main": "index.js",
+  "scripts": {
+    "build": "hardhat clean && hardhat compile && npm run copy:interfaces",
+    "copy:interfaces": "rm -rf interfaces/ && mkdir interfaces && cp artifacts/contracts/interfaces/*/*.json interfaces/ && rm interfaces/*.dbg.json",
+    "clean:artifacts": "rm -rf artifacts/build-info artifacts/build-info artifacts/*/test artifacts/contracts/*/*.dbg.json artifacts/contracts/*/*/*.dbg.json",
+    "test": "hardhat test",
+    "test-evm-versions": "bash test-evm-versions.bash",
+    "lint": "solhint 'contracts/**/*.sol' && eslint 'test/**/*.js'",
+    "prettier": "prettier --write 'contracts/**/*.sol' 'test/**/*.js' 'scripts/**/*.js' '*.js'",
+    "flatten": "sh scripts/flatten-contracts.sh",
+    "coverage": "cross-env COVERAGE=true hardhat coverage",
+    "storage-layout": "cross-env STORAGE_LAYOUT=true npm run build && cross-env STORAGE_LAYOUT=true hardhat check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axelarnetwork/axelar-cgp-solidity.git"
+  },
+  "keywords": [
+    "ethereum",
+    "axelar"
+  ],
+  "author": "axelar-network",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/axelarnetwork/axelar-cgp-solidity/issues"
+  },
+  "homepage": "https://github.com/axelarnetwork/axelar-cgp-solidity#readme",
+  "dependencies": {
+    "@axelar-network/axelar-gmp-sdk-solidity": "^5.3.3"
+  },
+  "devDependencies": {
+    "@axelar-network/axelar-chains-config": "^0.1.2",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "chai": "^4.3.7",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.1",
+    "eslint": "^8.36.0",
+    "eslint-config-richardpringle": "^2.0.0",
+    "ethers": "^5.7.2",
+    "fs-extra": "^11.1.1",
+    "hardhat": "^2.17.2",
+    "hardhat-storage-layout": "^0.1.7",
+    "lodash": "^4.17.21",
+    "mocha": "^10.2.0",
+    "prettier": "^2.8.7",
+    "prettier-plugin-solidity": "1.0.0-beta.19",
+    "readline-sync": "^1.4.10",
+    "solhint": "^3.4.1",
+    "solidity-coverage": "^0.8.4"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "files": [
+    "artifacts",
+    "contracts",
+    "interfaces",
+    "scripts",
+    "README.md",
+    "hardhat.config.js"
+  ]
+}

@@ -82,6 +82,7 @@ ROOT_GAS_SERVICE_ADDRESS=
 CHILD_GAS_SERVICE_ADDRESS=
 ROOT_CHAIN_NAME="ROOT"
 CHILD_CHAIN_NAME="CHILD"
+ROOT_IMX_ADDRESS=
 ```
 where `{ROOT,CHILD}_{GATEWAY,GAS_SERVICE}_ADDRESS` refers to the gateway and gas service addresses used by Axelar.
 
@@ -99,3 +100,22 @@ When deploying these contracts on remote networks (i.e. testnets or mainnets), t
 - in step 2:
     - The RPC URLs and Chain IDs should be set for the targetted networks.
     - The private keys should be for addresses with which the contracts are to be deployed.
+
+
+### Axelar Local Bridge
+
+##### One-time setup
+
+1. install the dependencies
+`yarn install`
+
+2. compile the smart contracts
+`forge build`
+
+##### Start & setup the local blockchains
+
+Follow the instructions above to start up the local blockchains and configure the environment variables
+
+##### Deploy the contracts
+
+`./deploy.sh`

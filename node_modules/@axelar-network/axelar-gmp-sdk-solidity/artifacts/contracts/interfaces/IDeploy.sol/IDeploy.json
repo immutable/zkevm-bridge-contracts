@@ -1,0 +1,26 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IDeploy",
+  "sourceName": "contracts/interfaces/IDeploy.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "AlreadyDeployed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "DeployFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptyBytecode",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

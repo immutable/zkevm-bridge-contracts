@@ -1,0 +1,113 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "DepositServiceBase",
+  "sourceName": "contracts/deposit-service/DepositServiceBase.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "InvalidAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAmount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidStringLength",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidSymbol",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotRefundIssuer",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NothingDeposited",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "TokenApproveFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UnwrapFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WrapFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WrappedTokenNotSupported",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "gateway",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "wrappedSymbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "wrappedToken",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "wrappedTokenAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
