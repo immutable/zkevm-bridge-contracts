@@ -12,11 +12,13 @@ import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
 contract Utils is Test {
+
     function integrationSetup(
         address childBridge, 
         address childBridgeAdaptor, 
         string memory childBridgeName,
-        address imxTokenAddress)
+        address imxTokenAddress,
+        address ethTokenAddress)
         public
         returns (
             ERC20PresetMinterPauser token,
@@ -40,7 +42,7 @@ contract Utils is Test {
             address(axelarGasService)
         );
 
-        rootBridge.initialize(address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress);
+        rootBridge.initialize(address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress, ethTokenAddress);
         axelarAdaptor.setChildBridgeAdaptor();
     }
 
@@ -73,12 +75,24 @@ contract Utils is Test {
         address to,
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
+        console2.log("_setupDeposit ------");
+        console2.logBytes32(rootBridge.DEPOSIT_SIG());
+        console2.logAddress(address(token));
+        console2.logAddress(address(this));
+        console2.logAddress(to);
+        console2.logUint(tokenAmount);
         predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(token), address(this), to, tokenAmount);
+        console2.logBytes(predictedPayload);
         if (saveTokenMapping) {
             childToken = rootBridge.mapToken{value: gasPrice}(token);
         }
-        token.mint(address(this), tokenAmount);
-        token.approve(address(rootBridge), tokenAmount);
+        if (address(token) == address(0xeee)) {
+            vm.deal(to, tokenAmount);
+        } else {
+            token.mint(address(this), tokenAmount);
+            token.approve(address(rootBridge), tokenAmount);
+        }
+        
         return (childToken, predictedPayload);
     }
 

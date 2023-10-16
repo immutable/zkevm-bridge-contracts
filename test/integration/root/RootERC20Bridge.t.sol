@@ -16,7 +16,8 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
-    address constant IMX_TOKEN_ADDRESS = address(9);
+    address constant IMX_TOKEN_ADDRESS = address(99);
+    address constant ETH_TOKEN_ADDRESS = address(88);
 
 
     ERC20PresetMinterPauser public token;
@@ -27,7 +28,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
     function setUp() public {
         (token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) =
-            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS);
+            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, ETH_TOKEN_ADDRESS);
     }
 
     /**

@@ -11,6 +11,7 @@ import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarG
 import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
+import {console2} from "forge-std/Test.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
@@ -42,8 +43,10 @@ contract RootERC20Bridge is
     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
     address public childTokenTemplate;
     mapping(address => address) public rootTokenToChildToken;
-
+    /// @dev The address of the IMX ERC20 token on L1.
     address public rootIMXToken;
+    /// @dev The address of the ETH ERC20 token on L2.
+    address public childETHToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -52,6 +55,7 @@ contract RootERC20Bridge is
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootIMXToken Address of ECR20 IMX on the root chain.
+     * @param newChildETHToken Address of ECR20 ETH on the child chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -59,7 +63,8 @@ contract RootERC20Bridge is
         address newChildERC20Bridge,
         address newChildBridgeAdaptor,
         address newChildTokenTemplate, 
-        address newRootIMXToken)
+        address newRootIMXToken,
+        address newChildETHToken)
         public
         initializer
     {
@@ -67,13 +72,15 @@ contract RootERC20Bridge is
         || newChildERC20Bridge == address(0) 
         || newChildTokenTemplate == address(0)
         || newChildBridgeAdaptor == address(0) 
-        || newRootIMXToken == address(0))
+        || newRootIMXToken == address(0)
+        || newChildETHToken == address(0))
         {
             revert ZeroAddress();
         }
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
         rootIMXToken = newRootIMXToken;
+        childETHToken = newChildETHToken;
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
         childBridgeAdaptor = Strings.toHexString(newChildBridgeAdaptor);
     }
@@ -87,6 +94,30 @@ contract RootERC20Bridge is
      */
     function mapToken(IERC20Metadata rootToken) external payable override returns (address) {
         return _mapToken(rootToken);
+    }
+
+    function depositETH() external payable { //override removed?
+        _depositETH(msg.sender, msg.value);
+    }
+
+    function depositToETH(address receiver) external payable { //override removed?
+        _depositETH(receiver, msg.value);
+    }
+
+    function _depositETH(address receiver, uint256 amount) private {
+        console2.log('start balance');
+        console2.logUint(address(this).balance);
+        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, amount);
+        //@TODO can we do an invariant check here?
+        console2.log('end balance');
+
+        console2.logUint(address(this).balance);
+
+
+        // invariant check to ensure that the root native balance has increased by the amount deposited
+        // if (address(msg.sender).balance != expectedBalance) {
+        //     revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        // }
     }
 
     /**
@@ -141,6 +172,8 @@ contract RootERC20Bridge is
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        console2.log("_deposit ---------------");
+        
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -152,27 +185,40 @@ contract RootERC20Bridge is
         // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
         //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         //      Discuss this, and add this decision to the design doc.
-        // TODO NATIVE TOKEN BRIDGING NOT YET SUPPORTED
         if (address(rootToken) != NATIVE_TOKEN) {  
+
+        console2.log("!NATIVE_TOKEN");
+
 
             if (address(rootToken) != rootIMXToken) {
                 childToken = rootTokenToChildToken[address(rootToken)];
                 if (childToken == address(0)) {
                     revert NotMapped();
                 }
-            }        
+            }
             
             // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
         }
+
+        console2.logBytes32(DEPOSIT_SIG);
+        console2.logAddress(address(rootToken));
+        console2.logAddress(msg.sender);
+        console2.logAddress(address(receiver));
+        console2.logUint(amount);
+        
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
+        
+        console2.logBytes(payload);
+
+        //@TODO need to minus the bridge amount from the gas otherwise we're sending the whole amount to axelar
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
         if (address(rootToken) == NATIVE_TOKEN) {
-            // not used yet
-            emit NativeDeposit(address(rootToken), childToken, msg.sender, receiver, amount);
+            console2.log("emit NativeDeposit");
+            emit NativeDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
         } else if (address(rootToken) == rootIMXToken) {
             emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
         } else {
