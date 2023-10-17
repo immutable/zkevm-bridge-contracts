@@ -64,8 +64,6 @@ interface IRootERC20BridgeErrors {
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
     /// @notice Error when there is no gas payment received.
-    error NoGasReceived();
-     /// @notice Error when the amount is zero.
     error ZeroAmount();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();

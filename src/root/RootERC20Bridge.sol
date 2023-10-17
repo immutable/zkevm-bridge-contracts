@@ -109,22 +109,14 @@ contract RootERC20Bridge is
             revert InsufficientValue();
         }
 
-        if (amount == msg.value) {
-            revert NoGasReceived();
-        }
-        
-        console2.log('start balance');
-        console2.logUint(address(this).balance);
+        uint256 expectedBalance = address(this).balance - (msg.value - amount);
+    
         _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, amount);
-        //@TODO can we do an invariant check here?
-        console2.log('end balance');
-
-        console2.logUint(address(this).balance);
 
         // invariant check to ensure that the root native balance has increased by the amount deposited
-        // if (address(msg.sender).balance != expectedBalance) {
-        //     revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
-        // }
+        if (address(this).balance != expectedBalance) {
+            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        }
     }
 
     /**
@@ -142,9 +134,6 @@ contract RootERC20Bridge is
     }
 
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
-        if (msg.value == 0) {
-            revert NoGasReceived();
-        }
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
         _deposit(rootToken, receiver, amount);
         // invariant check to ensure that the root token balance has increased by the amount deposited
@@ -155,9 +144,6 @@ contract RootERC20Bridge is
     }
 
     function _mapToken(IERC20Metadata rootToken) private returns (address) {
-        if(msg.value == 0) {
-            revert NoGasReceived();
-        }
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -185,7 +171,6 @@ contract RootERC20Bridge is
     }
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
-        console2.log("_deposit ---------------");
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }

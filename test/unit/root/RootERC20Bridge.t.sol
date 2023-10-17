@@ -195,8 +195,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.updateRootBridgeAdaptor(address(0));
     }
 
-    // @TODO add tests for no gas received; mapToken, deposit, depositTo, depositETH, depositToETH
-
     /**
      * DEPOSIT ETH
      */
@@ -214,13 +212,60 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositETH{value: amount+depositFee}(amount);
     }
 
-    function test_depositEmitsNativeDepositEvent() public {
+    function test_depositETHEmitsNativeDepositEvent() public {
         uint256 amount = 1000;
-        (address childToken,) = setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
+        setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
 
         vm.expectEmit();
         emit NativeDeposit(NATIVE_TOKEN, CHILD_ETH_TOKEN, address(this), address(this), amount);
         rootBridge.depositETH{value: amount+depositFee}(amount);
+    }
+
+    function test_RevertIf_depositETHInsufficientValue() public {
+        uint256 amount = 1000;
+        setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
+
+        vm.expectRevert(InsufficientValue.selector);
+        rootBridge.depositETH{value: (amount/2)+depositFee}(amount);
+    }
+
+    /**
+     * ZERO AMOUNT
+     */
+
+    function test_RevertIf_depositETHAmountIsZero() public {
+        uint256 amount = 0;
+        setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
+
+        vm.expectRevert(ZeroAmount.selector);
+        rootBridge.depositETH{value: amount+depositFee}(amount);
+    }
+
+    function test_RevertIf_depositToETHAmountIsZero() public {
+        uint256 amount = 0;
+        address receiver = address(12345);
+
+        setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
+
+        vm.expectRevert(ZeroAmount.selector);
+        rootBridge.depositToETH{value: amount+depositFee}(receiver, amount);
+    }
+
+    function test_RevertIf_depositAmountIsZero() public {
+        uint256 amount = 0;
+        setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
+
+        vm.expectRevert(ZeroAmount.selector);
+        rootBridge.deposit{value: depositFee}(token, amount);
+    }
+
+    function test_RevertIf_depositToAmountIsZero() public {
+        uint256 amount = 0;
+        address receiver = address(12345);
+        setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
+
+        vm.expectRevert(ZeroAmount.selector);
+        rootBridge.depositTo{value: depositFee}(token, receiver, amount);
     }
 
     /**
