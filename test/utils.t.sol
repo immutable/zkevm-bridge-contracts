@@ -49,45 +49,41 @@ contract Utils is Test {
     function setupDeposit(
         ERC20PresetMinterPauser token,
         RootERC20Bridge rootBridge,
-        uint256 gasPrice,
+        uint256 mapTokenFee,
+        uint256 depositFee,
         uint256 tokenAmount,
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
-        return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, address(this), saveTokenMapping);
+        return _setupDeposit(token, rootBridge, mapTokenFee, depositFee, tokenAmount, address(this), saveTokenMapping);
     }
 
     function setupDepositTo(
         ERC20PresetMinterPauser token,
         RootERC20Bridge rootBridge,
-        uint256 gasPrice,
+        uint256 mapTokenFee,
+        uint256 depositFee,
         uint256 tokenAmount,
         address to,
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
-        return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, to, saveTokenMapping);
+        return _setupDeposit(token, rootBridge, mapTokenFee, depositFee, tokenAmount, to, saveTokenMapping);
     }
 
     function _setupDeposit(
         ERC20PresetMinterPauser token,
         RootERC20Bridge rootBridge,
-        uint256 gasPrice,
+        uint256 mapTokenFee,
+        uint256 depositFee,
         uint256 tokenAmount,
         address to,
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
-        console2.log("_setupDeposit ------");
-        console2.logBytes32(rootBridge.DEPOSIT_SIG());
-        console2.logAddress(address(token));
-        console2.logAddress(address(this));
-        console2.logAddress(to);
-        console2.logUint(tokenAmount);
         predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(token), address(this), to, tokenAmount);
-        console2.logBytes(predictedPayload);
         if (saveTokenMapping) {
-            childToken = rootBridge.mapToken{value: gasPrice}(token);
+            childToken = rootBridge.mapToken{value: mapTokenFee}(token);
         }
         if (address(token) == address(0xeee)) {
-            vm.deal(to, tokenAmount);
+            vm.deal(to, tokenAmount+depositFee);
         } else {
             token.mint(address(this), tokenAmount);
             token.approve(address(rootBridge), tokenAmount);

@@ -96,23 +96,30 @@ contract RootERC20Bridge is
         return _mapToken(rootToken);
     }
 
-    function depositETH(uint256 gasAmount) external payable { //override removed?
-        _depositETH(msg.sender, msg.value);
+    function depositETH(uint256 amount) external payable { //override removed?
+        _depositETH(msg.sender, amount);
     }
 
-    function depositToETH(address receiver, uint256 gasAmount) external payable { //override removed?
-        _depositETH(receiver, msg.value);
+    function depositToETH(address receiver, uint256 amount) external payable { //override removed?
+        _depositETH(receiver, amount);
     }
 
-    function _depositETH(address receiver, uint256 amount, uint256 gasAmount) private {
+    function _depositETH(address receiver, uint256 amount) private {
+        if (msg.value < amount) {
+            revert InsufficientValue();
+        }
+
+        if (amount == msg.value) {
+            revert NoGasReceived();
+        }
+        
         console2.log('start balance');
         console2.logUint(address(this).balance);
-        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, amount, gasAmount);
+        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, amount);
         //@TODO can we do an invariant check here?
         console2.log('end balance');
 
         console2.logUint(address(this).balance);
-
 
         // invariant check to ensure that the root native balance has increased by the amount deposited
         // if (address(msg.sender).balance != expectedBalance) {
@@ -135,6 +142,9 @@ contract RootERC20Bridge is
     }
 
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        if (msg.value == 0) {
+            revert NoGasReceived();
+        }
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
         _deposit(rootToken, receiver, amount);
         // invariant check to ensure that the root token balance has increased by the amount deposited
@@ -146,7 +156,7 @@ contract RootERC20Bridge is
 
     function _mapToken(IERC20Metadata rootToken) private returns (address) {
         if(msg.value == 0) {
-            revert NoGas();
+            revert NoGasReceived();
         }
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
@@ -176,15 +186,16 @@ contract RootERC20Bridge is
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         console2.log("_deposit ---------------");
-        if(msg.value == 0) {
-            revert NoGas();
-        }
-
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
 
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+
         address childToken;
+        uint256 feeAmount;
 
         // The native token does not need to be mapped since it should have been mapped on initialization
         // The native token also cannot be transferred since it was received in the payable function call
@@ -192,46 +203,26 @@ contract RootERC20Bridge is
         //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         //      Discuss this, and add this decision to the design doc.
         if (address(rootToken) != NATIVE_TOKEN) {  
-
-        console2.log("!NATIVE_TOKEN");
-
-
             if (address(rootToken) != rootIMXToken) {
                 childToken = rootTokenToChildToken[address(rootToken)];
                 if (childToken == address(0)) {
                     revert NotMapped();
                 }
             }
-            
             // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
+            feeAmount = msg.value;
+        } else {
+            feeAmount = msg.value - amount;
         }
-
-        console2.logBytes32(DEPOSIT_SIG);
-        console2.logAddress(address(rootToken));
-        console2.logAddress(msg.sender);
-        console2.logAddress(address(receiver));
-        console2.logUint(amount);
         
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
 
-        console2.logBytes(payload);
-
-        gasService.payNativeGasForContractCall{ value: msg.value }(
-            address(this),
-            destinationChain,
-            destinationAddress,
-            payload,
-            msg.sender
-        );
-
-        //@TODO need to minus the bridge amount from the gas otherwise we're sending the whole amount to axelar
-        rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
+        rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         if (address(rootToken) == NATIVE_TOKEN) {
-            console2.log("emit NativeDeposit");
             emit NativeDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
         } else if (address(rootToken) == rootIMXToken) {
             emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
