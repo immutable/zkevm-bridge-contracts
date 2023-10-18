@@ -53,8 +53,8 @@ contract RootERC20Bridge is
      * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
-     * @param newRootIMXToken Address of ECR20 IMX on the root chain.
-     * @param newChildETHToken Address of ECR20 ETH on the child chain.
+     * @param newRootIMXToken Address of ERC20 IMX on the root chain.
+     * @param newChildETHToken Address of ERC20 ETH on the child chain.
      * @dev Can only be called once.
      */
     function initialize(
