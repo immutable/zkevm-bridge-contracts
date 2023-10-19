@@ -1,5 +1,6 @@
 'use strict';
 
+const util = require('util')
 const {
     utils: { deployContract },
 } = require('@axelar-network/axelar-local-dev');
@@ -41,9 +42,16 @@ async function execute(chains, wallet, options) {
     console.log("SOURCE CONTRACT: ", source.contract.address)
     console.log("Calling mapToken");
     // const tx = await source.contract.deposit("0x38C50773CdA2E79a9217f40d63A8faF8fb0D4d73", "9999", {value: fee})
-    const tx = await source.contract.mapToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4", {value: fee})
-    await tx.wait();
-    console.log("Called ++++++++++++")
+    const tx = await source.contract2.mapToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4", {value: fee})
+    const receipt = await tx.wait();
+
+    console.log("TX ++++++++++++")
+
+    console.log(util.inspect(tx, {showHidden: false, depth: null, colors: true}))
+
+    console.log("RECEIPT ++++++++++++")
+
+    console.log(util.inspect(receipt, {showHidden: false, depth: null, colors: true}))
 
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -54,6 +62,7 @@ async function execute(chains, wallet, options) {
 
     while ((await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")) == "0x0000000000000000000000000000000000000000") {
         console.log('Waiting...');
+        console.log(`value at ${destination.name} is "${await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")}"`);
         await sleep(3000);
     }
 

@@ -21,3 +21,7 @@ docs/
 addresses.json
 
 broadcast/**
+broadcast/InitializeRootContracts.s.sol/2500/run-latest.json
+broadcast/InitializeChildContracts.s.sol/2501/run-latest.json
+broadcast/DeployRootContracts.s.sol/2500/run-latest.json
+broadcast/DeployChildContracts.s.sol/2501/run-latest.json
