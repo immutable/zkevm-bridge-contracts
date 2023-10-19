@@ -20,7 +20,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
-    address constant IMX_TOKEN = address(99);
+    address constant IMX_TOKEN = address(0xccc);
     address constant CHILD_ETH_TOKEN = address(0xddd);
     address constant NATIVE_TOKEN = address(0xeee);
     uint256 constant mapTokenFee = 300;
