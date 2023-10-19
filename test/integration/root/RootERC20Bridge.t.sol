@@ -16,8 +16,10 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
-    address constant IMX_TOKEN_ADDRESS = address(9);
-
+    address constant IMX_TOKEN_ADDRESS = address(0xccc);
+    address constant CHILD_ETH_TOKEN = address(0xddd);
+    uint256 constant mapTokenFee = 300;
+    uint256 constant depositFee = 200;
 
     ERC20PresetMinterPauser public token;
     RootERC20Bridge public rootBridge;
@@ -27,7 +29,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
     function setUp() public {
         (token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) =
-            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS);
+            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, CHILD_ETH_TOKEN);
     }
 
     /**
@@ -37,7 +39,6 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
      */
     function test_mapToken() public {
         // TODO split this up into multiple tests.
-        uint256 mapTokenFee = 300;
         address childToken =
             Clones.predictDeterministicAddress(address(token), keccak256(abi.encodePacked(token)), CHILD_BRIDGE);
 
@@ -97,9 +98,8 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     // TODO split into multiple tests
     function test_depositToken() public {
         uint256 tokenAmount = 300;
-        uint256 gasPrice = 100;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
-        (address childToken, bytes memory predictedPayload) = setupDeposit(token, rootBridge, gasPrice, tokenAmount, true);
+        (address childToken, bytes memory predictedPayload) = setupDeposit(token, rootBridge, mapTokenFee, depositFee, tokenAmount, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
@@ -108,13 +108,13 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
         vm.expectCall(
             address(axelarAdaptor),
-            gasPrice,
+            depositFee,
             abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
         vm.expectCall(
             address(axelarGasService),
-            gasPrice,
+            depositFee,
             abi.encodeWithSelector(
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
@@ -139,24 +139,23 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         uint256 thisNativePreBal = address(this).balance;
         uint256 gasServiceNativePreBal = address(axelarGasService).balance;
 
-        rootBridge.deposit{value: gasPrice}(token, tokenAmount);
+        rootBridge.deposit{value: depositFee}(token, tokenAmount);
 
         // Check that tokens are transferred
         assertEq(thisPreBal - tokenAmount, token.balanceOf(address(this)), "Tokens not transferred from user");
         assertEq(bridgePreBal + tokenAmount, token.balanceOf(address(rootBridge)), "Tokens not transferred to bridge");
         // Check that native asset transferred to gas service
-        assertEq(thisNativePreBal - gasPrice, address(this).balance, "ETH not paid from user");
-        assertEq(gasServiceNativePreBal + gasPrice, address(axelarGasService).balance, "ETH not paid to adaptor");
+        assertEq(thisNativePreBal - depositFee, address(this).balance, "ETH not paid from user");
+        assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");
     }
 
     // TODO split into multiple tests
     function test_depositTo() public {
         uint256 tokenAmount = 300;
-        uint256 gasPrice = 100;
         address recipient = address(9876);
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
         (address childToken, bytes memory predictedPayload) =
-            setupDepositTo(token, rootBridge, gasPrice, tokenAmount, recipient, true);
+            setupDepositTo(token, rootBridge, mapTokenFee, depositFee, tokenAmount, recipient, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
@@ -165,13 +164,13 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
         vm.expectCall(
             address(axelarAdaptor),
-            gasPrice,
+            depositFee,
             abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
         vm.expectCall(
             address(axelarGasService),
-            gasPrice,
+            depositFee,
             abi.encodeWithSelector(
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
@@ -196,13 +195,13 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         uint256 thisNativePreBal = address(this).balance;
         uint256 gasServiceNativePreBal = address(axelarGasService).balance;
 
-        rootBridge.depositTo{value: gasPrice}(token, recipient, tokenAmount);
+        rootBridge.depositTo{value: depositFee}(token, recipient, tokenAmount);
 
         // Check that tokens are transferred
         assertEq(thisPreBal - tokenAmount, token.balanceOf(address(this)), "Tokens not transferred from user");
         assertEq(bridgePreBal + tokenAmount, token.balanceOf(address(rootBridge)), "Tokens not transferred to bridge");
         // Check that native asset transferred to gas service
-        assertEq(thisNativePreBal - gasPrice, address(this).balance, "ETH not paid from user");
-        assertEq(gasServiceNativePreBal + gasPrice, address(axelarGasService).balance, "ETH not paid to adaptor");
+        assertEq(thisNativePreBal - depositFee, address(this).balance, "ETH not paid from user");
+        assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");
     }
 }
