@@ -29,19 +29,20 @@ contract RootERC20Bridge is
 {
     using SafeERC20 for IERC20Metadata;
 
+    /// @dev leave this as the first param for the integration tests
+    mapping(address => address) public rootTokenToChildToken;
+
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     address public constant NATIVE_TOKEN = address(0xeee);
 
     IRootERC20BridgeAdaptor public rootBridgeAdaptor;
     /// @dev Used to verify source address in messages sent from child chain.
-    /// @dev Stringified version of address.
     string public childBridgeAdaptor;
     /// @dev The address that will be minting tokens on the child chain.
     address public childERC20Bridge;
     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
     address public childTokenTemplate;
-    mapping(address => address) public rootTokenToChildToken;
     /// @dev The address of the IMX ERC20 token on L1.
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.

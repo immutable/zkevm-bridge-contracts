@@ -18,7 +18,8 @@ import {Utils} from "../../utils.t.sol";
 contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
     string public ROOT_CHAIN_NAME = "ROOT_CHAIN";
-    address constant IMX_TOKEN = address(9);
+    address constant IMX_TOKEN_ADDRESS = address(0xccc);
+    address constant CHILD_ETH_TOKEN = address(0xddd);
 
     ChildERC20Bridge public childERC20Bridge;
     ChildERC20 public childERC20;
@@ -35,7 +36,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(childERC20Bridge));
 
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), ROOT_ADAPTOR_ADDRESS, address(childERC20), ROOT_CHAIN_NAME, IMX_TOKEN
+            address(childAxelarBridgeAdaptor), ROOT_ADAPTOR_ADDRESS, address(childERC20), ROOT_CHAIN_NAME, IMX_TOKEN_ADDRESS, CHILD_ETH_TOKEN
         );
     }
 
@@ -246,8 +247,8 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
         address rootAddress = address(0x123);
         {
-            // Slot is 6 because of the Ownable, Initializable contracts coming first.
-            uint256 rootTokenToChildTokenMappingSlot = 6;
+            // Slot is 2 because of the Ownable, Initializable contracts coming first.
+            uint256 rootTokenToChildTokenMappingSlot = 2;
             address childAddress = address(444444);
             bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);
             bytes32 data = bytes32(uint256(uint160(childAddress)));

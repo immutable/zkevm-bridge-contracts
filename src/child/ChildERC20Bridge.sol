@@ -33,6 +33,13 @@ contract ChildERC20Bridge is
 {
     using SafeERC20 for IERC20Metadata;
 
+    /// @dev leave this as the first param for the integration tests
+    mapping(address => address) public rootTokenToChildToken;
+
+    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+    bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    address public constant NATIVE_TOKEN = address(0xeee);
+
     IChildERC20BridgeAdaptor public bridgeAdaptor;
     /// @dev The address that will be sending messages to, and receiving messages from, the child chain.
     string public rootERC20BridgeAdaptor;
@@ -40,11 +47,11 @@ contract ChildERC20Bridge is
     address public childTokenTemplate;
     /// @dev The name of the chain that this bridge is connected to.
     string public rootChain;
-    mapping(address => address) public rootTokenToChildToken;
-
-    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
-    bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
-    address public imxToken;
+    /// @dev The address of the IMX ERC20 token on L1.
+    address public rootIMXToken;
+    /// @dev The address of the ETH ERC20 token on L2.
+    address public childETHToken;
+     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -52,7 +59,8 @@ contract ChildERC20Bridge is
      * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootChain A stringified representation of the chain that this bridge is connected to. Used for validation.
-     * @param newIMXToken Address of ECR20 IMX on the root chain.
+     * @param newRootIMXToken Address of ECR20 IMX on the root chain.
+     * @param newChildETHToken Address of ERC20 ETH on the child chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -60,11 +68,14 @@ contract ChildERC20Bridge is
         string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
         string memory newRootChain,
-        address newIMXToken
-    ) public initializer {
+        address newRootIMXToken,
+        address newChildETHToken) 
+        public initializer 
+    {
         if (newBridgeAdaptor == address(0) 
         || newChildTokenTemplate == address(0)
-        || newIMXToken == address(0)) {
+        || newRootIMXToken == address(0)
+        || newChildETHToken == address(0)) {
             revert ZeroAddress();
         }
 
@@ -80,7 +91,9 @@ contract ChildERC20Bridge is
         childTokenTemplate = newChildTokenTemplate;
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
         rootChain = newRootChain;
-        imxToken = newIMXToken;
+        rootIMXToken = newRootIMXToken;
+        childETHToken = newChildETHToken;
+
     }
 
     /**
@@ -122,7 +135,7 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
-        if (address(rootToken) == imxToken) {
+        if (address(rootToken) == rootIMXToken) {
             revert CantMapIMX();
         }
 
@@ -149,7 +162,7 @@ contract ChildERC20Bridge is
 
         address childToken;
 
-        if (address(rootToken) != imxToken) {
+        if (address(rootToken) != rootIMXToken) {
             childToken = rootTokenToChildToken[address(rootToken)];
             if (childToken == address(0)) {
                 revert NotMapped();
