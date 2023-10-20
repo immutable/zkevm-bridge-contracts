@@ -41,6 +41,7 @@ contract ChildERC20Bridge is
     address public constant NATIVE_ETH = address(0xeee);
 
     IChildERC20BridgeAdaptor public bridgeAdaptor;
+    
     /// @dev The address that will be sending messages to, and receiving messages from, the child chain.
     string public rootERC20BridgeAdaptor;
     /// @dev The address of the token template that will be cloned to create tokens.
@@ -51,7 +52,6 @@ contract ChildERC20Bridge is
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
     address public childETHToken;
-     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
 
     /**
      * @notice Initilization function for RootERC20Bridge.
