@@ -212,12 +212,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositETH{value: amount+depositFee}(amount);
     }
 
-    function test_depositETHEmitsNativeDepositEvent() public {
+    function test_depositETHEmitsNativeEthDepositEvent() public {
         uint256 amount = 1000;
         setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
 
         vm.expectEmit();
-        emit NativeDeposit(NATIVE_TOKEN, CHILD_ETH_TOKEN, address(this), address(this), amount);
+        emit NativeEthDeposit(NATIVE_TOKEN, CHILD_ETH_TOKEN, address(this), address(this), amount);
         rootBridge.depositETH{value: amount+depositFee}(amount);
     }
 
@@ -246,13 +246,13 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositToETH{value: amount+depositFee}(receiver, amount);
     }
 
-    function test_depositToETHEmitsNativeDepositEvent() public {
+    function test_depositToETHEmitsNativeEthDepositEvent() public {
         uint256 amount = 1000;
         address receiver = address(12345);
         setupDepositTo(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, receiver, false);
 
         vm.expectEmit();
-        emit NativeDeposit(NATIVE_TOKEN, CHILD_ETH_TOKEN, address(this), receiver, amount);
+        emit NativeEthDeposit(NATIVE_TOKEN, CHILD_ETH_TOKEN, address(this), receiver, amount);
         rootBridge.depositToETH{value: amount+depositFee}(receiver, amount);
     }
 

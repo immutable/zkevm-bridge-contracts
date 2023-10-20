@@ -2,6 +2,7 @@
 pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
@@ -10,6 +11,7 @@ import {
     IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../src/child/ChildERC20Bridge.sol";
+import {IChildERC20} from "../../../src/interfaces/child/IChildERC20.sol";
 import {ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../utils.t.sol";
@@ -18,12 +20,11 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
-
-    address constant IMX_TOKEN = address(0xccc);
-    address constant CHILD_ETH_TOKEN = address(0xddd);
-    address constant NATIVE_TOKEN = address(0xeee);
+    address constant ROOT_IMX_TOKEN = address(0xccc);
+    address constant NATIVE_ETH = address(0xeee);
     ChildERC20 public childTokenTemplate;
     ChildERC20 public rootToken;
+    address public childETHToken;
     ChildERC20Bridge public childBridge;
 
     function setUp() public {
@@ -32,10 +33,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "Test", "TST", 18);
-
+        
         childBridge = new ChildERC20Bridge();
-
-        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, IMX_TOKEN, CHILD_ETH_TOKEN);
+        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, NATIVE_ETH);
     }
 
     function test_Initialize() public {
@@ -43,11 +43,14 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR, "rootERC20BridgeAdaptor not set");
         assertEq(childBridge.childTokenTemplate(), address(childTokenTemplate), "childTokenTemplate not set");
         assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
+        assertEq(childBridge.rootIMXToken(), ROOT_IMX_TOKEN, "rootIMXToken not set");
+        assertNotEq(childBridge.childETHToken(), address(0), "childETHToken not set");
+        assertNotEq(address(childBridge.childETHToken()).code.length, 0, "childETHToken contract empty");
     }
 
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, IMX_TOKEN, CHILD_ETH_TOKEN);
+        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, NATIVE_ETH);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdapter() public {
@@ -68,7 +71,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(0), address(1));
     }
 
-    function test_RevertIf_InitializeWithAZeroAddressEthChildToken() public {
+    function test_RevertIf_InitializeWithAZeroAddressEthRootToken() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(0));
@@ -83,13 +86,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_RevertIf_InitializeWithAnEmptyBridgeAdaptorString() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(InvalidRootERC20BridgeAdaptor.selector);
-        bridge.initialize(address(this), "", address(childTokenTemplate), ROOT_CHAIN_NAME, IMX_TOKEN, CHILD_ETH_TOKEN);
+        bridge.initialize(address(this), "", address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, NATIVE_ETH);
     }
 
     function test_RevertIf_InitializeWithAnEmptyChainNameString() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(InvalidRootChain.selector);
-        bridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), "", IMX_TOKEN, CHILD_ETH_TOKEN);
+        bridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), "", ROOT_IMX_TOKEN, NATIVE_ETH);
     }
 
     function test_onMessageReceive_EmitsTokenMappedEvent() public {
@@ -191,7 +194,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_RevertIf_mapTokenCalledWithIMXAddress() public {
         bytes memory data = abi.encode(
-            childBridge.MAP_TOKEN_SIG(), IMX_TOKEN, "ImmutableX", "IMX", 18
+            childBridge.MAP_TOKEN_SIG(), ROOT_IMX_TOKEN, "ImmutableX", "IMX", 18
         );
         vm.expectRevert(CantMapIMX.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
@@ -225,6 +228,59 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.updateBridgeAdaptor(address(0));
     }
 
+    //Deposit ETH
+
+    function test_onMessageReceive_DepositETH_EmitsETHDepositEvent() public {
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1000;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(NATIVE_ETH), sender, receiver, amount);
+
+        address predictedChildETHToken = Clones.predictDeterministicAddress(
+            address(childTokenTemplate), keccak256(abi.encodePacked(NATIVE_ETH)), address(childBridge)
+        );
+
+        vm.expectEmit(address(childBridge));
+        emit NativeEthDeposit(address(NATIVE_ETH), predictedChildETHToken, sender, receiver, amount);
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+    }
+
+    function test_onMessageReceive_DepositETH_TransfersTokensToReceiver() public {
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1000;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(NATIVE_ETH), sender, receiver, amount);
+
+        address predictedChildETHToken = Clones.predictDeterministicAddress(
+            address(childTokenTemplate), keccak256(abi.encodePacked(NATIVE_ETH)), address(childBridge)
+        );
+        
+        uint256 receiverPreBal = ChildERC20(predictedChildETHToken).balanceOf(receiver);
+
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+
+        assertEq(ChildERC20(predictedChildETHToken).balanceOf(receiver), receiverPreBal + amount, "receiver balance not increased");
+    }
+
+    function test_onMessageReceive_DepositETH_IncreasesTotalSupply() public {
+        address sender = address(100);
+        address receiver = address(200);
+        uint256 amount = 1000;
+
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), address(NATIVE_ETH), sender, receiver, amount);
+
+        address predictedChildETHToken = Clones.predictDeterministicAddress(
+            address(childTokenTemplate), keccak256(abi.encodePacked(NATIVE_ETH)), address(childBridge)
+        );
+        uint256 totalSupplyPre = ChildERC20(predictedChildETHToken).totalSupply();
+
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+
+        assertEq(ChildERC20(predictedChildETHToken).totalSupply(), totalSupplyPre + amount, "totalSupply not increased");
+    }
+
     //Deposit
 
     function test_onMessageReceive_DepositIMX_EmitsIMXDepositEvent() public {
@@ -236,10 +292,10 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         address receiver = address(200);
         uint256 amount = 1 ether;
 
-        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), IMX_TOKEN, sender, receiver, amount);
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), ROOT_IMX_TOKEN, sender, receiver, amount);
 
         vm.expectEmit(address(childBridge));
-        emit IMXDeposit(IMX_TOKEN, sender, receiver, amount);
+        emit IMXDeposit(ROOT_IMX_TOKEN, sender, receiver, amount);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 
@@ -251,7 +307,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         address receiver = address(200);
         uint256 amount = 1 ether;
 
-        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), IMX_TOKEN, sender, receiver, amount);
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), ROOT_IMX_TOKEN, sender, receiver, amount);
 
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
 
@@ -267,7 +323,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         address receiver = address(200);
         uint256 amount = 10 ether;
 
-        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), IMX_TOKEN, sender, receiver, amount);
+        bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), ROOT_IMX_TOKEN, sender, receiver, amount);
 
         vm.expectRevert("Address: insufficient balance");
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);

@@ -34,7 +34,7 @@ contract RootERC20Bridge is
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
-    address public constant NATIVE_TOKEN = address(0xeee);
+    address public constant NATIVE_ETH = address(0xeee);
 
     IRootERC20BridgeAdaptor public rootBridgeAdaptor;
     /// @dev Used to verify source address in messages sent from child chain.
@@ -111,7 +111,7 @@ contract RootERC20Bridge is
 
         uint256 expectedBalance = address(this).balance - (msg.value - amount);
     
-        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, amount);
+        _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount);
 
         // invariant check to ensure that the root native balance has increased by the amount deposited
         if (address(this).balance != expectedBalance) {
@@ -187,7 +187,7 @@ contract RootERC20Bridge is
         // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
         //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         //      Discuss this, and add this decision to the design doc.
-        if (address(rootToken) != NATIVE_TOKEN) {  
+        if (address(rootToken) != NATIVE_ETH) {  
             if (address(rootToken) != rootIMXToken) {
                 childToken = rootTokenToChildToken[address(rootToken)];
                 if (childToken == address(0)) {
@@ -207,8 +207,8 @@ contract RootERC20Bridge is
 
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
-        if (address(rootToken) == NATIVE_TOKEN) {
-            emit NativeDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
+        if (address(rootToken) == NATIVE_ETH) {
+            emit NativeEthDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
         } else if (address(rootToken) == rootIMXToken) {
             emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
         } else {

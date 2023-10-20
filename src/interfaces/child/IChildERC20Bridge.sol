@@ -38,7 +38,7 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
-    event NativeDeposit(
+    event NativeEthDeposit(
         address indexed rootToken,
         address indexed childToken,
         address depositor,
