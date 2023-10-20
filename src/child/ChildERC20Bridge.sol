@@ -15,7 +15,6 @@ import {
 } from "../interfaces/child/IChildERC20Bridge.sol";
 import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
-import {console2} from "forge-std/Test.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
