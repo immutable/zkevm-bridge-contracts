@@ -108,15 +108,28 @@ When deploying these contracts on remote networks (i.e. testnets or mainnets), t
 ##### One-time setup
 
 1. install the dependencies
-`yarn install`
+```shell
+yarn install
+```
 
 2. compile the smart contracts
-`forge build`
+```shell
+forge build
+```
 
 ##### Start & setup the local blockchains
 
-Follow the instructions above to start up the local blockchains and configure the environment variables
+1. Start the local blockchains and local Axelar network
+```shell
+yarn start
+```
 
-##### Deploy the contracts
+2. In a separate terminal window, deploy the smart contracts
+```shell
+./deploy.sh
+```
 
-`./deploy.sh`
+3. Run the script to execute the `axelar-local-dev/examples/evm/call-contract/index.js` file
+```shell
+yarn run execute evm/call-contract local Ethereum Polygon
+```
