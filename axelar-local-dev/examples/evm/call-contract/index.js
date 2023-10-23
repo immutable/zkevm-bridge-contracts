@@ -24,7 +24,7 @@ async function execute(chains, wallet, options) {
     async function logValue() {
         //console.log(destination.contract2)
         console.log(destination.name)
-        console.log(`value at ${destination.name} is "${await destination.contract.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")}"`);
+        console.log(`value at ${destination.name} is "${await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")}"`);
         //console.log(await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4"));
     }
 
@@ -40,14 +40,20 @@ async function execute(chains, wallet, options) {
     // });
     console.log("SOURCE CONTRACT: ", source.contract.address)
     console.log("Calling mapToken");
-    // const tx = await source.contract.deposit("0x38C50773CdA2E79a9217f40d63A8faF8fb0D4d73", "9999", {value: fee})
-    const tx = await source.contract.mapToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4", {value: fee})
-    await tx.wait();
+    const tx = await source.contract.deposit("0x38C50773CdA2E79a9217f40d63A8faF8fb0D4d73", "9999", {value: fee})
+    // const tx = await source.contract.mapToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4", {value: fee})
+    const receipt = await tx.wait();
+    // console.log(tx);
+    console.log(receipt);
+
+    const util = require('util')
+
+    console.log(util.inspect(receipt, {showHidden: false, depth: null, colors: true}))
     console.log("Called ++++++++++++")
 
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    while ((await destination.contract.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")) == "0x0000000000000000000000000000000000000000") {
+    while ((await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")) == "0x0000000000000000000000000000000000000000") {
         console.log('Waiting...');
         await sleep(3000);
     }

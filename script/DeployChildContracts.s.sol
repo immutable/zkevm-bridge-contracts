@@ -19,6 +19,7 @@ contract DeployChildContracts is Script {
         vm.createSelectFork(childRpcUrl);
         vm.startBroadcast(deployerPrivateKey);
 
+        // new ChildERC20();
         ChildERC20 childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 

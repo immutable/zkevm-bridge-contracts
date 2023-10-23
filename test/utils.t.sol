@@ -3,6 +3,7 @@ pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
@@ -13,10 +14,11 @@ import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
 contract Utils is Test {
     function integrationSetup(
-        address childBridge, 
-        address childBridgeAdaptor, 
+        address childBridge,
+        address childBridgeAdaptor,
         string memory childBridgeName,
-        address imxTokenAddress)
+        address imxTokenAddress
+    )
         public
         returns (
             ERC20PresetMinterPauser token,
@@ -40,7 +42,7 @@ contract Utils is Test {
             address(axelarGasService)
         );
 
-        rootBridge.initialize(address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress);
+        rootBridge.initialize(address(axelarAdaptor), childBridge, Strings.toHexString(childBridgeAdaptor), address(token), imxTokenAddress);
         axelarAdaptor.setChildBridgeAdaptor();
     }
 

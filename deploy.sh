@@ -35,8 +35,8 @@ function main() {
     export CHILD_ERC20_BRIDGE=$child_erc20_bridge
     export CHILDCHAIN_CHILD_TOKEN_TEMPLATE=$child_chain_child_token_template
 
-    forge script script/InitializeRootContracts.s.sol:InitializeRootContracts --broadcast
-    forge script script/InitializeChildContracts.s.sol:InitializeChildContracts --broadcast
+    forge script script/InitializeRootContracts.s.sol:InitializeRootContracts --broadcast --ffi
+    forge script script/InitializeChildContracts.s.sol:InitializeChildContracts --broadcast --ffi
 
     # Write JSON file with contract addresses
     echo "{

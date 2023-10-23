@@ -18,7 +18,6 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     address constant IMX_TOKEN_ADDRESS = address(9);
 
-
     ERC20PresetMinterPauser public token;
     RootERC20Bridge public rootBridge;
     RootAxelarBridgeAdaptor public axelarAdaptor;
@@ -99,7 +98,8 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         uint256 tokenAmount = 300;
         uint256 gasPrice = 100;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
-        (address childToken, bytes memory predictedPayload) = setupDeposit(token, rootBridge, gasPrice, tokenAmount, true);
+        (address childToken, bytes memory predictedPayload) =
+            setupDeposit(token, rootBridge, gasPrice, tokenAmount, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
