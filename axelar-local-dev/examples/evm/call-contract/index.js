@@ -1,5 +1,6 @@
 'use strict';
 
+const util = require('util')
 const {
     utils: { deployContract },
 } = require('@axelar-network/axelar-local-dev');
@@ -55,6 +56,7 @@ async function execute(chains, wallet, options) {
 
     while ((await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")) == "0x0000000000000000000000000000000000000000") {
         console.log('Waiting...');
+        console.log(`value at ${destination.name} is "${await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")}"`);
         await sleep(3000);
     }
 

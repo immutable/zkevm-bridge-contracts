@@ -2,6 +2,7 @@ const { ethers } = require('ethers');
 const { createAndExport } = require('@axelar-network/axelar-local-dev');
 const { enabledAptos } = require('./config');
 const path = require('path');
+const fs = require('fs');
 const { EvmRelayer } = require('@axelar-network/axelar-local-dev/dist/relay/EvmRelayer');
 
 const evmRelayer = new EvmRelayer();
@@ -23,6 +24,7 @@ async function start(fundAddresses = [], chains = [], options = {}) {
     }
 
     const pathname = path.resolve(__dirname, '../..', 'chain-config', 'local.json');
+    const templatePathname = path.resolve(__dirname, '../..', 'chain-config', 'local.template.json');
 
     await createAndExport({
         chainOutputPath: pathname,
@@ -32,6 +34,12 @@ async function start(fundAddresses = [], chains = [], options = {}) {
         relayers,
         relayInterval: options.relayInterval,
     });
+    
+    try {
+        await fs.copyFileSync(templatePathname, pathname);
+    } catch(err) {
+        console.log(err)
+    }
 }
 
 /**
