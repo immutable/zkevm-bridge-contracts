@@ -83,6 +83,7 @@ CHILD_GAS_SERVICE_ADDRESS=
 ROOT_CHAIN_NAME="ROOT"
 CHILD_CHAIN_NAME="CHILD"
 ROOT_IMX_ADDRESS=
+CHILD_ETH_ADDRESS=
 ```
 where `{ROOT,CHILD}_{GATEWAY,GAS_SERVICE}_ADDRESS` refers to the gateway and gas service addresses used by Axelar.
 

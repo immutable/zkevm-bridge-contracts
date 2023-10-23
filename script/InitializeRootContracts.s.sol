@@ -27,6 +27,7 @@ contract InitializeRootContracts is Script {
         string[] memory checksumInputs = Utils.getChecksumInputs(childBridgeAdaptor);
         bytes memory checksumOutput = vm.ffi(checksumInputs);
         string memory childBridgeAdaptorChecksum = string(Utils.removeZeroByteValues(checksumOutput));
+        address childETHToken = vm.envAddress("CHILD_ETH_ADDRESS");  
         /**
          * INITIALIZE ROOT CHAIN CONTRACTS
          */
@@ -34,7 +35,12 @@ contract InitializeRootContracts is Script {
         vm.startBroadcast(rootPrivateKey);
 
         rootERC20Bridge.initialize(
-            address(rootBridgeAdaptor), childERC20Bridge, childBridgeAdaptorChecksum, rootChainChildTokenTemplate, rootIMXToken
+            address(rootBridgeAdaptor),
+            childERC20Bridge,
+            childBridgeAdaptorChecksum,
+            rootChainChildTokenTemplate,
+            rootIMXToken,
+            childETHToken
         );
 
         rootBridgeAdaptor.setChildBridgeAdaptor();

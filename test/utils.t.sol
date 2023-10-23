@@ -13,12 +13,13 @@ import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
 contract Utils is Test {
+
     function integrationSetup(
         address childBridge,
         address childBridgeAdaptor,
         string memory childBridgeName,
-        address imxTokenAddress
-    )
+        address imxTokenAddress,
+        address ethTokenAddress)
         public
         returns (
             ERC20PresetMinterPauser token,
@@ -42,45 +43,53 @@ contract Utils is Test {
             address(axelarGasService)
         );
 
-        rootBridge.initialize(address(axelarAdaptor), childBridge, Strings.toHexString(childBridgeAdaptor), address(token), imxTokenAddress);
+        rootBridge.initialize(address(axelarAdaptor), childBridge, Strings.toHexString(childBridgeAdaptor), address(token), imxTokenAddress, ethTokenAddress);
         axelarAdaptor.setChildBridgeAdaptor();
     }
 
     function setupDeposit(
         ERC20PresetMinterPauser token,
         RootERC20Bridge rootBridge,
-        uint256 gasPrice,
+        uint256 mapTokenFee,
+        uint256 depositFee,
         uint256 tokenAmount,
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
-        return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, address(this), saveTokenMapping);
+        return _setupDeposit(token, rootBridge, mapTokenFee, depositFee, tokenAmount, address(this), saveTokenMapping);
     }
 
     function setupDepositTo(
         ERC20PresetMinterPauser token,
         RootERC20Bridge rootBridge,
-        uint256 gasPrice,
+        uint256 mapTokenFee,
+        uint256 depositFee,
         uint256 tokenAmount,
         address to,
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
-        return _setupDeposit(token, rootBridge, gasPrice, tokenAmount, to, saveTokenMapping);
+        return _setupDeposit(token, rootBridge, mapTokenFee, depositFee, tokenAmount, to, saveTokenMapping);
     }
 
     function _setupDeposit(
         ERC20PresetMinterPauser token,
         RootERC20Bridge rootBridge,
-        uint256 gasPrice,
+        uint256 mapTokenFee,
+        uint256 depositFee,
         uint256 tokenAmount,
         address to,
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
         predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(token), address(this), to, tokenAmount);
         if (saveTokenMapping) {
-            childToken = rootBridge.mapToken{value: gasPrice}(token);
+            childToken = rootBridge.mapToken{value: mapTokenFee}(token);
         }
-        token.mint(address(this), tokenAmount);
-        token.approve(address(rootBridge), tokenAmount);
+        if (address(token) == address(0xeee)) {
+            vm.deal(to, tokenAmount+depositFee);
+        } else {
+            token.mint(address(this), tokenAmount);
+            token.approve(address(rootBridge), tokenAmount);
+        }
+        
         return (childToken, predictedPayload);
     }
 

@@ -42,8 +42,10 @@ contract RootERC20Bridge is
     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
     address public childTokenTemplate;
     mapping(address => address) public rootTokenToChildToken;
-
+    /// @dev The address of the IMX ERC20 token on L1.
     address public rootIMXToken;
+    /// @dev The address of the ETH ERC20 token on L2.
+    address public childETHToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -51,21 +53,26 @@ contract RootERC20Bridge is
      * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with (As a checksummed string).
      * @param newChildTokenTemplate Address of child token template to clone.
-     * @param newRootIMXToken Address of ECR20 IMX on the root chain.
+     * @param newRootIMXToken Address of ERC20 IMX on the root chain.
+     * @param newChildETHToken Address of ERC20 ETH on the child chain.
      * @dev Can only be called once.
      */
     function initialize(
         address newRootBridgeAdaptor,
         address newChildERC20Bridge,
         string memory newChildBridgeAdaptor,
-        address newChildTokenTemplate,
-        address newRootIMXToken
-    ) public initializer {
-        if (
-            newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
-                || newChildTokenTemplate == address(0)
-                || newRootIMXToken == address(0)
-        ) {
+        address newChildTokenTemplate, 
+        address newRootIMXToken,
+        address newChildETHToken)
+        public
+        initializer
+    {
+        if (newRootBridgeAdaptor == address(0) 
+        || newChildERC20Bridge == address(0) 
+        || newChildTokenTemplate == address(0)
+        || newRootIMXToken == address(0)
+        || newChildETHToken == address(0))
+        {
             revert ZeroAddress();
         }
         if (bytes(newChildBridgeAdaptor).length == 0) {
@@ -74,6 +81,7 @@ contract RootERC20Bridge is
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
         rootIMXToken = newRootIMXToken;
+        childETHToken = newChildETHToken;
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
         childBridgeAdaptor = newChildBridgeAdaptor;
     }
@@ -87,6 +95,29 @@ contract RootERC20Bridge is
      */
     function mapToken(IERC20Metadata rootToken) external payable override returns (address) {
         return _mapToken(rootToken);
+    }
+
+    function depositETH(uint256 amount) external payable { //override removed?
+        _depositETH(msg.sender, amount);
+    }
+
+    function depositToETH(address receiver, uint256 amount) external payable { //override removed?
+        _depositETH(receiver, amount);
+    }
+
+    function _depositETH(address receiver, uint256 amount) private {
+        if (msg.value < amount) {
+            revert InsufficientValue();
+        }
+
+        uint256 expectedBalance = address(this).balance - (msg.value - amount);
+    
+        _deposit(IERC20Metadata(NATIVE_TOKEN), receiver, amount);
+
+        // invariant check to ensure that the root native balance has increased by the amount deposited
+        if (address(this).balance != expectedBalance) {
+            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        }
     }
 
     /**
@@ -145,33 +176,40 @@ contract RootERC20Bridge is
             revert ZeroAddress();
         }
 
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+
         address childToken;
+        uint256 feeAmount;
 
         // The native token does not need to be mapped since it should have been mapped on initialization
         // The native token also cannot be transferred since it was received in the payable function call
         // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
         //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         //      Discuss this, and add this decision to the design doc.
-        // TODO NATIVE TOKEN BRIDGING NOT YET SUPPORTED
-        if (address(rootToken) != NATIVE_TOKEN) {
+        if (address(rootToken) != NATIVE_TOKEN) {  
             if (address(rootToken) != rootIMXToken) {
                 childToken = rootTokenToChildToken[address(rootToken)];
                 if (childToken == address(0)) {
                     revert NotMapped();
                 }
             }
-
             // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
+            feeAmount = msg.value;
+        } else {
+            feeAmount = msg.value - amount;
         }
+        
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
-        rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
+
+        rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         if (address(rootToken) == NATIVE_TOKEN) {
-            // not used yet
-            emit NativeDeposit(address(rootToken), childToken, msg.sender, receiver, amount);
+            emit NativeDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
         } else if (address(rootToken) == rootIMXToken) {
             emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
         } else {
