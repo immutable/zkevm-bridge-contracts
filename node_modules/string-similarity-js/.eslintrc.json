@@ -1,7 +1,0 @@
-{
-    "extends": "eslint:recommended",
-    "parser": "babel-eslint",
-    "rules": {
-        "semi": ["error", "always"]
-    }
-}
