@@ -9,8 +9,6 @@ import {Utils} from "./Utils.sol";
 
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
-/// Remove zeroes from a string represented as a bytes array
-
 contract InitializeChildContracts is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("CHILD_PRIVATE_KEY");
