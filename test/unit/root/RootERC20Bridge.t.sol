@@ -44,7 +44,14 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         mockAxelarAdaptor = new MockAdaptor();
 
         // The specific ERC20 token template does not matter for these unit tests
-        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR_STRING, address(token), IMX_TOKEN, CHILD_ETH_TOKEN);
+        rootBridge.initialize(
+            address(mockAxelarAdaptor),
+            CHILD_BRIDGE,
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(token),
+            IMX_TOKEN,
+            CHILD_ETH_TOKEN
+        );
     }
 
     /**
@@ -59,7 +66,14 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        rootBridge.initialize(address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR_STRING, address(token), IMX_TOKEN, CHILD_ETH_TOKEN);
+        rootBridge.initialize(
+            address(mockAxelarAdaptor),
+            CHILD_BRIDGE,
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(token),
+            IMX_TOKEN,
+            CHILD_ETH_TOKEN
+        );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressRootAdapter() public {
@@ -119,7 +133,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_mapToken_CallsAdaptor() public {
-
         bytes memory payload =
             abi.encode(rootBridge.MAP_TOKEN_SIG(), token, token.name(), token.symbol(), token.decimals());
 
@@ -202,7 +215,8 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_depositETHCallsSendMessage() public {
         uint256 amount = 1000;
-        (, bytes memory predictedPayload) = setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
+        (, bytes memory predictedPayload) =
+            setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
 
         vm.expectCall(
             address(mockAxelarAdaptor),
@@ -210,7 +224,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             abi.encodeWithSelector(mockAxelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
-        rootBridge.depositETH{value: amount+depositFee}(amount);
+        rootBridge.depositETH{value: amount + depositFee}(amount);
     }
 
     function test_depositETHEmitsNativeDepositEvent() public {
@@ -219,7 +233,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
         vm.expectEmit();
         emit NativeDeposit(NATIVE_TOKEN, CHILD_ETH_TOKEN, address(this), address(this), amount);
-        rootBridge.depositETH{value: amount+depositFee}(amount);
+        rootBridge.depositETH{value: amount + depositFee}(amount);
     }
 
     function test_RevertIf_depositETHInsufficientValue() public {
@@ -227,43 +241,49 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
 
         vm.expectRevert(InsufficientValue.selector);
-        rootBridge.depositETH{value: (amount/2)+depositFee}(amount);
+        rootBridge.depositETH{value: (amount / 2) + depositFee}(amount);
     }
 
-     /**
+    /**
      * DEPOSIT TO ETH
      */
 
     function test_depositToETHCallsSendMessage() public {
         uint256 amount = 1000;
         address receiver = address(12345);
-        (, bytes memory predictedPayload) = setupDepositTo(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, receiver, false);
+        (, bytes memory predictedPayload) = setupDepositTo(
+            ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, receiver, false
+        );
         vm.expectCall(
             address(mockAxelarAdaptor),
             depositFee,
             abi.encodeWithSelector(mockAxelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
-        rootBridge.depositToETH{value: amount+depositFee}(receiver, amount);
+        rootBridge.depositToETH{value: amount + depositFee}(receiver, amount);
     }
 
     function test_depositToETHEmitsNativeDepositEvent() public {
         uint256 amount = 1000;
         address receiver = address(12345);
-        setupDepositTo(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, receiver, false);
+        setupDepositTo(
+            ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, receiver, false
+        );
 
         vm.expectEmit();
         emit NativeDeposit(NATIVE_TOKEN, CHILD_ETH_TOKEN, address(this), receiver, amount);
-        rootBridge.depositToETH{value: amount+depositFee}(receiver, amount);
+        rootBridge.depositToETH{value: amount + depositFee}(receiver, amount);
     }
 
     function test_RevertIf_depositToETHInsufficientValue() public {
         uint256 amount = 1000;
         address receiver = address(12345);
-        setupDepositTo(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, receiver, false);
+        setupDepositTo(
+            ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, receiver, false
+        );
 
         vm.expectRevert(InsufficientValue.selector);
-        rootBridge.depositToETH{value: (amount/2)+depositFee}(receiver, amount);
+        rootBridge.depositToETH{value: (amount / 2) + depositFee}(receiver, amount);
     }
 
     /**
@@ -275,7 +295,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
 
         vm.expectRevert(ZeroAmount.selector);
-        rootBridge.depositETH{value: amount+depositFee}(amount);
+        rootBridge.depositETH{value: amount + depositFee}(amount);
     }
 
     function test_RevertIf_depositToETHAmountIsZero() public {
@@ -285,7 +305,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         setupDeposit(ERC20PresetMinterPauser(NATIVE_TOKEN), rootBridge, mapTokenFee, depositFee, amount, false);
 
         vm.expectRevert(ZeroAmount.selector);
-        rootBridge.depositToETH{value: amount+depositFee}(receiver, amount);
+        rootBridge.depositToETH{value: amount + depositFee}(receiver, amount);
     }
 
     function test_RevertIf_depositAmountIsZero() public {
@@ -407,7 +427,8 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         uint256 amount = 100;
         address receiver = address(12345);
 
-        (, bytes memory predictedPayload) = setupDepositTo(token, rootBridge, mapTokenFee, depositFee, amount, receiver, true);
+        (, bytes memory predictedPayload) =
+            setupDepositTo(token, rootBridge, mapTokenFee, depositFee, amount, receiver, true);
 
         vm.expectCall(
             address(mockAxelarAdaptor),

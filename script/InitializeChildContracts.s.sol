@@ -34,7 +34,7 @@ contract InitializeChildContracts is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), rootBridgeAdaptorString , childTokenTemplate, rootChainName, rootIMXToken
+            address(childAxelarBridgeAdaptor), rootBridgeAdaptorString, childTokenTemplate, rootChainName, rootIMXToken
         );
 
         childAxelarBridgeAdaptor.setRootBridgeAdaptor();

@@ -27,7 +27,7 @@ contract InitializeRootContracts is Script {
         string[] memory checksumInputs = Utils.getChecksumInputs(childBridgeAdaptor);
         bytes memory checksumOutput = vm.ffi(checksumInputs);
         string memory childBridgeAdaptorChecksum = string(Utils.removeZeroByteValues(checksumOutput));
-        address childETHToken = vm.envAddress("CHILD_ETH_ADDRESS");  
+        address childETHToken = vm.envAddress("CHILD_ETH_ADDRESS");
         /**
          * INITIALIZE ROOT CHAIN CONTRACTS
          */
