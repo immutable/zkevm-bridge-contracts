@@ -21,7 +21,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
     address constant IMX_TOKEN = address(0xccc);
-    address constant CHILD_ETH_TOKEN = address(0xddd);
     address constant NATIVE_ETH = address(0xeee);
     uint256 constant mapTokenFee = 300;
     uint256 constant depositFee = 200;
@@ -44,7 +43,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
         // The specific ERC20 token template does not matter for these unit tests
         rootBridge.initialize(
-            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN, CHILD_ETH_TOKEN
+            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN
         );
     }
 
@@ -61,50 +60,44 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
         rootBridge.initialize(
-            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN, CHILD_ETH_TOKEN
+            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN
         );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressRootAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(1), address(1), address(1), address(1), address(1));
+        bridge.initialize(address(0), address(1), address(1), address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildBridge() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(0), address(1), address(1), address(1), address(1));
+        bridge.initialize(address(1), address(0), address(1), address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(0), address(1), address(1), address(1));
+        bridge.initialize(address(1), address(1), address(0), address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressTokenTemplate() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(1), address(0), address(1), address(1));
+        bridge.initialize(address(1), address(1), address(1), address(0), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(1), address(1), address(0), address(1));
-    }
-
-    function test_RevertIf_InitializeWithAZeroAddressETHToken() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
-        vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(1), address(1), address(1), address(0));
+        bridge.initialize(address(1), address(1), address(1), address(1), address(0));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(0), address(0), address(0), address(0), address(0));
+        bridge.initialize(address(0), address(0), address(0), address(0), address(0));
     }
 
     /**
@@ -226,7 +219,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         setupDeposit(ERC20PresetMinterPauser(NATIVE_ETH), rootBridge, mapTokenFee, depositFee, amount, false);
 
         vm.expectEmit();
-        emit NativeEthDeposit(NATIVE_ETH, CHILD_ETH_TOKEN, address(this), address(this), amount);
+        emit NativeEthDeposit(NATIVE_ETH, rootBridge.childETHToken(), address(this), address(this), amount);
         rootBridge.depositETH{value: amount + depositFee}(amount);
     }
 
@@ -265,7 +258,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         );
 
         vm.expectEmit();
-        emit NativeEthDeposit(NATIVE_ETH, CHILD_ETH_TOKEN, address(this), receiver, amount);
+        emit NativeEthDeposit(NATIVE_ETH, rootBridge.childETHToken(), address(this), receiver, amount);
         rootBridge.depositToETH{value: amount + depositFee}(receiver, amount);
     }
 

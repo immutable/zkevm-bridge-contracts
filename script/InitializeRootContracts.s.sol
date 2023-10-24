@@ -35,8 +35,7 @@ contract InitializeRootContracts is Script {
             childERC20Bridge,
             childBridgeAdaptor,
             rootChainChildTokenTemplate,
-            rootIMXToken,
-            childETHToken
+            rootIMXToken
         );
 
         rootBridgeAdaptor.setChildBridgeAdaptor();

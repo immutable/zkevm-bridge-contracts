@@ -11,6 +11,7 @@ import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarG
 import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
+import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
@@ -55,7 +56,6 @@ contract RootERC20Bridge is
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootIMXToken Address of ERC20 IMX on the root chain.
-     * @param newChildETHToken Address of ERC20 ETH on the child chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -63,20 +63,21 @@ contract RootERC20Bridge is
         address newChildERC20Bridge,
         address newChildBridgeAdaptor,
         address newChildTokenTemplate,
-        address newRootIMXToken,
-        address newChildETHToken
+        address newRootIMXToken
     ) public initializer {
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
                 || newChildTokenTemplate == address(0) || newChildBridgeAdaptor == address(0)
-                || newRootIMXToken == address(0) || newChildETHToken == address(0)
+                || newRootIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
         rootIMXToken = newRootIMXToken;
-        childETHToken = newChildETHToken;
+        IChildERC20 clonedETHToken =
+            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
+        childETHToken = address(clonedETHToken);
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
         childBridgeAdaptor = Strings.toHexString(newChildBridgeAdaptor);
     }
