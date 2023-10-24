@@ -41,7 +41,7 @@ contract ChildERC20Bridge is
     address public constant NATIVE_ETH = address(0xeee);
 
     IChildERC20BridgeAdaptor public bridgeAdaptor;
-    
+
     /// @dev The address that will be sending messages to, and receiving messages from, the child chain.
     string public rootERC20BridgeAdaptor;
     /// @dev The address of the token template that will be cloned to create tokens.
@@ -67,12 +67,9 @@ contract ChildERC20Bridge is
         string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
         string memory newRootChain,
-        address newRootIMXToken) 
-        public initializer 
-    {
-        if (newBridgeAdaptor == address(0) 
-        || newChildTokenTemplate == address(0)
-        || newRootIMXToken == address(0)) {
+        address newRootIMXToken
+    ) public initializer {
+        if (newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)) {
             revert ZeroAddress();
         }
 
@@ -175,7 +172,7 @@ contract ChildERC20Bridge is
                     revert NotMapped();
                 }
             }
-            
+
             if (address(childToken).code.length == 0) {
                 revert EmptyTokenContract();
             }

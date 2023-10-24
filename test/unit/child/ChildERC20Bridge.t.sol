@@ -33,9 +33,11 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "Test", "TST", 18);
-        
+
         childBridge = new ChildERC20Bridge();
-        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN);
+        childBridge.initialize(
+            address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN
+        );
     }
 
     function test_Initialize() public {
@@ -50,7 +52,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        childBridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN);
+        childBridge.initialize(
+            address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN
+        );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdapter() public {
@@ -187,17 +191,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_RevertIf_mapTokenCalledWithIMXAddress() public {
-        bytes memory data = abi.encode(
-            childBridge.MAP_TOKEN_SIG(), ROOT_IMX_TOKEN, "ImmutableX", "IMX", 18
-        );
+        bytes memory data = abi.encode(childBridge.MAP_TOKEN_SIG(), ROOT_IMX_TOKEN, "ImmutableX", "IMX", 18);
         vm.expectRevert(CantMapIMX.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
     function test_RevertIf_mapTokenCalledWithETHAddress() public {
-        bytes memory data = abi.encode(
-            childBridge.MAP_TOKEN_SIG(), NATIVE_ETH, "Ethereum", "ETH", 18
-        );
+        bytes memory data = abi.encode(childBridge.MAP_TOKEN_SIG(), NATIVE_ETH, "Ethereum", "ETH", 18);
         vm.expectRevert(CantMapETH.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
@@ -258,12 +258,16 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         address predictedChildETHToken = Clones.predictDeterministicAddress(
             address(childTokenTemplate), keccak256(abi.encodePacked(NATIVE_ETH)), address(childBridge)
         );
-        
+
         uint256 receiverPreBal = ChildERC20(predictedChildETHToken).balanceOf(receiver);
 
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
 
-        assertEq(ChildERC20(predictedChildETHToken).balanceOf(receiver), receiverPreBal + amount, "receiver balance not increased");
+        assertEq(
+            ChildERC20(predictedChildETHToken).balanceOf(receiver),
+            receiverPreBal + amount,
+            "receiver balance not increased"
+        );
     }
 
     function test_onMessageReceive_DepositETH_IncreasesTotalSupply() public {

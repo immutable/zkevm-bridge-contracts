@@ -108,7 +108,7 @@ contract RootERC20Bridge is
         }
 
         uint256 expectedBalance = address(this).balance - (msg.value - amount);
-    
+
         _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount);
 
         // invariant check to ensure that the root native balance has increased by the amount deposited
@@ -190,7 +190,7 @@ contract RootERC20Bridge is
         // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
         //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         //      Discuss this, and add this decision to the design doc.
-        if (address(rootToken) != NATIVE_ETH) {  
+        if (address(rootToken) != NATIVE_ETH) {
             if (address(rootToken) != rootIMXToken) {
                 childToken = rootTokenToChildToken[address(rootToken)];
                 if (childToken == address(0)) {

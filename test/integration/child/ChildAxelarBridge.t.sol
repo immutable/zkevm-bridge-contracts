@@ -35,7 +35,11 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(childERC20Bridge));
 
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), ROOT_ADAPTOR_ADDRESS, address(childERC20), ROOT_CHAIN_NAME, IMX_TOKEN_ADDRESS
+            address(childAxelarBridgeAdaptor),
+            ROOT_ADAPTOR_ADDRESS,
+            address(childERC20),
+            ROOT_CHAIN_NAME,
+            IMX_TOKEN_ADDRESS
         );
     }
 
