@@ -31,11 +31,7 @@ contract InitializeRootContracts is Script {
         vm.startBroadcast(rootPrivateKey);
 
         rootERC20Bridge.initialize(
-            address(rootBridgeAdaptor),
-            childERC20Bridge,
-            childBridgeAdaptor,
-            rootChainChildTokenTemplate,
-            rootIMXToken
+            address(rootBridgeAdaptor), childERC20Bridge, childBridgeAdaptor, rootChainChildTokenTemplate, rootIMXToken
         );
 
         rootBridgeAdaptor.setChildBridgeAdaptor();

@@ -104,13 +104,15 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
         (, bytes memory predictedPayload) =
             setupDeposit(ERC20PresetMinterPauser(NATIVE_ETH), rootBridge, mapTokenFee, depositFee, tokenAmount, false);
-            
+
         console2.logBytes(predictedPayload);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
-        emit NativeEthDeposit(address(NATIVE_ETH), rootBridge.childETHToken(), address(this), address(this), tokenAmount);
+        emit NativeEthDeposit(
+            address(NATIVE_ETH), rootBridge.childETHToken(), address(this), address(this), tokenAmount
+        );
 
         vm.expectCall(
             address(axelarAdaptor),
@@ -149,7 +151,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         // Check that tokens are transferred
         assertEq(bridgePreBal + tokenAmount, address(rootBridge).balance, "ETH not transferred to bridge");
         // Check that native asset transferred to gas service
-        assertEq(thisNativePreBal - (depositFee+tokenAmount), address(this).balance, "ETH not paid from user");
+        assertEq(thisNativePreBal - (depositFee + tokenAmount), address(this).balance, "ETH not paid from user");
         assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");
     }
 
@@ -158,9 +160,10 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         uint256 tokenAmount = 300;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
 
-        (, bytes memory predictedPayload) =
-            setupDeposit(ERC20PresetMinterPauser(IMX_TOKEN_ADDRESS), rootBridge, mapTokenFee, depositFee, tokenAmount, false);
-            
+        (, bytes memory predictedPayload) = setupDeposit(
+            ERC20PresetMinterPauser(IMX_TOKEN_ADDRESS), rootBridge, mapTokenFee, depositFee, tokenAmount, false
+        );
+
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
@@ -203,7 +206,9 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
         // Check that tokens are transferred
         assertEq(thisPreBal - tokenAmount, imxToken.balanceOf(address(this)), "Tokens not transferred from user");
-        assertEq(bridgePreBal + tokenAmount, imxToken.balanceOf(address(rootBridge)), "Tokens not transferred to bridge");
+        assertEq(
+            bridgePreBal + tokenAmount, imxToken.balanceOf(address(rootBridge)), "Tokens not transferred to bridge"
+        );
         // Check that native asset transferred to gas service
         assertEq(thisNativePreBal - depositFee, address(this).balance, "ETH not paid from user");
         assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");

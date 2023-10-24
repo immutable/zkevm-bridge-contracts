@@ -31,7 +31,6 @@ contract Utils is Test {
         token = new ERC20PresetMinterPauser("Test", "TST");
         token.mint(address(this), 1000000 ether);
 
-
         deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), imxTokenAddress);
         imxToken = ERC20PresetMinterPauser(imxTokenAddress);
         imxToken.mint(address(this), 1000000 ether);
@@ -47,9 +46,7 @@ contract Utils is Test {
             address(axelarGasService)
         );
 
-        rootBridge.initialize(
-            address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress
-        );
+        rootBridge.initialize(address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress);
         axelarAdaptor.setChildBridgeAdaptor();
     }
 
