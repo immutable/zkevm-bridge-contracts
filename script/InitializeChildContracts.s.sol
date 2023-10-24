@@ -13,7 +13,8 @@ contract InitializeChildContracts is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("CHILD_PRIVATE_KEY");
         ChildERC20Bridge childERC20Bridge = ChildERC20Bridge(vm.envAddress("CHILD_ERC20_BRIDGE"));
-        ChildAxelarBridgeAdaptor childAxelarBridgeAdaptor = ChildAxelarBridgeAdaptor(vm.envAddress("CHILD_BRIDGE_ADAPTOR"));
+        ChildAxelarBridgeAdaptor childAxelarBridgeAdaptor =
+            ChildAxelarBridgeAdaptor(vm.envAddress("CHILD_BRIDGE_ADAPTOR"));
         address childTokenTemplate = vm.envAddress("CHILDCHAIN_CHILD_TOKEN_TEMPLATE");
         address rootERC20BridgeAdaptor = vm.envAddress("ROOT_BRIDGE_ADAPTOR");
         string memory childRpcUrl = vm.envString("CHILD_RPC_URL");
@@ -27,8 +28,8 @@ contract InitializeChildContracts is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), 
-            Strings.toHexString(rootERC20BridgeAdaptor), 
+            address(childAxelarBridgeAdaptor),
+            Strings.toHexString(rootERC20BridgeAdaptor),
             childTokenTemplate,
             rootChainName,
             rootIMXToken
@@ -37,6 +38,5 @@ contract InitializeChildContracts is Script {
         childAxelarBridgeAdaptor.setRootBridgeAdaptor();
 
         vm.stopBroadcast();
-
     }
 }

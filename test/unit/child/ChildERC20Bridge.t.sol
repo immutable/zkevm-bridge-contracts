@@ -286,7 +286,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     //Deposit
 
     function test_onMessageReceive_DepositIMX_EmitsIMXDepositEvent() public {
-
         uint256 fundedAmount = 10 ether;
         vm.deal(address(childBridge), fundedAmount);
 
@@ -317,7 +316,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(receiver.balance, amount, "receiver balance not increased");
     }
 
-     function test_RevertIf_onMessageReceive_DepositIMX_InsufficientBalance() public {
+    function test_RevertIf_onMessageReceive_DepositIMX_InsufficientBalance() public {
         uint256 fundedAmount = 1 ether;
         vm.deal(address(childBridge), fundedAmount);
 

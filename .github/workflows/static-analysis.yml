@@ -11,3 +11,4 @@ jobs:
         with:
           fail-on: high
           slither-args: --filter-paths "./lib|./test"
+          node-version: 18

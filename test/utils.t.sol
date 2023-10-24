@@ -12,13 +12,13 @@ import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
 contract Utils is Test {
-
     function integrationSetup(
-        address childBridge, 
-        address childBridgeAdaptor, 
+        address childBridge,
+        address childBridgeAdaptor,
         string memory childBridgeName,
         address imxTokenAddress,
-        address ethTokenAddress)
+        address ethTokenAddress
+    )
         public
         returns (
             ERC20PresetMinterPauser token,
@@ -42,7 +42,9 @@ contract Utils is Test {
             address(axelarGasService)
         );
 
-        rootBridge.initialize(address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress, ethTokenAddress);
+        rootBridge.initialize(
+            address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress, ethTokenAddress
+        );
         axelarAdaptor.setChildBridgeAdaptor();
     }
 
@@ -83,12 +85,12 @@ contract Utils is Test {
             childToken = rootBridge.mapToken{value: mapTokenFee}(token);
         }
         if (address(token) == address(0xeee)) {
-            vm.deal(to, tokenAmount+depositFee);
+            vm.deal(to, tokenAmount + depositFee);
         } else {
             token.mint(address(this), tokenAmount);
             token.approve(address(rootBridge), tokenAmount);
         }
-        
+
         return (childToken, predictedPayload);
     }
 

@@ -192,7 +192,7 @@ contract ChildERC20Bridge is
         } else {
             Address.sendValue(payable(receiver), amount);
             emit IMXDeposit(address(rootToken), sender, receiver, amount);
-        }                
+        }
     }
 
     function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
