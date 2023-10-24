@@ -99,7 +99,8 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     function test_depositToken() public {
         uint256 tokenAmount = 300;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
-        (address childToken, bytes memory predictedPayload) = setupDeposit(token, rootBridge, mapTokenFee, depositFee, tokenAmount, true);
+        (address childToken, bytes memory predictedPayload) =
+            setupDeposit(token, rootBridge, mapTokenFee, depositFee, tokenAmount, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
