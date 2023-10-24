@@ -62,9 +62,7 @@ contract ChildERC20Bridge is
         string memory newRootChain,
         address newIMXToken
     ) public initializer {
-        if (newBridgeAdaptor == address(0) 
-        || newChildTokenTemplate == address(0)
-        || newIMXToken == address(0)) {
+        if (newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newIMXToken == address(0)) {
             revert ZeroAddress();
         }
 
@@ -165,7 +163,7 @@ contract ChildERC20Bridge is
         } else {
             Address.sendValue(payable(receiver), amount);
             emit IMXDeposit(address(rootToken), sender, receiver, amount);
-        }                
+        }
     }
 
     function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
