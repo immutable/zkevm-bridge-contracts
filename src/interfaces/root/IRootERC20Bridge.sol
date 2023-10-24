@@ -73,6 +73,8 @@ interface IRootERC20BridgeErrors {
     error NotMapped();
     /// @notice Error when attempting to map IMX.
     error CantMapIMX();
+    /// @notice Error when attempting to map ETH.
+    error CantMapETH();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
 }

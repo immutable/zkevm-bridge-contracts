@@ -150,6 +150,11 @@ contract RootERC20Bridge is
         if (address(rootToken) == rootIMXToken) {
             revert CantMapIMX();
         }
+
+        if (address(rootToken) == NATIVE_ETH) {
+            revert CantMapETH();
+        }
+
         if (rootTokenToChildToken[address(rootToken)] != address(0)) {
             revert AlreadyMapped();
         }

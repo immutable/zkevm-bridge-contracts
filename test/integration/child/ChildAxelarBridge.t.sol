@@ -19,7 +19,6 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
     string public ROOT_CHAIN_NAME = "ROOT_CHAIN";
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
-    address constant CHILD_ETH_TOKEN = address(0xddd);
 
     ChildERC20Bridge public childERC20Bridge;
     ChildERC20 public childERC20;
@@ -36,7 +35,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(childERC20Bridge));
 
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), ROOT_ADAPTOR_ADDRESS, address(childERC20), ROOT_CHAIN_NAME, IMX_TOKEN_ADDRESS, CHILD_ETH_TOKEN
+            address(childAxelarBridgeAdaptor), ROOT_ADAPTOR_ADDRESS, address(childERC20), ROOT_CHAIN_NAME, IMX_TOKEN_ADDRESS
         );
     }
 

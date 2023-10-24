@@ -60,7 +60,6 @@ contract ChildERC20Bridge is
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootChain A stringified representation of the chain that this bridge is connected to. Used for validation.
      * @param newRootIMXToken Address of ECR20 IMX on the root chain.
-     * @param newRootETHToken Address used to denote ETH on the root chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -68,14 +67,12 @@ contract ChildERC20Bridge is
         string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
         string memory newRootChain,
-        address newRootIMXToken,
-        address newRootETHToken) 
+        address newRootIMXToken) 
         public initializer 
     {
         if (newBridgeAdaptor == address(0) 
         || newChildTokenTemplate == address(0)
-        || newRootIMXToken == address(0)
-        || newRootETHToken == address(0)) {
+        || newRootIMXToken == address(0)) {
             revert ZeroAddress();
         }
 
@@ -94,8 +91,8 @@ contract ChildERC20Bridge is
         rootIMXToken = newRootIMXToken;
 
         IChildERC20 clonedETHToken =
-            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(newRootETHToken))));
-        clonedETHToken.initialize(newRootETHToken, "Ethereum", "ETH", 18);
+            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
+        clonedETHToken.initialize(NATIVE_ETH, "Ethereum", "ETH", 18);
         childETHToken = address(clonedETHToken);
     }
 
@@ -140,6 +137,10 @@ contract ChildERC20Bridge is
 
         if (address(rootToken) == rootIMXToken) {
             revert CantMapIMX();
+        }
+
+        if (address(rootToken) == NATIVE_ETH) {
+            revert CantMapETH();
         }
 
         if (rootTokenToChildToken[rootToken] != address(0)) {
