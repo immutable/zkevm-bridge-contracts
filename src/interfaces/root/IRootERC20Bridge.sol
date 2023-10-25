@@ -46,7 +46,7 @@ interface IRootERC20BridgeEvents {
         uint256 amount
     );
     event IMXDeposit(address indexed rootToken, address depositor, address indexed receiver, uint256 amount);
-    event NativeDeposit(
+    event NativeEthDeposit(
         address indexed rootToken,
         address indexed childToken,
         address depositor,
@@ -68,6 +68,8 @@ interface IRootERC20BridgeErrors {
     error NotMapped();
     /// @notice Error when attempting to map IMX.
     error CantMapIMX();
+    /// @notice Error when attempting to map ETH.
+    error CantMapETH();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
     /// @notice Error when the given child chain bridge adaptor is invalid.

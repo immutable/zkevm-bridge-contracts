@@ -14,7 +14,7 @@ contract DeployChildContracts is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("CHILD_PRIVATE_KEY");
         address childGateway = vm.envAddress("CHILD_GATEWAY_ADDRESS");
-        address childGasService = vm.envAddress("CHILD_GAS_SERVICE_ADDRESS"); // Not yet used.
+        //address childGasService = vm.envAddress("CHILD_GAS_SERVICE_ADDRESS"); // Not yet used.
         string memory childRpcUrl = vm.envString("CHILD_RPC_URL");
 
         vm.createSelectFork(childRpcUrl);

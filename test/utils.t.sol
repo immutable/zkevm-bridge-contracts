@@ -17,11 +17,11 @@ contract Utils is Test {
         address childBridge,
         address childBridgeAdaptor,
         string memory childBridgeName,
-        address imxTokenAddress,
-        address ethTokenAddress
+        address imxTokenAddress
     )
         public
         returns (
+            ERC20PresetMinterPauser imxToken,
             ERC20PresetMinterPauser token,
             RootERC20Bridge rootBridge,
             RootAxelarBridgeAdaptor axelarAdaptor,
@@ -31,6 +31,10 @@ contract Utils is Test {
     {
         token = new ERC20PresetMinterPauser("Test", "TST");
         token.mint(address(this), 1000000 ether);
+
+        deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), imxTokenAddress);
+        imxToken = ERC20PresetMinterPauser(imxTokenAddress);
+        imxToken.mint(address(this), 1000000 ether);
 
         rootBridge = new RootERC20Bridge();
         mockAxelarGateway = new MockAxelarGateway();
@@ -48,8 +52,7 @@ contract Utils is Test {
             childBridge,
             Strings.toHexString(childBridgeAdaptor),
             address(token),
-            imxTokenAddress,
-            ethTokenAddress
+            imxTokenAddress
         );
         axelarAdaptor.setChildBridgeAdaptor();
     }
@@ -90,6 +93,7 @@ contract Utils is Test {
         if (saveTokenMapping) {
             childToken = rootBridge.mapToken{value: mapTokenFee}(token);
         }
+
         if (address(token) == address(0xeee)) {
             vm.deal(to, tokenAmount + depositFee);
         } else {
