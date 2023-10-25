@@ -22,7 +22,7 @@ contract InitializeRootContracts is Script {
         string memory rootRpcUrl = vm.envString("ROOT_RPC_URL");
         uint256 rootPrivateKey = vm.envUint("ROOT_PRIVATE_KEY");
         address rootIMXToken = vm.envAddress("ROOT_IMX_ADDRESS");
-        address childETHToken = vm.envAddress("CHILD_ETH_ADDRESS");
+        address rootWETHToken = vm.envAddress("ROOT_WETH_ADDRESS");
 
         /**
          * INITIALIZE ROOT CHAIN CONTRACTS
@@ -31,7 +31,7 @@ contract InitializeRootContracts is Script {
         vm.startBroadcast(rootPrivateKey);
 
         rootERC20Bridge.initialize(
-            address(rootBridgeAdaptor), childERC20Bridge, childBridgeAdaptor, rootChainChildTokenTemplate, rootIMXToken
+            address(rootBridgeAdaptor), childERC20Bridge, childBridgeAdaptor, rootChainChildTokenTemplate, rootIMXToken, rootWETHToken
         );
 
         rootBridgeAdaptor.setChildBridgeAdaptor();

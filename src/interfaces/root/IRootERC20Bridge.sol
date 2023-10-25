@@ -70,6 +70,8 @@ interface IRootERC20BridgeErrors {
     error CantMapIMX();
     /// @notice Error when attempting to map ETH.
     error CantMapETH();
+    /// @notice Error when attempting to map wETH.
+    error CantMapWETH();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
 }

@@ -12,6 +12,8 @@ import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bri
 import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
+import {IWETH} from "../interfaces/root/IWETH.sol";
+import {console2} from "forge-std/Test.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
@@ -48,6 +50,8 @@ contract RootERC20Bridge is
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
     address public childETHToken;
+    /// @dev The address of the wETH ERC20 token on L1.
+    address public rootWETHToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -56,6 +60,7 @@ contract RootERC20Bridge is
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootIMXToken Address of ERC20 IMX on the root chain.
+     * @param newRootWETHToken Address of ERC20 IMX on the root chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -63,18 +68,20 @@ contract RootERC20Bridge is
         address newChildERC20Bridge,
         address newChildBridgeAdaptor,
         address newChildTokenTemplate,
-        address newRootIMXToken
+        address newRootIMXToken,
+        address newRootWETHToken
     ) public initializer {
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
                 || newChildTokenTemplate == address(0) || newChildBridgeAdaptor == address(0)
-                || newRootIMXToken == address(0)
+                || newRootIMXToken == address(0) || newRootWETHToken == address(0)
         ) {
             revert ZeroAddress();
         }
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
         rootIMXToken = newRootIMXToken;
+        rootWETHToken = newRootWETHToken;
         IChildERC20 clonedETHToken =
             IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
         childETHToken = address(clonedETHToken);
@@ -118,18 +125,41 @@ contract RootERC20Bridge is
         }
     }
 
+    function _unwrapWETH(uint256 amount) private {
+        uint256 expectedBalance = address(this).balance + amount;
+
+        IERC20Metadata erc20WETH = IERC20Metadata(rootWETHToken);
+
+        erc20WETH.safeTransferFrom(msg.sender, address(this), amount);
+        IWETH(rootWETHToken).withdraw(amount);
+
+        // invariant check to ensure that the root native balance has increased by the amount deposited
+        if (address(this).balance != expectedBalance) {
+            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        }
+    }
+
     /**
      * @inheritdoc IRootERC20Bridge
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
-        _depositERC20(rootToken, msg.sender, amount);
+        _depositWETHorERC20(rootToken, msg.sender, amount);
     }
 
     /**
      * @inheritdoc IRootERC20Bridge
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
-        _depositERC20(rootToken, receiver, amount);
+        _depositWETHorERC20(rootToken, receiver, amount);
+    }
+
+    function _depositWETHorERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        if (address(rootToken) == rootWETHToken) {
+            _unwrapWETH(amount);
+            _depositETH(receiver, amount);
+        } else {
+            _depositERC20(rootToken, receiver, amount);
+        }
     }
 
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
@@ -152,6 +182,10 @@ contract RootERC20Bridge is
 
         if (address(rootToken) == NATIVE_ETH) {
             revert CantMapETH();
+        }
+
+        if (address(rootToken) == rootWETHToken) {
+            revert CantMapWETH();
         }
 
         if (rootTokenToChildToken[address(rootToken)] != address(0)) {

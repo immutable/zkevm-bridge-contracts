@@ -18,6 +18,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
+    address constant WRAPPED_ETH = address(0xeee);
 
     uint256 constant mapTokenFee = 300;
     uint256 constant depositFee = 200;
@@ -31,7 +32,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
     function setUp() public {
         (imxToken, token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) =
-            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS);
+            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, WRAPPED_ETH);
     }
 
     /**
@@ -103,7 +104,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
 
         (, bytes memory predictedPayload) =
-            setupDeposit(ERC20PresetMinterPauser(NATIVE_ETH), rootBridge, mapTokenFee, depositFee, tokenAmount, false);
+            setupDeposit(NATIVE_ETH, rootBridge, mapTokenFee, depositFee, tokenAmount, false);
 
         console2.logBytes(predictedPayload);
 
@@ -161,7 +162,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
 
         (, bytes memory predictedPayload) = setupDeposit(
-            ERC20PresetMinterPauser(IMX_TOKEN_ADDRESS), rootBridge, mapTokenFee, depositFee, tokenAmount, false
+            IMX_TOKEN_ADDRESS, rootBridge, mapTokenFee, depositFee, tokenAmount, false
         );
 
         vm.expectEmit(address(axelarAdaptor));
@@ -219,7 +220,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         uint256 tokenAmount = 300;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
         (address childToken, bytes memory predictedPayload) =
-            setupDeposit(token, rootBridge, mapTokenFee, depositFee, tokenAmount, true);
+            setupDeposit(address(token), rootBridge, mapTokenFee, depositFee, tokenAmount, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
@@ -275,7 +276,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         address recipient = address(9876);
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
         (address childToken, bytes memory predictedPayload) =
-            setupDepositTo(token, rootBridge, mapTokenFee, depositFee, tokenAmount, recipient, true);
+            setupDepositTo(address(token), rootBridge, mapTokenFee, depositFee, tokenAmount, recipient, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
