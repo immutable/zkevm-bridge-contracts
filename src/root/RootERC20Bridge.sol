@@ -97,6 +97,11 @@ contract RootERC20Bridge is
     }
 
     /**
+     * @dev method to receive the ETH back from the WETH contract when it is unwrapped
+     */
+    receive() external payable {}
+
+    /**
      * @inheritdoc IRootERC20Bridge
      * @dev TODO when this becomes part of the deposit flow on a token's first bridge, this logic will need to be mostly moved into an internal function.
      *      Additionally, we need to investigate what the ordering guarantees are. i.e. if we send a map token message, then a bridge token message,
@@ -128,11 +133,6 @@ contract RootERC20Bridge is
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
         _depositToken(rootToken, receiver, amount);
     }
-
-    /**
-     * @dev method to receive the ETH back from the WETH contract when it is unwrapped
-     */
-    receive() external payable {}
 
     function _depositUnwrappedETH(address receiver, uint256 amount) private {
         _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount, msg.value);
