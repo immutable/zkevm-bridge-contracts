@@ -124,12 +124,25 @@ forge build
 yarn start
 ```
 
-2. In a separate terminal window, deploy the smart contracts
+2. Set the following env vars in your `.env` file
+```shell
+ROOT_RPC_URL="http://localhost:8500/0"
+CHILD_RPC_URL="http://localhost:8500/1"
+ROOT_CHAIN_ID="2500"
+CHILD_CHAIN_ID="2501"
+```
+
+3. In a separate terminal window, deploy the smart contracts
 ```shell
 ./deploy.sh
 ```
 
-3. Run the script to execute the `axelar-local-dev/examples/evm/call-contract/index.js` file
+4. Copy the config file with the correct addresses
+```shell
+cp axelar-local-dev/chain-config/local.template.json axelar-local-dev/chain-config/local.json
+```
+
+5. Run the script to execute the `axelar-local-dev/examples/evm/call-contract/index.js` file
 ```shell
 yarn run execute evm/call-contract local Ethereum Polygon
 ```

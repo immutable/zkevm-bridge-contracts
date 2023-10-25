@@ -11,10 +11,6 @@
     },
     "rpc": "http://localhost:8500/0",
     "contract": {
-      "abi": [],
-      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
-    },
-    "contract2": {
       "abi": [
         "function rootTokenToChildToken(address rootToken) external view returns (address)",
         "function mapToken(address rootToken) external payable returns (address)",
@@ -54,23 +50,6 @@
     },
     "contract2": {
       "abi": [
-        "function rootTokenToChildToken(address rootToken) external view returns (address)"
-      ],
-      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
-    },
-    "contract2": {
-      "abi": [
-        "constructor(address gateway_, address gasReceiver_)",
-        "error InvalidAddress()",
-        "error NotApprovedByGateway()",
-        "function execute(bytes32 commandId, string sourceChain, string sourceAddress, bytes payload)",
-        "function executeWithToken(bytes32 commandId, string sourceChain, string sourceAddress, bytes payload, string tokenSymbol, uint256 amount)",
-        "function gasService() view returns (address)",
-        "function gateway() view returns (address)",
-        "function setRemoteValue(string destinationChain, string destinationAddress, string value_) payable",
-        "function sourceAddress() view returns (string)",
-        "function sourceChain() view returns (string)",
-        "function value() view returns (string)",
         "function rootTokenToChildToken(address rootToken) external view returns (address)"
       ],
       "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"

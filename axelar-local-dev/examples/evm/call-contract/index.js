@@ -38,11 +38,6 @@ async function execute(chains, wallet, options) {
     const tx = await source.contract.mapToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4", {value: fee})
     await tx.wait();
 
-    const util = require('util')
-
-    console.log(util.inspect(receipt, {showHidden: false, depth: null, colors: true}))
-    console.log("Called ++++++++++++")
-
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     while ((await destination.contract2.rootTokenToChildToken("0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4")) == "0x0000000000000000000000000000000000000000") {
