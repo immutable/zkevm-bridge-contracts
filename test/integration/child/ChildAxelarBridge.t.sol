@@ -18,7 +18,8 @@ import {Utils} from "../../utils.t.sol";
 contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
     string public ROOT_CHAIN_NAME = "ROOT_CHAIN";
-    address constant IMX_TOKEN = address(9);
+    address constant IMX_TOKEN_ADDRESS = address(0xccc);
+    address constant NATIVE_ETH = address(0xeee);
 
     ChildERC20Bridge public childERC20Bridge;
     ChildERC20 public childERC20;
@@ -35,7 +36,11 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(childERC20Bridge));
 
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), ROOT_ADAPTOR_ADDRESS, address(childERC20), ROOT_CHAIN_NAME, IMX_TOKEN
+            address(childAxelarBridgeAdaptor),
+            ROOT_ADAPTOR_ADDRESS,
+            address(childERC20),
+            ROOT_CHAIN_NAME,
+            IMX_TOKEN_ADDRESS
         );
     }
 
@@ -143,6 +148,47 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         );
     }
 
+    function test_deposit_EmitsNativeDeposit() public {
+        address sender = address(0xff);
+        address receiver = address(0xee);
+        uint256 amount = 100;
+
+        address predictedChildETHToken = Clones.predictDeterministicAddress(
+            address(childERC20), keccak256(abi.encodePacked(NATIVE_ETH)), address(childERC20Bridge)
+        );
+
+        bytes32 commandId = bytes32("testCommandId");
+
+        vm.expectEmit(address(childERC20Bridge));
+        emit NativeEthDeposit(NATIVE_ETH, predictedChildETHToken, sender, receiver, amount);
+
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(childERC20Bridge.DEPOSIT_SIG(), NATIVE_ETH, sender, receiver, amount)
+        );
+    }
+
+    function test_deposit_EmitsIMXDeposit() public {
+        address sender = address(0xff);
+        address receiver = address(0xee);
+        uint256 amount = 100;
+        bytes32 commandId = bytes32("testCommandId");
+
+        vm.deal(address(childERC20Bridge), 1 ether);
+
+        vm.expectEmit(address(childERC20Bridge));
+        emit IMXDeposit(IMX_TOKEN_ADDRESS, sender, receiver, amount);
+
+        childAxelarBridgeAdaptor.execute(
+            commandId,
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            abi.encode(childERC20Bridge.DEPOSIT_SIG(), IMX_TOKEN_ADDRESS, sender, receiver, amount)
+        );
+    }
+
     function test_deposit_TransfersTokenToReceiver() public {
         address rootTokenAddress = address(456);
         address sender = address(0xff);
@@ -246,8 +292,8 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
         address rootAddress = address(0x123);
         {
-            // Slot is 6 because of the Ownable, Initializable contracts coming first.
-            uint256 rootTokenToChildTokenMappingSlot = 6;
+            // Slot is 2 because of the Ownable, Initializable contracts coming first.
+            uint256 rootTokenToChildTokenMappingSlot = 2;
             address childAddress = address(444444);
             bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);
             bytes32 data = bytes32(uint256(uint160(childAddress)));

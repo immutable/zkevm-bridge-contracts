@@ -33,18 +33,25 @@ contract ChildERC20Bridge is
 {
     using SafeERC20 for IERC20Metadata;
 
+    /// @dev leave this as the first param for the integration tests
+    mapping(address => address) public rootTokenToChildToken;
+
+    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+    bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    address public constant NATIVE_ETH = address(0xeee);
+
     IChildERC20BridgeAdaptor public bridgeAdaptor;
+
     /// @dev The address that will be sending messages to, and receiving messages from, the child chain.
     string public rootERC20BridgeAdaptor;
     /// @dev The address of the token template that will be cloned to create tokens.
     address public childTokenTemplate;
     /// @dev The name of the chain that this bridge is connected to.
     string public rootChain;
-    mapping(address => address) public rootTokenToChildToken;
-
-    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
-    bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
-    address public imxToken;
+    /// @dev The address of the IMX ERC20 token on L1.
+    address public rootIMXToken;
+    /// @dev The address of the ETH ERC20 token on L2.
+    address public childETHToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -52,7 +59,7 @@ contract ChildERC20Bridge is
      * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootChain A stringified representation of the chain that this bridge is connected to. Used for validation.
-     * @param newIMXToken Address of ECR20 IMX on the root chain.
+     * @param newRootIMXToken Address of ECR20 IMX on the root chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -60,9 +67,9 @@ contract ChildERC20Bridge is
         string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
         string memory newRootChain,
-        address newIMXToken
+        address newRootIMXToken
     ) public initializer {
-        if (newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newIMXToken == address(0)) {
+        if (newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)) {
             revert ZeroAddress();
         }
 
@@ -78,7 +85,12 @@ contract ChildERC20Bridge is
         childTokenTemplate = newChildTokenTemplate;
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
         rootChain = newRootChain;
-        imxToken = newIMXToken;
+        rootIMXToken = newRootIMXToken;
+
+        IChildERC20 clonedETHToken =
+            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
+        clonedETHToken.initialize(NATIVE_ETH, "Ethereum", "ETH", 18);
+        childETHToken = address(clonedETHToken);
     }
 
     /**
@@ -120,8 +132,12 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
-        if (address(rootToken) == imxToken) {
+        if (address(rootToken) == rootIMXToken) {
             revert CantMapIMX();
+        }
+
+        if (address(rootToken) == NATIVE_ETH) {
+            revert CantMapETH();
         }
 
         if (rootTokenToChildToken[rootToken] != address(0)) {
@@ -147,11 +163,16 @@ contract ChildERC20Bridge is
 
         address childToken;
 
-        if (address(rootToken) != imxToken) {
-            childToken = rootTokenToChildToken[address(rootToken)];
-            if (childToken == address(0)) {
-                revert NotMapped();
+        if (address(rootToken) != rootIMXToken) {
+            if (address(rootToken) == NATIVE_ETH) {
+                childToken = childETHToken;
+            } else {
+                childToken = rootTokenToChildToken[address(rootToken)];
+                if (childToken == address(0)) {
+                    revert NotMapped();
+                }
             }
+
             if (address(childToken).code.length == 0) {
                 revert EmptyTokenContract();
             }
@@ -159,7 +180,12 @@ contract ChildERC20Bridge is
             if (!IChildERC20(childToken).mint(receiver, amount)) {
                 revert MintFailed();
             }
-            emit ERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
+
+            if (address(rootToken) == NATIVE_ETH) {
+                emit NativeEthDeposit(address(rootToken), childToken, sender, receiver, amount);
+            } else {
+                emit ERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
+            }
         } else {
             Address.sendValue(payable(receiver), amount);
             emit IMXDeposit(address(rootToken), sender, receiver, amount);

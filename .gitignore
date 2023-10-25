@@ -21,3 +21,5 @@ docs/
 
 # Contract addresses
 addresses.json
+
+/node_modules
