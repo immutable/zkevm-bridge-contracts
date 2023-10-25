@@ -77,9 +77,10 @@ contract RootERC20Bridge is
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
         rootIMXToken = newRootIMXToken;
-        IChildERC20 clonedETHToken =
-            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
-        childETHToken = address(clonedETHToken);
+
+        childETHToken = Clones.predictDeterministicAddress(
+            childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH)), childERC20Bridge
+        );
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
         childBridgeAdaptor = newChildBridgeAdaptor;
     }
