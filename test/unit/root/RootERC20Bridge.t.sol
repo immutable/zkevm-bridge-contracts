@@ -363,9 +363,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.deposit{value: depositFee}(IERC20Metadata(WRAPPED_ETH), amount);
 
         // Check that tokens are transferred
-        assertEq(thisPreBal - amount, IERC20Metadata(WRAPPED_ETH).balanceOf(address(this)), "Tokens not transferred from user");
+        assertEq(
+            thisPreBal - amount,
+            IERC20Metadata(WRAPPED_ETH).balanceOf(address(this)),
+            "Tokens not transferred from user"
+        );
         assertEq(bridgePreBal + amount, address(rootBridge).balance, "ETH not transferred to Bridge");
-
     }
 
     function test_depositToWETHTransfersTokens() public {
@@ -380,9 +383,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositTo{value: depositFee}(IERC20Metadata(WRAPPED_ETH), receiver, amount);
 
         // Check that tokens are transferred
-        assertEq(thisPreBal - amount, IERC20Metadata(WRAPPED_ETH).balanceOf(address(this)), "Tokens not transferred from user");
+        assertEq(
+            thisPreBal - amount,
+            IERC20Metadata(WRAPPED_ETH).balanceOf(address(this)),
+            "Tokens not transferred from user"
+        );
         assertEq(bridgePreBal + amount, address(rootBridge).balance, "ETH not transferred to Bridge");
-        
     }
 
     /**

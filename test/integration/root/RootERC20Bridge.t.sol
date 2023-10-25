@@ -32,7 +32,6 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     MockAxelarGasService public axelarGasService;
 
     function setUp() public {
-
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
         (imxToken, token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) =
@@ -267,7 +266,11 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         rootBridge.deposit{value: depositFee}(IERC20Metadata(WRAPPED_ETH), tokenAmount);
 
         // Check that tokens are transferred
-        assertEq(thisPreBal - tokenAmount, IERC20Metadata(WRAPPED_ETH).balanceOf(address(this)), "Tokens not transferred from user");
+        assertEq(
+            thisPreBal - tokenAmount,
+            IERC20Metadata(WRAPPED_ETH).balanceOf(address(this)),
+            "Tokens not transferred from user"
+        );
         assertEq(bridgePreBal + tokenAmount, address(rootBridge).balance, "ETH not transferred to Bridge");
         // Check that native asset transferred to gas service
         assertEq(thisNativePreBal - depositFee, address(this).balance, "ETH for fee not paid from user");

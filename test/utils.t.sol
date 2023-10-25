@@ -92,7 +92,7 @@ contract Utils is Test {
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
         predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), token, address(this), to, tokenAmount);
-        
+
         if (saveTokenMapping) {
             childToken = rootBridge.mapToken{value: mapTokenFee}(ERC20PresetMinterPauser(token));
         }
