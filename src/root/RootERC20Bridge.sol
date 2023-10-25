@@ -13,8 +13,7 @@ import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
-import {console2} from "forge-std/Test.sol";
-
+import "forge-std/console.sol";
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
  * @dev This contract is designed to be upgradeable.
@@ -23,6 +22,7 @@ import {console2} from "forge-std/Test.sol";
  * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in RootERC20Bridge.
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
+
 contract RootERC20Bridge is
     Ownable2Step,
     Initializable,
@@ -101,13 +101,15 @@ contract RootERC20Bridge is
     }
 
     function depositETH(uint256 amount) external payable {
-        //override removed?
         _depositETH(msg.sender, amount);
     }
 
     function depositToETH(address receiver, uint256 amount) external payable {
-        //override removed?
         _depositETH(receiver, amount);
+    }
+
+    function _depositUnwrappedETH(address receiver, uint256 amount) private {
+        _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount, msg.value);
     }
 
     function _depositETH(address receiver, uint256 amount) private {
@@ -117,7 +119,7 @@ contract RootERC20Bridge is
 
         uint256 expectedBalance = address(this).balance - (msg.value - amount);
 
-        _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount);
+        _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount, msg.value - amount);
 
         // invariant check to ensure that the root native balance has increased by the amount deposited
         if (address(this).balance != expectedBalance) {
@@ -143,20 +145,20 @@ contract RootERC20Bridge is
      * @inheritdoc IRootERC20Bridge
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
-        _depositWETHorERC20(rootToken, msg.sender, amount);
+        _depositToken(rootToken, msg.sender, amount);
     }
 
     /**
      * @inheritdoc IRootERC20Bridge
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
-        _depositWETHorERC20(rootToken, receiver, amount);
+        _depositToken(rootToken, receiver, amount);
     }
 
-    function _depositWETHorERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+    function _depositToken(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         if (address(rootToken) == rootWETHToken) {
             _unwrapWETH(amount);
-            _depositETH(receiver, amount);
+            _depositUnwrappedETH(receiver, amount);
         } else {
             _depositERC20(rootToken, receiver, amount);
         }
@@ -164,7 +166,7 @@ contract RootERC20Bridge is
 
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
-        _deposit(rootToken, receiver, amount);
+        _deposit(rootToken, receiver, amount, msg.value);
         // invariant check to ensure that the root token balance has increased by the amount deposited
         // slither-disable-next-line incorrect-equality
         if (rootToken.balanceOf(address(this)) != expectedBalance) {
@@ -208,17 +210,15 @@ contract RootERC20Bridge is
         return childToken;
     }
 
-    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount, uint256 feeAmount) private {
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
-
         if (amount == 0) {
             revert ZeroAmount();
         }
 
         address childToken;
-        uint256 feeAmount;
 
         // The native token does not need to be mapped since it should have been mapped on initialization
         // The native token also cannot be transferred since it was received in the payable function call
@@ -234,9 +234,6 @@ contract RootERC20Bridge is
             }
             // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
-            feeAmount = msg.value;
-        } else {
-            feeAmount = msg.value - amount;
         }
 
         // Deposit sig, root token address, depositor, receiver, amount
@@ -260,4 +257,6 @@ contract RootERC20Bridge is
         }
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
     }
+
+    receive() external payable {}
 }

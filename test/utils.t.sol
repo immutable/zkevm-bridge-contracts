@@ -53,7 +53,9 @@ contract Utils is Test {
             address(axelarGasService)
         );
 
-        rootBridge.initialize(address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress, wethTokenAddress);
+        rootBridge.initialize(
+            address(axelarAdaptor), childBridge, childBridgeAdaptor, address(token), imxTokenAddress, wethTokenAddress
+        );
         axelarAdaptor.setChildBridgeAdaptor();
     }
 
@@ -96,7 +98,7 @@ contract Utils is Test {
 
         if (token == address(0xeee)) {
             vm.deal(to, tokenAmount + depositFee);
-        } else if(address(token) == address(0xddd)) {
+        } else if (address(token) == address(0xddd)) {
             vm.deal(to, tokenAmount + depositFee);
             IWETH(token).deposit{value: tokenAmount}();
             IWETH(token).approve(address(rootBridge), tokenAmount);

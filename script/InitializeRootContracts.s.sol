@@ -14,7 +14,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract InitializeRootContracts is Script {
     function run() public {
-        RootERC20Bridge rootERC20Bridge = RootERC20Bridge(vm.envAddress("ROOT_ERC20_BRIDGE"));
+        RootERC20Bridge rootERC20Bridge = RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE")));
         RootAxelarBridgeAdaptor rootBridgeAdaptor = RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR"));
         address rootChainChildTokenTemplate = vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE");
         address childBridgeAdaptor = vm.envAddress("CHILD_BRIDGE_ADAPTOR");
@@ -31,7 +31,12 @@ contract InitializeRootContracts is Script {
         vm.startBroadcast(rootPrivateKey);
 
         rootERC20Bridge.initialize(
-            address(rootBridgeAdaptor), childERC20Bridge, childBridgeAdaptor, rootChainChildTokenTemplate, rootIMXToken, rootWETHToken
+            address(rootBridgeAdaptor),
+            childERC20Bridge,
+            childBridgeAdaptor,
+            rootChainChildTokenTemplate,
+            rootIMXToken,
+            rootWETHToken
         );
 
         rootBridgeAdaptor.setChildBridgeAdaptor();
