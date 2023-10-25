@@ -60,7 +60,7 @@ contract RootERC20Bridge is
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootIMXToken Address of ERC20 IMX on the root chain.
-     * @param newRootWETHToken Address of ERC20 IMX on the root chain.
+     * @param newRootWETHToken Address of ERC20 WETH on the root chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -89,6 +89,13 @@ contract RootERC20Bridge is
         childBridgeAdaptor = Strings.toHexString(newChildBridgeAdaptor);
     }
 
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
+        if (newRootBridgeAdaptor == address(0)) {
+            revert ZeroAddress();
+        }
+        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
+    }
+
     /**
      * @inheritdoc IRootERC20Bridge
      * @dev TODO when this becomes part of the deposit flow on a token's first bridge, this logic will need to be mostly moved into an internal function.
@@ -107,6 +114,25 @@ contract RootERC20Bridge is
     function depositToETH(address receiver, uint256 amount) external payable {
         _depositETH(receiver, amount);
     }
+
+    /**
+     * @inheritdoc IRootERC20Bridge
+     */
+    function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
+        _depositToken(rootToken, msg.sender, amount);
+    }
+
+    /**
+     * @inheritdoc IRootERC20Bridge
+     */
+    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
+        _depositToken(rootToken, receiver, amount);
+    }
+
+    /**
+     * @dev method to receive the ETH back from the WETH contract when it is unwrapped
+     */
+    receive() external payable {}
 
     function _depositUnwrappedETH(address receiver, uint256 amount) private {
         _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount, msg.value);
@@ -139,20 +165,6 @@ contract RootERC20Bridge is
         if (address(this).balance != expectedBalance) {
             revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
         }
-    }
-
-    /**
-     * @inheritdoc IRootERC20Bridge
-     */
-    function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
-        _depositToken(rootToken, msg.sender, amount);
-    }
-
-    /**
-     * @inheritdoc IRootERC20Bridge
-     */
-    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
-        _depositToken(rootToken, receiver, amount);
     }
 
     function _depositToken(IERC20Metadata rootToken, address receiver, uint256 amount) private {
@@ -251,15 +263,4 @@ contract RootERC20Bridge is
         }
     }
 
-    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
-        if (newRootBridgeAdaptor == address(0)) {
-            revert ZeroAddress();
-        }
-        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
-    }
-
-    /**
-     * @dev method to receive the ETH back from the WETH contract when it is unwrapped
-     */
-    receive() external payable {}
 }
