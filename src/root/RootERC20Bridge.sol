@@ -67,8 +67,7 @@ contract RootERC20Bridge is
     ) public initializer {
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
-                || newChildTokenTemplate == address(0)
-                || newRootIMXToken == address(0)
+                || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }

@@ -44,11 +44,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
         // The specific ERC20 token template does not matter for these unit tests
         rootBridge.initialize(
-            address(mockAxelarAdaptor),
-            CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(token),
-            IMX_TOKEN
+            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR_STRING, address(token), IMX_TOKEN
         );
     }
 
@@ -65,11 +61,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
         rootBridge.initialize(
-            address(mockAxelarAdaptor),
-            CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(token),
-            IMX_TOKEN
+            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR_STRING, address(token), IMX_TOKEN
         );
     }
 
