@@ -325,14 +325,64 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         (, bytes memory predictedPayload) =
             setupDeposit(WRAPPED_ETH, rootBridge, mapTokenFee, depositFee, amount, false);
 
-        bytes memory pp = abi.encode(rootBridge.DEPOSIT_SIG(), NATIVE_ETH, address(this), address(this), amount);
-
         vm.expectCall(
             address(mockAxelarAdaptor),
-            abi.encodeWithSelector(mockAxelarAdaptor.sendMessage.selector, pp, address(this))
+            abi.encodeWithSelector(mockAxelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
         rootBridge.deposit{value: depositFee}(IERC20Metadata(WRAPPED_ETH), amount);
+    }
+
+    function test_depositWETHEmitsNativeDepositEvent() public {
+        uint256 amount = 100;
+        setupDeposit(WRAPPED_ETH, rootBridge, mapTokenFee, depositFee, amount, false);
+
+        vm.expectEmit();
+        emit NativeEthDeposit(NATIVE_ETH, rootBridge.childETHToken(), address(this), address(this), amount);
+        rootBridge.deposit{value: depositFee}(IERC20Metadata(WRAPPED_ETH), amount);
+    }
+
+    function test_depositToWETHEmitsNativeEthDepositEvent() public {
+        uint256 amount = 1000;
+        address receiver = address(12345);
+        setupDepositTo(WRAPPED_ETH, rootBridge, mapTokenFee, depositFee, amount, receiver, false);
+
+        vm.expectEmit();
+        emit NativeEthDeposit(NATIVE_ETH, rootBridge.childETHToken(), address(this), receiver, amount);
+        rootBridge.depositTo{value: depositFee}(IERC20Metadata(WRAPPED_ETH), receiver, amount);
+    }
+
+    function test_depositWETHTransfersTokens() public {
+        uint256 amount = 100;
+
+        setupDeposit(WRAPPED_ETH, rootBridge, mapTokenFee, depositFee, amount, false);
+
+        uint256 thisPreBal = IERC20Metadata(WRAPPED_ETH).balanceOf(address(this));
+        uint256 bridgePreBal = address(rootBridge).balance;
+
+        rootBridge.deposit{value: depositFee}(IERC20Metadata(WRAPPED_ETH), amount);
+
+        // Check that tokens are transferred
+        assertEq(thisPreBal - amount, IERC20Metadata(WRAPPED_ETH).balanceOf(address(this)), "Tokens not transferred from user");
+        assertEq(bridgePreBal + amount, address(rootBridge).balance, "ETH not transferred to Bridge");
+
+    }
+
+    function test_depositToWETHTransfersTokens() public {
+        uint256 amount = 100;
+        address receiver = address(12345);
+
+        setupDepositTo(WRAPPED_ETH, rootBridge, mapTokenFee, depositFee, amount, receiver, false);
+
+        uint256 thisPreBal = IERC20Metadata(WRAPPED_ETH).balanceOf(address(this));
+        uint256 bridgePreBal = address(rootBridge).balance;
+
+        rootBridge.depositTo{value: depositFee}(IERC20Metadata(WRAPPED_ETH), receiver, amount);
+
+        // Check that tokens are transferred
+        assertEq(thisPreBal - amount, IERC20Metadata(WRAPPED_ETH).balanceOf(address(this)), "Tokens not transferred from user");
+        assertEq(bridgePreBal + amount, address(rootBridge).balance, "ETH not transferred to Bridge");
+        
     }
 
     /**

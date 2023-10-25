@@ -258,5 +258,8 @@ contract RootERC20Bridge is
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
     }
 
+    /**
+     * @dev method to receive the ETH back from the WETH contract when it is unwrapped
+     */
     receive() external payable {}
 }

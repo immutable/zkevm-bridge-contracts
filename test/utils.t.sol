@@ -92,6 +92,7 @@ contract Utils is Test {
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
         predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), token, address(this), to, tokenAmount);
+        
         if (saveTokenMapping) {
             childToken = rootBridge.mapToken{value: mapTokenFee}(ERC20PresetMinterPauser(token));
         }
@@ -99,6 +100,8 @@ contract Utils is Test {
         if (token == address(0xeee)) {
             vm.deal(to, tokenAmount + depositFee);
         } else if (address(token) == address(0xddd)) {
+            // set the payload to expect native eth when depositing wrapped eth
+            predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(0xeee), address(this), to, tokenAmount);
             vm.deal(to, tokenAmount + depositFee);
             IWETH(token).deposit{value: tokenAmount}();
             IWETH(token).approve(address(rootBridge), tokenAmount);
