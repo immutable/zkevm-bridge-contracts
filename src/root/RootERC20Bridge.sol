@@ -13,7 +13,7 @@ import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
-import "forge-std/console.sol";
+
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
  * @dev This contract is designed to be upgradeable.
