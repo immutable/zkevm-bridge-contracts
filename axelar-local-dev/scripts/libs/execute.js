@@ -50,9 +50,7 @@ async function executeEVMExample(env, chains, args, wallet, example) {
         chain.gateway = new Contract(chain.gateway, AxelarGatewayContract.abi, connectedWallet);
         chain.gasService = new Contract(chain.gasService, AxelarGasServiceContract.abi, connectedWallet);
 
-        console.log('before getAddress')
         const tokenAddress = await chain.gateway.tokenAddresses('aUSDC');
-        console.log('tokenAddress', tokenAddress)
         chain.usdc = new Contract(tokenAddress, IERC20.abi, connectedWallet);
     }
 
