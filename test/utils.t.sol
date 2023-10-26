@@ -8,6 +8,8 @@ import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
+import {WETH} from "../src/test/root/WETH.sol";
+import {IWETH} from "../src/interfaces/root/IWETH.sol";
 
 import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
@@ -17,7 +19,8 @@ contract Utils is Test {
         address childBridge,
         address childBridgeAdaptor,
         string memory childBridgeName,
-        address imxTokenAddress
+        address imxTokenAddress,
+        address wethTokenAddress
     )
         public
         returns (
@@ -36,6 +39,10 @@ contract Utils is Test {
         imxToken = ERC20PresetMinterPauser(imxTokenAddress);
         imxToken.mint(address(this), 1000000 ether);
 
+        // deployCodeTo("WETH9.sol", abi.encode("Wrapped ETH", "WETH"), wethTokenAddress);
+        // imxToken = ERC20PresetMinterPauser(imxTokenAddress);
+        // imxToken.mint(address(this), 1000000 ether);
+
         rootBridge = new RootERC20Bridge();
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
@@ -52,13 +59,14 @@ contract Utils is Test {
             childBridge,
             Strings.toHexString(childBridgeAdaptor),
             address(token),
-            imxTokenAddress
+            imxTokenAddress,
+            wethTokenAddress
         );
         axelarAdaptor.setChildBridgeAdaptor();
     }
 
     function setupDeposit(
-        ERC20PresetMinterPauser token,
+        address token,
         RootERC20Bridge rootBridge,
         uint256 mapTokenFee,
         uint256 depositFee,
@@ -69,7 +77,7 @@ contract Utils is Test {
     }
 
     function setupDepositTo(
-        ERC20PresetMinterPauser token,
+        address token,
         RootERC20Bridge rootBridge,
         uint256 mapTokenFee,
         uint256 depositFee,
@@ -81,7 +89,7 @@ contract Utils is Test {
     }
 
     function _setupDeposit(
-        ERC20PresetMinterPauser token,
+        address token,
         RootERC20Bridge rootBridge,
         uint256 mapTokenFee,
         uint256 depositFee,
@@ -89,16 +97,23 @@ contract Utils is Test {
         address to,
         bool saveTokenMapping
     ) public returns (address childToken, bytes memory predictedPayload) {
-        predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(token), address(this), to, tokenAmount);
+        predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), token, address(this), to, tokenAmount);
+
         if (saveTokenMapping) {
-            childToken = rootBridge.mapToken{value: mapTokenFee}(token);
+            childToken = rootBridge.mapToken{value: mapTokenFee}(ERC20PresetMinterPauser(token));
         }
 
-        if (address(token) == address(0xeee)) {
+        if (token == address(0xeee)) {
             vm.deal(to, tokenAmount + depositFee);
+        } else if (address(token) == address(0xddd)) {
+            // set the payload to expect native eth when depositing wrapped eth
+            predictedPayload = abi.encode(rootBridge.DEPOSIT_SIG(), address(0xeee), address(this), to, tokenAmount);
+            vm.deal(to, tokenAmount + depositFee);
+            IWETH(token).deposit{value: tokenAmount}();
+            IWETH(token).approve(address(rootBridge), tokenAmount);
         } else {
-            token.mint(address(this), tokenAmount);
-            token.approve(address(rootBridge), tokenAmount);
+            ERC20PresetMinterPauser(token).mint(address(this), tokenAmount);
+            ERC20PresetMinterPauser(token).approve(address(rootBridge), tokenAmount);
         }
 
         return (childToken, predictedPayload);

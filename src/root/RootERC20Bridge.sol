@@ -12,6 +12,7 @@ import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bri
 import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
+import {IWETH} from "../interfaces/root/IWETH.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
@@ -21,6 +22,7 @@ import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
  * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in RootERC20Bridge.
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
+
 contract RootERC20Bridge is
     Ownable2Step,
     Initializable,
@@ -48,6 +50,8 @@ contract RootERC20Bridge is
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
     address public childETHToken;
+    /// @dev The address of the wETH ERC20 token on L1.
+    address public rootWETHToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -56,6 +60,7 @@ contract RootERC20Bridge is
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with (As a checksummed string).
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootIMXToken Address of ERC20 IMX on the root chain.
+     * @param newRootWETHToken Address of ERC20 WETH on the root chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -63,11 +68,12 @@ contract RootERC20Bridge is
         address newChildERC20Bridge,
         string memory newChildBridgeAdaptor,
         address newChildTokenTemplate,
-        address newRootIMXToken
+        address newRootIMXToken,
+        address newRootWETHToken
     ) public initializer {
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
-                || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
+                || newChildTokenTemplate == address(0) || newRootIMXToken == address(0) || newRootWETHToken == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -77,13 +83,25 @@ contract RootERC20Bridge is
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
         rootIMXToken = newRootIMXToken;
-
+        rootWETHToken = newRootWETHToken;
         childETHToken = Clones.predictDeterministicAddress(
             childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH)), childERC20Bridge
         );
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
         childBridgeAdaptor = newChildBridgeAdaptor;
     }
+
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
+        if (newRootBridgeAdaptor == address(0)) {
+            revert ZeroAddress();
+        }
+        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
+    }
+
+    /**
+     * @dev method to receive the ETH back from the WETH contract when it is unwrapped
+     */
+    receive() external payable {}
 
     /**
      * @inheritdoc IRootERC20Bridge
@@ -97,13 +115,25 @@ contract RootERC20Bridge is
     }
 
     function depositETH(uint256 amount) external payable {
-        //override removed?
         _depositETH(msg.sender, amount);
     }
 
     function depositToETH(address receiver, uint256 amount) external payable {
-        //override removed?
         _depositETH(receiver, amount);
+    }
+
+    /**
+     * @inheritdoc IRootERC20Bridge
+     */
+    function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
+        _depositToken(rootToken, msg.sender, amount);
+    }
+
+    /**
+     * @inheritdoc IRootERC20Bridge
+     */
+    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
+        _depositToken(rootToken, receiver, amount);
     }
 
     function _depositETH(address receiver, uint256 amount) private {
@@ -121,18 +151,27 @@ contract RootERC20Bridge is
         }
     }
 
-    /**
-     * @inheritdoc IRootERC20Bridge
-     */
-    function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
-        _depositERC20(rootToken, msg.sender, amount);
+    function _depositToken(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        if (address(rootToken) == rootWETHToken) {
+            _depositWrappedETH(receiver, amount);
+        } else {
+            _depositERC20(rootToken, receiver, amount);
+        }
     }
 
-    /**
-     * @inheritdoc IRootERC20Bridge
-     */
-    function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
-        _depositERC20(rootToken, receiver, amount);
+    function _depositWrappedETH(address receiver, uint256 amount) private {
+        uint256 expectedBalance = address(this).balance + amount;
+
+        IERC20Metadata erc20WETH = IERC20Metadata(rootWETHToken);
+
+        erc20WETH.safeTransferFrom(msg.sender, address(this), amount);
+        IWETH(rootWETHToken).withdraw(amount);
+
+        // invariant check to ensure that the root native balance has increased by the amount deposited
+        if (address(this).balance != expectedBalance) {
+            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        }
+        _deposit(IERC20Metadata(rootWETHToken), receiver, amount);
     }
 
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
@@ -155,6 +194,10 @@ contract RootERC20Bridge is
 
         if (address(rootToken) == NATIVE_ETH) {
             revert CantMapETH();
+        }
+
+        if (address(rootToken) == rootWETHToken) {
+            revert CantMapWETH();
         }
 
         if (rootTokenToChildToken[address(rootToken)] != address(0)) {
@@ -181,52 +224,50 @@ contract RootERC20Bridge is
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
-
         if (amount == 0) {
             revert ZeroAmount();
         }
 
-        address childToken;
-        uint256 feeAmount;
+        // ETH, WETH and IMX do not need to be mapped since it should have been mapped on initialization
+        // ETH also cannot be transferred since it was received in the payable function call
+        // WETH is also not transferred here since it was earlier unwrapped to ETH
 
-        // The native token does not need to be mapped since it should have been mapped on initialization
-        // The native token also cannot be transferred since it was received in the payable function call
         // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
-        //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
-        //      Discuss this, and add this decision to the design doc.
-        if (address(rootToken) != NATIVE_ETH) {
+        // Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
+        // Discuss this, and add this decision to the design doc.
+
+        address childToken;
+        uint256 feeAmount = msg.value;
+        address payloadToken = address(rootToken);
+
+        if (address(rootToken) == NATIVE_ETH) {
+            feeAmount = msg.value - amount;
+        } else if (address(rootToken) == rootWETHToken) {
+            payloadToken = NATIVE_ETH;
+        } else {
             if (address(rootToken) != rootIMXToken) {
                 childToken = rootTokenToChildToken[address(rootToken)];
                 if (childToken == address(0)) {
                     revert NotMapped();
                 }
             }
-            // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
-            feeAmount = msg.value;
-        } else {
-            feeAmount = msg.value - amount;
         }
 
         // Deposit sig, root token address, depositor, receiver, amount
-        bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
-        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
+        bytes memory payload = abi.encode(DEPOSIT_SIG, payloadToken, msg.sender, receiver, amount);
 
+        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         if (address(rootToken) == NATIVE_ETH) {
             emit NativeEthDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
+        } else if (address(rootToken) == rootWETHToken) {
+            emit WETHDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
         } else if (address(rootToken) == rootIMXToken) {
             emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
         } else {
             emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
         }
-    }
-
-    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
-        if (newRootBridgeAdaptor == address(0)) {
-            revert ZeroAddress();
-        }
-        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
     }
 }

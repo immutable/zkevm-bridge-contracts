@@ -15,7 +15,7 @@ import {Utils} from "./Utils.sol";
 
 contract InitializeRootContracts is Script {
     function run() public {
-        RootERC20Bridge rootERC20Bridge = RootERC20Bridge(vm.envAddress("ROOT_ERC20_BRIDGE"));
+        RootERC20Bridge rootERC20Bridge = RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE")));
         RootAxelarBridgeAdaptor rootBridgeAdaptor = RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR"));
         address rootChainChildTokenTemplate = vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE");
         address childBridgeAdaptor = vm.envAddress("CHILD_BRIDGE_ADAPTOR");
@@ -23,6 +23,7 @@ contract InitializeRootContracts is Script {
         string memory rootRpcUrl = vm.envString("ROOT_RPC_URL");
         uint256 rootPrivateKey = vm.envUint("ROOT_PRIVATE_KEY");
         address rootIMXToken = vm.envAddress("ROOT_IMX_ADDRESS");
+        address rootWETHToken = vm.envAddress("ROOT_WETH_ADDRESS");
 
         string[] memory checksumInputs = Utils.getChecksumInputs(childBridgeAdaptor);
         bytes memory checksumOutput = vm.ffi(checksumInputs);
@@ -38,7 +39,8 @@ contract InitializeRootContracts is Script {
             childERC20Bridge,
             childBridgeAdaptorChecksum,
             rootChainChildTokenTemplate,
-            rootIMXToken
+            rootIMXToken,
+            rootWETHToken
         );
 
         rootBridgeAdaptor.setChildBridgeAdaptor();
