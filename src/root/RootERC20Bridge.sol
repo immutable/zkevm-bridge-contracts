@@ -72,11 +72,8 @@ contract RootERC20Bridge is
         address newRootWETHToken
     ) public initializer {
         if (
-            newRootBridgeAdaptor == address(0) 
-            || newChildERC20Bridge == address(0)
-            || newChildTokenTemplate == address(0) 
-            || newRootIMXToken == address(0) 
-            || newRootWETHToken == address(0)
+            newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
+                || newChildTokenTemplate == address(0) || newRootIMXToken == address(0) || newRootWETHToken == address(0)
         ) {
             revert ZeroAddress();
         }
