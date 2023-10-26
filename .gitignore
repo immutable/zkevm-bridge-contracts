@@ -23,4 +23,10 @@ docs/
 # Contract addresses
 addresses.json
 
-/node_modules
+broadcast/**
+broadcast/InitializeRootContracts.s.sol/2500/
+broadcast/InitializeChildContracts.s.sol/2501/
+broadcast/DeployRootContracts.s.sol/2500/
+broadcast/DeployChildContracts.s.sol/2501/
+
+node_modules/

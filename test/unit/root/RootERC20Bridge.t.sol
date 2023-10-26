@@ -20,6 +20,7 @@ import {WETH} from "../../../src/test/root/WETH.sol";
 contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
+    string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
     string constant CHILD_CHAIN_NAME = "test";
     address constant IMX_TOKEN = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
@@ -47,7 +48,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
         // The specific ERC20 token template does not matter for these unit tests
         rootBridge.initialize(
-            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN, WRAPPED_ETH
+            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR_STRING, address(token), IMX_TOKEN, WRAPPED_ETH
         );
     }
 
@@ -64,50 +65,51 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
         rootBridge.initialize(
-            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, address(token), IMX_TOKEN, WRAPPED_ETH
+            address(mockAxelarAdaptor), CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR_STRING, address(token), IMX_TOKEN, WRAPPED_ETH
         );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressRootAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(1), address(1), address(1), address(1), address(1));
+        bridge.initialize(address(0), address(1), CHILD_BRIDGE_ADAPTOR_STRING, address(1), address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildBridge() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(0), address(1), address(1), address(1), address(1));
+        bridge.initialize(address(1), address(0), CHILD_BRIDGE_ADAPTOR_STRING, address(1), address(1), address(1));
     }
 
-    function test_RevertIf_InitializeWithAZeroAddressChildAdapter() public {
+    function test_RevertIf_InitializeWithEmptyChildAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
-        vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(0), address(1), address(1), address(1));
+        vm.expectRevert(InvalidChildERC20BridgeAdaptor.selector);
+        bridge.initialize(address(1), address(1), "", address(1), address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressTokenTemplate() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(1), address(0), address(1), address(1));
+        bridge.initialize(address(1), address(1), CHILD_BRIDGE_ADAPTOR_STRING, address(0), address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(1), address(1), address(0), address(1));
+        bridge.initialize(address(1), address(1), CHILD_BRIDGE_ADAPTOR_STRING, address(1), address(0), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressWETHToken() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), address(1), address(1), address(1), address(0));
+        bridge.initialize(address(1), address(1), CHILD_BRIDGE_ADAPTOR_STRING, address(1), address(1), address(0));
     }
+
 
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(0), address(0), address(0), address(0), address(0));
+        bridge.initialize(address(0), address(0), "", address(0), address(0), address(0));
     }
 
     /**
