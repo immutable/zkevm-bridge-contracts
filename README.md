@@ -83,7 +83,6 @@ CHILD_GAS_SERVICE_ADDRESS=
 ROOT_CHAIN_NAME="ROOT"
 CHILD_CHAIN_NAME="CHILD"
 ROOT_IMX_ADDRESS=
-CHILD_ETH_ADDRESS=
 ```
 where `{ROOT,CHILD}_{GATEWAY,GAS_SERVICE}_ADDRESS` refers to the gateway and gas service addresses used by Axelar.
 
@@ -132,8 +131,17 @@ ROOT_CHAIN_ID="2500"
 CHILD_CHAIN_ID="2501"
 ROOT_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 CHILD_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+ROOT_CHAIN_NAME="Ethereum"
+CHILD_CHAIN_NAME="Polygon"
+ROOT_IMX_ADDRESS="0x1111111111111111111111111111111111111111"
+ROOT_GATEWAY_ADDRESS="0x013459EC3E8Aeced878C5C4bFfe126A366cd19E9"
+CHILD_GATEWAY_ADDRESS="0xc7B788E88BAaB770A6d4936cdcCcd5250E1bbAd8"
+ROOT_GAS_SERVICE_ADDRESS="0x28f8B50E1Be6152da35e923602a2641491E71Ed8"
+CHILD_GAS_SERVICE_ADDRESS="0xC573c722e21eD7fadD38A8f189818433e01Ae466"
+
 ```
 (Note that `{ROOT,CHILD}_PRIVATE_KEY` can be any of the standard localhost private keys that get funded)
+(Note that `ROOT_IMX_ADDRESS` is not currently used in this local environment. Therefore, any non-zero address is fine.)
 
 3. In a separate terminal window, deploy the smart contracts
 ```shell
