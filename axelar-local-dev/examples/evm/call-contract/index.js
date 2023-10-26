@@ -11,22 +11,24 @@ const TOKEN = "0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4"
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 async function execute(chains, wallet, options) {
-    console.log("======================================")
-    console.log("ATTEMPTING TO SEND `MAP_TOKEN` MESSAGE")
-    console.log("======================================")
-    console.log()
-
-    // const args = options.args || [];
     const { source, destination, calculateBridgeFee } = options;
     let functionToCall = options.args[2]
     if (functionToCall === "map") {
         await map(source, destination, calculateBridgeFee)
     } else if (functionToCall === "deposit") {
         await deposit(source, destination, calculateBridgeFee)
+    } else {
+        console.error("final arg must be either `deposit` or `map`")
+        process.exit(1)
     }
 }
 
 async function map(source, destination, calculateBridgeFee) {
+    console.log("======================================")
+    console.log("ATTEMPTING TO SEND `MAP_TOKEN` MESSAGE")
+    console.log("======================================")
+    console.log()
+
     async function logValue() {
         let childTokenAddress = await destination.contract2.rootTokenToChildToken(TOKEN);
         console.log(`The L1 => L2 token mapping for token ${TOKEN.slice(0,8)}... is ${childTokenAddress.slice(0,8)}...`)
@@ -62,6 +64,11 @@ async function map(source, destination, calculateBridgeFee) {
 }
 
 async function deposit(source, destination, calculateBridgeFee) {
+    console.log("======================================")
+    console.log("ATTEMPTING TO SEND `DEPOSIT` MESSAGE")
+    console.log("======================================")
+    console.log()
+
     const depositAmount = ethers.utils.parseEther("0.1")
     const userAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     const balanceOfAbi = `
@@ -122,6 +129,8 @@ async function deposit(source, destination, calculateBridgeFee) {
     let l2TokenContract = new ethers.Contract(l2TokenAddress, balanceOfAbi, destination.contract.signer)
     let l1TokenContract = new ethers.Contract(TOKEN, balanceOfAbi, source.contract.signer)
 
+    const initialBal = await l2TokenContract.balanceOf(userAddress)
+
     async function logValue() {
         let l2Balance = await l2TokenContract.balanceOf(userAddress)
         let l1Balance = await l1TokenContract.balanceOf(userAddress)
@@ -147,7 +156,7 @@ async function deposit(source, destination, calculateBridgeFee) {
 
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    while ((await l2TokenContract.balanceOf(userAddress)).toString() === "0") {
+    while ((await l2TokenContract.balanceOf(userAddress)).toString() === initialBal.toString()) {
         console.log('Waiting...');
         console.log();
         await sleep(1000);
