@@ -138,10 +138,11 @@ ROOT_GATEWAY_ADDRESS="0x013459EC3E8Aeced878C5C4bFfe126A366cd19E9"
 CHILD_GATEWAY_ADDRESS="0xc7B788E88BAaB770A6d4936cdcCcd5250E1bbAd8"
 ROOT_GAS_SERVICE_ADDRESS="0x28f8B50E1Be6152da35e923602a2641491E71Ed8"
 CHILD_GAS_SERVICE_ADDRESS="0xC573c722e21eD7fadD38A8f189818433e01Ae466"
-
+ENVIRONMENT="local"
 ```
 (Note that `{ROOT,CHILD}_PRIVATE_KEY` can be any of the standard localhost private keys that get funded)
 (Note that `ROOT_IMX_ADDRESS` is not currently used in this local environment. Therefore, any non-zero address is fine.)
+(Note that `ENVIRONMENT` if the environment is not set to "local" then ROOT_WETH_ADDRESS will need to be manually set in the .env file since it is expected WETH to be already deployed on testnet or mainnet)
 
 3. In a separate terminal window, deploy the smart contracts
 ```shell
