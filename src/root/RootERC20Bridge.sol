@@ -134,10 +134,6 @@ contract RootERC20Bridge is
         _depositToken(rootToken, receiver, amount);
     }
 
-    function _depositUnwrappedETH(address receiver, uint256 amount) private {
-        _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount, msg.value);
-    }
-
     function _depositETH(address receiver, uint256 amount) private {
         if (msg.value < amount) {
             revert InsufficientValue();
@@ -145,7 +141,7 @@ contract RootERC20Bridge is
 
         uint256 expectedBalance = address(this).balance - (msg.value - amount);
 
-        _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount, msg.value - amount);
+        _deposit(IERC20Metadata(NATIVE_ETH), receiver, amount);
 
         // invariant check to ensure that the root native balance has increased by the amount deposited
         if (address(this).balance != expectedBalance) {
@@ -153,7 +149,16 @@ contract RootERC20Bridge is
         }
     }
 
-    function _unwrapWETH(uint256 amount) private {
+    function _depositToken(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+        if (address(rootToken) == rootWETHToken) {
+            _unwrapETH(amount);
+            _deposit(IERC20Metadata(rootWETHToken), receiver, amount);
+        } else {
+            _depositERC20(rootToken, receiver, amount);
+        }
+    }
+
+    function _unwrapETH(uint256 amount) private {
         uint256 expectedBalance = address(this).balance + amount;
 
         IERC20Metadata erc20WETH = IERC20Metadata(rootWETHToken);
@@ -167,18 +172,9 @@ contract RootERC20Bridge is
         }
     }
 
-    function _depositToken(IERC20Metadata rootToken, address receiver, uint256 amount) private {
-        if (address(rootToken) == rootWETHToken) {
-            _unwrapWETH(amount);
-            _depositUnwrappedETH(receiver, amount);
-        } else {
-            _depositERC20(rootToken, receiver, amount);
-        }
-    }
-
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         uint256 expectedBalance = rootToken.balanceOf(address(this)) + amount;
-        _deposit(rootToken, receiver, amount, msg.value);
+        _deposit(rootToken, receiver, amount);
         // invariant check to ensure that the root token balance has increased by the amount deposited
         // slither-disable-next-line incorrect-equality
         if (rootToken.balanceOf(address(this)) != expectedBalance) {
@@ -222,7 +218,7 @@ contract RootERC20Bridge is
         return childToken;
     }
 
-    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount, uint256 feeAmount) private {
+    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -230,32 +226,42 @@ contract RootERC20Bridge is
             revert ZeroAmount();
         }
 
-        address childToken;
-
-        // The native token does not need to be mapped since it should have been mapped on initialization
-        // The native token also cannot be transferred since it was received in the payable function call
+        // ETH, WETH and IMX do not need to be mapped since it should have been mapped on initialization
+        // ETH also cannot be transferred since it was received in the payable function call
+        // WETH is also not transferred here since it was earlier unwrapped to ETH
+        
         // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
-        //      Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
-        //      Discuss this, and add this decision to the design doc.
-        if (address(rootToken) != NATIVE_ETH) {
+        // Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
+        // Discuss this, and add this decision to the design doc.
+
+        address childToken;
+        uint256 feeAmount = msg.value;
+        address payloadToken = address(rootToken);
+
+        if (address(rootToken) == NATIVE_ETH) {
+            feeAmount = msg.value - amount;
+        } else if (address(rootToken) == rootWETHToken) {
+            payloadToken = NATIVE_ETH;
+        } else {
             if (address(rootToken) != rootIMXToken) {
                 childToken = rootTokenToChildToken[address(rootToken)];
                 if (childToken == address(0)) {
                     revert NotMapped();
                 }
             }
-            // ERC20 must be transferred explicitly
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
-        }
+        }  
 
         // Deposit sig, root token address, depositor, receiver, amount
-        bytes memory payload = abi.encode(DEPOSIT_SIG, rootToken, msg.sender, receiver, amount);
+        bytes memory payload = abi.encode(DEPOSIT_SIG, payloadToken, msg.sender, receiver, amount);
+        
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
-
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         if (address(rootToken) == NATIVE_ETH) {
             emit NativeEthDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
+        } else if (address(rootToken) == rootWETHToken) {
+            emit WETHDeposit(address(rootToken), msg.sender, receiver, amount);
         } else if (address(rootToken) == rootIMXToken) {
             emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
         } else {
