@@ -227,9 +227,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
-        emit WETHDeposit(
-            address(WRAPPED_ETH), address(this), address(this), tokenAmount
-        );
+        emit WETHDeposit(address(WRAPPED_ETH), address(this), address(this), tokenAmount);
         vm.expectCall(
             address(axelarAdaptor),
             depositFee,

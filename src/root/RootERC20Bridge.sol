@@ -229,7 +229,7 @@ contract RootERC20Bridge is
         // ETH, WETH and IMX do not need to be mapped since it should have been mapped on initialization
         // ETH also cannot be transferred since it was received in the payable function call
         // WETH is also not transferred here since it was earlier unwrapped to ETH
-        
+
         // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
         // Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         // Discuss this, and add this decision to the design doc.
@@ -250,11 +250,11 @@ contract RootERC20Bridge is
                 }
             }
             rootToken.safeTransferFrom(msg.sender, address(this), amount);
-        }  
+        }
 
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, payloadToken, msg.sender, receiver, amount);
-        
+
         // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
@@ -268,5 +268,4 @@ contract RootERC20Bridge is
             emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
         }
     }
-
 }
