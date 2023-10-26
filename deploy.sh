@@ -13,6 +13,7 @@ function get_deployed_contract() {
 }
 
 function main() {
+
     forge script script/DeployRootContracts.s.sol:DeployRootContracts --broadcast
     forge script script/DeployChildContracts.s.sol:DeployChildContracts --broadcast
 
@@ -23,6 +24,11 @@ function main() {
     root_erc20_bridge=$( get_deployed_contract "$root_filename" "RootERC20Bridge" )
     root_bridge_adaptor=$( get_deployed_contract "$root_filename" "RootAxelarBridgeAdaptor" )
     root_chain_child_token_template=$( get_deployed_contract "$root_filename" "ChildERC20" )
+    
+    if [ "$ENVIRONMENT" = "local" ]; then
+        root_weth_contract=$( get_deployed_contract "$root_filename" "WETH" )
+        export ROOT_WETH_ADDRESS=$root_weth_contract
+    fi
 
     child_erc20_bridge=$( get_deployed_contract "$child_filename" "ChildERC20Bridge" )
     child_bridge_adaptor=$( get_deployed_contract "$child_filename" "ChildAxelarBridgeAdaptor" )
@@ -31,6 +37,7 @@ function main() {
     export ROOT_ERC20_BRIDGE=$root_erc20_bridge
     export ROOT_BRIDGE_ADAPTOR=$root_bridge_adaptor
     export ROOTCHAIN_CHILD_TOKEN_TEMPLATE=$root_chain_child_token_template
+
     export CHILD_BRIDGE_ADAPTOR=$child_bridge_adaptor
     export CHILD_ERC20_BRIDGE=$child_erc20_bridge
     export CHILDCHAIN_CHILD_TOKEN_TEMPLATE=$child_chain_child_token_template

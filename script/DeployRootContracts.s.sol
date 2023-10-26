@@ -9,6 +9,7 @@ import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {WETH} from "../src/test/root/WETH.sol";
 
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
@@ -19,6 +20,7 @@ contract DeployRootContracts is Script {
         address rootGateway = vm.envAddress("ROOT_GATEWAY_ADDRESS");
         address rootGasService = vm.envAddress("ROOT_GAS_SERVICE_ADDRESS");
         string memory childChainName = vm.envString("CHILD_CHAIN_NAME");
+        string memory deployEnvironment = vm.envString("ENVIRONMENT");
 
         /**
          * DEPLOY ROOT CHAIN CONTRACTS
@@ -39,11 +41,15 @@ contract DeployRootContracts is Script {
             rootGasService // axelar gas service
         );
 
+        if (Strings.equal(deployEnvironment, "local")) {
+            new WETH();
+        }
+
+        vm.stopBroadcast();
+
         console2.log("====ROOT ADDRESSES====");
         console2.log("Root ERC20 Bridge: %s", address(rootERC20Bridge));
         console2.log("Root Axelar Bridge Adaptor: %s", address(rootBridgeAdaptor));
         console2.log("ROOT CHAIN childTokenTemplate: %s", address(rootChainChildTokenTemplate));
-
-        vm.stopBroadcast();
     }
 }
