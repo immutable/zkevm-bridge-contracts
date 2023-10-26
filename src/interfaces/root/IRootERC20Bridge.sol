@@ -46,7 +46,7 @@ interface IRootERC20BridgeEvents {
         uint256 amount
     );
     event IMXDeposit(address indexed rootToken, address depositor, address indexed receiver, uint256 amount);
-    event WETHDeposit(address indexed rootToken, address depositor, address indexed receiver, uint256 amount);
+    event WETHDeposit(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 amount);
     event NativeEthDeposit(
         address indexed rootToken,
         address indexed childToken,

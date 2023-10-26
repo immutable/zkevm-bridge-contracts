@@ -153,14 +153,13 @@ contract RootERC20Bridge is
 
     function _depositToken(IERC20Metadata rootToken, address receiver, uint256 amount) private {
         if (address(rootToken) == rootWETHToken) {
-            _unwrapETH(amount);
-            _deposit(IERC20Metadata(rootWETHToken), receiver, amount);
+            _depositWrappedETH(receiver, amount);
         } else {
             _depositERC20(rootToken, receiver, amount);
         }
     }
 
-    function _unwrapETH(uint256 amount) private {
+    function _depositWrappedETH(address receiver, uint256 amount) private {
         uint256 expectedBalance = address(this).balance + amount;
 
         IERC20Metadata erc20WETH = IERC20Metadata(rootWETHToken);
@@ -172,6 +171,7 @@ contract RootERC20Bridge is
         if (address(this).balance != expectedBalance) {
             revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
         }
+        _deposit(IERC20Metadata(rootWETHToken), receiver, amount);
     }
 
     function _depositERC20(IERC20Metadata rootToken, address receiver, uint256 amount) private {
@@ -263,7 +263,7 @@ contract RootERC20Bridge is
         if (address(rootToken) == NATIVE_ETH) {
             emit NativeEthDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
         } else if (address(rootToken) == rootWETHToken) {
-            emit WETHDeposit(address(rootToken), msg.sender, receiver, amount);
+            emit WETHDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
         } else if (address(rootToken) == rootIMXToken) {
             emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
         } else {

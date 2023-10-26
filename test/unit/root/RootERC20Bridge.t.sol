@@ -349,7 +349,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         setupDeposit(WRAPPED_ETH, rootBridge, mapTokenFee, depositFee, amount, false);
 
         vm.expectEmit();
-        emit WETHDeposit(WRAPPED_ETH, address(this), address(this), amount);
+        emit WETHDeposit(WRAPPED_ETH, rootBridge.childETHToken(), address(this), address(this), amount);
         rootBridge.deposit{value: depositFee}(IERC20Metadata(WRAPPED_ETH), amount);
     }
 
@@ -359,7 +359,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         setupDepositTo(WRAPPED_ETH, rootBridge, mapTokenFee, depositFee, amount, receiver, false);
 
         vm.expectEmit();
-        emit WETHDeposit(WRAPPED_ETH, address(this), receiver, amount);
+        emit WETHDeposit(WRAPPED_ETH, rootBridge.childETHToken(), address(this), receiver, amount);
         rootBridge.depositTo{value: depositFee}(IERC20Metadata(WRAPPED_ETH), receiver, amount);
     }
 
