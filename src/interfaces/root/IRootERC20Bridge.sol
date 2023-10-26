@@ -72,4 +72,6 @@ interface IRootERC20BridgeErrors {
     error CantMapETH();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
+    /// @notice Error when the given child chain bridge adaptor is invalid.
+    error InvalidChildERC20BridgeAdaptor();
 }

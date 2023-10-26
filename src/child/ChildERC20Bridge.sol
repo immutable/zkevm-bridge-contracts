@@ -108,6 +108,7 @@ contract ChildERC20Bridge is
         if (!Strings.equal(messageSourceChain, rootChain)) {
             revert InvalidSourceChain();
         }
+
         if (!Strings.equal(sourceAddress, rootERC20BridgeAdaptor)) {
             revert InvalidSourceAddress();
         }

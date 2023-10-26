@@ -83,7 +83,6 @@ CHILD_GAS_SERVICE_ADDRESS=
 ROOT_CHAIN_NAME="ROOT"
 CHILD_CHAIN_NAME="CHILD"
 ROOT_IMX_ADDRESS=
-CHILD_ETH_ADDRESS=
 ```
 where `{ROOT,CHILD}_{GATEWAY,GAS_SERVICE}_ADDRESS` refers to the gateway and gas service addresses used by Axelar.
 
@@ -101,3 +100,60 @@ When deploying these contracts on remote networks (i.e. testnets or mainnets), t
 - in step 2:
     - The RPC URLs and Chain IDs should be set for the targetted networks.
     - The private keys should be for addresses with which the contracts are to be deployed.
+
+
+### Axelar Local Bridge
+
+##### One-time setup
+
+1. install the dependencies
+```shell
+yarn install
+```
+
+2. compile the smart contracts
+```shell
+forge build
+```
+
+##### Start & setup the local blockchains
+
+1. Start the local blockchains and local Axelar network
+```shell
+yarn start
+```
+
+2. Set the following env vars in your `.env` file
+```shell
+ROOT_RPC_URL="http://localhost:8500/0"
+CHILD_RPC_URL="http://localhost:8500/1"
+ROOT_CHAIN_ID="2500"
+CHILD_CHAIN_ID="2501"
+ROOT_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+CHILD_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+ROOT_CHAIN_NAME="Ethereum"
+CHILD_CHAIN_NAME="Polygon"
+ROOT_IMX_ADDRESS="0x1111111111111111111111111111111111111111"
+ROOT_GATEWAY_ADDRESS="0x013459EC3E8Aeced878C5C4bFfe126A366cd19E9"
+CHILD_GATEWAY_ADDRESS="0xc7B788E88BAaB770A6d4936cdcCcd5250E1bbAd8"
+ROOT_GAS_SERVICE_ADDRESS="0x28f8B50E1Be6152da35e923602a2641491E71Ed8"
+CHILD_GAS_SERVICE_ADDRESS="0xC573c722e21eD7fadD38A8f189818433e01Ae466"
+
+```
+(Note that `{ROOT,CHILD}_PRIVATE_KEY` can be any of the standard localhost private keys that get funded)
+(Note that `ROOT_IMX_ADDRESS` is not currently used in this local environment. Therefore, any non-zero address is fine.)
+
+3. In a separate terminal window, deploy the smart contracts
+```shell
+./deploy.sh
+```
+
+4. Copy the config file with the correct addresses
+```shell
+cp axelar-local-dev/chain-config/local.template.json axelar-local-dev/chain-config/local.json
+```
+
+5. Run the script to execute the `axelar-local-dev/examples/evm/call-contract/index.js` file
+```shell
+yarn run execute evm/call-contract local Ethereum Polygon
+```

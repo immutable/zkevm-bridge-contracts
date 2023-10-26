@@ -8,7 +8,8 @@ import {RootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {AddressToString} from "@axelar-gmp-sdk-solidity/contracts/libs/AddressString.sol";
+import {Utils} from "./Utils.sol";
 
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
@@ -23,6 +24,9 @@ contract InitializeRootContracts is Script {
         uint256 rootPrivateKey = vm.envUint("ROOT_PRIVATE_KEY");
         address rootIMXToken = vm.envAddress("ROOT_IMX_ADDRESS");
 
+        string[] memory checksumInputs = Utils.getChecksumInputs(childBridgeAdaptor);
+        bytes memory checksumOutput = vm.ffi(checksumInputs);
+        string memory childBridgeAdaptorChecksum = string(Utils.removeZeroByteValues(checksumOutput));
         /**
          * INITIALIZE ROOT CHAIN CONTRACTS
          */
@@ -30,11 +34,16 @@ contract InitializeRootContracts is Script {
         vm.startBroadcast(rootPrivateKey);
 
         rootERC20Bridge.initialize(
-            address(rootBridgeAdaptor), childERC20Bridge, childBridgeAdaptor, rootChainChildTokenTemplate, rootIMXToken
+            address(rootBridgeAdaptor),
+            childERC20Bridge,
+            childBridgeAdaptorChecksum,
+            rootChainChildTokenTemplate,
+            rootIMXToken
         );
 
         rootBridgeAdaptor.setChildBridgeAdaptor();
 
         vm.stopBroadcast();
+        console2.log(rootERC20Bridge.childBridgeAdaptor());
     }
 }
