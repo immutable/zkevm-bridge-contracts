@@ -130,7 +130,10 @@ ROOT_RPC_URL="http://localhost:8500/0"
 CHILD_RPC_URL="http://localhost:8500/1"
 ROOT_CHAIN_ID="2500"
 CHILD_CHAIN_ID="2501"
+ROOT_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+CHILD_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 ```
+(Note that `{ROOT,CHILD}_PRIVATE_KEY` can be any of the standard localhost private keys that get funded)
 
 3. In a separate terminal window, deploy the smart contracts
 ```shell
