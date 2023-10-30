@@ -148,28 +148,23 @@ CHILD_GAS_SERVICE_ADDRESS="0xC573c722e21eD7fadD38A8f189818433e01Ae466"
 ./deploy.sh
 ```
 
-4. Copy the config file with the correct addresses
-```shell
-cp axelar-local-dev/chain-config/local.template.json axelar-local-dev/chain-config/local.json
-```
-
-5. Run the script that will send a `MAP_TOKEN` message
+4. Run the script that will send a `MAP_TOKEN` message
 ```shell
 yarn run execute evm/call-contract local Ethereum Polygon map
 ```
 
-6. (OPTIONAL) Check the token mapping has been populated using `cast`
+5. (OPTIONAL) Check the token mapping has been populated using `cast`
 ```shell
 source .env
 cast call --rpc-url $CHILD_RPC_URL "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" "rootTokenToChildToken(address)(address)" "0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4"
 ```
 
-7. Run the script that will send a `DEPOSIT` message
+6. Run the script that will send a `DEPOSIT` message
 ```shell
-yarn run execute evm/call-contract local Ethereum Polygon map
+yarn run execute evm/call-contract local Ethereum Polygon deposit
 ```
 
-8. (OPTIONAL) Check the tokens have been deposited using `cast`
+7. (OPTIONAL) Check the tokens have been deposited using `cast`
 ```shell
 source .env
 cast call --rpc-url $CHILD_RPC_URL "0x3b39f73D7De57Ed2Fe85C0F30374D839dc625b93" "balanceOf(address)(uint256)" "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"

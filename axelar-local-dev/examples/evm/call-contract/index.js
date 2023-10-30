@@ -31,7 +31,14 @@ async function map(source, destination, calculateBridgeFee) {
 
     async function logValue() {
         let childTokenAddress = await destination.contract2.rootTokenToChildToken(TOKEN);
+        let rootChainChildTokenAddress = await source.contract.rootTokenToChildToken(TOKEN);
+        console.log("LAYER 1:")
+        console.log(`The L1 => L2 token mapping for token ${TOKEN.slice(0,8)}... is ${rootChainChildTokenAddress.slice(0,8)}...`)
+        console.log()
+        console.log("LAYER 2:")
         console.log(`The L1 => L2 token mapping for token ${TOKEN.slice(0,8)}... is ${childTokenAddress.slice(0,8)}...`)
+        console.log()
+
         if (childTokenAddress === ZERO_ADDRESS){
             console.log("This is empty, indicating that the L1 token hasn't been deployed yet on L2. :( :(")
         } else {
@@ -50,7 +57,9 @@ async function map(source, destination, calculateBridgeFee) {
 
     console.log(`Calling mapToken with a service fee of ${fee} ETH`);
     console.log()
-    await source.contract.mapToken(TOKEN, {value: fee})
+    const tx = await source.contract.mapToken(TOKEN, {value: fee})
+    await tx.wait()
+    await logValue();
 
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -71,7 +80,7 @@ async function deposit(source, destination, calculateBridgeFee) {
 
     const depositAmount = ethers.utils.parseEther("0.1")
     const userAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-    const balanceOfAbi = `
+    const basicTokenAbi = `
     [
         {
             "inputs": [
@@ -126,15 +135,15 @@ async function deposit(source, destination, calculateBridgeFee) {
     }
 
     // User ethers to call the balanceOf function on the TOKEN contract
-    let l2TokenContract = new ethers.Contract(l2TokenAddress, balanceOfAbi, destination.contract.signer)
-    let l1TokenContract = new ethers.Contract(TOKEN, balanceOfAbi, source.contract.signer)
+    let l2TokenContract = new ethers.Contract(l2TokenAddress, basicTokenAbi, destination.contract.signer)
+    let l1TokenContract = new ethers.Contract(TOKEN, basicTokenAbi, source.contract.signer)
 
     const initialBal = await l2TokenContract.balanceOf(userAddress)
 
     async function logValue() {
         let l2Balance = await l2TokenContract.balanceOf(userAddress)
         let l1Balance = await l1TokenContract.balanceOf(userAddress)
-        console.log(`The user currently has ${ethers.utils.formatEther(l2Balance).toString()} L2 token(s), and ${ethers.utils.formatEther(l1Balance).toString()} L1 token(s)`)
+        console.log(`The user currently has ${ethers.utils.formatEther(l1Balance).toString()} L1 token(s), and ${ethers.utils.formatEther(l2Balance).toString()} L2 token(s)`)
         console.log()
     }
 
