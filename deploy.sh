@@ -31,8 +31,11 @@ function main() {
     fi
 
     child_erc20_bridge=$( get_deployed_contract "$child_filename" "ChildERC20Bridge" )
+    proxies=$( get_deployed_contract "$child_filename" "TransparentUpgradeableProxy" )
     child_bridge_adaptor=$( get_deployed_contract "$child_filename" "ChildAxelarBridgeAdaptor" )
     child_chain_child_token_template=$( get_deployed_contract "$child_filename" "ChildERC20" )
+
+    echo "Proxies: $proxies"
 
     export ROOT_ERC20_BRIDGE=$root_erc20_bridge
     export ROOT_BRIDGE_ADAPTOR=$root_bridge_adaptor
