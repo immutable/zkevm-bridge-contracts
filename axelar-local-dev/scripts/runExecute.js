@@ -15,9 +15,6 @@ const example = require(getExamplePath(exampleName));
 // Get the wallet.
 const wallet = getWallet();
 
-console.log('run execute');
-
-
 // This will execute an example script. The example script must have an `execute` function.
 if (exampleName.split('/')[0] === 'evm') {
     // Get the chains for the environment.
