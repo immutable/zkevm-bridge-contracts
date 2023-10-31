@@ -1,10 +1,14 @@
 # Compiler files
 cache/
 out/
+.idea/
 
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/
+/broadcast/*/2501/
+/broadcast/*/31338/
+/broadcast/*/2500/
 /broadcast/**/dry-run/
 
 # Docs
@@ -12,3 +16,17 @@ docs/
 
 # Dotenv file
 .env
+
+# VS Code settings
+.vscode/
+
+# Contract addresses
+addresses.json
+
+broadcast/**
+broadcast/InitializeRootContracts.s.sol/2500/
+broadcast/InitializeChildContracts.s.sol/2501/
+broadcast/DeployRootContracts.s.sol/2500/
+broadcast/DeployChildContracts.s.sol/2501/
+
+node_modules/

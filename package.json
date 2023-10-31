@@ -1,0 +1,46 @@
+{
+    "name": "immutable-axelar-bridge",
+    "version": "1.0.0",
+    "description": "",
+    "engines": {
+        "node": "^16.0.0 || ^18.0.0"
+    },
+    "scripts": {
+        "test": "TEST=true mocha examples/tests",
+        "start": "node axelar-local-dev/scripts/runStart",
+        "deploy": "node axelar-local-dev/scripts/runDeploy",
+        "execute": "node axelar-local-dev/scripts/runExecute",
+        "setup": "node axelar-local-dev/scripts/runSetupEnv",
+        "check-balance": "node axelar-local-dev/scripts/runCheckBalance",
+        "build": "rm -rf artifacts && npx hardhat clean && npx hardhat compile",
+        "build-aptos": "bash ./build-aptos.sh"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@axelar-network/axelar-chains-config": "^0.1.0",
+        "@axelar-network/axelar-gmp-sdk-solidity": "^5.3.1",
+        "@axelar-network/axelar-local-dev": "^2.1.1-alpha.2",
+        "@axelar-network/axelarjs-sdk": "^0.12.8",
+        "@openzeppelin/contracts": "^4.5.0",
+        "axios": "^0.27.2",
+        "bip39": "^3.0.4",
+        "config": "^3.3.9",
+        "dotenv": "^16.0.2",
+        "ethers": "^5.6.2",
+        "uuid": "^8.3.2"
+    },
+    "devDependencies": {
+        "eslint-config-richardpringle": "^2.0.0",
+        "hardhat": "^2.9.9",
+        "hardhat-gas-reporter": "^1.0.8",
+        "mocha": "^10.0.0",
+        "prettier": "^2.6.2",
+        "prettier-plugin-solidity": "^1.0.0-beta.19",
+        "solhint": "^3.3.7",
+        "solidity-coverage": "^0.8.2"
+    },
+    "optionalDependencies": {
+        "@axelar-network/axelar-local-dev-aptos": "^2.1.1-alpha.4"
+    }
+}

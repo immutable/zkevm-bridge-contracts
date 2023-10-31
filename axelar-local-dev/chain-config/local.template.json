@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Ethereum",
+    "chainId": 2500,
+    "gateway": "0x013459EC3E8Aeced878C5C4bFfe126A366cd19E9",
+    "gasService": "0x28f8B50E1Be6152da35e923602a2641491E71Ed8",
+    "constAddressDeployer": "0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a",
+    "create3Deployer": "0x783E7717fD4592814614aFC47ee92568a495Ce0B",
+    "tokens": {
+      "aUSDC": "aUSDC"
+    },
+    "rpc": "http://localhost:8500/0",
+    "contract": {
+      "abi": [
+        "function rootTokenToChildToken(address rootToken) external view returns (address)",
+        "function mapToken(address rootToken) external payable returns (address)",
+        "function deposit(address rootToken, uint256 amount) external payable"
+      ],
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+    },
+    "usdc": {
+      "abi": [
+        "error InvalidAccount()",
+        "event Approval(address indexed owner, address indexed spender, uint256 value)",
+        "event Transfer(address indexed from, address indexed to, uint256 value)",
+        "function allowance(address owner, address spender) view returns (uint256)",
+        "function approve(address spender, uint256 amount) returns (bool)",
+        "function balanceOf(address account) view returns (uint256)",
+        "function totalSupply() view returns (uint256)",
+        "function transfer(address recipient, uint256 amount) returns (bool)",
+        "function transferFrom(address sender, address recipient, uint256 amount) returns (bool)"
+      ],
+      "address": "0x38Aa1Cb12E5263eC0c6e9febC25B01116D346CD4"
+    }
+  },
+  {
+    "name": "Polygon",
+    "chainId": 2501,
+    "gateway": "0xc7B788E88BAaB770A6d4936cdcCcd5250E1bbAd8",
+    "gasService": "0xC573c722e21eD7fadD38A8f189818433e01Ae466",
+    "constAddressDeployer": "0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a",
+    "create3Deployer": "0x783E7717fD4592814614aFC47ee92568a495Ce0B",
+    "tokens": {
+      "aUSDC": "aUSDC"
+    },
+    "rpc": "http://localhost:8500/1",
+    "contract": {
+      "abi": [],
+      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
+    },
+    "contract2": {
+      "abi": [
+        "function rootTokenToChildToken(address rootToken) external view returns (address)"
+      ],
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+    },
+    "usdc": {
+      "abi": [
+        "error InvalidAccount()",
+        "event Approval(address indexed owner, address indexed spender, uint256 value)",
+        "event Transfer(address indexed from, address indexed to, uint256 value)",
+        "function allowance(address owner, address spender) view returns (uint256)",
+        "function approve(address spender, uint256 amount) returns (bool)",
+        "function balanceOf(address account) view returns (uint256)",
+        "function totalSupply() view returns (uint256)",
+        "function transfer(address recipient, uint256 amount) returns (bool)",
+        "function transferFrom(address sender, address recipient, uint256 amount) returns (bool)"
+      ],
+      "address": "0xC1a50e3611C2c500562803945C0a746c9cFb1939"
+    }
+  }
+]
