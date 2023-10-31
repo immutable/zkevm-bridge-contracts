@@ -38,5 +38,8 @@ contract InitializeChildContracts is Script {
         childAxelarBridgeAdaptor.setRootBridgeAdaptor();
 
         vm.stopBroadcast();
+
+        console2.log("DINGDING");
+        console2.log(childAxelarBridgeAdaptor.rootBridgeAdaptor());
     }
 }

@@ -18,39 +18,48 @@ contract DeployChildContracts is Script {
         uint256 deployerPrivateKey = vm.envUint("CHILD_PRIVATE_KEY");
         address childGateway = vm.envAddress("CHILD_GATEWAY_ADDRESS");
         address childGasService = vm.envAddress("CHILD_GAS_SERVICE_ADDRESS"); // Not yet used.
-        address initialChildChainAdmin = vm.envAddress("INITIAL_CHILDCHAIN_ADMIN");
         string memory childRpcUrl = vm.envString("CHILD_RPC_URL");
 
         vm.createSelectFork(childRpcUrl);
         vm.startBroadcast(deployerPrivateKey);
 
-        ProxyAdmin proxyAdmin = new ProxyAdmin(initialChildChainAdmin);
+        ProxyAdmin proxyAdmin = new ProxyAdmin();
 
         ChildERC20 childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 
-        ChildERC20Bridge childBridge = new ChildERC20Bridge();
-        childBridge.initialize(address(1), "0x1", address(1), "root", address(1));
+        ChildERC20Bridge childBridgeImplementation = new ChildERC20Bridge();
+        childBridgeImplementation.initialize(address(1), "0x123", address(1), "root", address(1));
 
         TransparentUpgradeableProxy childBridgeProxy = new TransparentUpgradeableProxy(
-            address(childBridge),
+            address(childBridgeImplementation),
             address(proxyAdmin),
             ""
         );
 
         // TODO put behind proxy
-        ChildAxelarBridgeAdaptor childBridgeAdaptor = new ChildAxelarBridgeAdaptor(
+        ChildAxelarBridgeAdaptor childBridgeAdaptorImplementation = new ChildAxelarBridgeAdaptor(
             childGateway, // child gateway
-            address(childBridge) // child bridge
+            address(childBridgeProxy) // child bridge
+        );
+
+        // TODO confirm that we want the same proxyAdmin for both
+        TransparentUpgradeableProxy childBridgeAdaptorProxy = new TransparentUpgradeableProxy(
+            address(childBridgeAdaptorImplementation),
+            address(proxyAdmin),
+            ""
         );
 
         WIMX wrappedIMX = new WIMX();
 
         vm.stopBroadcast();
+        console2.log(ChildAxelarBridgeAdaptor(address(childBridgeAdaptorProxy)).rootBridgeAdaptor());
+        console2.log(childGateway);
 
         console2.log("====ADDRESSES====");
-        console2.log("Child ERC20 Bridge: %s", address(childBridge));
-        console2.log("Child Axelar Bridge Adaptor: %s", address(childBridgeAdaptor));
+        console2.log("Child ERC20 Bridge: %s", address(childBridgeProxy));
+        console2.log("Child Axelar Bridge Adaptor Proxy: %s", address(childBridgeAdaptorProxy));
+        console2.log("Child Axelar Bridge Adaptor Implementation: %s", address(childBridgeAdaptorImplementation));
         console2.log("childTokenTemplate: %s", address(childTokenTemplate));
         console2.log("Wrapped IMX: %s", address(wrappedIMX));
     }
