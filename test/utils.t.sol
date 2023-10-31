@@ -48,9 +48,6 @@ contract Utils is Test {
         axelarGasService = new MockAxelarGasService();
 
         axelarAdaptor = new RootAxelarBridgeAdaptor();
-        axelarAdaptor.initialize(
-            address(rootBridge), childBridgeName, address(mockAxelarGateway), address(axelarGasService)
-        );
 
         rootBridge.initialize(
             address(axelarAdaptor),
@@ -59,6 +56,10 @@ contract Utils is Test {
             address(token),
             imxTokenAddress,
             wethTokenAddress
+        );
+
+        axelarAdaptor.initialize(
+            address(rootBridge), childBridgeName, address(mockAxelarGateway), address(axelarGasService)
         );
     }
 
