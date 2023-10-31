@@ -27,6 +27,16 @@ contract ChildAxelarBridgeAdaptor is AxelarExecutable, Initializable, IChildAxel
         rootBridgeAdaptor = childBridge.rootERC20BridgeAdaptor();
     }
 
+    // TODO tests for this
+    // TODO does this need to be permissioned?
+    /**
+     * @notice Sets the root bridge adaptor address.
+     * @dev Always sets it to whatever the rootERC20BridgeAdaptor of the bridge contract is.
+     */
+    function setRootBridgeAdaptor() external {
+        rootBridgeAdaptor = childBridge.rootERC20BridgeAdaptor();
+    }
+
     /**
      * @dev This function is called by the parent `AxelarExecutable` contract to execute the payload.
      * @custom:assumes `sourceAddress_` is a 20 byte address.

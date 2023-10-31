@@ -19,8 +19,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     function setUp() public {
         mockChildERC20Bridge = new MockChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
-        childAxelarBridgeAdaptor =
-            new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
+        childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
         childAxelarBridgeAdaptor.initialize(address(mockChildERC20Bridge));
     }
 

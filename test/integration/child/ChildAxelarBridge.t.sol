@@ -32,8 +32,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
 
         childERC20Bridge = new ChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
-        childAxelarBridgeAdaptor =
-            new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
+        childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
 
         childERC20Bridge.initialize(
             address(childAxelarBridgeAdaptor),

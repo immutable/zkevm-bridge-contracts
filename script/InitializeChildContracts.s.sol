@@ -38,8 +38,5 @@ contract InitializeChildContracts is Script {
         childAxelarBridgeAdaptor.initialize(address(childERC20Bridge));
 
         vm.stopBroadcast();
-
-        console2.log("DINGDING");
-        console2.log(childAxelarBridgeAdaptor.rootBridgeAdaptor());
     }
 }

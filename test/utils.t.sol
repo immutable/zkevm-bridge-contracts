@@ -47,11 +47,9 @@ contract Utils is Test {
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
 
-        axelarAdaptor = new RootAxelarBridgeAdaptor(
-            address(rootBridge),
-            childBridgeName,
-            address(mockAxelarGateway),
-            address(axelarGasService)
+        axelarAdaptor = new RootAxelarBridgeAdaptor();
+        axelarAdaptor.initialize(
+            address(rootBridge), childBridgeName, address(mockAxelarGateway), address(axelarGasService)
         );
 
         rootBridge.initialize(
@@ -62,7 +60,6 @@ contract Utils is Test {
             imxTokenAddress,
             wethTokenAddress
         );
-        axelarAdaptor.setChildBridgeAdaptor();
     }
 
     function setupDeposit(

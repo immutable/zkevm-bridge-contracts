@@ -33,42 +33,32 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         stubRootBridge = new StubRootBridge();
         childBridgeAdaptor = stubRootBridge.childBridgeAdaptor();
 
-        axelarAdaptor = new RootAxelarBridgeAdaptor(
-            address(stubRootBridge),
-            CHILD_CHAIN_NAME,
-            address(mockAxelarGateway),
-            address(axelarGasService)
+        axelarAdaptor = new RootAxelarBridgeAdaptor();
+        axelarAdaptor.initialize(
+            address(stubRootBridge), CHILD_CHAIN_NAME, address(mockAxelarGateway), address(axelarGasService)
         );
         axelarAdaptor.setChildBridgeAdaptor();
         vm.deal(address(stubRootBridge), 99999999999);
     }
 
     function test_Constructor() public {
-        assertEq(axelarAdaptor.ROOT_BRIDGE(), address(stubRootBridge), "rootBridge not set");
+        assertEq(axelarAdaptor.rootBridge(), address(stubRootBridge), "rootBridge not set");
         assertEq(axelarAdaptor.childBridgeAdaptor(), childBridgeAdaptor, "childBridgeAdaptor not set");
         assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
-        assertEq(address(axelarAdaptor.AXELAR_GATEWAY()), address(mockAxelarGateway), "axelarGateway not set");
-        assertEq(address(axelarAdaptor.GAS_SERVICE()), address(axelarGasService), "axelarGasService not set");
+        assertEq(address(axelarAdaptor.axelarGateway()), address(mockAxelarGateway), "axelarGateway not set");
+        assertEq(address(axelarAdaptor.gasService()), address(axelarGasService), "axelarGasService not set");
     }
 
-    function test_RevertWhen_ConstructorGivenZeroAddress() public {
+    function test_RevertWhen_InitializerGivenZeroAddress() public {
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor();
         vm.expectRevert(ZeroAddresses.selector);
-        new RootAxelarBridgeAdaptor(
-            address(0),
-            CHILD_CHAIN_NAME,
-            address(mockAxelarGateway),
-            address(axelarGasService)
-        );
+        newAdaptor.initialize(address(0), CHILD_CHAIN_NAME, address(mockAxelarGateway), address(axelarGasService));
     }
 
     function test_RevertWhen_ConstructorGivenEmptyChildChainName() public {
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor();
         vm.expectRevert(InvalidChildChain.selector);
-        new RootAxelarBridgeAdaptor(
-            address(this),
-            "",
-            address(mockAxelarGateway),
-            address(axelarGasService)
-        );
+        newAdaptor.initialize(address(this), "", address(mockAxelarGateway), address(axelarGasService));
     }
 
     /// @dev For this unit test we just want to make sure the correct functions are called on the Axelar Gateway and Gas Service.
