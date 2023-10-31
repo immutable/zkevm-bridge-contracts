@@ -2,30 +2,29 @@
 pragma solidity ^0.8.21;
 
 import {AxelarExecutable} from "@axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IChildERC20Bridge} from "../interfaces/child/IChildERC20Bridge.sol";
 import {IChildAxelarBridgeAdaptorErrors} from "../interfaces/child/IChildAxelarBridgeAdaptor.sol";
 
-contract ChildAxelarBridgeAdaptor is AxelarExecutable, IChildAxelarBridgeAdaptorErrors {
+contract ChildAxelarBridgeAdaptor is AxelarExecutable, Initializable, IChildAxelarBridgeAdaptorErrors {
     /// @notice Address of bridge to relay messages to.
-    IChildERC20Bridge public immutable CHILD_BRIDGE;
+    IChildERC20Bridge public childBridge;
     string public rootBridgeAdaptor;
 
-    constructor(address _gateway, address _childBridge) AxelarExecutable(_gateway) {
+    constructor(address _gateway) AxelarExecutable(_gateway) {}
+
+    /**
+     * @notice Initializes the contract.
+     * @param _childBridge Address of the child bridge contract.
+     * @dev Always sets the rootBridgeAdaptor to whatever the rootERC20BridgeAdaptor of the bridge contract is.
+     */
+    function initialize(address _childBridge) external initializer {
         if (_childBridge == address(0)) {
             revert ZeroAddress();
         }
 
-        CHILD_BRIDGE = IChildERC20Bridge(_childBridge);
-    }
-
-    // TODO tests for this
-    // TODO does this need to be permissioned?
-    /**
-     * @notice Sets the root bridge adaptor address.
-     * @dev Always sets it to whatever the rootERC20BridgeAdaptor of the bridge contract is.
-     */
-    function setRootBridgeAdaptor() external {
-        rootBridgeAdaptor = CHILD_BRIDGE.rootERC20BridgeAdaptor();
+        childBridge = IChildERC20Bridge(_childBridge);
+        rootBridgeAdaptor = childBridge.rootERC20BridgeAdaptor();
     }
 
     /**
@@ -36,6 +35,6 @@ contract ChildAxelarBridgeAdaptor is AxelarExecutable, IChildAxelarBridgeAdaptor
         internal
         override
     {
-        CHILD_BRIDGE.onMessageReceive(sourceChain_, sourceAddress_, payload_);
+        childBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
 }

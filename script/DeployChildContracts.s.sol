@@ -37,10 +37,8 @@ contract DeployChildContracts is Script {
             ""
         );
 
-        // TODO put behind proxy
         ChildAxelarBridgeAdaptor childBridgeAdaptorImplementation = new ChildAxelarBridgeAdaptor(
-            childGateway, // child gateway
-            address(childBridgeProxy) // child bridge
+            childGateway
         );
 
         // TODO confirm that we want the same proxyAdmin for both
