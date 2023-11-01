@@ -37,13 +37,11 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.initialize(
             address(stubRootBridge), CHILD_CHAIN_NAME, address(mockAxelarGateway), address(axelarGasService)
         );
-        axelarAdaptor.setChildBridgeAdaptor();
         vm.deal(address(stubRootBridge), 99999999999);
     }
 
     function test_Constructor() public {
         assertEq(axelarAdaptor.rootBridge(), address(stubRootBridge), "rootBridge not set");
-        assertEq(axelarAdaptor.childBridgeAdaptor(), childBridgeAdaptor, "childBridgeAdaptor not set");
         assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
         assertEq(address(axelarAdaptor.axelarGateway()), address(mockAxelarGateway), "axelarGateway not set");
         assertEq(address(axelarAdaptor.gasService()), address(axelarGasService), "axelarGasService not set");
