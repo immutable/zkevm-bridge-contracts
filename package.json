@@ -22,6 +22,8 @@
         "@axelar-network/axelar-gmp-sdk-solidity": "^5.3.1",
         "@axelar-network/axelar-local-dev": "^2.1.1-alpha.2",
         "@axelar-network/axelarjs-sdk": "^0.12.8",
+        "@ethersproject/hardware-wallets": "^5.7.0",
+        "@ledgerhq/hw-transport-node-hid": "^6.27.21",
         "@openzeppelin/contracts": "^4.5.0",
         "axios": "^0.27.2",
         "bip39": "^3.0.4",
