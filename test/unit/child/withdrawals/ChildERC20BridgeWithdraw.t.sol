@@ -44,7 +44,8 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
             address(mockAdaptor), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN
         );
 
-        bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
+        bytes memory mapTokenData =
+            abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
 
         vm.prank(address(mockAdaptor));
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, mapTokenData);
@@ -68,9 +69,31 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         // Found by running `forge inspect src/child/ChildERC20.sol:ChildERC20 storageLayout | grep -B3 -A5 -i "bridge"`
         uint256 bridgeSlot = 108;
         bytes32 bridgeSlotBytes32 = bytes32(bridgeSlot);
-        vm.store(address(childToken), bridgeSlotBytes32, bytes32(address(0x123)));
+        vm.store(address(childToken), bridgeSlotBytes32, bytes32(uint256(uint160(address(0x123)))));
 
         vm.expectRevert(BridgeNotSet.selector);
+        childBridge.withdraw(IChildERC20(address(childToken)), 100);
+    }
+
+    function test_RevertsIf_WithdrawCalledWithAChildTokenWithUnsetRootToken() public {
+        /* First, set rootToken of mapped token to zero */
+
+        // Found by running `forge inspect src/child/ChildERC20.sol:ChildERC20 storageLayout | grep -B3 -A5 -i "rootToken"`
+        uint256 rootTokenSlot = 109;
+        bytes32 rootTokenSlotBytes32 = bytes32(rootTokenSlot);
+        vm.store(address(childToken), rootTokenSlotBytes32, bytes32(uint256(uint160(address(0)))));
+
+        /* Then, set rootTokenToChildToken[address(0)] to the child token (to bypass the NotMapped check) */
+
+        // Slot is 2 because of the Ownable, Initializable contracts coming first.
+        // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
+        uint256 rootTokenToChildTokenMappingSlot = 2;
+        bytes32 slot = getMappingStorageSlotFor(address(0), rootTokenToChildTokenMappingSlot);
+        bytes32 data = bytes32(uint256(uint160(address(childToken))));
+
+        vm.store(address(childBridge), slot, data);
+
+        vm.expectRevert(ZeroAddressRootToken.selector);
         childBridge.withdraw(IChildERC20(address(childToken)), 100);
     }
 

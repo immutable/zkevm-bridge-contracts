@@ -145,7 +145,7 @@ contract ChildERC20Bridge is
             revert NotMapped();
         }
 
-        // A mapped token should never a root token unset
+        // A mapped token should never have root token unset
         if (rootToken == address(0)) {
             revert ZeroAddressRootToken();
         }
