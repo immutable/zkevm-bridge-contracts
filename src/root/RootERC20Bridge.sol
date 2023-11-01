@@ -267,7 +267,7 @@ contract RootERC20Bridge is
         } else if (address(rootToken) == rootIMXToken) {
             emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
         } else {
-            emit ERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
+            emit ChildChainERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
         }
     }
 }

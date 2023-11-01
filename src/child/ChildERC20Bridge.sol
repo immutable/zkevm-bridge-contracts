@@ -167,6 +167,7 @@ contract ChildERC20Bridge is
         bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
     
         // TODO emit event
+        emit ChildChainERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
     }
 
     function _mapToken(bytes calldata data) private {
@@ -229,7 +230,7 @@ contract ChildERC20Bridge is
             if (address(rootToken) == NATIVE_ETH) {
                 emit NativeEthDeposit(address(rootToken), childToken, sender, receiver, amount);
             } else {
-                emit ERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
+                emit ChildChainERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
             }
         } else {
             Address.sendValue(payable(receiver), amount);

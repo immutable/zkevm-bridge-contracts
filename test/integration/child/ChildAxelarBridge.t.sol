@@ -133,7 +133,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
     /*
      * DEPOSIT
      */
-    function test_deposit_EmitsERC20Deposit() public {
+    function test_deposit_EmitsChildChainERC20Deposit() public {
         address rootTokenAddress = address(456);
         address sender = address(0xff);
         address receiver = address(0xee);
@@ -142,7 +142,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 commandId = bytes32("testCommandId");
 
         vm.expectEmit(address(childERC20Bridge));
-        emit ERC20Deposit(rootTokenAddress, childToken, sender, receiver, amount);
+        emit ChildChainERC20Deposit(rootTokenAddress, childToken, sender, receiver, amount);
 
         childAxelarBridgeAdaptor.execute(
             commandId,

@@ -285,7 +285,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
-        emit ERC20Deposit(address(token), childToken, address(this), address(this), tokenAmount);
+        emit ChildChainERC20Deposit(address(token), childToken, address(this), address(this), tokenAmount);
 
         vm.expectCall(
             address(axelarAdaptor),
@@ -341,7 +341,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         vm.expectEmit(address(axelarAdaptor));
         emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
-        emit ERC20Deposit(address(token), childToken, address(this), recipient, tokenAmount);
+        emit ChildChainERC20Deposit(address(token), childToken, address(this), recipient, tokenAmount);
 
         vm.expectCall(
             address(axelarAdaptor),

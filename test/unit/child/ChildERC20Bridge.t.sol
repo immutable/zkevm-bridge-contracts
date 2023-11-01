@@ -334,7 +334,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 
-    function test_onMessageReceive_Deposit_EmitsERC20DepositEvent() public {
+    function test_onMessageReceive_Deposit_EmitsChildChainERC20DepositEvent() public {
         setupChildDeposit(rootToken, childBridge, ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR);
 
         address sender = address(100);
@@ -346,7 +346,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         address childToken = childBridge.rootTokenToChildToken(address(rootToken));
 
         vm.expectEmit(address(childBridge));
-        emit ERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
+        emit ChildChainERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 
