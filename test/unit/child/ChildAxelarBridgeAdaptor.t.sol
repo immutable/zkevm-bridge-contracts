@@ -7,6 +7,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
 import {MockChildERC20Bridge} from "../../../src/test/child/MockChildERC20Bridge.sol";
 import {MockChildAxelarGateway} from "../../../src/test/child/MockChildAxelarGateway.sol";
+import {MockChildAxelarGasService} from "../../../src/test/child/MockChildAxelarGasService.sol";
 import {IChildAxelarBridgeAdaptorErrors} from "../../../src/interfaces/child/IChildAxelarBridgeAdaptor.sol";
 
 contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErrors {
@@ -15,12 +16,14 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     ChildAxelarBridgeAdaptor public childAxelarBridgeAdaptor;
     MockChildERC20Bridge public mockChildERC20Bridge;
     MockChildAxelarGateway public mockChildAxelarGateway;
+    MockChildAxelarGasService public mockChildAxelarGasService;
 
     function setUp() public {
         mockChildERC20Bridge = new MockChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
+        mockChildAxelarGasService = new MockChildAxelarGasService();
         childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
-        childAxelarBridgeAdaptor.initialize(address(mockChildERC20Bridge));
+        childAxelarBridgeAdaptor.initialize("root", address(mockChildERC20Bridge), address(mockChildAxelarGasService));
     }
 
     function test_Constructor_SetsValues() public {
@@ -28,10 +31,11 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         assertEq(address(childAxelarBridgeAdaptor.gateway()), address(mockChildAxelarGateway), "gateway not set");
     }
 
-    function test_RevertIf_ConstructorGivenZeroAddress() public {
+    // TODO add more initialize tests
+    function test_RevertIf_InitializeGivenZeroAddress() public {
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
         vm.expectRevert(ZeroAddress.selector);
-        newAdaptor.initialize(address(0));
+        newAdaptor.initialize("root", address(0), address(mockChildAxelarGasService));
     }
 
     function test_Execute() public {

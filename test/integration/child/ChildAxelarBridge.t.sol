@@ -13,6 +13,7 @@ import {
 } from "../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20, ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {MockChildAxelarGateway} from "../../../src/test/child/MockChildAxelarGateway.sol";
+import {MockChildAxelarGasService} from "../../../src/test/child/MockChildAxelarGasService.sol";
 import {Utils} from "../../utils.t.sol";
 
 contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
@@ -25,6 +26,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
     ChildERC20 public childERC20;
     ChildAxelarBridgeAdaptor public childAxelarBridgeAdaptor;
     MockChildAxelarGateway public mockChildAxelarGateway;
+    MockChildAxelarGasService public mockChildAxelarGasService;
 
     function setUp() public {
         childERC20 = new ChildERC20();
@@ -32,6 +34,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
 
         childERC20Bridge = new ChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
+        mockChildAxelarGasService = new MockChildAxelarGasService();
         childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
 
         childERC20Bridge.initialize(
@@ -42,7 +45,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             IMX_TOKEN_ADDRESS
         );
 
-        childAxelarBridgeAdaptor.initialize(address(childERC20Bridge));
+        childAxelarBridgeAdaptor.initialize(ROOT_CHAIN_NAME, address(childERC20Bridge), address(mockChildAxelarGasService));
     }
 
     function test_ChildTokenMap() public {

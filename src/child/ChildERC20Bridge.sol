@@ -132,9 +132,7 @@ contract ChildERC20Bridge is
     }
 
     function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external {
-        _beforeTokenWithdraw();
         _withdraw(childToken, receiver, amount);
-        _afterTokenWithdraw();
     }
 
     function _withdraw(IChildERC20 childToken, address receiver, uint256 amount) private {
@@ -166,16 +164,9 @@ contract ChildERC20Bridge is
         bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
 
         // Send the message to the bridge adaptor and up to root chain
-        bridgeAdaptor.sendMessage(rootChain, rootERC20BridgeAdaptor, payload);
-
-        if (address(childToken) == childETHToken) {
-            childToken.burn(msg.sender, amount);
-            Address.sendValue(payable(receiver), amount);
-        } else {
-            childToken.burn(msg.sender, amount);
-            IERC20Metadata rootToken = IERC20Metadata(childToken.rootToken());
-            rootToken.safeTransfer(receiver, amount);
-        }
+        bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
+    
+        // TODO emit event
     }
 
     function _mapToken(bytes calldata data) private {

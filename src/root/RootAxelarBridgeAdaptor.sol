@@ -30,8 +30,6 @@ contract RootAxelarBridgeAdaptor is
 
     address public rootBridge;
     string public childBridgeAdaptor;
-    /// @dev childChain could be immutable, but as of writing this Solidity does not support immutable strings.
-    ///      see: https://ethereum.stackexchange.com/questions/127622/typeerror-immutable-variables-cannot-have-a-non-value-type
     string public childChain;
     IAxelarGateway public axelarGateway;
     IAxelarGasService public gasService;
