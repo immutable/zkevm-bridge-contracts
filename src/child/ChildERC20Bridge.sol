@@ -152,7 +152,7 @@ contract ChildERC20Bridge is
 
         // A mapped token should never have the bridge unset
         if (childToken.bridge() != address(this)) {
-            revert BrigeNotSet();
+            revert BridgeNotSet();
         }
 
         if (!childToken.burn(msg.sender, amount)) {

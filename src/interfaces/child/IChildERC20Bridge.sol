@@ -81,7 +81,7 @@ interface IChildERC20BridgeErrors {
     /// @notice Error when a given child token's root token is the zero address.
     error ZeroAddressRootToken();
     /// @notice Error when a given child token's bridge address is not set.
-    error BrigeNotSet();
+    error BridgeNotSet();
     /// @notice Error when a call to the given child token's `burn` function fails.
     error BurnFailed();
 }

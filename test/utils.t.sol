@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -123,9 +123,9 @@ contract Utils is Test {
         string memory sourceChain,
         string memory sourceAddress
     ) public {
-        string memory name = "TEST";
-        string memory symbol = "TST";
-        uint8 decimals = 18;
+        string memory name = token.name();
+        string memory symbol = token.symbol();
+        uint8 decimals = token.decimals();
 
         bytes memory payload = abi.encode(childBridge.MAP_TOKEN_SIG(), address(token), name, symbol, decimals);
 

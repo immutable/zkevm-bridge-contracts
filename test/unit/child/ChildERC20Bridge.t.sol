@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -13,7 +13,6 @@ import {
 } from "../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20} from "../../../src/interfaces/child/IChildERC20.sol";
 import {ChildERC20} from "../../../src/child/ChildERC20.sol";
-import {MockAdaptor} from "../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../utils.t.sol";
 
 contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
