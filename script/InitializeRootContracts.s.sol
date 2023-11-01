@@ -44,18 +44,6 @@ contract InitializeRootContracts is Script {
             rootGateway: vm.envAddress("ROOT_GATEWAY_ADDRESS"),
             rootGasService: vm.envAddress("ROOT_GAS_SERVICE_ADDRESS")
         });
-        // RootERC20Bridge rootERC20Bridge = RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE")));
-        // RootAxelarBridgeAdaptor rootBridgeAdaptor = RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR"));
-        // address rootChainChildTokenTemplate = vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE");
-        // address childBridgeAdaptor = vm.envAddress("CHILD_BRIDGE_ADAPTOR");
-        // address childERC20Bridge = vm.envAddress("CHILD_ERC20_BRIDGE");
-        // string memory rootRpcUrl = vm.envString("ROOT_RPC_URL");
-        // uint256 rootPrivateKey = vm.envUint("ROOT_PRIVATE_KEY");
-        // address rootIMXToken = vm.envAddress("ROOT_IMX_ADDRESS");
-        // address rootWETHToken = vm.envAddress("ROOT_WETH_ADDRESS");
-        // string memory childChainName = vm.envString("CHILD_CHAIN_NAME");
-        // address rootGateway = vm.envAddress("ROOT_GATEWAY_ADDRESS");
-        // address rootGasService = vm.envAddress("ROOT_GAS_SERVICE_ADDRESS");
 
         string[] memory checksumInputs = Utils.getChecksumInputs(params.childBridgeAdaptor);
         bytes memory checksumOutput = vm.ffi(checksumInputs);
