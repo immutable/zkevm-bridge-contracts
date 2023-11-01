@@ -25,7 +25,13 @@ interface IChildERC20BridgeEvents {
     /// @notice Emitted when a map token message is received from the root chain and executed successfully.
     event L2TokenMapped(address rootToken, address childToken);
 
-    event ChildChainERC20Withdraw(address indexed rootToken, address indexed childToken, address depositor, address indexed receiver, uint256 amount);
+    event ChildChainERC20Withdraw(
+        address indexed rootToken,
+        address indexed childToken,
+        address depositor,
+        address indexed receiver,
+        uint256 amount
+    );
 
     event ChildChainERC20Deposit(
         address indexed rootToken,

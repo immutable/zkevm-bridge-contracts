@@ -126,7 +126,6 @@ contract ChildERC20Bridge is
         }
     }
 
-    
     function withdraw(IChildERC20 childToken, uint256 amount) external {
         _withdraw(childToken, msg.sender, amount);
     }
@@ -165,7 +164,7 @@ contract ChildERC20Bridge is
 
         // Send the message to the bridge adaptor and up to root chain
         bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
-    
+
         // TODO emit event
         emit ChildChainERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
     }

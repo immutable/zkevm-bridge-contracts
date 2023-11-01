@@ -6,11 +6,19 @@ import {IAxelarGasService} from "@axelar-cgp-solidity/contracts/interfaces/IAxel
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IChildERC20Bridge} from "../interfaces/child/IChildERC20Bridge.sol";
-import {IChildAxelarBridgeAdaptorErrors, IChildAxelarBridgeAdaptorEvents} from "../interfaces/child/IChildAxelarBridgeAdaptor.sol";
+import {
+    IChildAxelarBridgeAdaptorErrors,
+    IChildAxelarBridgeAdaptorEvents
+} from "../interfaces/child/IChildAxelarBridgeAdaptor.sol";
 import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
 
-contract ChildAxelarBridgeAdaptor is AxelarExecutable, IChildERC20BridgeAdaptor, Initializable, IChildAxelarBridgeAdaptorErrors, 
- IChildAxelarBridgeAdaptorEvents {
+contract ChildAxelarBridgeAdaptor is
+    AxelarExecutable,
+    IChildERC20BridgeAdaptor,
+    Initializable,
+    IChildAxelarBridgeAdaptorErrors,
+    IChildAxelarBridgeAdaptorEvents
+{
     /// @notice Address of bridge to relay messages to.
     IChildERC20Bridge public childBridge;
     IAxelarGasService public gasService;
