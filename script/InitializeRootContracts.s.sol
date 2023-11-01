@@ -13,39 +13,75 @@ import {Utils} from "./Utils.sol";
 
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
+struct InitializeRootContractsParams {
+    RootERC20Bridge rootERC20Bridge;
+    RootAxelarBridgeAdaptor rootBridgeAdaptor;
+    address rootChainChildTokenTemplate;
+    address childBridgeAdaptor;
+    address childERC20Bridge;
+    string rootRpcUrl;
+    uint256 rootPrivateKey;
+    address rootIMXToken;
+    address rootWETHToken;
+    string childChainName;
+    address rootGateway;
+    address rootGasService;
+}
+
 contract InitializeRootContracts is Script {
     function run() public {
-        RootERC20Bridge rootERC20Bridge = RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE")));
-        RootAxelarBridgeAdaptor rootBridgeAdaptor = RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR"));
-        address rootChainChildTokenTemplate = vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE");
-        address childBridgeAdaptor = vm.envAddress("CHILD_BRIDGE_ADAPTOR");
-        address childERC20Bridge = vm.envAddress("CHILD_ERC20_BRIDGE");
-        string memory rootRpcUrl = vm.envString("ROOT_RPC_URL");
-        uint256 rootPrivateKey = vm.envUint("ROOT_PRIVATE_KEY");
-        address rootIMXToken = vm.envAddress("ROOT_IMX_ADDRESS");
-        address rootWETHToken = vm.envAddress("ROOT_WETH_ADDRESS");
+        InitializeRootContractsParams memory params = InitializeRootContractsParams({
+            rootERC20Bridge: RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE"))),
+            rootBridgeAdaptor: RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR")),
+            rootChainChildTokenTemplate: vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE"),
+            childBridgeAdaptor: vm.envAddress("CHILD_BRIDGE_ADAPTOR"),
+            childERC20Bridge: vm.envAddress("CHILD_ERC20_BRIDGE"),
+            rootRpcUrl: vm.envString("ROOT_RPC_URL"),
+            rootPrivateKey: vm.envUint("ROOT_PRIVATE_KEY"),
+            rootIMXToken: vm.envAddress("ROOT_IMX_ADDRESS"),
+            rootWETHToken: vm.envAddress("ROOT_WETH_ADDRESS"),
+            childChainName: vm.envString("CHILD_CHAIN_NAME"),
+            rootGateway: vm.envAddress("ROOT_GATEWAY_ADDRESS"),
+            rootGasService: vm.envAddress("ROOT_GAS_SERVICE_ADDRESS")
+        });
+        // RootERC20Bridge rootERC20Bridge = RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE")));
+        // RootAxelarBridgeAdaptor rootBridgeAdaptor = RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR"));
+        // address rootChainChildTokenTemplate = vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE");
+        // address childBridgeAdaptor = vm.envAddress("CHILD_BRIDGE_ADAPTOR");
+        // address childERC20Bridge = vm.envAddress("CHILD_ERC20_BRIDGE");
+        // string memory rootRpcUrl = vm.envString("ROOT_RPC_URL");
+        // uint256 rootPrivateKey = vm.envUint("ROOT_PRIVATE_KEY");
+        // address rootIMXToken = vm.envAddress("ROOT_IMX_ADDRESS");
+        // address rootWETHToken = vm.envAddress("ROOT_WETH_ADDRESS");
+        // string memory childChainName = vm.envString("CHILD_CHAIN_NAME");
+        // address rootGateway = vm.envAddress("ROOT_GATEWAY_ADDRESS");
+        // address rootGasService = vm.envAddress("ROOT_GAS_SERVICE_ADDRESS");
 
-        string[] memory checksumInputs = Utils.getChecksumInputs(childBridgeAdaptor);
+        string[] memory checksumInputs = Utils.getChecksumInputs(params.childBridgeAdaptor);
         bytes memory checksumOutput = vm.ffi(checksumInputs);
         string memory childBridgeAdaptorChecksum = string(Utils.removeZeroByteValues(checksumOutput));
         /**
          * INITIALIZE ROOT CHAIN CONTRACTS
          */
-        vm.createSelectFork(rootRpcUrl);
-        vm.startBroadcast(rootPrivateKey);
+        vm.createSelectFork(params.rootRpcUrl);
+        vm.startBroadcast(params.rootPrivateKey);
 
-        rootERC20Bridge.initialize(
-            address(rootBridgeAdaptor),
-            childERC20Bridge,
+        params.rootERC20Bridge.initialize(
+            address(params.rootBridgeAdaptor),
+            params.childERC20Bridge,
             childBridgeAdaptorChecksum,
-            rootChainChildTokenTemplate,
-            rootIMXToken,
-            rootWETHToken
+            params.rootChainChildTokenTemplate,
+            params.rootIMXToken,
+            params.rootWETHToken
         );
 
-        rootBridgeAdaptor.setChildBridgeAdaptor();
+        params.rootBridgeAdaptor.initialize(
+            address(params.rootERC20Bridge), // root bridge
+            params.childChainName, // child chain name
+            params.rootGateway, // axelar gateway
+            params.rootGasService // axelar gas service
+        );
 
         vm.stopBroadcast();
-        console2.log(rootERC20Bridge.childBridgeAdaptor());
     }
 }

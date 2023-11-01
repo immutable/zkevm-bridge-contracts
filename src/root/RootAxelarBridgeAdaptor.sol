@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.21;
 
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -20,22 +21,29 @@ import {IRootERC20Bridge} from "../interfaces/root/IRootERC20Bridge.sol";
  * @dev This is not an upgradeable contract, because it is trivial to deploy a new one if needed.
  */
 contract RootAxelarBridgeAdaptor is
+    Initializable,
     IRootERC20BridgeAdaptor,
     IRootAxelarBridgeAdaptorEvents,
     IRootAxelarBridgeAdaptorErrors
 {
     using SafeERC20 for IERC20Metadata;
 
-    address public immutable ROOT_BRIDGE;
+    address public rootBridge;
     string public childBridgeAdaptor;
     /// @dev childChain could be immutable, but as of writing this Solidity does not support immutable strings.
     ///      see: https://ethereum.stackexchange.com/questions/127622/typeerror-immutable-variables-cannot-have-a-non-value-type
     string public childChain;
-    IAxelarGateway public immutable AXELAR_GATEWAY;
-    IAxelarGasService public immutable GAS_SERVICE;
+    IAxelarGateway public axelarGateway;
+    IAxelarGasService public gasService;
     mapping(uint256 => string) public chainIdToChainName;
 
-    constructor(address _rootBridge, string memory _childChain, address _axelarGateway, address _gasService) {
+    /**
+     * @dev Always sets it to whatever the childBridgeAdaptor of the bridge contract is.
+     */
+    function initialize(address _rootBridge, string memory _childChain, address _axelarGateway, address _gasService)
+        public
+        initializer
+    {
         if (_rootBridge == address(0) || _axelarGateway == address(0) || _gasService == address(0)) {
             revert ZeroAddresses();
         }
@@ -43,10 +51,19 @@ contract RootAxelarBridgeAdaptor is
         if (bytes(_childChain).length == 0) {
             revert InvalidChildChain();
         }
-        ROOT_BRIDGE = _rootBridge;
+        rootBridge = _rootBridge;
         childChain = _childChain;
-        AXELAR_GATEWAY = IAxelarGateway(_axelarGateway);
-        GAS_SERVICE = IAxelarGasService(_gasService);
+        axelarGateway = IAxelarGateway(_axelarGateway);
+        gasService = IAxelarGasService(_gasService);
+        childBridgeAdaptor = IRootERC20Bridge(rootBridge).childBridgeAdaptor();
+    }
+
+    /**
+     * @notice Sets the child bridge adaptor address.
+     * @dev Always sets it to whatever the childBridgeAdaptor of the bridge contract is.
+     */
+    function setChildBridgeAdaptor() external {
+        childBridgeAdaptor = IRootERC20Bridge(rootBridge).childBridgeAdaptor();
     }
 
     /**
@@ -57,7 +74,7 @@ contract RootAxelarBridgeAdaptor is
         if (msg.value == 0) {
             revert NoGas();
         }
-        if (msg.sender != ROOT_BRIDGE) {
+        if (msg.sender != rootBridge) {
             revert CallerNotBridge();
         }
 
@@ -66,19 +83,11 @@ contract RootAxelarBridgeAdaptor is
         string memory _childChain = childChain;
 
         // TODO For `sender` (first param), should likely be refundRecipient (and in which case refundRecipient should be renamed to sender and used as refund recipient)
-        GAS_SERVICE.payNativeGasForContractCall{value: msg.value}(
+        gasService.payNativeGasForContractCall{value: msg.value}(
             address(this), _childChain, _childBridgeAdaptor, payload, refundRecipient
         );
 
-        AXELAR_GATEWAY.callContract(_childChain, _childBridgeAdaptor, payload);
+        axelarGateway.callContract(_childChain, _childBridgeAdaptor, payload);
         emit MapTokenAxelarMessage(_childChain, _childBridgeAdaptor, payload);
-    }
-
-    /**
-     * @notice Sets the child bridge adaptor address.
-     * @dev Always sets it to whatever the childBridgeAdaptor of the bridge contract is.
-     */
-    function setChildBridgeAdaptor() external {
-        childBridgeAdaptor = IRootERC20Bridge(ROOT_BRIDGE).childBridgeAdaptor();
     }
 }
