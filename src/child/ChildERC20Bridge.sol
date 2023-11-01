@@ -38,6 +38,7 @@ contract ChildERC20Bridge is
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     address public constant NATIVE_ETH = address(0xeee);
 
     IChildERC20BridgeAdaptor public bridgeAdaptor;
@@ -122,6 +123,58 @@ contract ChildERC20Bridge is
             _deposit(data[32:]);
         } else {
             revert InvalidData();
+        }
+    }
+
+    
+    function withdraw(IChildERC20 childToken, uint256 amount) external {
+        _withdraw(childToken, msg.sender, amount);
+    }
+
+    function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external {
+        _beforeTokenWithdraw();
+        _withdraw(childToken, receiver, amount);
+        _afterTokenWithdraw();
+    }
+
+    function _withdraw(IChildERC20 childToken, address receiver, uint256 amount) private {
+        if (address(childToken).code.length == 0) {
+            revert EmptyTokenContract();
+        }
+
+        address rootToken = childToken.rootToken();
+
+        if (rootTokenToChildToken[rootToken] != address(childToken)) {
+            revert NotMapped();
+        }
+
+        // A mapped token should never a root token unset
+        if (rootToken == address(0)) {
+            revert ZeroAddressRootToken();
+        }
+
+        // A mapped token should never have the bridge unset
+        if (childToken.bridge() != address(this)) {
+            revert BrigeNotSet();
+        }
+
+        if (!childToken.burn(msg.sender, amount)) {
+            revert BurnFailed();
+        }
+
+        // Encode the message payload
+        bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
+
+        // Send the message to the bridge adaptor and up to root chain
+        bridgeAdaptor.sendMessage(rootChain, rootERC20BridgeAdaptor, payload);
+
+        if (address(childToken) == childETHToken) {
+            childToken.burn(msg.sender, amount);
+            Address.sendValue(payable(receiver), amount);
+        } else {
+            childToken.burn(msg.sender, amount);
+            IERC20Metadata rootToken = IERC20Metadata(childToken.rootToken());
+            rootToken.safeTransfer(receiver, amount);
         }
     }
 
