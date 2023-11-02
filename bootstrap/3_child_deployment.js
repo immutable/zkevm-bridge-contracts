@@ -25,7 +25,7 @@ async function run() {
     console.log("Admin address is: ", adminAddr);
 
     // Execute 
-    console.log("Deploy child contracts in...")
+    console.log("Deploy child contracts in...");
     await wait();
 
     // Deploy child token template
@@ -48,7 +48,7 @@ async function run() {
     console.log("Deploy wrapped IMX...");
     let wrappedIMX = await deployChildContract(wrappedIMXObj, adminWallet);
     await waitForReceipt(wrappedIMX.deployTransaction.hash, childProvider);
-    console.log("Deploy to WRAPPED_IMX_ADDRESS: ", wrappedIMX.address);
+    console.log("Deployed to WRAPPED_IMX_ADDRESS: ", wrappedIMX.address);
     output += "WRAPPED_IMX_ADDRESS=" + wrappedIMX.address + "\n";
 
     // Deploy proxy admin
@@ -63,7 +63,7 @@ async function run() {
         maxFeePerGas: maxFee,
     });
     await waitForReceipt(resp.hash, childProvider);
-    console.log("Deploy to CHILD_PROXY_ADMIN: ", proxyAdmin.address);
+    console.log("Deployed to CHILD_PROXY_ADMIN: ", proxyAdmin.address);
     output += "CHILD_PROXY_ADMIN=" + proxyAdmin.address + "\n";
 
     // Deploy child bridge impl
@@ -79,7 +79,7 @@ async function run() {
     console.log("Deploy child bridge proxy...");
     let childBridgeProxy = await deployChildContract(childBridgeProxyObj, adminWallet, childBridgeImpl.address, proxyAdmin.address, []);
     await waitForReceipt(childBridgeProxy.deployTransaction.hash, childProvider);
-    console.log("Deploy to CHILD_BRIDGE_PROXY_ADDRESS: ", childBridgeProxy.address);
+    console.log("Deployed to CHILD_BRIDGE_PROXY_ADDRESS: ", childBridgeProxy.address);
     output += "CHILD_BRIDGE_PROXY_ADDRESS=" + childBridgeProxy.address + "\n";
 
     // Deploy child adaptor impl
@@ -87,7 +87,7 @@ async function run() {
     console.log("Deploy child adaptor impl...");
     let childAdaptorImpl = await deployChildContract(childAdaptorImplObj, adminWallet, childGatewayAddr);
     await waitForReceipt(childAdaptorImpl.deployTransaction.hash, childProvider);
-    console.log("Deploy to CHILD_ADAPTOR_IMPL_ADDRESS: ", childAdaptorImpl.address);
+    console.log("Deployed to CHILD_ADAPTOR_IMPL_ADDRESS: ", childAdaptorImpl.address);
     output += "CHILD_ADAPTOR_IMPL_ADDRESS=" + childAdaptorImpl.address + "\n";
 
     // Deploy child adaptor proxy
@@ -95,7 +95,7 @@ async function run() {
     console.log("Deploy child adaptor proxy...");
     let childAdaptorProxy = await deployChildContract(childAdaptorProxyObj, adminWallet, childAdaptorImpl.address, proxyAdmin.address, []);
     await waitForReceipt(childAdaptorProxy.deployTransaction.hash, childProvider);
-    console.log("Deploy to CHILD_ADAPTOR_PROXY_ADDRESS: ", childAdaptorProxy.address);
+    console.log("Deployed to CHILD_ADAPTOR_PROXY_ADDRESS: ", childAdaptorProxy.address);
     output += "CHILD_ADAPTOR_PROXY_ADDRESS" + childAdaptorProxy.address + "\n";
 
     fs.writeFileSync("./3.out.tmp", output);
