@@ -14,11 +14,6 @@ async function run() {
     let childBridgeAddr = requireEnv("CHILD_BRIDGE_ADDRESS");
     let multisigAddr = requireEnv("MULTISIG_CONTRACT_ADDRESS");
 
-    // Check duplicates
-    if (hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
-        throw("Duplicate address detected!");
-    }
-
     // Get admin address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
     let adminWallet;
@@ -29,6 +24,11 @@ async function run() {
     }
     let adminAddr = await adminWallet.getAddress();
     console.log("Admin address is: ", adminAddr);
+
+    // Check duplicates
+    if (hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
+        throw("Duplicate address detected!");
+    }
 
     // Execute
     let adminBal = await childProvider.getBalance(adminAddr);
