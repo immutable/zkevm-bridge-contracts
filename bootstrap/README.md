@@ -45,7 +45,7 @@ ROOT_GAS_SERVICE_ADDRESS=
 ```
 6. Basic contract validation
 ```
-node 2_deployment_validation.js (Note, for testnet regenesis, lien 41 needs to be disabled.)
+node 2_deployment_validation.js (Note, for testnet regenesis, line 41 needs to be disabled.)
 ```
 7. Deploy bridge contracts on child and root chain. (see [here](../README.md#remote-deployment) for more details)
 ```
