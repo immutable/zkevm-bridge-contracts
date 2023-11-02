@@ -50,7 +50,7 @@ node 2_deployment_validation.js (Note, for testnet regenesis, line 41 needs to b
 7. Deploy bridge contracts on child and root chain. (see [here](../README.md#remote-deployment) for more details)
 ```
 node 3_child_deployment.js
-node 4_child_deployment.js
+node 4_root_deployment.js
 ```
 8. Set the following environment variables using the output `3.out.tmp` & `4.out.tmp` from the previous step.
 ```
