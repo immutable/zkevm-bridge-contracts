@@ -14,6 +14,11 @@ async function run() {
     let childBridgeAddr = requireEnv("CHILD_BRIDGE_ADDRESS");
     let multisigAddr = requireEnv("MULTISIG_CONTRACT_ADDRESS");
 
+    // Check duplicates
+    if (hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
+        throw("Duplicate address detected!");
+    }
+
     // Get admin address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
     let adminWallet;
@@ -25,83 +30,46 @@ async function run() {
     let adminAddr = await adminWallet.getAddress();
     console.log("Admin address is: ", adminAddr);
 
-    // Check duplicates
-    if (hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
-        throw("Duplicate address detected!");
-    }
-
-    // Get admin, child bridge and multisig balances.
+    // Execute
     let adminBal = await childProvider.getBalance(adminAddr);
     let bridgeBal = await childProvider.getBalance(childBridgeAddr);
     let multisigBal = await childProvider.getBalance(multisigAddr);
-
     console.log("Admin balance: ", ethers.utils.formatEther(adminBal));
     console.log("Bridge balance: ", ethers.utils.formatEther(bridgeBal));
     console.log("Multisig balance: ", ethers.utils.formatEther(multisigBal));
-
-    // Execute
     console.log("Burn IMX in...");
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    // Transfer to child bridge.
-    console.log("Transfer 200m to child bridge...")
-    let feeData = await adminWallet.getFeeData();
-    let baseFee = feeData.lastBaseFeePerGas;
-    let gasPrice = feeData.gasPrice;
-    let priorityFee = Math.round(gasPrice * 150 / 100);
-    let maxFee = Math.round(1.13 * baseFee + priorityFee);
-    let txn = {
+    await wait();
+
+    // Transfer to child bridge
+    console.log("Transfer 200m to child bridge...");
+    let [priorityFee, maxFee] = await getFee(adminWallet);
+    let resp = await adminWallet.sendTransaction({
         to: childBridgeAddr,
         value: ethers.utils.parseEther(TRANSFER_TO_CHILD_BRIDGE),
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
-    }
-    let resp = await adminWallet.sendTransaction(txn)
-
-    let receipt;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-
+    });
+    await waitForReceipt(resp.hash, childProvider);
     adminBal = await childProvider.getBalance(adminAddr);
     bridgeBal = await childProvider.getBalance(childBridgeAddr);
     multisigBal = await childProvider.getBalance(multisigAddr);
-
     console.log("Admin balance: ", ethers.utils.formatEther(adminBal));
     console.log("Bridge balance: ", ethers.utils.formatEther(bridgeBal));
     console.log("Multisig balance: ", ethers.utils.formatEther(multisigBal));
 
-    // Transfer to multisig.
-    console.log("Transfer remaining to multisig...")
-    feeData = await adminWallet.getFeeData();
-    baseFee = feeData.lastBaseFeePerGas;
-    gasPrice = feeData.gasPrice;
-    priorityFee = Math.round(gasPrice * 150 / 100);
-    maxFee = Math.round(1.13 * baseFee + priorityFee);
-
-    txn = {
+    // Transfer to multisig
+    console.log("Transfer remaining to multisig...");
+    [priorityFee, maxFee] = await getFee(adminWallet);
+    resp = await adminWallet.sendTransaction({
         to: multisigAddr,
         value: adminBal.sub(ethers.utils.parseEther("0.01")),
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
-    }
-    resp = await adminWallet.sendTransaction(txn)
-
-    receipt = null;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-
+    });
+    await waitForReceipt(resp.hash, childProvider);
     adminBal = await childProvider.getBalance(adminAddr);
     bridgeBal = await childProvider.getBalance(childBridgeAddr);
     multisigBal = await childProvider.getBalance(multisigAddr);
-
     console.log("Admin balance: ", ethers.utils.formatEther(adminBal));
     console.log("Bridge balance: ", ethers.utils.formatEther(bridgeBal));
     console.log("Multisig balance: ", ethers.utils.formatEther(multisigBal));
@@ -127,4 +95,33 @@ function hasDuplicates(array) {
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function wait() {
+    for (let i = 10; i >= 0; i--) {
+        console.log(i)
+        await delay(1000);
+    }
+}
+
+async function getFee(adminWallet) {
+    let feeData = await adminWallet.getFeeData();
+    let baseFee = feeData.lastBaseFeePerGas;
+    let gasPrice = feeData.gasPrice;
+    let priorityFee = Math.round(gasPrice * 150 / 100);
+    let maxFee = Math.round(1.13 * baseFee + priorityFee);
+    return [priorityFee, maxFee];
+}
+
+async function waitForReceipt(txHash, provider) {
+    let receipt;
+    while (receipt == null) {
+        receipt = await provider.getTransactionReceipt(txHash)
+        await delay(1000);
+    }
+    if (receipt.status != 1) {
+        throw("Fail to execute");
+    }
+    console.log(receipt);
+    console.log("Succeed.");
 }
