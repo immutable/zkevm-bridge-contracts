@@ -29,35 +29,21 @@ async function run() {
     }
     
     // Execute
+    console.log("Axelar EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(axelarEOA)));
     console.log("Fund deployer in...");
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    let feeData = await adminWallet.getFeeData();
-    let baseFee = feeData.lastBaseFeePerGas;
-    let gasPrice = feeData.gasPrice;
-    let priorityFee = Math.round(gasPrice * 150 / 100);
-    let maxFee = Math.round(1.13 * baseFee + priorityFee);
+    await wait();
 
-    let txn = {
+    let [priorityFee, maxFee] = await getFee(adminWallet);
+    let resp = await adminWallet.sendTransaction({
         to: axelarEOA,
         value: ethers.utils.parseEther(axelarFund),
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
-    }
-    let resp = await adminWallet.sendTransaction(txn)
-
-    let receipt;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
+    })
+    await waitForReceipt(resp.hash, childProvider);
 
     // Check target balance
-    let balance = await childProvider.getBalance(axelarEOA)
-    console.log("Axelar EOA now has: ", ethers.utils.formatEther(balance));
+    console.log("Axelar EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(axelarEOA)));
 }
 
 run();
@@ -80,4 +66,33 @@ function hasDuplicates(array) {
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function wait() {
+    for (let i = 10; i >= 0; i--) {
+        console.log(i)
+        await delay(1000);
+    }
+}
+
+async function getFee(adminWallet) {
+    let feeData = await adminWallet.getFeeData();
+    let baseFee = feeData.lastBaseFeePerGas;
+    let gasPrice = feeData.gasPrice;
+    let priorityFee = Math.round(gasPrice * 150 / 100);
+    let maxFee = Math.round(1.13 * baseFee + priorityFee);
+    return [priorityFee, maxFee];
+}
+
+async function waitForReceipt(txHash, provider) {
+    let receipt;
+    while (receipt == null) {
+        receipt = await provider.getTransactionReceipt(txHash)
+        await delay(1000);
+    }
+    if (receipt.status != 1) {
+        throw("Fail to execute");
+    }
+    console.log(receipt);
+    console.log("Succeed.");
 }
