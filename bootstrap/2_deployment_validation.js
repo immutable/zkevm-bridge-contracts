@@ -30,22 +30,26 @@ async function run() {
     console.log("Check contracts on child chain...");
     console.log("Check gateway contract...")
     await requireNonEmptyCode(childProvider, childGatewayAddr);
-    console.log("Succeed.")
+    console.log("Succeed.");
     console.log("Check gas service contract...")
     await requireNonEmptyCode(childProvider, childGasServiceAddr);
-    console.log("Succeed.")
-    console.log("Check multisig contract...")
-    await requireNonEmptyCode(childProvider, multisigAddr);
-    console.log("Succeed.")
+    console.log("Succeed.");
+    if (process.env["SKIP_MULTISIG_CHECK"] != null) {
+        console.log("Skip multisig contract check...");
+    } else {
+        console.log("Check multisig contract...");
+        await requireNonEmptyCode(childProvider, multisigAddr);
+        console.log("Succeed.");
+    }
 
     // Check root chain.
     console.log("Check contracts on root chain...");
-    console.log("Check gateway contract...")
+    console.log("Check gateway contract...");
     await requireNonEmptyCode(rootProvider, rootGatewayAddr);
-    console.log("Succeed.")
-    console.log("Check gas service contract...")
+    console.log("Succeed.");
+    console.log("Check gas service contract...");
     await requireNonEmptyCode(rootProvider, rootGasService);
-    console.log("Succeed.")
+    console.log("Succeed.");
 }
 
 run();

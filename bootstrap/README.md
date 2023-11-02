@@ -2,7 +2,7 @@
 
 ## Prerequisite
 1. Coordinate with Axelar to obtain their admin address for initial funding as well as the desired amount in $IMX. (50 IMX in previous discussion).
-2. Fund admin EOA account with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 100 IMX_ (TBD))
+2. Fund admin EOA account with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 100 IMX_ (TBD)).
 
 
 ## Bootstrapping
@@ -24,11 +24,20 @@ CHILD_CHAIN_ID=
 ROOT_CHAIN_NAME=
 ROOT_RPC_URL=
 ROOT_CHAIN_ID=
+## The IMX token address on root chain.
 IMX_ROOT_ADDR=
+## The Wrapped ETH token address on the root chain.
 WETH_ROOT_ADDR=
-ADMIN_EOA_SECRET= (Note: Use private key string or "ledger" if using hardware wallet)
+## The private key for the admin EOA or "ledger" if using hardware wallet.
+ADMIN_EOA_SECRET=
+## The Axelar address for receive initial funding.
 AXELAR_EOA=
+## The amount of fund Axelar requested, unit is in IMX or 10^18 Wei.
 AXELAR_FUND=
+# The address to perform child bridge upgrade.
+CHILD_PROXY_ADMIN=
+# The address to perform root adaptor upgrade.
+ROOT_PROXY_ADMIN=
 ```
 3. Fund deployer
 ```
@@ -44,8 +53,14 @@ ROOT_GATEWAY_ADDRESS=
 ROOT_GAS_SERVICE_ADDRESS=
 ```
 6. Basic contract validation
+
+For Mainnet:
 ```
-node 2_deployment_validation.js (Note, for testnet regenesis, multisig contract check in line 38 needs to be disabled.)
+node 2_deployment_validation.js
+```
+For Testnet/Devnet when multisig isn't deployed:
+```
+SKIP_MULTISIG_CHECK=true node 2_deployment_validation.js
 ```
 7. Deploy bridge contracts on child and root chain. (see [here](../README.md#remote-deployment) for more details)
 ```
