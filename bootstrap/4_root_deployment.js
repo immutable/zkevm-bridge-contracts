@@ -6,12 +6,12 @@ const fs = require('fs');
 
 async function run() {
     // Check environment variables
-    let childChainName = requireEnv("CHILD_CHAIN_NAME");
     let rootRPCURL = requireEnv("ROOT_RPC_URL");
     let rootChainID = requireEnv("ROOT_CHAIN_ID");
     let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
     let rootGatewayAddr = requireEnv("ROOT_GATEWAY_ADDRESS");
     let rootGasService = requireEnv("ROOT_GAS_SERVICE_ADDRESS");
+    let rootProxyAdmin = requireEnv("ROOT_PROXY_ADMIN");
 
     // Get admin address
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -25,69 +25,64 @@ async function run() {
     console.log("Admin address is: ", adminAddr);
 
     // Execute
-    let rootBridgeContractObj = JSON.parse(fs.readFileSync('../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
-    console.log("Deploy root bridge contract in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    let factory = new ContractFactory(rootBridgeContractObj.abi, rootBridgeContractObj.bytecode, adminWallet);
+    console.log("Deploy root contracts in...");
+    await wait();
 
-    let rootBridge = await factory.deploy();
+    // Deploy root token template
+    let rootTokenTemplateObj = JSON.parse(fs.readFileSync('../out/ChildERC20.sol/ChildERC20.json', 'utf8'));
+    console.log("Deploy root token template...");
+    let rootTokenTemplate = await deployRootContract(rootTokenTemplateObj, adminWallet);
+    await waitForReceipt(rootTokenTemplate.deployTransaction.hash, rootProvider);
+    // Initialise template
+    let resp = await rootTokenTemplate.connect(adminWallet).initialize("000000000000000000000000000000000000007B", "TEMPLATE", "TPT", 18);
+    await waitForReceipt(resp.hash, rootProvider);
+    console.log("Deployed to ROOT_TOKEN_TEMPLATE: ", rootTokenTemplate.address);
+    let output = "ROOT_TOKEN_TEMPLATE=" + rootTokenTemplate.address + "\n";
 
-    let receipt;
-    while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(rootBridge.deployTransaction.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-    console.log("Deployed to ROOT_BRIDGE_ADDRESS: ", rootBridge.address);
+    // Deploy proxy admin
+    let proxyAdminObj = JSON.parse(fs.readFileSync('../out/ProxyAdmin.sol/ProxyAdmin.json', 'utf8'));
+    console.log("Deploy proxy admin...");
+    let proxyAdmin = await deployRootContract(proxyAdminObj, adminWallet);
+    await waitForReceipt(proxyAdmin.deployTransaction.hash, rootProvider);
+    // Change owner
+    resp = await proxyAdmin.connect(adminWallet).transferOwnership(rootProxyAdmin);
+    await waitForReceipt(resp.hash, rootProvider);
+    console.log("Deployed to ROOT_PROXY_ADMIN: ", proxyAdmin.address);
+    output += "ROOT_PROXY_ADMIN=" + proxyAdmin.address + "\n";
 
-    let adapterContractObj = JSON.parse(fs.readFileSync('../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
-    console.log("Deploy root adapter contract in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    factory = new ContractFactory(adapterContractObj.abi, adapterContractObj.bytecode, adminWallet);
+    // Deploy root bridge impl
+    let rootBridgeImplObj = JSON.parse(fs.readFileSync('../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
+    console.log("Deploy root bridge impl...");
+    let rootBridgeImpl = await deployRootContract(rootBridgeImplObj, adminWallet);
+    await waitForReceipt(rootBridgeImpl.deployTransaction.hash, rootProvider);
+    console.log("Deployed to ROOT_BRIDGE_IMPL_ADDRESS: ", rootBridgeImpl.address);
+    output += "ROOT_BRIDGE_IMPL_ADDRESS=" + rootBridgeImpl.address + "\n";
 
-    let rootAdapter = await factory.deploy(rootBridge.address, childChainName, rootGatewayAddr, rootGasService);
+    // Deploy root bridge proxy
+    let rootBridgeProxyObj = JSON.parse(fs.readFileSync('../out/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json', 'utf8'));
+    console.log("Deploy root bridge proxy...");
+    let rootBridgeProxy = await deployRootContract(rootBridgeProxyObj, adminWallet, rootBridgeImpl.address, proxyAdmin.address, []);
+    await waitForReceipt(rootBridgeProxy.deployTransaction.hash, rootProvider);
+    console.log("Deployed to ROOT_BRIDGE_PROXY_ADDRESS: ", rootBridgeProxy.address);
+    output += "ROOT_BRIDGE_PROXY_ADDRESS=" + rootBridgeProxy.address + "\n";
 
-    receipt = null;
-    while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(rootAdapter.deployTransaction.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-    console.log("Deployed to ROOT_ADAPTER_ADDRESS: ", rootAdapter.address);
+    // Deploy root adaptor impl
+    let rootAdaptorImplObj = JSON.parse(fs.readFileSync('../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
+    console.log("Deploy root adaptor impl...");
+    let rootAdaptorImpl = await deployRootContract(rootAdaptorImplObj, adminWallet);
+    await waitForReceipt(rootAdaptorImpl.deployTransaction.hash, rootProvider);
+    console.log("Deployed to ROOT_ADAPTOR_IMPL_ADDRESS: ", rootAdaptorImpl.address);
+    output += "ROOT_ADAPTOR_IMPL_ADDRESS=" + rootAdaptorImpl.address + "\n";
 
-    let templateContractObj = JSON.parse(fs.readFileSync('../out/ChildERC20.sol/ChildERC20.json', 'utf8'));
-    console.log("Deploy root template contract in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    factory = new ContractFactory(templateContractObj.abi, templateContractObj.bytecode, adminWallet);
+    // Deploy root adaptor proxy
+    let rootAdaptorProxyObj = JSON.parse(fs.readFileSync('../out/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json', 'utf8'));
+    console.log("Deploy root adaptor proxy...");
+    let rootAdaptorProxy = await deployRootContract(rootAdaptorProxyObj, adminWallet, rootAdaptorImpl.address, proxyAdmin.address, []);
+    await waitForReceipt(rootAdaptorProxy.deployTransaction.hash, rootProvider);
+    console.log("Deployed to ROOT_ADAPTOR_PROXY_ADDRESS: ", rootAdaptorProxy.address);
+    output += "ROOT_ADAPTOR_PROXY_ADDRESS=" + rootAdaptorProxy.address + "\n";
 
-    let rootTemplate = await factory.deploy();
-
-    receipt = null;
-    while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(rootTemplate.deployTransaction.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-    console.log("Deployed to ROOT_TOKEN_TEMPLATE: ", rootTemplate.address);
-
-    let resp = await rootTemplate.initialize("000000000000000000000000000000000000007B", "TEMPLATE", "TPT", 18);
-    receipt = null;
-    while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-
-    fs.writeFileSync("./4.out.tmp", "ROOT_BRIDGE_ADDRESS:" + rootBridge.address + "\n" + "ROOT_ADAPTER_ADDRESS:" + rootAdapter.address + "\n" + "ROOT_TOKEN_TEMPLATE:" + rootTemplate.address);
+    fs.writeFileSync("./4.out.tmp", output);
 }
 
 run();
@@ -106,4 +101,29 @@ function requireEnv(envName) {
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function wait() {
+    for (let i = 10; i >= 0; i--) {
+        console.log(i)
+        await delay(1000);
+    }
+}
+
+async function deployRootContract(contractObj, adminWallet, ...args) {
+    let factory = new ContractFactory(contractObj.abi, contractObj.bytecode, adminWallet);
+    return await factory.deploy(...args);
+}
+
+async function waitForReceipt(txHash, provider) {
+    let receipt;
+    while (receipt == null) {
+        receipt = await provider.getTransactionReceipt(txHash)
+        await delay(1000);
+    }
+    if (receipt.status != 1) {
+        throw("Fail to execute");
+    }
+    console.log(receipt);
+    console.log("Succeed.");
 }
