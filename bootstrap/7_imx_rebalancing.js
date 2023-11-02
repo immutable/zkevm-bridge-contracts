@@ -41,35 +41,24 @@ async function run() {
         throw("Duplicate address detected!");
     }
 
-    // Get amount to balance on L2.
+    // Execute
+    // Get amount to balance on L2
     let bridgeBal = await childProvider.getBalance(childBridgeAddr);
     let multisigBal = await childProvider.getBalance(multisigAddr);
     let balanceAmt = ethers.utils.parseEther(TOTAL_SUPPLY).sub(bridgeBal).sub(multisigBal);
-
     console.log("The amount to balance on L1 is: ", ethers.utils.formatEther(balanceAmt));
-
-    // Execute
+    let IMX = new ethers.Contract(imxRootAddr, IMX_ABI, rootProvider);
+    console.log("Admin L1 IMX balance: ", await IMX.balanceOf(adminAddr));
+    console.log("Root bridge L1 IMX balance: ", await IMX.balanceOf(rootBridgeAddr));
     console.log("Rebalance in...");
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-
-    const IMX = new ethers.Contract(imxRootAddr, IMX_ABI, rootProvider);
-    console.log("Admin IMX balance: ", await IMX.balanceOf(adminAddr));
-    console.log("Root bridge IMX balance: ", await IMX.balanceOf(rootBridgeAddr));
+    await wait();
+    
+    // Rebalancing
     console.log("Transfer...")
     let resp = await IMX.connect(adminWallet).transfer(rootBridgeAddr, balanceAmt);
-
-    let receipt;
-    while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-
-    console.log("Admin IMX balance: ", await IMX.balanceOf(adminAddr));
-    console.log("Root bridge IMX balance: ", await IMX.balanceOf(rootBridgeAddr));
+    await waitForReceipt(resp.hash, rootProvider);
+    console.log("Admin L1 IMX balance: ", await IMX.balanceOf(adminAddr));
+    console.log("Root bridge L1 IMX balance: ", await IMX.balanceOf(rootBridgeAddr));
 }
 
 run();
@@ -92,4 +81,24 @@ function hasDuplicates(array) {
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function wait() {
+    for (let i = 10; i >= 0; i--) {
+        console.log(i)
+        await delay(1000);
+    }
+}
+
+async function waitForReceipt(txHash, provider) {
+    let receipt;
+    while (receipt == null) {
+        receipt = await provider.getTransactionReceipt(txHash)
+        await delay(1000);
+    }
+    if (receipt.status != 1) {
+        throw("Fail to execute");
+    }
+    console.log(receipt);
+    console.log("Succeed.");
 }
