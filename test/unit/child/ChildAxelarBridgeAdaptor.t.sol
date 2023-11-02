@@ -19,19 +19,19 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     function setUp() public {
         mockChildERC20Bridge = new MockChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
-        childAxelarBridgeAdaptor =
-            new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(mockChildERC20Bridge));
+        childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
+        childAxelarBridgeAdaptor.initialize(address(mockChildERC20Bridge));
     }
 
     function test_Constructor_SetsValues() public {
-        assertEq(address(childAxelarBridgeAdaptor.CHILD_BRIDGE()), address(mockChildERC20Bridge), "childBridge not set");
+        assertEq(address(childAxelarBridgeAdaptor.childBridge()), address(mockChildERC20Bridge), "childBridge not set");
         assertEq(address(childAxelarBridgeAdaptor.gateway()), address(mockChildAxelarGateway), "gateway not set");
     }
 
     function test_RevertIf_ConstructorGivenZeroAddress() public {
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
         vm.expectRevert(ZeroAddress.selector);
-        // Gateway address being zero is checked in Axelar's AxelarExecutable smart contract.
-        new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(0));
+        newAdaptor.initialize(address(0));
     }
 
     function test_Execute() public {

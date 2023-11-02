@@ -32,8 +32,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
 
         childERC20Bridge = new ChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
-        childAxelarBridgeAdaptor =
-            new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(childERC20Bridge));
+        childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
 
         childERC20Bridge.initialize(
             address(childAxelarBridgeAdaptor),
@@ -42,6 +41,8 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             ROOT_CHAIN_NAME,
             IMX_TOKEN_ADDRESS
         );
+
+        childAxelarBridgeAdaptor.initialize(address(childERC20Bridge));
     }
 
     function test_ChildTokenMap() public {
