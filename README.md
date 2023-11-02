@@ -170,4 +170,4 @@ yarn run execute evm/call-contract local Ethereum Polygon deposit
 source .env
 cast call --rpc-url $CHILD_RPC_URL "0x3b39f73D7De57Ed2Fe85C0F30374D839dc625b93" "balanceOf(address)(uint256)" "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 ```
-(Note: This assumed your address if the one associated with the above-specified private key)
+(Note: This assumes your address is the one associated with the above-specified private key)

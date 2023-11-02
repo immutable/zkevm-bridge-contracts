@@ -18,7 +18,6 @@ import {IRootERC20Bridge} from "../interfaces/root/IRootERC20Bridge.sol";
 
 /**
  * @notice RootAxelarBridgeAdaptor is a bridge adaptor that allows the RootERC20Bridge to communicate with the Axelar Gateway.
- * @dev This is not an upgradeable contract, because it is trivial to deploy a new one if needed.
  */
 contract RootAxelarBridgeAdaptor is
     Initializable,
@@ -36,7 +35,11 @@ contract RootAxelarBridgeAdaptor is
     mapping(uint256 => string) public chainIdToChainName;
 
     /**
-     * @dev Always sets it to whatever the childBridgeAdaptor of the bridge contract is.
+     * @notice Initilization function for RootAxelarBridgeAdaptor.
+     * @param _rootBridge Address of root bridge contract.
+     * @param _childChain Name of child chain.
+     * @param _axelarGateway Address of Axelar Gateway contract.
+     * @param _gasService Address of Axelar Gas Service contract.
      */
     function initialize(address _rootBridge, string memory _childChain, address _axelarGateway, address _gasService)
         public
@@ -53,15 +56,6 @@ contract RootAxelarBridgeAdaptor is
         childChain = _childChain;
         axelarGateway = IAxelarGateway(_axelarGateway);
         gasService = IAxelarGasService(_gasService);
-        childBridgeAdaptor = IRootERC20Bridge(rootBridge).childBridgeAdaptor();
-    }
-
-    /**
-     * @notice Sets the child bridge adaptor address.
-     * @dev Always sets it to whatever the childBridgeAdaptor of the bridge contract is.
-     */
-    function setChildBridgeAdaptor() external {
-        childBridgeAdaptor = IRootERC20Bridge(rootBridge).childBridgeAdaptor();
     }
 
     /**
@@ -77,7 +71,7 @@ contract RootAxelarBridgeAdaptor is
         }
 
         // Load from storage.
-        string memory _childBridgeAdaptor = childBridgeAdaptor;
+        string memory _childBridgeAdaptor = IRootERC20Bridge(rootBridge).childBridgeAdaptor();
         string memory _childChain = childChain;
 
         // TODO For `sender` (first param), should likely be refundRecipient (and in which case refundRecipient should be renamed to sender and used as refund recipient)
