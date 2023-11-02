@@ -47,7 +47,7 @@ async function run() {
 
     let receipt;
     while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(resp.hash)
+        receipt = await childProvider.getTransactionReceipt(resp.hash)
         await delay(1000);
     }
     console.log(receipt);

@@ -82,7 +82,7 @@ async function run() {
     let resp = await rootTemplate.initialize("000000000000000000000000000000000000007B", "TEMPLATE", "TPT", 18);
     receipt = null;
     while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(resp.hash)
+        receipt = await rootProvider.getTransactionReceipt(resp.hash)
         await delay(1000);
     }
     console.log(receipt);
