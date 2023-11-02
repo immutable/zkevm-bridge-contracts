@@ -6,12 +6,12 @@ const fs = require('fs');
 
 async function run() {
     // Check environment variables
-    let rootChainName = requireEnv("ROOT_CHAIN_NAME");
     let childRPCURL = requireEnv("CHILD_RPC_URL");
     let childChainID = requireEnv("CHILD_CHAIN_ID");
     let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
     let childGatewayAddr = requireEnv("CHILD_GATEWAY_ADDRESS");
     let childGasServiceAddr = requireEnv("CHILD_GAS_SERVICE_ADDRESS");
+    let childProxyAdmin = requireEnv("CHILD_PROXY_ADMIN");
 
     // Get admin address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
@@ -24,129 +24,81 @@ async function run() {
     let adminAddr = await adminWallet.getAddress();
     console.log("Admin address is: ", adminAddr);
 
-    // Execute
-    let childBridgeContractObj = JSON.parse(fs.readFileSync('../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
-    console.log("Deploy child bridge contract in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    let factory = new ContractFactory(childBridgeContractObj.abi, childBridgeContractObj.bytecode, adminWallet);
-    
-    let feeData = await adminWallet.getFeeData();
-    let baseFee = feeData.lastBaseFeePerGas;
-    let gasPrice = feeData.gasPrice;
-    let priorityFee = Math.round(gasPrice * 150 / 100);
-    let maxFee = Math.round(1.13 * baseFee + priorityFee);
-    let childBridge = await factory.deploy({
+    // Execute 
+    console.log("Deploy child proxy admin in...")
+    await wait();
+
+    // Deploy child token template
+    let childTokenTemplateObj = JSON.parse(fs.readFileSync('../out/ChildERC20.sol/ChildERC20.json', 'utf8'));
+    console.log("Deploy child token template...");
+    let childTokenTemplate = await deployChildContract(childTokenTemplateObj, adminWallet);
+    await waitForReceipt(childTokenTemplate.deployTransaction.hash, childProvider);
+    // Initialise template
+    let [priorityFee, maxFee] = await getFee(adminWallet);
+    let resp = await childTokenTemplate.connect(adminWallet).initialize("000000000000000000000000000000000000007B", "TEMPLATE", "TPT", 18, {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
+    await waitForReceipt(resp.hash, childProvider);
+    console.log("Deployed to CHILD_TOKEN_TEMPLATE: ", childTokenTemplate.address);
+    let output = "CHILD_TOKEN_TEMPLATE=" + childTokenTemplate.address + "\n";
 
-    let receipt;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(childBridge.deployTransaction.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-    console.log("Deployed to CHILD_BRIDGE_ADDRESS: ", childBridge.address);
+    // Deploy wrapped IMX
+    let wrappedIMXObj = JSON.parse(fs.readFileSync('../out/WIMX.sol/WIMX.json', 'utf8'));
+    console.log("Deploy wrapped IMX...");
+    let wrappedIMX = await deployChildContract(wrappedIMXObj, adminWallet);
+    await waitForReceipt(wrappedIMX.deployTransaction.hash, childProvider);
+    console.log("Deploy to WRAPPED_IMX_ADDRESS: ", wrappedIMX.address);
+    output += "WRAPPED_IMX_ADDRESS=" + wrappedIMX.address + "\n";
 
-    let wIMXContractObj = JSON.parse(fs.readFileSync('../out/WIMX.sol/WIMX.json', 'utf8'));
-    console.log("Deploy WIMX contract in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    factory = new ContractFactory(wIMXContractObj.abi, wIMXContractObj.bytecode, adminWallet);
-
-    feeData = await adminWallet.getFeeData();
-    baseFee = feeData.lastBaseFeePerGas;
-    gasPrice = feeData.gasPrice;
-    priorityFee = Math.round(gasPrice * 150 / 100);
-    maxFee = Math.round(1.13 * baseFee + priorityFee);
-    let WIMX = await factory.deploy({
+    // Deploy proxy admin
+    let proxyAdminObj = JSON.parse(fs.readFileSync('../out/ProxyAdmin.sol/ProxyAdmin.json', 'utf8'));
+    console.log("Deploy proxy admin...");
+    let proxyAdmin = await deployChildContract(proxyAdminObj, adminWallet);
+    await waitForReceipt(proxyAdmin.deployTransaction.hash, childProvider);
+    // Change owner
+    [priorityFee, maxFee] = await getFee(adminWallet);
+    resp = await proxyAdmin.connect(adminWallet).transferOwnership(childProxyAdmin, {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
+    await waitForReceipt(resp.hash, childProvider);
+    console.log("Deploy to CHILD_PROXY_ADMIN: ", proxyAdmin.address);
+    output += "CHILD_PROXY_ADMIN=" + proxyAdmin.address + "\n";
 
-    receipt = null;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(WIMX.deployTransaction.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-    console.log("Deployed to WRAPPED_IMX_ADDRESS: ", WIMX.address);
+    // Deploy child bridge impl
+    let childBridgeImplObj = JSON.parse(fs.readFileSync('../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
+    console.log("Deploy child bridge impl...");
+    let childBridgeImpl = await deployChildContract(childBridgeImplObj, adminWallet);
+    await waitForReceipt(childBridgeImpl.deployTransaction.hash, childProvider);
+    console.log("Deployed to CHILD_BRIDGE_IMPL_ADDRESS: ", childBridgeImpl.address);
+    output += "CHILD_BRIDGE_IMPL_ADDRESS=" + childBridgeImpl.address + "\n";
 
-    let adapterContractObj = JSON.parse(fs.readFileSync('../out/ChildAxelarBridgeAdaptor.sol/ChildAxelarBridgeAdaptor.json', 'utf8'));
-    console.log("Deploy child adapter contract in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    factory = new ContractFactory(adapterContractObj.abi, adapterContractObj.bytecode, adminWallet);
+    // Deploy child bridge proxy
+    let childBridgeProxyObj = JSON.parse(fs.readFileSync('../out/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json', 'utf8'));
+    console.log("Deploy child bridge proxy...");
+    let childBridgeProxy = await deployChildContract(childBridgeProxyObj, adminWallet, childBridgeImpl.address, proxyAdmin.address, []);
+    await waitForReceipt(childBridgeProxy.deployTransaction.hash, childProvider);
+    console.log("Deploy to CHILD_BRIDGE_PROXY_ADDRESS: ", childBridgeProxy.address);
+    output += "CHILD_BRIDGE_PROXY_ADDRESS=" + childBridgeProxy.address + "\n";
 
-    feeData = await adminWallet.getFeeData();
-    baseFee = feeData.lastBaseFeePerGas;
-    gasPrice = feeData.gasPrice;
-    priorityFee = Math.round(gasPrice * 150 / 100);
-    maxFee = Math.round(1.13 * baseFee + priorityFee);
-    let childAdapter = await factory.deploy(childGatewayAddr, childBridge.address, {
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
+    // Deploy child adaptor impl
+    let childAdaptorImplObj = JSON.parse(fs.readFileSync('../out/ChildAxelarBridgeAdaptor.sol/ChildAxelarBridgeAdaptor.json', 'utf8'));
+    console.log("Deploy child adaptor impl...");
+    let childAdaptorImpl = await deployChildContract(childAdaptorImplObj, adminWallet, childGatewayAddr);
+    await waitForReceipt(childAdaptorImpl.deployTransaction.hash, childProvider);
+    console.log("Deploy to CHILD_ADAPTOR_IMPL_ADDRESS: ", childAdaptorImpl.address);
+    output += "CHILD_ADAPTOR_IMPL_ADDRESS=" + childAdaptorImpl.address + "\n";
 
-    receipt = null;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(childAdapter.deployTransaction.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-    console.log("Deployed to CHILD_ADAPTER_ADDRESS: ", childAdapter.address);
+    // Deploy child adaptor proxy
+    let childAdaptorProxyObj = JSON.parse(fs.readFileSync('../out/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json', 'utf8'));
+    console.log("Deploy child adaptor proxy...");
+    let childAdaptorProxy = await deployChildContract(childAdaptorProxyObj, adminWallet, childAdaptorImpl.address, proxyAdmin.address, []);
+    await waitForReceipt(childAdaptorProxy.deployTransaction.hash, childProvider);
+    console.log("Deploy to CHILD_ADAPTOR_PROXY_ADDRESS: ", childAdaptorProxy.address);
+    output += "CHILD_ADAPTOR_PROXY_ADDRESS" + childAdaptorProxy.address + "\n";
 
-    let templateContractObj = JSON.parse(fs.readFileSync('../out/ChildERC20.sol/ChildERC20.json', 'utf8'));
-    console.log("Deploy child template contract in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    factory = new ContractFactory(templateContractObj.abi, templateContractObj.bytecode, adminWallet);
-
-    feeData = await adminWallet.getFeeData();
-    baseFee = feeData.lastBaseFeePerGas;
-    gasPrice = feeData.gasPrice;
-    priorityFee = Math.round(gasPrice * 150 / 100);
-    maxFee = Math.round(1.13 * baseFee + priorityFee);
-    let childTemplate = await factory.deploy({
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
-
-    receipt = null;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(childTemplate.deployTransaction.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-    console.log("Deployed to CHILD_TOKEN_TEMPLATE: ", childTemplate.address);
-
-    feeData = await adminWallet.getFeeData();
-    baseFee = feeData.lastBaseFeePerGas;
-    gasPrice = feeData.gasPrice;
-    priorityFee = Math.round(gasPrice * 150 / 100);
-    maxFee = Math.round(1.13 * baseFee + priorityFee);
-    let resp = await childTemplate.initialize("000000000000000000000000000000000000007B", "TEMPLATE", "TPT", 18, {
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
-    receipt = null;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-
-
-    fs.writeFileSync("./3.out.tmp", "CHILD_BRIDGE_ADDRESS:" + childBridge.address + "\n" + "WRAPPED_IMX_ADDRESS:" + WIMX.address + "\n" + "CHILD_ADAPTER_ADDRESS:" + childAdapter.address + "\n" + "CHILD_TOKEN_TEMPLATE:" + childTemplate.address);
+    fs.writeFileSync("./3.out.tmp", output);
 }
 
 run();
@@ -165,4 +117,42 @@ function requireEnv(envName) {
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function wait() {
+    for (let i = 10; i >= 0; i--) {
+        console.log(i)
+        await delay(1000);
+    }
+}
+
+async function getFee(adminWallet) {
+    let feeData = await adminWallet.getFeeData();
+    let baseFee = feeData.lastBaseFeePerGas;
+    let gasPrice = feeData.gasPrice;
+    let priorityFee = Math.round(gasPrice * 150 / 100);
+    let maxFee = Math.round(1.13 * baseFee + priorityFee);
+    return [priorityFee, maxFee];
+}
+
+async function deployChildContract(contractObj, adminWallet, ...args) {
+    let [priorityFee, maxFee] = await getFee(adminWallet);
+    let factory = new ContractFactory(contractObj.abi, contractObj.bytecode, adminWallet);
+    return await factory.deploy(...args, {
+        maxPriorityFeePerGas: priorityFee,
+        maxFeePerGas: maxFee,
+    });
+}
+
+async function waitForReceipt(txHash, provider) {
+    let receipt;
+    while (receipt == null) {
+        receipt = await provider.getTransactionReceipt(txHash)
+        await delay(1000);
+    }
+    if (receipt.status != 1) {
+        throw("Fail to execute");
+    }
+    console.log(receipt);
+    console.log("Succeed.");
 }
