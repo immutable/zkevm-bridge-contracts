@@ -25,7 +25,7 @@ async function run() {
     console.log("Admin address is: ", adminAddr);
 
     // Execute 
-    console.log("Deploy child proxy admin in...")
+    console.log("Deploy child contracts in...")
     await wait();
 
     // Deploy child token template
