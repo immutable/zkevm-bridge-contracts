@@ -27,48 +27,30 @@ async function run() {
     console.log("Admin address is: ", adminAddr);
 
     // Execute
-    let childBridgeContractObj = JSON.parse(fs.readFileSync('../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
-    let adapterContractObj = JSON.parse(fs.readFileSync('../out/ChildAxelarBridgeAdaptor.sol/ChildAxelarBridgeAdaptor.json', 'utf8'));
-    console.log("Initialise child contracts in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
-    let feeData = await adminWallet.getFeeData();
-    let baseFee = feeData.lastBaseFeePerGas;
-    let gasPrice = feeData.gasPrice;
-    let priorityFee = Math.round(gasPrice * 150 / 100);
-    let maxFee = Math.round(1.13 * baseFee + priorityFee);
-    const childBridge = new ethers.Contract(childBridgeAddr, childBridgeContractObj.abi, childProvider);
-    let resp = await childBridge.connect(adminWallet).initialize(childAdapterAddr, rootAdapterAddr, childTemplateAddr, rootChainName, imxRootAddr, {
+    console.log("Initialise child contracts in...");
+    await wait();
+
+    // Initialise child bridge
+    let childBridgeObj = JSON.parse(fs.readFileSync('../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
+    console.log("Initialise child bridge...");
+    let childBridge = new ethers.Contract(childBridgeAddr, childBridgeObj.abi, childProvider);
+    let [priorityFee, maxFee] = await getFee(adminWallet);
+    let resp = await childBridge.connect(adminWallet).initialize(childAdapterAddr, ethers.utils.getAddress(rootAdapterAddr), childTemplateAddr, rootChainName, imxRootAddr, {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
+    await waitForReceipt(resp.hash, childProvider);
 
-    let receipt;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-
-    feeData = await adminWallet.getFeeData();
-    baseFee = feeData.lastBaseFeePerGas;
-    gasPrice = feeData.gasPrice;
-    priorityFee = Math.round(gasPrice * 150 / 100);
-    maxFee = Math.round(1.13 * baseFee + priorityFee);
-    const childAdapter = new ethers.Contract(childAdapterAddr, adapterContractObj.abi, childProvider);
-    resp = await childAdapter.connect(adminWallet).setRootBridgeAdaptor({
+    // Initialise child adaptor
+    let childAdaptorObj = JSON.parse(fs.readFileSync('../out/ChildAxelarBridgeAdaptor.sol/ChildAxelarBridgeAdaptor.json', 'utf8'));
+    console.log("Initialise child adaptor...");
+    let childAdaptor = new ethers.Contract(childAdapterAddr, childAdaptorObj.abi, childProvider);
+    [priorityFee, maxFee] = await getFee(adminWallet);
+    resp = await childAdaptor.connect(adminWallet).initialize(childBridgeAddr, {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
-
-    receipt = null;
-    while (receipt == null) {
-        receipt = await childProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
+    await waitForReceipt(resp.hash, childProvider);
 }
 
 run();
@@ -87,4 +69,33 @@ function requireEnv(envName) {
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function wait() {
+    for (let i = 10; i >= 0; i--) {
+        console.log(i)
+        await delay(1000);
+    }
+}
+
+async function getFee(adminWallet) {
+    let feeData = await adminWallet.getFeeData();
+    let baseFee = feeData.lastBaseFeePerGas;
+    let gasPrice = feeData.gasPrice;
+    let priorityFee = Math.round(gasPrice * 150 / 100);
+    let maxFee = Math.round(1.13 * baseFee + priorityFee);
+    return [priorityFee, maxFee];
+}
+
+async function waitForReceipt(txHash, provider) {
+    let receipt;
+    while (receipt == null) {
+        receipt = await provider.getTransactionReceipt(txHash)
+        await delay(1000);
+    }
+    if (receipt.status != 1) {
+        throw("Fail to execute");
+    }
+    console.log(receipt);
+    console.log("Succeed.");
 }
