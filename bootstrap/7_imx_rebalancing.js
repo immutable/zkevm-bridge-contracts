@@ -55,10 +55,10 @@ async function run() {
         await delay(1000);
     }
 
+    const IMX = new ethers.Contract(imxRootAddr, IMX_ABI, rootProvider);
     console.log("Admin IMX balance: ", await IMX.balanceOf(adminAddr));
     console.log("Root bridge IMX balance: ", await IMX.balanceOf(rootBridgeAddr));
     console.log("Transfer...")
-    const IMX = new ethers.Contract(imxRootAddr, IMX_ABI, rootProvider);
     let resp = await IMX.connect(adminWallet).transfer(rootBridgeAddr, balanceAmt);
 
     let receipt;
