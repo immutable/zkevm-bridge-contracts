@@ -126,11 +126,11 @@ contract ChildERC20Bridge is
         }
     }
 
-    function withdraw(IChildERC20 childToken, uint256 amount) external {
+    function withdraw(IChildERC20 childToken, uint256 amount) external payable {
         _withdraw(childToken, msg.sender, amount);
     }
 
-    function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external {
+    function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external payable {
         _withdraw(childToken, receiver, amount);
     }
 
@@ -159,13 +159,15 @@ contract ChildERC20Bridge is
             revert BurnFailed();
         }
 
+
+        // TODO Should we enforce receiver != 0? old poly contracts don't
+
         // Encode the message payload
         bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
 
         // Send the message to the bridge adaptor and up to root chain
         bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
-        // TODO emit event
         emit ChildChainERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
     }
 

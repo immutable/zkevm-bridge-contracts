@@ -12,5 +12,5 @@ interface IChildAxelarBridgeAdaptorErrors {
 
 interface IChildAxelarBridgeAdaptorEvents {
     /// @notice Emitted when an Axelar message is sent to the root chain.
-    event MapTokenAxelarMessage(string indexed rootChain, string indexed rootBridgeAdaptor, bytes indexed payload);
+    event AxelarMessage(string indexed rootChain, string indexed rootBridgeAdaptor, bytes indexed payload);
 }

@@ -86,6 +86,6 @@ contract RootAxelarBridgeAdaptor is
         );
 
         axelarGateway.callContract(_childChain, _childBridgeAdaptor, payload);
-        emit MapTokenAxelarMessage(_childChain, _childBridgeAdaptor, payload);
+        emit AxelarMessage(_childChain, _childBridgeAdaptor, payload);
     }
 }

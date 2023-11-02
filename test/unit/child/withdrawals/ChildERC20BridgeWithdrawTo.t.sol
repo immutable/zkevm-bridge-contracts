@@ -16,7 +16,7 @@ import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 
-contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
+contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     address constant ROOT_BRIDGE = address(3);
@@ -57,19 +57,19 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         childToken.approve(address(childBridge), 1000000 ether);
     }
 
-    function test_RevertsIf_WithdrawCalledWithEmptyChildToken() public {
+    function test_RevertsIf_WithdrawToCalledWithEmptyChildToken() public {
         vm.expectRevert(EmptyTokenContract.selector);
-        childBridge.withdraw(IChildERC20(address(2222222)), 100);
+        childBridge.withdrawTo(IChildERC20(address(2222222)), address(this), 100);
     }
 
-    function test_RevertsIf_WithdrawCalledWithUnmappedToken() public {
+    function test_RevertsIf_WithdrawToCalledWithUnmappedToken() public {
         ChildERC20 newToken = new ChildERC20();
         newToken.initialize(address(123), "Test", "TST", 18);
         vm.expectRevert(NotMapped.selector);
-        childBridge.withdraw(IChildERC20(address(newToken)), 100);
+        childBridge.withdrawTo(IChildERC20(address(newToken)), address(this), 100);
     }
 
-    function test_RevertsIf_WithdrawCalledWithAChildTokenWithUnsetRootToken() public {
+    function test_RevertsIf_WithdrawToCalledWithAChildTokenWithUnsetRootToken() public {
         /* First, set rootToken of mapped token to zero */
 
         // Found by running `forge inspect src/child/ChildERC20.sol:ChildERC20 storageLayout | grep -B3 -A5 -i "rootToken"`
@@ -88,28 +88,28 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         vm.store(address(childBridge), slot, data);
 
         vm.expectRevert(ZeroAddressRootToken.selector);
-        childBridge.withdraw(IChildERC20(address(childToken)), 100);
+        childBridge.withdrawTo(IChildERC20(address(childToken)), address(this), 100);
     }
 
-    function test_RevertsIf_WithdrawCalledWithAChildTokenThatHasWrongBridge() public {
+    function test_RevertsIf_WithdrawToCalledWithAChildTokenThatHasWrongBridge() public {
         // Found by running `forge inspect src/child/ChildERC20.sol:ChildERC20 storageLayout | grep -B3 -A5 -i "bridge"`
         uint256 bridgeSlot = 108;
         bytes32 bridgeSlotBytes32 = bytes32(bridgeSlot);
         vm.store(address(childToken), bridgeSlotBytes32, bytes32(uint256(uint160(address(0x123)))));
 
         vm.expectRevert(BridgeNotSet.selector);
-        childBridge.withdraw(IChildERC20(address(childToken)), 100);
+        childBridge.withdrawTo(IChildERC20(address(childToken)), address(this), 100);
     }
 
-    function test_RevertsIf_WithdrawWhenBurnFails() public {
+    function test_RevertsIf_WithdrawToWhenBurnFails() public {
         // Replace the childToken with one that always returns `false` on failure.
         deployCodeTo("ChildERC20FailOnBurn.sol", address(childToken));
 
         vm.expectRevert(BurnFailed.selector);
-        childBridge.withdraw(IChildERC20(address(childToken)), 100);
+        childBridge.withdrawTo(IChildERC20(address(childToken)), address(this), 100);
     }
 
-    function test_withdraw_CallsBridgeAdaptor() public {
+    function test_withdrawTo_CallsBridgeAdaptor() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -121,17 +121,17 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
             abi.encodeWithSelector(mockAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
-        childBridge.withdraw{value: withdrawFee}(IChildERC20(address(childToken)), withdrawAmount);
+        childBridge.withdrawTo{value: withdrawFee}(IChildERC20(address(childToken)), address(this), withdrawAmount);
     }
 
-    function test_withdraw_EmitsERC20WithdrawEvent() public {
+    function test_withdrawTo_EmitsERC20WithdrawEvent() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         vm.expectEmit(address(childBridge));
         emit ChildChainERC20Withdraw(address(rootToken), address(childToken), address(this), address(this), withdrawAmount);
 
-        childBridge.withdraw{value: withdrawFee}(IChildERC20(address(childToken)), withdrawAmount);
+        childBridge.withdrawTo{value: withdrawFee}(IChildERC20(address(childToken)), address(this), withdrawAmount);
     }
 
     function test_withdraw_ReducesBalance() public {
@@ -140,10 +140,10 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
 
         uint256 preBal = childToken.balanceOf(address(this));
 
-        childBridge.withdraw{value: withdrawFee}(IChildERC20(address(childToken)), withdrawAmount);
+        childBridge.withdrawTo{value: withdrawFee}(IChildERC20(address(childToken)), address(this), withdrawAmount);
 
         uint256 postBal = childToken.balanceOf(address(this));
-        assertEq(postBal, preBal - withdrawAmount, "Balance not reduced");
+        assertEq(postBal, preBal - withdrawAmount);
     }
 
     function test_withdraw_ReducesTotalSupply() public {
@@ -152,25 +152,41 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
 
         uint256 preTotalSupply = childToken.totalSupply();
 
-        childBridge.withdraw{value: withdrawFee}(IChildERC20(address(childToken)), withdrawAmount);
+        childBridge.withdrawTo{value: withdrawFee}(IChildERC20(address(childToken)), address(this), withdrawAmount);
 
         uint256 postTotalSupply = childToken.totalSupply();
-        assertEq(postTotalSupply, preTotalSupply - withdrawAmount, "total supply not reduced");
+        assertEq(postTotalSupply, preTotalSupply - withdrawAmount);
     }
 
-    function test_withdraw_PaysFee() public {
+    function test_withdrawTo_PaysFee() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         uint256 preBal = address(mockAdaptor).balance;
         uint256 thisPreBal = address(this).balance;
 
-        childBridge.withdraw{value: withdrawFee}(IChildERC20(address(childToken)), withdrawAmount);
+        childBridge.withdrawTo{value: withdrawFee}(IChildERC20(address(childToken)), address(this), withdrawAmount);
 
         uint256 postBal = address(mockAdaptor).balance;
         uint256 thisPostBal = address(this).balance;
 
-        assertEq(postBal, preBal + withdrawFee, "Adaptor balance not increased");
-        assertEq(thisPostBal, thisPreBal - withdrawFee, "withdrawer's balance not decreased");
+        assertEq(postBal, preBal + withdrawFee);
+        assertEq(thisPostBal, thisPreBal - withdrawFee);
+    }
+
+    function test_withdrawTo_ToDifferentReceiverCallsMockAdaptor() public {
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
+        address receiver = address(123);
+
+        bytes memory predictedPayload = abi.encode(WITHDRAW_SIG, address(rootToken), address(this), receiver, withdrawAmount);
+
+        vm.expectCall(
+            address(mockAdaptor),
+            withdrawFee,
+            abi.encodeWithSelector(mockAdaptor.sendMessage.selector, predictedPayload, address(this))
+        );
+
+        childBridge.withdrawTo{value: withdrawFee}(IChildERC20(address(childToken)), receiver, withdrawAmount);
     }
 }

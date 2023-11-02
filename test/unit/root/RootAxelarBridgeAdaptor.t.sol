@@ -4,7 +4,6 @@ pragma solidity ^0.8.21;
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {MockAxelarGateway} from "../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../src/test/root/MockAxelarGasService.sol";
 import {
@@ -99,12 +98,12 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }
 
-    function test_sendMessage_EmitsMapTokenAxelarMessageEvent() public {
+    function test_sendMessage_EmitsAxelarMessageEvent() public {
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
         uint256 callValue = 300;
 
         vm.expectEmit(true, true, true, false, address(axelarAdaptor));
-        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptor, payload);
+        emit AxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptor, payload);
         vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }
