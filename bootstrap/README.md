@@ -14,7 +14,7 @@ forge build
 1. Create environment file
 ```
 cd bootstrap
-cp ./env.example ./env
+cp .env.example .env
 ```
 2. Set the following environment variables
 ```
