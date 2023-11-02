@@ -28,14 +28,24 @@ async function run() {
 
     // Check child chain.
     console.log("Check contracts on child chain...");
+    console.log("Check gateway contract...")
     await requireNonEmptyCode(childProvider, childGatewayAddr);
+    console.log("Succeed.")
+    console.log("Check gas service contract...")
     await requireNonEmptyCode(childProvider, childGasServiceAddr);
+    console.log("Succeed.")
+    console.log("Check multisig contract...")
     await requireNonEmptyCode(childProvider, multisigAddr);
+    console.log("Succeed.")
 
     // Check root chain.
     console.log("Check contracts on root chain...");
+    console.log("Check gateway contract...")
     await requireNonEmptyCode(rootProvider, rootGatewayAddr);
+    console.log("Succeed.")
+    console.log("Check gas service contract...")
     await requireNonEmptyCode(rootProvider, rootGasService);
+    console.log("Succeed.")
 }
 
 run();
