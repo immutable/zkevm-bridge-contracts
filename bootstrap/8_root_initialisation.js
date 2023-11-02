@@ -52,7 +52,7 @@ async function run() {
 
     receipt = null;
     while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(childTemplate.deployTransaction.hash)
+        receipt = await rootProvider.getTransactionReceipt(resp.hash)
         await delay(1000);
     }
     console.log(receipt);
