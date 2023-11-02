@@ -9,8 +9,6 @@ async function run() {
     let rootRPCURL = requireEnv("ROOT_RPC_URL");
     let rootChainID = requireEnv("ROOT_CHAIN_ID");
     let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
-    let rootGatewayAddr = requireEnv("ROOT_GATEWAY_ADDRESS");
-    let rootGasService = requireEnv("ROOT_GAS_SERVICE_ADDRESS");
     let rootProxyAdmin = requireEnv("ROOT_PROXY_ADMIN");
 
     // Get admin address

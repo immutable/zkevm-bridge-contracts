@@ -6,9 +6,12 @@ const fs = require('fs');
 
 async function run() {
     // Check environment variables
+    let childChainName = requireEnv("CHILD_CHAIN_NAME");
     let rootRPCURL = requireEnv("ROOT_RPC_URL");
     let rootChainID = requireEnv("ROOT_CHAIN_ID");
     let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
+    let rootGatewayAddr = requireEnv("ROOT_GATEWAY_ADDRESS");
+    let rootGasServiceAddr = requireEnv("ROOT_GAS_SERVICE_ADDRESS");
     let rootBridgeAddr = requireEnv("ROOT_BRIDGE_ADDRESS");
     let rootAdapterAddr = requireEnv("ROOT_ADAPTER_ADDRESS");
     let rootTemplateAddr = requireEnv("ROOT_TOKEN_TEMPLATE");
@@ -29,33 +32,22 @@ async function run() {
     console.log("Admin address is: ", adminAddr);
 
     // Execute
-    let rootBridgeContractObj = JSON.parse(fs.readFileSync('../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
-    let adapterContractObj = JSON.parse(fs.readFileSync('../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
-    console.log("Initialise root contracts in...")
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
-    }
+    console.log("Initialise root contracts in...");
+    await wait();
 
-    const rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeContractObj.abi, rootProvider);
+    // Initialise root bridge
+    let rootBridgeObj = JSON.parse(fs.readFileSync('../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
+    console.log("Initialise root bridge...");
+    let rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeObj.abi, rootProvider);
     let resp = await rootBridge.connect(adminWallet).initialize(rootAdapterAddr, childBridgeAddr, ethers.utils.getAddress(childAdapterAddr), rootTemplateAddr, imxRootAddr, wethRootAddr);
+    await waitForReceipt(resp.hash, rootProvider);
 
-    let receipt;
-    while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
-
-    const rootAdapter = new ethers.Contract(rootAdapterAddr, adapterContractObj.abi, rootProvider);
-    resp = await rootAdapter.connect(adminWallet).setChildBridgeAdaptor();
-
-    receipt = null;
-    while (receipt == null) {
-        receipt = await rootProvider.getTransactionReceipt(resp.hash)
-        await delay(1000);
-    }
-    console.log(receipt);
+    // Initialise root adaptor
+    let rootAdaptorObj = JSON.parse(fs.readFileSync('../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
+    console.log("Initialise root adaptor...");
+    let rootAdaptor = new ethers.Contract(rootAdapterAddr, rootAdaptorObj.abi, rootProvider);
+    resp = await rootAdaptor.connect(adminWallet).initialize(rootBridgeAddr, childChainName, rootGatewayAddr, rootGasServiceAddr);
+    await waitForReceipt(resp.hash, rootProvider);
 }
 
 run();
@@ -74,4 +66,24 @@ function requireEnv(envName) {
 
 function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function wait() {
+    for (let i = 10; i >= 0; i--) {
+        console.log(i)
+        await delay(1000);
+    }
+}
+
+async function waitForReceipt(txHash, provider) {
+    let receipt;
+    while (receipt == null) {
+        receipt = await provider.getTransactionReceipt(txHash)
+        await delay(1000);
+    }
+    if (receipt.status != 1) {
+        throw("Fail to execute");
+    }
+    console.log(receipt);
+    console.log("Succeed.");
 }
