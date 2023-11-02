@@ -8,6 +8,7 @@ import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
+import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {WETH} from "../src/test/root/WETH.sol";
 import {IWETH} from "../src/interfaces/root/IWETH.sol";
 
@@ -15,7 +16,45 @@ import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
 contract Utils is Test {
-    function integrationSetup(
+    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
+    bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
+
+    function childIntegrationSetup()
+        public
+        returns (
+            ChildERC20Bridge childBridge,
+            ChildAxelarBridgeAdaptor childBridgeAdaptor,
+            address rootToken,
+            address rootIMX,
+            ChildERC20 childTokenTemplate,
+            MockAxelarGasService axelarGasService,
+            MockAxelarGateway mockAxelarGateway
+        )
+    {
+        string memory rootAdaptor = Strings.toHexString(address(99999));
+        rootIMX = address(555555);
+        rootToken = address(44444);
+
+        axelarGasService = new MockAxelarGasService();
+        mockAxelarGateway = new MockAxelarGateway();
+        childTokenTemplate = new ChildERC20();
+        childTokenTemplate.initialize(address(1), "Test", "TST", 18);
+        childBridge = new ChildERC20Bridge();
+        childBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockAxelarGateway));
+        childBridge.initialize(address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX);
+        childBridgeAdaptor.initialize("ROOT", address(childBridge), address(axelarGasService));
+
+        bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, "TEST NAME", "TNM", 18);
+        vm.prank(address(childBridgeAdaptor));
+        childBridge.onMessageReceive("ROOT", rootAdaptor, mapTokenData);
+
+        ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(address(rootToken)));
+        vm.prank(address(childBridge));
+        childToken.mint(address(this), 1000000 ether);
+        childToken.approve(address(childBridge), 1000000 ether);
+    }
+
+    function rootIntegrationSetup(
         address childBridge,
         address childBridgeAdaptor,
         string memory childBridgeName,

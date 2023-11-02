@@ -159,7 +159,6 @@ contract ChildERC20Bridge is
             revert BurnFailed();
         }
 
-
         // TODO Should we enforce receiver != 0? old poly contracts don't
 
         // Encode the message payload

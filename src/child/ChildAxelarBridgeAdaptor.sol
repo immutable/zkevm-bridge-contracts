@@ -68,7 +68,6 @@ contract ChildAxelarBridgeAdaptor is
         string memory _rootBridgeAdaptor = rootBridgeAdaptor;
         string memory _rootChain = rootChain;
 
-        // TODO For `sender` (first param), should likely be refundRecipient (and in which case refundRecipient should be renamed to sender and used as refund recipient)
         gasService.payNativeGasForContractCall{value: msg.value}(
             address(this), _rootChain, _rootBridgeAdaptor, payload, refundRecipient
         );

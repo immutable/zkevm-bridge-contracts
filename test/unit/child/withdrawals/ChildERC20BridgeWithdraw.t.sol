@@ -17,8 +17,6 @@ import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
-    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
-    bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
@@ -113,7 +111,8 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
-        bytes memory predictedPayload = abi.encode(WITHDRAW_SIG, address(rootToken), address(this), address(this), withdrawAmount);
+        bytes memory predictedPayload =
+            abi.encode(WITHDRAW_SIG, address(rootToken), address(this), address(this), withdrawAmount);
 
         vm.expectCall(
             address(mockAdaptor),
@@ -129,7 +128,9 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         uint256 withdrawAmount = 7 ether;
 
         vm.expectEmit(address(childBridge));
-        emit ChildChainERC20Withdraw(address(rootToken), address(childToken), address(this), address(this), withdrawAmount);
+        emit ChildChainERC20Withdraw(
+            address(rootToken), address(childToken), address(this), address(this), withdrawAmount
+        );
 
         childBridge.withdraw{value: withdrawFee}(IChildERC20(address(childToken)), withdrawAmount);
     }

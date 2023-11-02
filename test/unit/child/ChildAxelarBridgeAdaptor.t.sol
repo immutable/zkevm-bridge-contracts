@@ -9,7 +9,10 @@ import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdap
 import {MockChildERC20Bridge} from "../../../src/test/child/MockChildERC20Bridge.sol";
 import {MockChildAxelarGateway} from "../../../src/test/child/MockChildAxelarGateway.sol";
 import {MockChildAxelarGasService} from "../../../src/test/child/MockChildAxelarGasService.sol";
-import {IChildAxelarBridgeAdaptorErrors, IChildAxelarBridgeAdaptorEvents} from "../../../src/interfaces/child/IChildAxelarBridgeAdaptor.sol";
+import {
+    IChildAxelarBridgeAdaptorErrors,
+    IChildAxelarBridgeAdaptorEvents
+} from "../../../src/interfaces/child/IChildAxelarBridgeAdaptor.sol";
 
 contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErrors, IChildAxelarBridgeAdaptorEvents {
     address public GATEWAY_ADDRESS = address(1);
@@ -58,7 +61,6 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
     }
 
-    /// @dev For this unit test we just want to make sure the correct functions are called on the Axelar Gateway and Gas Service.
     function test_sendMessage_CallsGasService() public {
         address refundRecipient = address(123);
         bytes memory payload = abi.encode(WITHDRAW_SIG, address(token), address(this), address(999), 11111);
@@ -89,7 +91,10 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         vm.expectCall(
             address(mockChildAxelarGateway),
             abi.encodeWithSelector(
-                mockChildAxelarGateway.callContract.selector, ROOT_CHAIN_NAME, mockChildERC20Bridge.rootERC20BridgeAdaptor(), payload
+                mockChildAxelarGateway.callContract.selector,
+                ROOT_CHAIN_NAME,
+                mockChildERC20Bridge.rootERC20BridgeAdaptor(),
+                payload
             )
         );
 
@@ -124,7 +129,11 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
 
         assertEq(address(mockChildERC20Bridge).balance, bridgePreBal - callValue, "ETH balance not decreased");
-        assertEq(address(mockChildAxelarGasService).balance, axelarGasServicePreBal + callValue, "ETH not paid to gas service");
+        assertEq(
+            address(mockChildAxelarGasService).balance,
+            axelarGasServicePreBal + callValue,
+            "ETH not paid to gas service"
+        );
     }
 
     function test_sendMessage_GivesCorrectRefundRecipient() public {
@@ -151,19 +160,18 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         axelarAdaptor.sendMessage{value: callValue}(payload, refundRecipient);
     }
 
-    function test_RevertIf_mapTokenCalledByNonRootBridge() public {
+    function test_RevertIf_sendMessageCalledByNonRootBridge() public {
         address payable prankster = payable(address(0x33));
         uint256 value = 300;
         bytes memory payload = abi.encode(WITHDRAW_SIG, address(token), address(this), address(999), 11111);
 
-        // Have to call these above so the expectRevert works on the call to mapToken.
         prankster.transfer(value);
         vm.prank(prankster);
         vm.expectRevert(CallerNotBridge.selector);
         axelarAdaptor.sendMessage{value: value}(payload, address(123));
     }
 
-    function test_RevertIf_mapTokenCalledWithNoValue() public {
+    function test_RevertIf_sendMessageCalledWithNoValue() public {
         bytes memory payload = abi.encode(WITHDRAW_SIG, address(token), address(this), address(999), 11111);
         vm.expectRevert(NoGas.selector);
         vm.prank(address(mockChildERC20Bridge));
