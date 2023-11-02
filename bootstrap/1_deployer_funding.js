@@ -24,7 +24,7 @@ async function run() {
     console.log("Admin address is: ", adminAddr);
 
     // Check duplicates
-    if (hasDuplicates([adminAddr, axelarEOA, axelarFund])) {
+    if (hasDuplicates([adminAddr, axelarEOA])) {
         throw("Duplicate address detected!");
     }
     
