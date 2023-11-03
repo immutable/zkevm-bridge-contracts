@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -16,7 +16,6 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
-    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
     address constant WRAPPED_ETH = address(0xddd);
@@ -35,7 +34,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
         (imxToken, token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) =
-            integrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, WRAPPED_ETH);
+            rootIntegrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, WRAPPED_ETH);
     }
 
     /**
@@ -50,7 +49,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
 
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
         vm.expectEmit(true, true, true, false, address(axelarAdaptor));
-        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, Strings.toHexString(CHILD_BRIDGE_ADAPTOR), payload);
+        emit AxelarMessage(CHILD_CHAIN_NAME, Strings.toHexString(CHILD_BRIDGE_ADAPTOR), payload);
 
         vm.expectEmit(true, true, false, false, address(rootBridge));
         emit L1TokenMapped(address(token), childToken);
@@ -112,7 +111,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         console2.logBytes(predictedPayload);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
+        emit AxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
         emit NativeEthDeposit(
             address(NATIVE_ETH), rootBridge.childETHToken(), address(this), address(this), tokenAmount
@@ -168,7 +167,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
             setupDeposit(IMX_TOKEN_ADDRESS, rootBridge, mapTokenFee, depositFee, tokenAmount, false);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
+        emit AxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
         emit IMXDeposit(address(IMX_TOKEN_ADDRESS), address(this), address(this), tokenAmount);
 
@@ -225,7 +224,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
             setupDeposit(WRAPPED_ETH, rootBridge, mapTokenFee, depositFee, tokenAmount, false);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
+        emit AxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
         emit WETHDeposit(address(WRAPPED_ETH), rootBridge.childETHToken(), address(this), address(this), tokenAmount);
         vm.expectCall(
@@ -283,9 +282,9 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
             setupDeposit(address(token), rootBridge, mapTokenFee, depositFee, tokenAmount, true);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
+        emit AxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
-        emit ERC20Deposit(address(token), childToken, address(this), address(this), tokenAmount);
+        emit ChildChainERC20Deposit(address(token), childToken, address(this), address(this), tokenAmount);
 
         vm.expectCall(
             address(axelarAdaptor),
@@ -339,9 +338,9 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
             setupDepositTo(address(token), rootBridge, mapTokenFee, depositFee, tokenAmount, recipient, true);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit MapTokenAxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
+        emit AxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridge));
-        emit ERC20Deposit(address(token), childToken, address(this), recipient, tokenAmount);
+        emit ChildChainERC20Deposit(address(token), childToken, address(this), recipient, tokenAmount);
 
         vm.expectCall(
             address(axelarAdaptor),

@@ -28,8 +28,7 @@ contract RootAxelarBridgeAdaptor is
     using SafeERC20 for IERC20Metadata;
 
     address public rootBridge;
-    /// @dev childChain could be immutable, but as of writing this Solidity does not support immutable strings.
-    ///      see: https://ethereum.stackexchange.com/questions/127622/typeerror-immutable-variables-cannot-have-a-non-value-type
+    string public childBridgeAdaptor;
     string public childChain;
     IAxelarGateway public axelarGateway;
     IAxelarGasService public gasService;
@@ -81,6 +80,6 @@ contract RootAxelarBridgeAdaptor is
         );
 
         axelarGateway.callContract(_childChain, _childBridgeAdaptor, payload);
-        emit MapTokenAxelarMessage(_childChain, _childBridgeAdaptor, payload);
+        emit AxelarMessage(_childChain, _childBridgeAdaptor, payload);
     }
 }

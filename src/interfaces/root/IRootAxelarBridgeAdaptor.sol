@@ -14,5 +14,5 @@ interface IRootAxelarBridgeAdaptorErrors {
 
 interface IRootAxelarBridgeAdaptorEvents {
     /// @notice Emitted when an Axelar message is sent to the child chain.
-    event MapTokenAxelarMessage(string indexed childChain, string indexed childBridgeAdaptor, bytes indexed payload);
+    event AxelarMessage(string indexed childChain, string indexed childBridgeAdaptor, bytes indexed payload);
 }
