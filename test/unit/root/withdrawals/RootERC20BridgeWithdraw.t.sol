@@ -5,9 +5,7 @@ import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
-    RootERC20Bridge,
-    IRootERC20BridgeEvents,
-    IRootERC20BridgeErrors
+    RootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors
 } from "../../../../src/root/RootERC20Bridge.sol";
 import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
@@ -116,7 +114,9 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
 
         assertEq(token.balanceOf(address(this)), thisPreBal + withdrawAmount, "Tokens not transferred to receiver");
-        assertEq(token.balanceOf(address(rootBridge)), bridgePreBal - withdrawAmount, "Tokens not transferred from bridge");
+        assertEq(
+            token.balanceOf(address(rootBridge)), bridgePreBal - withdrawAmount, "Tokens not transferred from bridge"
+        );
     }
 
     function test_onMessageReceive_TransfersTokens_DifferentReceiver() public {
@@ -134,7 +134,9 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
 
         assertEq(token.balanceOf(receiver), receiverPreBal + withdrawAmount, "Tokens not transferred to receiver");
-        assertEq(token.balanceOf(address(rootBridge)), bridgePreBal - withdrawAmount, "Tokens not transferred from bridge");
+        assertEq(
+            token.balanceOf(address(rootBridge)), bridgePreBal - withdrawAmount, "Tokens not transferred from bridge"
+        );
     }
 
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEvent() public {
@@ -145,7 +147,13 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), withdrawAmount);
         vm.expectEmit();
-        emit RootChainERC20Withdraw(address(token), rootBridge.rootTokenToChildToken(address(token)), address(this), address(this), withdrawAmount);
+        emit RootChainERC20Withdraw(
+            address(token),
+            rootBridge.rootTokenToChildToken(address(token)),
+            address(this),
+            address(this),
+            withdrawAmount
+        );
         vm.prank(address(mockAxelarAdaptor));
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
@@ -159,9 +167,10 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), receiver, withdrawAmount);
         vm.expectEmit();
-        emit RootChainERC20Withdraw(address(token), rootBridge.rootTokenToChildToken(address(token)), address(this), receiver, withdrawAmount);
+        emit RootChainERC20Withdraw(
+            address(token), rootBridge.rootTokenToChildToken(address(token)), address(this), receiver, withdrawAmount
+        );
         vm.prank(address(mockAxelarAdaptor));
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
-
 }

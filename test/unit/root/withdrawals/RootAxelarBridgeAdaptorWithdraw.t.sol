@@ -37,7 +37,6 @@ contract RootAxelarBridgeWithdrawAdaptorTest is Test, IRootAxelarBridgeAdaptorEv
         vm.deal(address(stubRootBridge), 99999999999);
     }
 
-
     function test_execute_callsBridge() public {
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceChain = "test";

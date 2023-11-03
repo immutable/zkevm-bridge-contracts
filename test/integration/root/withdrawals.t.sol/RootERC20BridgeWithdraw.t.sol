@@ -7,12 +7,25 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
-import {RootERC20Bridge, IRootERC20BridgeEvents, IERC20Metadata} from "../../../../src/root/RootERC20Bridge.sol";
-import {RootAxelarBridgeAdaptor, IRootAxelarBridgeAdaptorEvents} from "../../../../src/root/RootAxelarBridgeAdaptor.sol";
+import {
+    RootERC20Bridge,
+    IRootERC20BridgeEvents,
+    IERC20Metadata,
+    IRootERC20BridgeErrors
+} from "../../../../src/root/RootERC20Bridge.sol";
+import {
+    RootAxelarBridgeAdaptor, IRootAxelarBridgeAdaptorEvents
+} from "../../../../src/root/RootAxelarBridgeAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 import {WETH} from "../../../../src/test/root/WETH.sol";
 
-contract RootERC20BridgeWithdrawIntegrationTest is Test, IRootERC20BridgeEvents, IRootAxelarBridgeAdaptorEvents, Utils {
+contract RootERC20BridgeWithdrawIntegrationTest is
+    Test,
+    IRootERC20BridgeErrors,
+    IRootERC20BridgeEvents,
+    IRootAxelarBridgeAdaptorEvents,
+    Utils
+{
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "CHILD";
@@ -36,9 +49,49 @@ contract RootERC20BridgeWithdrawIntegrationTest is Test, IRootERC20BridgeEvents,
             rootIntegrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, WRAPPED_ETH);
 
         // Need to first map the token.
-        rootBridge.mapToken{value:1}(token);
+        rootBridge.mapToken{value: 1}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
+    }
+
+    function test_RevertsIf_WithdrawWithInvalidSourceAddress() public {
+        bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        vm.expectRevert(InvalidSourceChain.selector);
+        axelarAdaptor.execute(commandId, "INVALID", sourceAddress, data);
+    }
+
+    function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
+        bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = Strings.toHexString(address(123));
+
+        vm.expectRevert(InvalidSourceAddress.selector);
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+    }
+
+    function test_RevertsIf_MessageWithEmptyData() public {
+        bytes memory data;
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        vm.expectRevert(InvalidData.selector);
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+    }
+
+    function test_RevertsIf_MessageWithInvalidSignature() public {
+        bytes memory data = abi.encode("INVALID_SIG", address(token), address(this), address(this), withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        vm.expectRevert(InvalidData.selector);
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
     function test_withdraw_TransfersTokens() public {
@@ -85,7 +138,27 @@ contract RootERC20BridgeWithdrawIntegrationTest is Test, IRootERC20BridgeEvents,
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
         vm.expectEmit();
-        emit RootChainERC20Withdraw(address(token), rootBridge.rootTokenToChildToken(address(token)), address(this), address(this), withdrawAmount);
+        emit RootChainERC20Withdraw(
+            address(token),
+            rootBridge.rootTokenToChildToken(address(token)),
+            address(this),
+            address(this),
+            withdrawAmount
+        );
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+    }
+
+    function test_withdraw_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
+        address receiver = address(987654321);
+        bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), receiver, withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        vm.expectEmit();
+        emit RootChainERC20Withdraw(
+            address(token), rootBridge.rootTokenToChildToken(address(token)), address(this), receiver, withdrawAmount
+        );
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 }
