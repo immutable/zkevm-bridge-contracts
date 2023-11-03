@@ -35,6 +35,7 @@ contract RootERC20Bridge is
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
 
+    uint256 public constant NO_DEPOSIT_LIMIT = 0;
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     address public constant NATIVE_ETH = address(0xeee);
@@ -119,7 +120,10 @@ contract RootERC20Bridge is
      * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
      */
     function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external onlyOwner {
-        if (newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))) {
+        if (
+            newImxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+                && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))
+        ) {
             revert ImxDepositLimitTooLow();
         }
         emit NewImxDepositLimit(imxCumulativeDepositLimit, newImxCumulativeDepositLimit);
@@ -256,7 +260,7 @@ contract RootERC20Bridge is
             revert ZeroAmount();
         }
         if (
-            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != 0
+            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
                 && IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit
         ) {
             revert ImxDepositLimitExceeded();
