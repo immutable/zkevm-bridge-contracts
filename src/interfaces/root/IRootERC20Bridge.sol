@@ -5,6 +5,14 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 
 interface IRootERC20Bridge {
     function childBridgeAdaptor() external view returns (string memory);
+    /**
+     * @notice Receives a bridge message from child chain, parsing the message type then executing.
+     * @param sourceChain The chain the message originated from.
+     * @param sourceAddress The address the message originated from.
+     * @param data The data payload of the message.
+     */
+    function onMessageReceive(string calldata sourceChain, string calldata sourceAddress, bytes calldata data)
+        external;
 
     /**
      * @notice Initiate sending a mapToken message to the child chain.
@@ -60,6 +68,14 @@ interface IRootERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+
+    event RootChainERC20Withdraw(
+        address indexed rootToken,
+        address indexed childToken,
+        address withdrawer,
+        address indexed receiver,
+        uint256 amount
+    );
 }
 
 interface IRootERC20BridgeErrors {
@@ -69,6 +85,8 @@ interface IRootERC20BridgeErrors {
     error ZeroAmount();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
+    /// @notice Error when the child chain name is invalid.
+    error InvalidChildChain();
     /// @notice Error when a token is already mapped.
     error AlreadyMapped();
     /// @notice Error when a token is not mapped when it should be.
@@ -83,4 +101,12 @@ interface IRootERC20BridgeErrors {
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
     /// @notice Error when the given child chain bridge adaptor is invalid.
     error InvalidChildERC20BridgeAdaptor();
+    /// @notice Error when a message received has invalid data.
+    error InvalidData();
+    /// @notice Error when a message received has invalid source address.
+    error InvalidSourceAddress();
+    /// @notice Error when a message received has invalid source chain.
+    error InvalidSourceChain();
+    /// @notice Error when caller is not the root bridge adaptor but should be.
+    error NotBridgeAdaptor();
 }

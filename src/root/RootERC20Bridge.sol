@@ -7,6 +7,7 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
@@ -37,6 +38,7 @@ contract RootERC20Bridge is
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     address public constant NATIVE_ETH = address(0xeee);
 
     IRootERC20BridgeAdaptor public rootBridgeAdaptor;
@@ -52,6 +54,8 @@ contract RootERC20Bridge is
     address public childETHToken;
     /// @dev The address of the wETH ERC20 token on L1.
     address public rootWETHToken;
+    /// @dev The name of the chain that this bridge is connected to.
+    string public childChain;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -61,6 +65,7 @@ contract RootERC20Bridge is
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootIMXToken Address of ERC20 IMX on the root chain.
      * @param newRootWETHToken Address of ERC20 WETH on the root chain.
+     * @param newChildChain Name of child chain.
      * @dev Can only be called once.
      */
     function initialize(
@@ -69,7 +74,8 @@ contract RootERC20Bridge is
         string memory newChildBridgeAdaptor,
         address newChildTokenTemplate,
         address newRootIMXToken,
-        address newRootWETHToken
+        address newRootWETHToken,
+        string memory newChildChain
     ) public initializer {
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
@@ -80,6 +86,10 @@ contract RootERC20Bridge is
         if (bytes(newChildBridgeAdaptor).length == 0) {
             revert InvalidChildERC20BridgeAdaptor();
         }
+        if (bytes(newChildChain).length == 0) {
+            revert InvalidChildChain();
+        }
+
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
         rootIMXToken = newRootIMXToken;
@@ -89,6 +99,7 @@ contract RootERC20Bridge is
         );
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
         childBridgeAdaptor = newChildBridgeAdaptor;
+        childChain = newChildChain;
     }
 
     function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
@@ -102,6 +113,35 @@ contract RootERC20Bridge is
      * @dev method to receive the ETH back from the WETH contract when it is unwrapped
      */
     receive() external payable {}
+
+    /**
+     * @inheritdoc IRootERC20Bridge
+     * @dev This is only callable by the root chain bridge adaptor.
+     * @dev Validates `sourceAddress` is the child chain's bridgeAdaptor.
+     */
+    function onMessageReceive(string calldata messageSourceChain, string calldata sourceAddress, bytes calldata data)
+        external
+        override
+    {
+        if (msg.sender != address(rootBridgeAdaptor)) {
+            revert NotBridgeAdaptor();
+        }
+        if (!Strings.equal(messageSourceChain, childChain)) {
+            revert InvalidSourceChain();
+        }
+        if (!Strings.equal(sourceAddress, childBridgeAdaptor)) {
+            revert InvalidSourceAddress();
+        }
+        if (data.length == 0) {
+            revert InvalidData();
+        }
+
+        if (bytes32(data[:32]) == WITHDRAW_SIG) {
+            _withdraw(data[32:]);
+        } else {
+            revert InvalidData();
+        }
+    }
 
     /**
      * @inheritdoc IRootERC20Bridge
@@ -269,5 +309,33 @@ contract RootERC20Bridge is
         } else {
             emit ChildChainERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
         }
+    }
+
+    function _withdraw(bytes memory data) private {
+        (address rootToken, address withdrawer, address receiver, uint256 amount) =
+            abi.decode(data, (address, address, address, uint256));
+        address childToken = rootTokenToChildToken[rootToken];
+        if (childToken == address(0)) {
+            revert NotMapped();
+        }
+        _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
+    }
+
+    function _executeTransfer(
+        address rootToken,
+        address childToken,
+        address withdrawer,
+        address receiver,
+        uint256 amount
+    ) internal {
+        // TODO when withdrawing ETH/WETH, this next section will also need to check for the withdrawal of WETH (i.e. rootToken == NATIVE_ETH || rootToken == CHILD_WETH)
+        // Tests for this NATIVE_ETH branch not yet written. This should come as part of that PR.
+        if (rootToken == NATIVE_ETH) {
+            Address.sendValue(payable(receiver), amount);
+        } else {
+            IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+        }
+        // slither-disable-next-line reentrancy-events
+        emit RootChainERC20Withdraw(address(rootToken), childToken, withdrawer, receiver, amount);
     }
 }

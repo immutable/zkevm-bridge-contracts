@@ -7,4 +7,5 @@ contract StubRootBridge {
     function childBridgeAdaptor() external pure returns (string memory) {
         return Strings.toHexString(address(9999));
     }
+    function onMessageReceive(string calldata, string calldata, bytes calldata) external {}
 }

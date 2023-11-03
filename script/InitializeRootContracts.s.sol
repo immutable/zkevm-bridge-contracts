@@ -24,7 +24,6 @@ struct InitializeRootContractsParams {
     address rootIMXToken;
     address rootWETHToken;
     string childChainName;
-    address rootGateway;
     address rootGasService;
 }
 
@@ -41,7 +40,6 @@ contract InitializeRootContracts is Script {
             rootIMXToken: vm.envAddress("ROOT_IMX_ADDRESS"),
             rootWETHToken: vm.envAddress("ROOT_WETH_ADDRESS"),
             childChainName: vm.envString("CHILD_CHAIN_NAME"),
-            rootGateway: vm.envAddress("ROOT_GATEWAY_ADDRESS"),
             rootGasService: vm.envAddress("ROOT_GAS_SERVICE_ADDRESS")
         });
 
@@ -60,13 +58,13 @@ contract InitializeRootContracts is Script {
             childBridgeAdaptorChecksum,
             params.rootChainChildTokenTemplate,
             params.rootIMXToken,
-            params.rootWETHToken
+            params.rootWETHToken,
+            params.childChainName
         );
 
         params.rootBridgeAdaptor.initialize(
             address(params.rootERC20Bridge), // root bridge
             params.childChainName, // child chain name
-            params.rootGateway, // axelar gateway
             params.rootGasService // axelar gas service
         );
 
