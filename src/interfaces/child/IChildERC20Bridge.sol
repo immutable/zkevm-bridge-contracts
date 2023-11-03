@@ -25,7 +25,15 @@ interface IChildERC20BridgeEvents {
     /// @notice Emitted when a map token message is received from the root chain and executed successfully.
     event L2TokenMapped(address rootToken, address childToken);
 
-    event ERC20Deposit(
+    event ChildChainERC20Withdraw(
+        address indexed rootToken,
+        address indexed childToken,
+        address depositor,
+        address indexed receiver,
+        uint256 amount
+    );
+
+    event ChildChainERC20Deposit(
         address indexed rootToken,
         address indexed childToken,
         address depositor,
@@ -70,4 +78,10 @@ interface IChildERC20BridgeErrors {
     error InvalidSourceChain();
     /// @notice Error when the source chain's message sender is not a recognised address.
     error InvalidSourceAddress();
+    /// @notice Error when a given child token's root token is the zero address.
+    error ZeroAddressRootToken();
+    /// @notice Error when a given child token's bridge address is not set.
+    error BridgeNotSet();
+    /// @notice Error when a call to the given child token's `burn` function fails.
+    error BurnFailed();
 }

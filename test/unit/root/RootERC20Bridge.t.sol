@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -561,12 +561,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.deposit{value: depositFee}(token, amount);
     }
 
-    function test_depositEmitsERC20DepositEvent() public {
+    function test_depositEmitsChildChainERC20DepositEvent() public {
         uint256 amount = 100;
         (address childToken,) = setupDeposit(address(token), rootBridge, mapTokenFee, depositFee, amount, true);
 
         vm.expectEmit();
-        emit ERC20Deposit(address(token), childToken, address(this), address(this), amount);
+        emit ChildChainERC20Deposit(address(token), childToken, address(this), address(this), amount);
         rootBridge.deposit{value: depositFee}(token, amount);
     }
 
@@ -658,7 +658,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositTo{value: depositFee}(token, receiver, amount);
     }
 
-    function test_depositToEmitsERC20DepositEvent() public {
+    function test_depositToEmitsChildChainERC20DepositEvent() public {
         uint256 amount = 100;
         address receiver = address(12345);
 
@@ -666,7 +666,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             setupDepositTo(address(token), rootBridge, mapTokenFee, depositFee, amount, receiver, true);
 
         vm.expectEmit();
-        emit ERC20Deposit(address(token), childToken, address(this), receiver, amount);
+        emit ChildChainERC20Deposit(address(token), childToken, address(this), receiver, amount);
         rootBridge.depositTo{value: depositFee}(token, receiver, amount);
     }
 

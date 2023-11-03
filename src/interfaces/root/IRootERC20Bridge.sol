@@ -42,7 +42,7 @@ interface IRootERC20BridgeEvents {
     /// @notice Emitted when a map token message is sent to the child chain.
     event L1TokenMapped(address indexed rootToken, address indexed childToken);
     /// @notice Emitted when an ERC20 deposit message is sent to the child chain.
-    event ERC20Deposit(
+    event ChildChainERC20Deposit(
         address indexed rootToken,
         address indexed childToken,
         address depositor,

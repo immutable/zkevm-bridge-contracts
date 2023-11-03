@@ -38,6 +38,7 @@ contract ChildERC20Bridge is
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
+    bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     address public constant NATIVE_ETH = address(0xeee);
 
     IChildERC20BridgeAdaptor public bridgeAdaptor;
@@ -125,6 +126,50 @@ contract ChildERC20Bridge is
         }
     }
 
+    function withdraw(IChildERC20 childToken, uint256 amount) external payable {
+        _withdraw(childToken, msg.sender, amount);
+    }
+
+    function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external payable {
+        _withdraw(childToken, receiver, amount);
+    }
+
+    function _withdraw(IChildERC20 childToken, address receiver, uint256 amount) private {
+        if (address(childToken).code.length == 0) {
+            revert EmptyTokenContract();
+        }
+
+        address rootToken = childToken.rootToken();
+
+        if (rootTokenToChildToken[rootToken] != address(childToken)) {
+            revert NotMapped();
+        }
+
+        // A mapped token should never have root token unset
+        if (rootToken == address(0)) {
+            revert ZeroAddressRootToken();
+        }
+
+        // A mapped token should never have the bridge unset
+        if (childToken.bridge() != address(this)) {
+            revert BridgeNotSet();
+        }
+
+        if (!childToken.burn(msg.sender, amount)) {
+            revert BurnFailed();
+        }
+
+        // TODO Should we enforce receiver != 0? old poly contracts don't
+
+        // Encode the message payload
+        bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
+
+        // Send the message to the bridge adaptor and up to root chain
+        bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
+
+        emit ChildChainERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
+    }
+
     function _mapToken(bytes calldata data) private {
         (, address rootToken, string memory name, string memory symbol, uint8 decimals) =
             abi.decode(data, (bytes32, address, string, string, uint8));
@@ -185,7 +230,7 @@ contract ChildERC20Bridge is
             if (address(rootToken) == NATIVE_ETH) {
                 emit NativeEthDeposit(address(rootToken), childToken, sender, receiver, amount);
             } else {
-                emit ERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
+                emit ChildChainERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
             }
         } else {
             Address.sendValue(payable(receiver), amount);
