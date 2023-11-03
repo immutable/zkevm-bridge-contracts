@@ -27,6 +27,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     address constant WRAPPED_ETH = address(0xddd);
     uint256 constant mapTokenFee = 300;
     uint256 constant depositFee = 200;
+    uint256 constant unlimitedIMXDeposits = 0;
 
     ERC20PresetMinterPauser public token;
     RootERC20Bridge public rootBridge;
@@ -53,7 +54,8 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
-            WRAPPED_ETH
+            WRAPPED_ETH,
+            unlimitedIMXDeposits
         );
     }
 
@@ -75,50 +77,112 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
-            WRAPPED_ETH
+            WRAPPED_ETH,
+            unlimitedIMXDeposits
         );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressRootAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(1), CHILD_BRIDGE_ADAPTOR_STRING, address(1), address(1), address(1));
+        bridge.initialize(
+            address(0),
+            address(1),
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(1),
+            address(1),
+            address(1),
+            unlimitedIMXDeposits
+        );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildBridge() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(0), CHILD_BRIDGE_ADAPTOR_STRING, address(1), address(1), address(1));
+        bridge.initialize(
+            address(1),
+            address(0),
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(1),
+            address(1),
+            address(1),
+            unlimitedIMXDeposits
+        );
     }
 
     function test_RevertIf_InitializeWithEmptyChildAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(InvalidChildERC20BridgeAdaptor.selector);
-        bridge.initialize(address(1), address(1), "", address(1), address(1), address(1));
+        bridge.initialize(address(1), address(1), "", address(1), address(1), address(1), unlimitedIMXDeposits);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressTokenTemplate() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), CHILD_BRIDGE_ADAPTOR_STRING, address(0), address(1), address(1));
+        bridge.initialize(
+            address(1),
+            address(1),
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(0),
+            address(1),
+            address(1),
+            unlimitedIMXDeposits
+        );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), CHILD_BRIDGE_ADAPTOR_STRING, address(1), address(0), address(1));
+        bridge.initialize(
+            address(1),
+            address(1),
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(1),
+            address(0),
+            address(1),
+            unlimitedIMXDeposits
+        );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressWETHToken() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), address(1), CHILD_BRIDGE_ADAPTOR_STRING, address(1), address(1), address(0));
+        bridge.initialize(
+            address(1),
+            address(1),
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(1),
+            address(1),
+            address(0),
+            unlimitedIMXDeposits
+        );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(0), "", address(0), address(0), address(0));
+        bridge.initialize(address(0), address(0), "", address(0), address(0), address(0), unlimitedIMXDeposits);
+    }
+
+    /**
+     * UPDATE IMX CUMULATIVE DEPOSIT LIMIT
+     */
+    function test_RevertsIf_IMXDepositLimitTooLow() public {
+        uint256 imxCumulativeDepositLimit = 700;
+        uint256 depositAmount = imxCumulativeDepositLimit + 1;
+
+        rootBridge.updateImxCumulativeDepositLimit(imxCumulativeDepositLimit);
+
+        setupDeposit(IMX_TOKEN, rootBridge, mapTokenFee, depositFee, depositAmount, false);
+
+        IERC20Metadata(IMX_TOKEN).approve(address(rootBridge), type(uint256).max);
+
+        rootBridge.updateImxCumulativeDepositLimit(depositAmount);
+
+        rootBridge.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN), depositAmount);
+
+        vm.expectRevert(ImxDepositLimitTooLow.selector);
+        rootBridge.updateImxCumulativeDepositLimit(imxCumulativeDepositLimit);
     }
 
     /**
@@ -405,6 +469,29 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TOKEN
      */
+
+    function test_RevertsIf_IMXDepositLimitExceeded() public {
+        uint256 imxCumulativeDepositLimit = 700;
+
+        uint256 amount = 300;
+        setupDeposit(IMX_TOKEN, rootBridge, mapTokenFee, depositFee, amount, false);
+
+        IERC20Metadata(IMX_TOKEN).approve(address(rootBridge), type(uint256).max);
+
+        rootBridge.updateImxCumulativeDepositLimit(imxCumulativeDepositLimit);
+
+        // Valid
+        rootBridge.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN), amount);
+
+        setupDeposit(IMX_TOKEN, rootBridge, mapTokenFee, depositFee, amount, false);
+        // Valid
+        rootBridge.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN), amount);
+
+        setupDeposit(IMX_TOKEN, rootBridge, mapTokenFee, depositFee, amount, false);
+        // Invalid
+        vm.expectRevert(ImxDepositLimitExceeded.selector);
+        rootBridge.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN), amount);
+    }
 
     function test_depositCallsSendMessage() public {
         uint256 amount = 100;
