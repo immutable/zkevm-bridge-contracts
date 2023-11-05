@@ -109,11 +109,12 @@ contract ChildERC20Bridge is
         if (!Strings.equal(messageSourceChain, rootChain)) {
             revert InvalidSourceChain();
         }
-
         if (!Strings.equal(sourceAddress, rootERC20BridgeAdaptor)) {
             revert InvalidSourceAddress();
         }
-        if (data.length == 0) {
+        if (data.length <= 32) {
+            // Data must always be greater than 32.
+            // 32 bytes for the signature, and at least some information for the payload
             revert InvalidData();
         }
 
