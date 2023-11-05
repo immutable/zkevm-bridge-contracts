@@ -48,8 +48,8 @@ async function run() {
     let balanceAmt = ethers.utils.parseEther(TOTAL_SUPPLY).sub(bridgeBal).sub(multisigBal);
     console.log("The amount to balance on L1 is: ", ethers.utils.formatEther(balanceAmt));
     let IMX = new ethers.Contract(imxRootAddr, IMX_ABI, rootProvider);
-    console.log("Admin L1 IMX balance: ", await IMX.balanceOf(adminAddr));
-    console.log("Root bridge L1 IMX balance: ", await IMX.balanceOf(rootBridgeAddr));
+    console.log("Admin L1 IMX balance: ", (await IMX.balanceOf(adminAddr)).toString());
+    console.log("Root bridge L1 IMX balance: ", (await IMX.balanceOf(rootBridgeAddr)).toString());
     console.log("Rebalance in...");
     await wait();
     
@@ -57,8 +57,8 @@ async function run() {
     console.log("Transfer...")
     let resp = await IMX.connect(adminWallet).transfer(rootBridgeAddr, balanceAmt);
     await waitForReceipt(resp.hash, rootProvider);
-    console.log("Admin L1 IMX balance: ", await IMX.balanceOf(adminAddr));
-    console.log("Root bridge L1 IMX balance: ", await IMX.balanceOf(rootBridgeAddr));
+    console.log("Admin L1 IMX balance: ", (await IMX.balanceOf(adminAddr)).toString());
+    console.log("Root bridge L1 IMX balance: ", (await IMX.balanceOf(rootBridgeAddr)).toString());
 }
 
 run();

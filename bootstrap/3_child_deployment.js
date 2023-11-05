@@ -96,7 +96,7 @@ async function run() {
     let childAdaptorProxy = await deployChildContract(childAdaptorProxyObj, adminWallet, childAdaptorImpl.address, proxyAdmin.address, []);
     await waitForReceipt(childAdaptorProxy.deployTransaction.hash, childProvider);
     console.log("Deployed to CHILD_ADAPTOR_PROXY_ADDRESS: ", childAdaptorProxy.address);
-    output += "CHILD_ADAPTOR_PROXY_ADDRESS" + childAdaptorProxy.address + "\n";
+    output += "CHILD_ADAPTOR_PROXY_ADDRESS=" + childAdaptorProxy.address + "\n";
 
     fs.writeFileSync("./3.out.tmp", output);
 }

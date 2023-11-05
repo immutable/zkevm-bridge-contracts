@@ -70,11 +70,11 @@ node 4_root_deployment.js
 8. Set the following environment variables using the output `3.out.tmp` & `4.out.tmp` from the previous step.
 ```
 CHILD_BRIDGE_ADDRESS=
-CHILD_ADAPTER_ADDRESS=
+CHILD_ADAPTOR_ADDRESS=
 WRAPPED_IMX_ADDRESS=
 CHILD_TOKEN_TEMPLATE=
 ROOT_BRIDGE_ADDRESS=
-ROOT_ADAPTER_ADDRESS=
+ROOT_ADAPTOR_ADDRESS=
 ROOT_TOKEN_TEMPLATE=
 ```
 9. Initialise bridge contracts on child chain. (see [here](../README.md#remote-deployment) for more details)
