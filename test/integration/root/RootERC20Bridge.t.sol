@@ -19,6 +19,7 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
     address constant WRAPPED_ETH = address(0xddd);
+    uint256 constant unlimitedDepositLimit = 0;
 
     uint256 constant mapTokenFee = 300;
     uint256 constant depositFee = 200;
@@ -33,8 +34,9 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
     function setUp() public {
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
-        (imxToken, token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) =
-            rootIntegrationSetup(CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, WRAPPED_ETH);
+        (imxToken, token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) = rootIntegrationSetup(
+            CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, WRAPPED_ETH, unlimitedDepositLimit
+        );
     }
 
     /**

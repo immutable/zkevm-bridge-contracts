@@ -59,7 +59,8 @@ contract Utils is Test {
         address childBridgeAdaptor,
         string memory childBridgeName,
         address imxTokenAddress,
-        address wethTokenAddress
+        address wethTokenAddress,
+        uint256 imxCumulativeDepositLimit
     )
         public
         returns (
@@ -94,7 +95,8 @@ contract Utils is Test {
             Strings.toHexString(childBridgeAdaptor),
             address(token),
             imxTokenAddress,
-            wethTokenAddress
+            wethTokenAddress,
+            imxCumulativeDepositLimit
         );
 
         axelarAdaptor.initialize(

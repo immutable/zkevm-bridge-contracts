@@ -35,14 +35,14 @@ contract DeployRootContracts is Script {
         rootChainChildTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 
         RootERC20Bridge rootERC20BridgeImplementation = new RootERC20Bridge();
-        rootERC20BridgeImplementation.initialize(address(1), address(1), "filler", address(1), address(1), address(1));
+        rootERC20BridgeImplementation.initialize(
+            address(1), address(1), "filler", address(1), address(1), address(1), 1
+        );
         TransparentUpgradeableProxy rootERC20BridgeProxy = new TransparentUpgradeableProxy(
             address(rootERC20BridgeImplementation),
             address(proxyAdmin),
             ""
         );
-
-        // TODO add dummy initialize of implementation contracts!
 
         RootAxelarBridgeAdaptor rootBridgeAdaptorImplementation = new RootAxelarBridgeAdaptor();
         rootBridgeAdaptorImplementation.initialize(
