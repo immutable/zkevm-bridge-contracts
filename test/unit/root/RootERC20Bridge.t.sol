@@ -55,6 +55,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
+            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -67,6 +68,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(address(rootBridge.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
         assertEq(rootBridge.childERC20Bridge(), CHILD_BRIDGE, "childERC20Bridge not set");
         assertEq(rootBridge.childTokenTemplate(), address(token), "childTokenTemplate not set");
+        assert(Strings.equal(rootBridge.childChain(), CHILD_CHAIN_NAME));
+        assert(Strings.equal(CHILD_BRIDGE_ADAPTOR_STRING, rootBridge.childBridgeAdaptor()));
+        assertEq(address(token), rootBridge.childTokenTemplate(), "childTokenTemplate not set");
+        assertEq(rootBridge.rootIMXToken(), IMX_TOKEN, "rootIMXToken not set");
+        assertEq(rootBridge.rootWETHToken(), WRAPPED_ETH, "rootWETHToken not set");
     }
 
     function test_RevertIfInitializeTwice() public {
@@ -78,6 +84,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
+            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -92,6 +99,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             address(1),
             address(1),
             address(1),
+            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -106,6 +114,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             address(1),
             address(1),
             address(1),
+            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -113,7 +122,9 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_RevertIf_InitializeWithEmptyChildAdapter() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(InvalidChildERC20BridgeAdaptor.selector);
-        bridge.initialize(address(1), address(1), "", address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
+        bridge.initialize(
+            address(1), address(1), "", address(1), address(1), address(1), CHILD_CHAIN_NAME, UNLIMITED_IMX_DEPOSITS
+        );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressTokenTemplate() public {
@@ -126,6 +137,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             address(0),
             address(1),
             address(1),
+            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -140,6 +152,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             address(1),
             address(0),
             address(1),
+            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -154,6 +167,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             address(1),
             address(1),
             address(0),
+            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -161,7 +175,24 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), address(0), "", address(0), address(0), address(0), UNLIMITED_IMX_DEPOSITS);
+        bridge.initialize(
+            address(0), address(0), "", address(0), address(0), address(0), CHILD_CHAIN_NAME, UNLIMITED_IMX_DEPOSITS
+        );
+    }
+
+    function test_RevertIf_InitializeWithEmptyChildName() public {
+        RootERC20Bridge bridge = new RootERC20Bridge();
+        vm.expectRevert(InvalidChildChain.selector);
+        bridge.initialize(
+            address(1),
+            address(1),
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(1),
+            address(1),
+            address(1),
+            "",
+            UNLIMITED_IMX_DEPOSITS
+        );
     }
 
     /**
