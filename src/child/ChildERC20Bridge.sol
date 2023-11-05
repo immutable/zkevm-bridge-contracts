@@ -56,8 +56,7 @@ contract ChildERC20Bridge is
     /**
      * @notice Fallback function on recieving native IMX.
      */
-    receive() external payable {
-    }
+    receive() external payable {}
 
     /**
      * @notice Initilization function for RootERC20Bridge.
