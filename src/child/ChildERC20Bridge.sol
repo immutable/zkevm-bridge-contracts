@@ -115,7 +115,7 @@ contract ChildERC20Bridge is
         if (data.length <= 32) {
             // Data must always be greater than 32.
             // 32 bytes for the signature, and at least some information for the payload
-            revert InvalidData();
+            revert DataTooShort();
         }
 
         if (bytes32(data[:32]) == MAP_TOKEN_SIG) {

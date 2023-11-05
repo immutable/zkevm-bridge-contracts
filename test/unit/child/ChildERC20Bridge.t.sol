@@ -168,7 +168,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_RevertIf_onMessageReceiveCalledWithDataLengthZero() public {
         bytes memory data = "";
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(DataTooShort.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 

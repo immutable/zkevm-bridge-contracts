@@ -84,7 +84,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         bytes memory data;
 
         vm.prank(address(mockAxelarAdaptor));
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(DataTooShort.selector);
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 

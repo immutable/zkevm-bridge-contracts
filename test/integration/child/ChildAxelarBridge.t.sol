@@ -109,7 +109,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = "";
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(DataTooShort.selector);
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 

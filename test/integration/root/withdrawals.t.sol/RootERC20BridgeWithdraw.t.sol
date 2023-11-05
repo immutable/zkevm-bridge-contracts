@@ -87,7 +87,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(DataTooShort.selector);
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 

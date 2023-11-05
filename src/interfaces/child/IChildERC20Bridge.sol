@@ -72,6 +72,8 @@ interface IChildERC20BridgeErrors {
     error AlreadyMapped();
     /// @notice Error when a message is given to the bridge from an address not the designated bridge adaptor.
     error NotBridgeAdaptor();
+    /// @notice Error when the message's payload is too short.
+    error DataTooShort();
     /// @notice Error when the message's payload is not valid.
     error InvalidData();
     /// @notice Error when the message's source chain is not valid.
