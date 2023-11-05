@@ -36,6 +36,7 @@ contract RootERC20Bridge is
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
 
+    uint256 public constant NO_DEPOSIT_LIMIT = 0;
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
@@ -56,6 +57,9 @@ contract RootERC20Bridge is
     address public rootWETHToken;
     /// @dev The name of the chain that this bridge is connected to.
     string public childChain;
+    /// @dev The maximum cumulative amount of IMX that can be deposited into the bridge.
+    /// @dev A limit of zero indicates unlimited.
+    uint256 public imxCumulativeDepositLimit;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -66,6 +70,7 @@ contract RootERC20Bridge is
      * @param newRootIMXToken Address of ERC20 IMX on the root chain.
      * @param newRootWETHToken Address of ERC20 WETH on the root chain.
      * @param newChildChain Name of child chain.
+     * @param newImxCumulativeDepositLimit The cumulative IMX deposit limit.
      * @dev Can only be called once.
      */
     function initialize(
@@ -75,7 +80,8 @@ contract RootERC20Bridge is
         address newChildTokenTemplate,
         address newRootIMXToken,
         address newRootWETHToken,
-        string memory newChildChain
+        string memory newChildChain,
+        uint256 newImxCumulativeDepositLimit
     ) public initializer {
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
@@ -100,13 +106,39 @@ contract RootERC20Bridge is
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
         childBridgeAdaptor = newChildBridgeAdaptor;
         childChain = newChildChain;
+        imxCumulativeDepositLimit = newImxCumulativeDepositLimit;
     }
 
+    /**
+     * @notice Updates the root bridge adaptor.
+     * @param newRootBridgeAdaptor Address of new root bridge adaptor.
+     * @dev Can only be called by owner.
+     */
     function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
         if (newRootBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
+        emit NewRootBridgeAdaptor(address(rootBridgeAdaptor), newRootBridgeAdaptor);
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
+    }
+
+    // TODO add updating of child bridge adaptor. Part of SMR-1908
+
+    /**
+     * @notice Updates the IMX deposit limit.
+     * @param newImxCumulativeDepositLimit The new cumulative IMX deposit limit.
+     * @dev Can only be called by owner.
+     * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
+     */
+    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external onlyOwner {
+        if (
+            newImxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+                && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))
+        ) {
+            revert ImxDepositLimitTooLow();
+        }
+        emit NewImxDepositLimit(imxCumulativeDepositLimit, newImxCumulativeDepositLimit);
+        imxCumulativeDepositLimit = newImxCumulativeDepositLimit;
     }
 
     /**
@@ -266,6 +298,12 @@ contract RootERC20Bridge is
         }
         if (amount == 0) {
             revert ZeroAmount();
+        }
+        if (
+            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+                && IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit
+        ) {
+            revert ImxDepositLimitExceeded();
         }
 
         // ETH, WETH and IMX do not need to be mapped since it should have been mapped on initialization

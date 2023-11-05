@@ -59,7 +59,8 @@ contract Utils is Test {
         address childBridgeAdaptor,
         string memory childBridgeName,
         address imxTokenAddress,
-        address wethTokenAddress
+        address wethTokenAddress,
+        uint256 imxCumulativeDepositLimit
     )
         public
         returns (
@@ -95,7 +96,8 @@ contract Utils is Test {
             address(token),
             imxTokenAddress,
             wethTokenAddress,
-            "CHILD"
+            "CHILD",
+            imxCumulativeDepositLimit
         );
 
         axelarAdaptor.initialize(address(rootBridge), childBridgeName, address(axelarGasService));

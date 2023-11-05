@@ -21,6 +21,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     address constant WRAPPED_ETH = address(0xddd);
     uint256 constant mapTokenFee = 300;
     uint256 constant withdrawAmount = 0.5 ether;
+    uint256 constant UNLIMITED_IMX_DEPOSIT_LIMIT = 0;
 
     ERC20PresetMinterPauser public token;
     RootERC20Bridge public rootBridge;
@@ -49,7 +50,8 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
-            CHILD_CHAIN_NAME
+            CHILD_CHAIN_NAME,
+            UNLIMITED_IMX_DEPOSIT_LIMIT
         );
     }
 

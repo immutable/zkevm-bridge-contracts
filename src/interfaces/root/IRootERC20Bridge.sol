@@ -43,6 +43,10 @@ interface IRootERC20Bridge {
 }
 
 interface IRootERC20BridgeEvents {
+    /// @notice Emitted when the child chain bridge adaptor is updated.
+    event NewRootBridgeAdaptor(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
+    /// @notice Emitted when the IMX deposit limit is updated.
+    event NewImxDepositLimit(uint256 oldImxDepositLimit, uint256 newImxDepositLimit);
     /// @notice Emitted when a map token message is sent to the child chain.
     event L1TokenMapped(address indexed rootToken, address indexed childToken);
     /// @notice Emitted when an ERC20 deposit message is sent to the child chain.
@@ -109,4 +113,8 @@ interface IRootERC20BridgeErrors {
     error InvalidSourceChain();
     /// @notice Error when caller is not the root bridge adaptor but should be.
     error NotBridgeAdaptor();
+    /// @notice Error when the total IMX deposit limit is exceeded
+    error ImxDepositLimitExceeded();
+    /// @notice Error when the IMX deposit limit is set below the amount of IMX already deposited
+    error ImxDepositLimitTooLow();
 }

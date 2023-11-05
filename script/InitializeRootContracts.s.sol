@@ -25,6 +25,7 @@ struct InitializeRootContractsParams {
     address rootWETHToken;
     string childChainName;
     address rootGasService;
+    uint256 initialIMXCumulativeDepositLimit;
 }
 
 contract InitializeRootContracts is Script {
@@ -40,7 +41,8 @@ contract InitializeRootContracts is Script {
             rootIMXToken: vm.envAddress("ROOT_IMX_ADDRESS"),
             rootWETHToken: vm.envAddress("ROOT_WETH_ADDRESS"),
             childChainName: vm.envString("CHILD_CHAIN_NAME"),
-            rootGasService: vm.envAddress("ROOT_GAS_SERVICE_ADDRESS")
+            rootGasService: vm.envAddress("ROOT_GAS_SERVICE_ADDRESS"),
+            initialIMXCumulativeDepositLimit: vm.envUint("INITIAL_IMX_CUMULATIVE_DEPOSIT_LIMIT")
         });
 
         string[] memory checksumInputs = Utils.getChecksumInputs(params.childBridgeAdaptor);
@@ -59,7 +61,8 @@ contract InitializeRootContracts is Script {
             params.rootChainChildTokenTemplate,
             params.rootIMXToken,
             params.rootWETHToken,
-            params.childChainName
+            params.childChainName,
+            params.initialIMXCumulativeDepositLimit
         );
 
         params.rootBridgeAdaptor.initialize(
