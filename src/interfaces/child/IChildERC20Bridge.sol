@@ -32,6 +32,9 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+    event ChildChainNativeIMXWithdraw(
+        address indexed rootToken, address depositor, address indexed receiver, uint256 amount
+    );
 
     event ChildChainERC20Deposit(
         address indexed rootToken,
@@ -52,6 +55,10 @@ interface IChildERC20BridgeEvents {
 
 // TODO add parameters to errors if it makes sense
 interface IChildERC20BridgeErrors {
+    /// @notice Error when the amount requested is less than the value sent.
+    error InsufficientValue();
+    /// @notice Error when the withdrawal amount is zero
+    error ZeroAmount();
     /// @notice Error when the contract to mint had no bytecode.
     error EmptyTokenContract();
     /// @notice Error when the mint operation failed.
@@ -82,6 +89,10 @@ interface IChildERC20BridgeErrors {
     error ZeroAddressRootToken();
     /// @notice Error when a given child token's bridge address is not set.
     error BridgeNotSet();
+    /// @notice Error when a given child token's bridge address is incorrect.
+    error IncorrectBridgeAddress();
     /// @notice Error when a call to the given child token's `burn` function fails.
     error BurnFailed();
+    /// @notice Error when token balance invariant check fails.
+    error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
 }
