@@ -3,6 +3,7 @@ pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {MockAxelarGateway} from "../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../src/test/root/MockAxelarGasService.sol";
@@ -54,6 +55,32 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(InvalidChildChain.selector);
         newAdaptor.initialize(address(this), "", address(axelarGasService));
+    }
+
+    function test_Execute_CallsBridge() public {
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceChain = "test";
+        string memory sourceAddress = Strings.toHexString(address(123));
+        bytes memory payload = abi.encodePacked("payload");
+
+        // We expect to call the bridge's onMessageReceive function.
+        vm.expectCall(
+            address(stubRootBridge),
+            abi.encodeWithSelector(stubRootBridge.onMessageReceive.selector, sourceChain, sourceAddress, payload)
+        );
+        axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
+    }
+
+    function test_Execute_EmitsAdaptorExecuteEvent() public {
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceChain = "test";
+        string memory sourceAddress = Strings.toHexString(address(123));
+        bytes memory payload = abi.encodePacked("payload");
+
+        // We expect to call the bridge's onMessageReceive function.
+        vm.expectEmit();
+        emit AdaptorExecute(sourceChain, sourceAddress, payload);
+        axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
     }
 
     /// @dev For this unit test we just want to make sure the correct functions are called on the Axelar Gateway and Gas Service.

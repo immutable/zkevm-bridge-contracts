@@ -71,6 +71,7 @@ contract ChildAxelarBridgeAdaptor is
         internal
         override
     {
+        emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
         childBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
 }

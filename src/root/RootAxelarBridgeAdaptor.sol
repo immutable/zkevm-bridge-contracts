@@ -88,6 +88,7 @@ contract RootAxelarBridgeAdaptor is
         internal
         override
     {
+        emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
         rootBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
 }

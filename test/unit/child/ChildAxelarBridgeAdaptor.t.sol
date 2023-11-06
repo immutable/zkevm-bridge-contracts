@@ -47,7 +47,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         newAdaptor.initialize("root", address(0), address(mockChildAxelarGasService));
     }
 
-    function test_Execute() public {
+    function test_Execute_CallsBridge() public {
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceChain = "test";
         string memory sourceAddress = Strings.toHexString(address(123));
@@ -58,6 +58,18 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
             address(mockChildERC20Bridge),
             abi.encodeWithSelector(mockChildERC20Bridge.onMessageReceive.selector, sourceChain, sourceAddress, payload)
         );
+        axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
+    }
+
+    function test_Execute_EmitsAdaptorExecuteEvent() public {
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceChain = "test";
+        string memory sourceAddress = Strings.toHexString(address(123));
+        bytes memory payload = abi.encodePacked("payload");
+
+        // We expect to call the bridge's onMessageReceive function.
+        vm.expectEmit();
+        emit AdaptorExecute(sourceChain, sourceAddress, payload);
         axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
     }
 

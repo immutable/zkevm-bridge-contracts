@@ -61,7 +61,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         token.transfer(address(rootBridge), 100 ether);
     }
 
-    function test_RevertsIf_WithdrawWithInvalidSourceAddress() public {
+    function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
@@ -71,7 +71,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         axelarAdaptor.execute(commandId, "INVALID", sourceAddress, data);
     }
 
-    function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
+    function test_RevertsIf_WithdrawWithInvalidSourceAddress() public {
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
