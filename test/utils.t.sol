@@ -64,7 +64,6 @@ contract Utils is Test {
         MockAxelarGasService axelarGasService;
     }
 
-
     function rootIntegrationSetup(
         address childBridge,
         address childBridgeAdaptor,

@@ -35,7 +35,12 @@ contract RootERC20BridgeIntegrationTest is Test, IRootERC20BridgeEvents, IRootAx
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
         RootIntegration memory integration = rootIntegrationSetup(
-            CHILD_BRIDGE, CHILD_BRIDGE_ADAPTOR, CHILD_CHAIN_NAME, IMX_TOKEN_ADDRESS, WRAPPED_ETH, UNLIMITED_DEPOSIT_LIMIT
+            CHILD_BRIDGE,
+            CHILD_BRIDGE_ADAPTOR,
+            CHILD_CHAIN_NAME,
+            IMX_TOKEN_ADDRESS,
+            WRAPPED_ETH,
+            UNLIMITED_DEPOSIT_LIMIT
         );
 
         imxToken = integration.imxToken;
