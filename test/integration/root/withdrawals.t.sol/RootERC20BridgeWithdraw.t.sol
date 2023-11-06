@@ -87,7 +87,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
-        vm.expectRevert(DataTooShort.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Data too short"));
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
@@ -97,7 +97,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 

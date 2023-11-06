@@ -83,7 +83,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode("invalid payload");
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
@@ -109,7 +109,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = "";
 
-        vm.expectRevert(DataTooShort.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Data too short"));
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 

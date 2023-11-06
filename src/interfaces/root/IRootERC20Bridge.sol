@@ -105,10 +105,8 @@ interface IRootERC20BridgeErrors {
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
     /// @notice Error when the given child chain bridge adaptor is invalid.
     error InvalidChildERC20BridgeAdaptor();
-    /// @notice Error when the message's payload is too short.
-    error DataTooShort();
     /// @notice Error when a message received has invalid data.
-    error InvalidData();
+    error InvalidData(string reason);
     /// @notice Error when a message received has invalid source address.
     error InvalidSourceAddress();
     /// @notice Error when a message received has invalid source chain.

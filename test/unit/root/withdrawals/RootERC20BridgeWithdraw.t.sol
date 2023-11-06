@@ -84,14 +84,16 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         bytes memory data;
 
         vm.prank(address(mockAxelarAdaptor));
-        vm.expectRevert(DataTooShort.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Data too short"));
+
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
     function test_RevertsIf_OnMessageReceiveWithInvalidSignature() public {
         bytes memory data = abi.encode(keccak256("RANDOM"), IMX_TOKEN, address(this), address(this), withdrawAmount);
+
         vm.prank(address(mockAxelarAdaptor));
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
