@@ -164,14 +164,16 @@ contract RootERC20Bridge is
         if (!Strings.equal(sourceAddress, childBridgeAdaptor)) {
             revert InvalidSourceAddress();
         }
-        if (data.length == 0) {
-            revert InvalidData();
+        if (data.length <= 32) {
+            // Data must always be greater than 32.
+            // 32 bytes for the signature, and at least some information for the payload
+            revert InvalidData("Data too short");
         }
 
         if (bytes32(data[:32]) == WITHDRAW_SIG) {
             _withdraw(data[32:]);
         } else {
-            revert InvalidData();
+            revert InvalidData("Unsupported action signature");
         }
     }
 
