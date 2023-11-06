@@ -106,14 +106,14 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
         childBridge.withdraw{value: withdrawFee}(childToken, withdrawAmount);
     }
 
-    function test_withdraw_emits_AxelarMessageEvent() public {
+    function test_withdraw_emits_AxelarMessageSentEvent() public {
         ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
 
         bytes memory predictedPayload =
             abi.encode(WITHDRAW_SIG, rootToken, address(this), address(this), withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit AxelarMessage(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
+        emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
         childBridge.withdraw{value: withdrawFee}(childToken, withdrawAmount);
     }
 

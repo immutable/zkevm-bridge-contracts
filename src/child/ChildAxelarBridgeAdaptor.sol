@@ -22,7 +22,6 @@ contract ChildAxelarBridgeAdaptor is
     /// @notice Address of bridge to relay messages to.
     IChildERC20Bridge public childBridge;
     IAxelarGasService public gasService;
-    string public rootBridgeAdaptor;
     string public rootChain;
 
     constructor(address _gateway) AxelarExecutable(_gateway) {}
@@ -39,7 +38,6 @@ contract ChildAxelarBridgeAdaptor is
         childBridge = IChildERC20Bridge(_childBridge);
         rootChain = _rootChain;
         gasService = IAxelarGasService(_gasService);
-        rootBridgeAdaptor = childBridge.rootERC20BridgeAdaptor();
     }
 
     /**
@@ -54,7 +52,7 @@ contract ChildAxelarBridgeAdaptor is
         }
 
         // Load from storage.
-        string memory _rootBridgeAdaptor = rootBridgeAdaptor;
+        string memory _rootBridgeAdaptor = childBridge.rootERC20BridgeAdaptor();
         string memory _rootChain = rootChain;
 
         gasService.payNativeGasForContractCall{value: msg.value}(
@@ -62,7 +60,7 @@ contract ChildAxelarBridgeAdaptor is
         );
 
         gateway.callContract(_rootChain, _rootBridgeAdaptor, payload);
-        emit AxelarMessage(_rootChain, _rootBridgeAdaptor, payload);
+        emit AxelarMessageSent(_rootChain, _rootBridgeAdaptor, payload);
     }
 
     /**
@@ -73,6 +71,7 @@ contract ChildAxelarBridgeAdaptor is
         internal
         override
     {
+        emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
         childBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
 }
