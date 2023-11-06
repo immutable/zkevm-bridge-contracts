@@ -139,7 +139,7 @@ contract ChildERC20Bridge is
         _withdrawIMX(msg.sender, amount);
     }
 
-    function withdrawToIMX(address receiver, uint256 amount) external payable {
+    function withdrawIMXTo(address receiver, uint256 amount) external payable {
         _withdrawIMX(receiver, amount);
     }
 

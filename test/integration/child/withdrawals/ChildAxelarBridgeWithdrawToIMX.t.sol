@@ -17,7 +17,7 @@ import {Utils} from "../../../utils.t.sol";
 import {WETH} from "../../../../src/test/root/WETH.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 
-contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
+contract ChildERC20BridgewithdrawIMXToIntegrationTest is
     Test,
     IChildERC20BridgeEvents,
     IChildAxelarBridgeAdaptorEvents,
@@ -44,7 +44,7 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
             childIntegrationSetup();
     }
 
-    function test_WithdrawToIMX_CallsBridgeAdaptor() public {
+    function test_withdrawIMXTo_CallsBridgeAdaptor() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -56,10 +56,10 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
             abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
     }
 
-    function test_WithdrawToIMXWithDifferentAccount_CallsBridgeAdaptor() public {
+    function test_withdrawIMXToWithDifferentAccount_CallsBridgeAdaptor() public {
         address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
@@ -72,10 +72,10 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
             abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
-    function test_WithdrawToIMX_CallsAxelarGateway() public {
+    function test_withdrawIMXTo_CallsAxelarGateway() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -92,10 +92,10 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
             )
         );
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
     }
 
-    function test_WithdrawToIMXWithDifferentAccount_CallsAxelarGateway() public {
+    function test_withdrawIMXToWithDifferentAccount_CallsAxelarGateway() public {
         address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
@@ -113,10 +113,10 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
             )
         );
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
-    function test_WithdrawToIMX_CallsGasService() public {
+    function test_withdrawIMXTo_CallsGasService() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -136,10 +136,10 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
             )
         );
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
     }
 
-    function test_WithdrawToIMXWithDifferentAccount_CallsGasService() public {
+    function test_withdrawIMXToWithDifferentAccount_CallsGasService() public {
         address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
@@ -160,10 +160,10 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
             )
         );
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
-    function test_WithdrawToIMX_EmitsAxelarMessageEvent() public {
+    function test_withdrawIMXTo_EmitsAxelarMessageEvent() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -173,10 +173,10 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessage(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
     }
 
-    function test_WithdrawToIMXWithDifferentAccount_EmitsAxelarMessageEvent() public {
+    function test_withdrawIMXToWithDifferentAccount_EmitsAxelarMessageEvent() public {
         address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
@@ -187,17 +187,17 @@ contract ChildERC20BridgeWithdrawToIMXIntegrationTest is
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessage(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
-    function test_WithdrawToIMX_ReducesBalance() public {
+    function test_withdrawIMXTo_ReducesBalance() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         uint256 preBal = address(this).balance;
         uint256 preGasBal = address(axelarGasService).balance;
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
 
         uint256 postBal = address(this).balance;
         uint256 postGasBal = address(axelarGasService).balance;

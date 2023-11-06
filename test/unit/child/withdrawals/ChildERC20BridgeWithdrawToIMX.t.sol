@@ -16,7 +16,7 @@ import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 
-contract ChildERC20BridgeWithdrawToIMXUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
+contract ChildERC20BridgewithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
@@ -41,21 +41,21 @@ contract ChildERC20BridgeWithdrawToIMXUnitTest is Test, IChildERC20BridgeEvents,
         );
     }
 
-    function test_RevertsIf_WithdrawToIMXCalledWithInsufficientFund() public {
+    function test_RevertsIf_withdrawIMXToCalledWithInsufficientFund() public {
         uint256 withdrawAmount = 7 ether;
 
         vm.expectRevert(InsufficientValue.selector);
-        childBridge.withdrawToIMX{value: withdrawAmount - 1}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawAmount - 1}(address(this), withdrawAmount);
     }
 
     function test_RevertIf_ZeroAmountIsProvided() public {
         uint256 withdrawFee = 300;
 
         vm.expectRevert(ZeroAmount.selector);
-        childBridge.withdrawToIMX{value: withdrawFee}(address(this), 0);
+        childBridge.withdrawIMXTo{value: withdrawFee}(address(this), 0);
     }
 
-    function test_WithdrawToIMX_CallsBridgeAdaptor() public {
+    function test_withdrawIMXTo_CallsBridgeAdaptor() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -67,10 +67,10 @@ contract ChildERC20BridgeWithdrawToIMXUnitTest is Test, IChildERC20BridgeEvents,
             withdrawFee,
             abi.encodeWithSelector(mockAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
     }
 
-    function test_WithdrawToIMXWithDifferentAccount_CallsBridgeAdaptor() public {
+    function test_withdrawIMXToWithDifferentAccount_CallsBridgeAdaptor() public {
         address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
@@ -83,26 +83,26 @@ contract ChildERC20BridgeWithdrawToIMXUnitTest is Test, IChildERC20BridgeEvents,
             withdrawFee,
             abi.encodeWithSelector(mockAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
-    function test_WithdrawToIMX_EmitsNativeIMXWithdrawEvent() public {
+    function test_withdrawIMXTo_EmitsNativeIMXWithdrawEvent() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         vm.expectEmit(address(childBridge));
         emit ChildChainNativeIMXWithdraw(ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
     }
 
-    function test_WithdrawToIMXWithDifferentAccount_EmitsNativeIMXWithdrawEvent() public {
+    function test_withdrawIMXToWithDifferentAccount_EmitsNativeIMXWithdrawEvent() public {
         address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         vm.expectEmit(address(childBridge));
         emit ChildChainNativeIMXWithdraw(ROOT_IMX_TOKEN, address(this), receiver, withdrawAmount);
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
     function test_WithdrawIMX_ReducesBalance() public {
@@ -111,7 +111,7 @@ contract ChildERC20BridgeWithdrawToIMXUnitTest is Test, IChildERC20BridgeEvents,
 
         uint256 preBal = address(this).balance;
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
 
         uint256 postBal = address(this).balance;
         assertEq(postBal, preBal - withdrawAmount - withdrawFee, "Balance not reduced");
@@ -123,7 +123,7 @@ contract ChildERC20BridgeWithdrawToIMXUnitTest is Test, IChildERC20BridgeEvents,
 
         uint256 preBal = address(mockAdaptor).balance;
 
-        childBridge.withdrawToIMX{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
+        childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
 
         uint256 postBal = address(mockAdaptor).balance;
         assertEq(postBal, preBal + withdrawFee, "Adaptor balance not increased");
