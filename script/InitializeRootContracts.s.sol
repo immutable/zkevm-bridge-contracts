@@ -4,7 +4,7 @@ pragma solidity ^0.8.21;
 import {Script, console2} from "forge-std/Script.sol";
 
 import {ChildERC20} from "../src/child/ChildERC20.sol";
-import {RootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
+import {RootERC20Bridge, IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
@@ -14,6 +14,7 @@ import {Utils} from "./Utils.sol";
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 
 struct InitializeRootContractsParams {
+    address rootAdminAddress;
     RootERC20Bridge rootERC20Bridge;
     RootAxelarBridgeAdaptor rootBridgeAdaptor;
     address rootChainChildTokenTemplate;
@@ -31,6 +32,7 @@ struct InitializeRootContractsParams {
 contract InitializeRootContracts is Script {
     function run() public {
         InitializeRootContractsParams memory params = InitializeRootContractsParams({
+            rootAdminAddress: vm.envAddress("ROOT_ADMIN_ADDRESS"),
             rootERC20Bridge: RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE"))),
             rootBridgeAdaptor: RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR")),
             rootChainChildTokenTemplate: vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE"),
@@ -54,7 +56,18 @@ contract InitializeRootContracts is Script {
         vm.createSelectFork(params.rootRpcUrl);
         vm.startBroadcast(params.rootPrivateKey);
 
+        // TODO add pauser, unpauser roles. variable manager and Adaptor manager will be privileged transaction multisg
+
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles(
+            address(params.rootAdminAddress),
+            address(params.rootAdminAddress),
+            address(params.rootAdminAddress),
+            address(params.rootAdminAddress),
+            address(params.rootAdminAddress)
+        );
+
         params.rootERC20Bridge.initialize(
+            roles,
             address(params.rootBridgeAdaptor),
             params.childERC20Bridge,
             childBridgeAdaptorChecksum,

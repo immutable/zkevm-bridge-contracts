@@ -5,7 +5,10 @@ import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
-    RootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors
+    RootERC20Bridge,
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors,
+    IRootERC20Bridge
 } from "../../../../src/root/RootERC20Bridge.sol";
 import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
@@ -42,8 +45,17 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         mockAxelarAdaptor = new MockAdaptor();
 
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
+
         // The specific ERC20 token template does not matter for these unit tests
         rootBridge.initialize(
+            roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
             CHILD_BRIDGE_ADAPTOR_STRING,

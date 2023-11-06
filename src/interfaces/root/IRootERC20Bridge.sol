@@ -4,6 +4,14 @@ pragma solidity ^0.8.21;
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IRootERC20Bridge {
+    struct InitializationRoles {
+        address defaultAdmin; // The address which will inherit `DEFAULT_ADMIN_ROLE`.
+        address pauser; // The address which will inherit `PAUSER_ROLE`.
+        address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
+        address variableManager; // The address which will inherit `VARIABLE_MANAGER_ROLE`.
+        address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
+    }
+
     function childBridgeAdaptor() external view returns (string memory);
     /**
      * @notice Receives a bridge message from child chain, parsing the message type then executing.
@@ -83,6 +91,7 @@ interface IRootERC20BridgeEvents {
 }
 
 interface IRootERC20BridgeErrors {
+    error NotVariableManager();
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
     /// @notice Error when there is no gas payment received.

@@ -13,6 +13,7 @@ import {WETH} from "../src/test/root/WETH.sol";
 import {IWETH} from "../src/interfaces/root/IWETH.sol";
 
 import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
+import {IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
 contract Utils is Test {
@@ -54,6 +55,16 @@ contract Utils is Test {
         childToken.approve(address(childBridge), 1000000 ether);
     }
 
+    struct RootIntegration {
+        ERC20PresetMinterPauser imxToken;
+        ERC20PresetMinterPauser token;
+        RootERC20Bridge rootBridge;
+        RootAxelarBridgeAdaptor axelarAdaptor;
+        MockAxelarGateway mockAxelarGateway;
+        MockAxelarGasService axelarGasService;
+    }
+
+
     function rootIntegrationSetup(
         address childBridge,
         address childBridgeAdaptor,
@@ -61,46 +72,47 @@ contract Utils is Test {
         address imxTokenAddress,
         address wethTokenAddress,
         uint256 imxCumulativeDepositLimit
-    )
-        public
-        returns (
-            ERC20PresetMinterPauser imxToken,
-            ERC20PresetMinterPauser token,
-            RootERC20Bridge rootBridge,
-            RootAxelarBridgeAdaptor axelarAdaptor,
-            MockAxelarGateway mockAxelarGateway,
-            MockAxelarGasService axelarGasService
-        )
-    {
-        token = new ERC20PresetMinterPauser("Test", "TST");
-        token.mint(address(this), 1000000 ether);
+    ) public returns (RootIntegration memory integrationTest) {
+        integrationTest.token = new ERC20PresetMinterPauser("Test", "TST");
+        integrationTest.token.mint(address(this), 1000000 ether);
 
         deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), imxTokenAddress);
-        imxToken = ERC20PresetMinterPauser(imxTokenAddress);
-        imxToken.mint(address(this), 1000000 ether);
+        integrationTest.imxToken = ERC20PresetMinterPauser(imxTokenAddress);
+        integrationTest.imxToken.mint(address(this), 1000000 ether);
 
         // deployCodeTo("WETH9.sol", abi.encode("Wrapped ETH", "WETH"), wethTokenAddress);
         // imxToken = ERC20PresetMinterPauser(imxTokenAddress);
         // imxToken.mint(address(this), 1000000 ether);
 
-        rootBridge = new RootERC20Bridge();
-        mockAxelarGateway = new MockAxelarGateway();
-        axelarGasService = new MockAxelarGasService();
+        integrationTest.rootBridge = new RootERC20Bridge();
+        integrationTest.mockAxelarGateway = new MockAxelarGateway();
+        integrationTest.axelarGasService = new MockAxelarGasService();
 
-        axelarAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        integrationTest.axelarAdaptor = new RootAxelarBridgeAdaptor(address(integrationTest.mockAxelarGateway));
 
-        rootBridge.initialize(
-            address(axelarAdaptor),
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
+
+        integrationTest.rootBridge.initialize(
+            roles,
+            address(integrationTest.axelarAdaptor),
             childBridge,
             Strings.toHexString(childBridgeAdaptor),
-            address(token),
+            address(integrationTest.token),
             imxTokenAddress,
             wethTokenAddress,
-            "CHILD",
+            childBridgeName,
             imxCumulativeDepositLimit
         );
 
-        axelarAdaptor.initialize(address(rootBridge), childBridgeName, address(axelarGasService));
+        integrationTest.axelarAdaptor.initialize(
+            address(integrationTest.rootBridge), childBridgeName, address(integrationTest.axelarGasService)
+        );
     }
 
     function setupDeposit(
