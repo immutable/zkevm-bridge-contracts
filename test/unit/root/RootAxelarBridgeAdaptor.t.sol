@@ -121,12 +121,12 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }
 
-    function test_sendMessage_EmitsAxelarMessageEvent() public {
+    function test_sendMessage_EmitsAxelarMessageSentEvent() public {
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
         uint256 callValue = 300;
 
         vm.expectEmit(true, true, true, false, address(axelarAdaptor));
-        emit AxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptor, payload);
+        emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptor, payload);
         vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }

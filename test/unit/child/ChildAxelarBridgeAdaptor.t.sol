@@ -115,12 +115,12 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }
 
-    function test_sendMessage_EmitsAxelarMessageEvent() public {
+    function test_sendMessage_EmitsAxelarMessageSentEvent() public {
         bytes memory payload = abi.encode(WITHDRAW_SIG, address(token), address(this), address(999), 11111);
         uint256 callValue = 300;
 
         vm.expectEmit();
-        emit AxelarMessage(ROOT_CHAIN_NAME, mockChildERC20Bridge.rootERC20BridgeAdaptor(), payload);
+        emit AxelarMessageSent(ROOT_CHAIN_NAME, mockChildERC20Bridge.rootERC20BridgeAdaptor(), payload);
 
         vm.deal(address(mockChildERC20Bridge), callValue);
         vm.prank(address(mockChildERC20Bridge));

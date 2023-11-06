@@ -60,7 +60,7 @@ contract ChildAxelarBridgeAdaptor is
         );
 
         gateway.callContract(_rootChain, _rootBridgeAdaptor, payload);
-        emit AxelarMessage(_rootChain, _rootBridgeAdaptor, payload);
+        emit AxelarMessageSent(_rootChain, _rootBridgeAdaptor, payload);
     }
 
     /**
