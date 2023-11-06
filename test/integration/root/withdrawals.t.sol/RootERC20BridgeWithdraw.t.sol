@@ -165,15 +165,15 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
-        uint256 thisPreBal = imxToken.balanceOf(receiver);
+        uint256 receiverPreBal = imxToken.balanceOf(receiver);
         uint256 bridgePreBal = imxToken.balanceOf(address(rootBridge));
 
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
 
-        uint256 thisPostBal = imxToken.balanceOf(receiver);
+        uint256 receiverPostBal = imxToken.balanceOf(receiver);
         uint256 bridgePostBal = imxToken.balanceOf(address(rootBridge));
 
-        assertEq(thisPostBal, thisPreBal + withdrawAmount, "Incorrect user balance after withdraw");
+        assertEq(receiverPostBal, receiverPreBal + withdrawAmount, "Incorrect user balance after withdraw");
         assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
     }
 

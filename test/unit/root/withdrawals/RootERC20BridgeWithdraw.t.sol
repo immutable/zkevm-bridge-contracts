@@ -168,14 +168,16 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         // Give bridge some IMX tokens
         imxToken.transfer(address(rootBridge), 100 ether);
 
-        uint256 thisPreBal = imxToken.balanceOf(address(receiver));
+        uint256 receiverPreBal = imxToken.balanceOf(address(receiver));
         uint256 bridgePreBal = imxToken.balanceOf(address(rootBridge));
 
         bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), receiver, withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
 
-        assertEq(imxToken.balanceOf(address(receiver)), thisPreBal + withdrawAmount, "IMX not transferred to receiver");
+        assertEq(
+            imxToken.balanceOf(address(receiver)), receiverPreBal + withdrawAmount, "IMX not transferred to receiver"
+        );
         assertEq(
             imxToken.balanceOf(address(rootBridge)), bridgePreBal - withdrawAmount, "IMX not transferred from bridge"
         );
