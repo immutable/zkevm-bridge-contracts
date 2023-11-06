@@ -201,13 +201,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
-            address(imxToken),
-            NATIVE_IMX,
-            address(this),
-            address(this),
-            withdrawAmount
-        );
+        emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), address(this), withdrawAmount);
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
@@ -233,13 +227,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
-            address(imxToken),
-            NATIVE_IMX,
-            address(this),
-            receiver,
-            withdrawAmount
-        );
+        emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), receiver, withdrawAmount);
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 }

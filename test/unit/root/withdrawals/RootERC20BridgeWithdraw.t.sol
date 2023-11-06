@@ -206,13 +206,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), address(this), withdrawAmount);
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
-            address(imxToken),
-            NATIVE_IMX,
-            address(this),
-            address(this),
-            withdrawAmount
-        );
+        emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
@@ -240,13 +234,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), receiver, withdrawAmount);
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
-            address(imxToken),
-            NATIVE_IMX,
-            address(this),
-            receiver,
-            withdrawAmount
-        );
+        emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), receiver, withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
