@@ -102,7 +102,7 @@ contract ChildERC20BridgeWithdrawIMXIntegrationTest is
         childBridge.withdrawIMX{value: withdrawFee + withdrawAmount}(withdrawAmount);
     }
 
-    function test_WithdrawIMXEmitsAxelarMessageEvent() public {
+    function test_WithdrawIMX_EmitsAxelarMessageEvent() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 

@@ -57,7 +57,7 @@ interface IChildERC20BridgeEvents {
 interface IChildERC20BridgeErrors {
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
-    /// @notice Error when there is no gas payment received.
+    /// @notice Error when the withdrawal amount is zero
     error ZeroAmount();
     /// @notice Error when the contract to mint had no bytecode.
     error EmptyTokenContract();
