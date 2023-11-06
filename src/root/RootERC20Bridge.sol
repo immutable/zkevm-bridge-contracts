@@ -41,6 +41,7 @@ contract RootERC20Bridge is
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     address public constant NATIVE_ETH = address(0xeee);
+    address public constant NATIVE_IMX = address(0xfff);
 
     IRootERC20BridgeAdaptor public rootBridgeAdaptor;
     /// @dev Used to verify source address in messages sent from child chain.
@@ -352,9 +353,14 @@ contract RootERC20Bridge is
     function _withdraw(bytes memory data) private {
         (address rootToken, address withdrawer, address receiver, uint256 amount) =
             abi.decode(data, (address, address, address, uint256));
-        address childToken = rootTokenToChildToken[rootToken];
-        if (childToken == address(0)) {
-            revert NotMapped();
+        address childToken;
+        if (address(rootToken) == rootIMXToken) {
+            childToken = NATIVE_IMX;
+        } else {
+            childToken = rootTokenToChildToken[rootToken];
+            if (childToken == address(0)) {
+                revert NotMapped();
+            }
         }
         _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
     }
