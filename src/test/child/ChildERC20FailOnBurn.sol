@@ -12,7 +12,7 @@ import "../../child/ChildERC20.sol";
  */
 // solhint-disable reason-string
 contract ChildERC20FailOnBurn is ChildERC20 {
-    function burn(address account, uint256 amount) public virtual override returns (bool) {
+    function burn(address, /*account*/ uint256 /*amount*/ ) public virtual override returns (bool) {
         return false;
     }
 }

@@ -83,8 +83,11 @@ CHILD_GAS_SERVICE_ADDRESS=
 ROOT_CHAIN_NAME="ROOT"
 CHILD_CHAIN_NAME="CHILD"
 ROOT_IMX_ADDRESS=
+INITIAL_IMX_CUMULATIVE_DEPOSIT_LIMIT="0"
 ```
 where `{ROOT,CHILD}_{GATEWAY,GAS_SERVICE}_ADDRESS` refers to the gateway and gas service addresses used by Axelar.
+
+`INITIAL_IMX_CUMULATIVE_DEPOSIT_LIMIT` refers to the cumulative amount of IMX that can be deposited. A value of `0` indicated unlimited.
 
 We can just use dummy gateway/gas service addresses if we only want to test the deployment, and not bridging functionality. If wanting to use dummy addresses, any valid Ethereum address can be used here.
 
@@ -138,6 +141,7 @@ ROOT_GATEWAY_ADDRESS="0x013459EC3E8Aeced878C5C4bFfe126A366cd19E9"
 CHILD_GATEWAY_ADDRESS="0xc7B788E88BAaB770A6d4936cdcCcd5250E1bbAd8"
 ROOT_GAS_SERVICE_ADDRESS="0x28f8B50E1Be6152da35e923602a2641491E71Ed8"
 CHILD_GAS_SERVICE_ADDRESS="0xC573c722e21eD7fadD38A8f189818433e01Ae466"
+INITIAL_IMX_CUMULATIVE_DEPOSIT_LIMIT="0"
 ENVIRONMENT="local"
 ```
 (Note that `{ROOT,CHILD}_PRIVATE_KEY` can be any of the standard localhost private keys that get funded)

@@ -3,6 +3,7 @@ pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {MockAxelarGateway} from "../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../src/test/root/MockAxelarGasService.sol";
@@ -32,30 +33,54 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         stubRootBridge = new StubRootBridge();
         childBridgeAdaptor = stubRootBridge.childBridgeAdaptor();
 
-        axelarAdaptor = new RootAxelarBridgeAdaptor();
-        axelarAdaptor.initialize(
-            address(stubRootBridge), CHILD_CHAIN_NAME, address(mockAxelarGateway), address(axelarGasService)
-        );
+        axelarAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        axelarAdaptor.initialize(address(stubRootBridge), CHILD_CHAIN_NAME, address(axelarGasService));
         vm.deal(address(stubRootBridge), 99999999999);
     }
 
     function test_Constructor() public {
-        assertEq(axelarAdaptor.rootBridge(), address(stubRootBridge), "rootBridge not set");
+        assertEq(address(axelarAdaptor.rootBridge()), address(stubRootBridge), "rootBridge not set");
         assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
-        assertEq(address(axelarAdaptor.axelarGateway()), address(mockAxelarGateway), "axelarGateway not set");
+        assertEq(address(axelarAdaptor.gateway()), address(mockAxelarGateway), "axelarGateway not set");
         assertEq(address(axelarAdaptor.gasService()), address(axelarGasService), "axelarGasService not set");
     }
 
     function test_RevertWhen_InitializerGivenZeroAddress() public {
-        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor();
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);
-        newAdaptor.initialize(address(0), CHILD_CHAIN_NAME, address(mockAxelarGateway), address(axelarGasService));
+        newAdaptor.initialize(address(0), CHILD_CHAIN_NAME, address(axelarGasService));
     }
 
     function test_RevertWhen_ConstructorGivenEmptyChildChainName() public {
-        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor();
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(InvalidChildChain.selector);
-        newAdaptor.initialize(address(this), "", address(mockAxelarGateway), address(axelarGasService));
+        newAdaptor.initialize(address(this), "", address(axelarGasService));
+    }
+
+    function test_Execute_CallsBridge() public {
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceChain = "test";
+        string memory sourceAddress = Strings.toHexString(address(123));
+        bytes memory payload = abi.encodePacked("payload");
+
+        // We expect to call the bridge's onMessageReceive function.
+        vm.expectCall(
+            address(stubRootBridge),
+            abi.encodeWithSelector(stubRootBridge.onMessageReceive.selector, sourceChain, sourceAddress, payload)
+        );
+        axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
+    }
+
+    function test_Execute_EmitsAdaptorExecuteEvent() public {
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceChain = "test";
+        string memory sourceAddress = Strings.toHexString(address(123));
+        bytes memory payload = abi.encodePacked("payload");
+
+        // We expect to call the bridge's onMessageReceive function.
+        vm.expectEmit();
+        emit AdaptorExecute(sourceChain, sourceAddress, payload);
+        axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
     }
 
     /// @dev For this unit test we just want to make sure the correct functions are called on the Axelar Gateway and Gas Service.
@@ -96,12 +121,12 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }
 
-    function test_sendMessage_EmitsAxelarMessageEvent() public {
+    function test_sendMessage_EmitsAxelarMessageSentEvent() public {
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
         uint256 callValue = 300;
 
         vm.expectEmit(true, true, true, false, address(axelarAdaptor));
-        emit AxelarMessage(CHILD_CHAIN_NAME, childBridgeAdaptor, payload);
+        emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptor, payload);
         vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }

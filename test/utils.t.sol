@@ -62,7 +62,8 @@ contract Utils is Test {
         address childBridgeAdaptor,
         string memory childBridgeName,
         address imxTokenAddress,
-        address wethTokenAddress
+        address wethTokenAddress,
+        uint256 imxCumulativeDepositLimit
     )
         public
         returns (
@@ -89,7 +90,7 @@ contract Utils is Test {
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
 
-        axelarAdaptor = new RootAxelarBridgeAdaptor();
+        axelarAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
 
         rootBridge.initialize(
             address(axelarAdaptor),
@@ -97,12 +98,12 @@ contract Utils is Test {
             Strings.toHexString(childBridgeAdaptor),
             address(token),
             imxTokenAddress,
-            wethTokenAddress
+            wethTokenAddress,
+            "CHILD",
+            imxCumulativeDepositLimit
         );
 
-        axelarAdaptor.initialize(
-            address(rootBridge), childBridgeName, address(mockAxelarGateway), address(axelarGasService)
-        );
+        axelarAdaptor.initialize(address(rootBridge), childBridgeName, address(axelarGasService));
     }
 
     function setupDeposit(
