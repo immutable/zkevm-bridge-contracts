@@ -16,7 +16,7 @@ import {Utils} from "./Utils.sol";
 struct InitializeRootContractsParams {
     address rootAdminAddress;
     address rootPauserAddress;
-    address  rootUnpauserAddress;
+    address rootUnpauserAddress;
     RootERC20Bridge rootERC20Bridge;
     RootAxelarBridgeAdaptor rootBridgeAdaptor;
     address rootChainChildTokenTemplate;
