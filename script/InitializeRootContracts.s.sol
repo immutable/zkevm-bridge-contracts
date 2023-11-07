@@ -15,6 +15,8 @@ import {Utils} from "./Utils.sol";
 
 struct InitializeRootContractsParams {
     address rootAdminAddress;
+    address rootPauserAddress;
+    address  rootUnpauserAddress;
     RootERC20Bridge rootERC20Bridge;
     RootAxelarBridgeAdaptor rootBridgeAdaptor;
     address rootChainChildTokenTemplate;
@@ -33,6 +35,8 @@ contract InitializeRootContracts is Script {
     function run() public {
         InitializeRootContractsParams memory params = InitializeRootContractsParams({
             rootAdminAddress: vm.envAddress("ROOT_ADMIN_ADDRESS"),
+            rootPauserAddress: vm.envAddress("ROOT_PAUSER_ADDRESS"),
+            rootUnpauserAddress: vm.envAddress("ROOT_UNPAUSER_ADDRESS"),
             rootERC20Bridge: RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE"))),
             rootBridgeAdaptor: RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR")),
             rootChainChildTokenTemplate: vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE"),
@@ -58,13 +62,13 @@ contract InitializeRootContracts is Script {
 
         // TODO add pauser, unpauser roles. variable manager and Adaptor manager will be privileged transaction multisg
 
-        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles(
-            address(params.rootAdminAddress),
-            address(params.rootAdminAddress),
-            address(params.rootAdminAddress),
-            address(params.rootAdminAddress),
-            address(params.rootAdminAddress)
-        );
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: params.rootAdminAddress,
+            pauser: params.rootPauserAddress,
+            unpauser: params.rootUnpauserAddress,
+            variableManager: params.rootAdminAddress,
+            adaptorManager: params.rootAdminAddress
+        });
 
         params.rootERC20Bridge.initialize(
             roles,
