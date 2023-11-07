@@ -143,6 +143,72 @@ The tests below are solely related to the portion of the flow involving the L1 b
 
 ----
 
+
+## Root ERC 20 Flow Rate (Not Implemented)
+Contract: [RootERC20FlowRate.sol](../../src/root/RootERC20FlowRate.sol) inherits from [RootERC20Bridge.sol](../../src/root/RootERC20Bridge.sol)
+Tests: [RootERC20FlowRate.t.sol](./root/RootERC20FlowRate.t.sol)
+
+**Uninitialized testing:**
+| Test name                         |Description                                        | Happy Case |
+|-----------------------------------| --------------------------------------------------|------------|
+| `testUninitPaused`                  | paused() returns false.                           | NA         |
+| `testUninitLargeTransferThresholds` | largeTransferThresholds returns 0 for a  returns a zero length array | NA |
+| `testWrongInit`                     | Check calling RootERC20Predicate's initialize reverts. | NA    |
+
+**Control functions testing:**
+
+| Test name                                          | Description                                    | Happy Case |
+|----------------------------------------------------|------------------------------------------------|------------|
+| `testReinit`                                       | re-run initialize                              | No         |
+| `testActivateWithdrawalQueue`                      | activateWithdrawalQueue()                      | Yes        |
+| `testActivateWithdrawalQueueBadAuth`               | activateWithdrawalQueue() bad auth.            | No         |
+| `testDeactivateWithdrawalQueue`                    | deactivateWithdrawalQueue()                    | Yes        |
+| `testDeactivateWithdrawalQueueBadAuth`             | deactivateWithdrawalQueue() bad auth.          | No         |
+| `testSetWithdrawDelay`                             | setWithdrawDelay()                             | Yes        |
+| `testSetWithdrawDelayBadAuth`                      | setWithdrawDelay() bad auth                    | No         |
+| `testSetRateControlThreshold`                      | setRateControlThreshold()                      | Yes        |
+| `testSetRateControlThresholdBadAuth`               | setRateControlThreshold() bad auth             | No         |
+| `testGrantRole`                                    | grantRole()                                    | Yes        |
+| `testGrantRoleBadAuth`                             | grantRole() bad auth                           | No         |
+| `testPause`                                        | pause()                                        | Yes        |
+| `testPauseBadAuth`                                 | pause() bad auth.                              | No         |
+| `testUnpause`                                      | unpause()                                      | Yes        |
+| `testUnpauseBadAuth`                               | unpause() bad auth.                            | No         |
+| `testWithdrawalWhenPaused`                         | test withdrawal when paused                    | No         |
+| `testFinaliseQueuedWithdrawalWhenPaused`           | finaliseQueuedWithdrawal when paused           | No         |
+| `testfinaliseQueuedWithdrawalAggregatedWhenPaused` | finaliseQueuedWithdrawalAggregated when paused | No         |
+| `testDepositWhenPaused`                            | depoosit when paused                           | No         |
+| `testDepositToWhenPaused`                          | depoositTo when paused                         | No         |
+| `testDepositNativeToWhenPaused`                    | depoositNativeTo when paused                   | No         |
+
+
+**Operational functions testing:**
+| Test name                       |Description                                        | Happy Case |
+|---------------------------------| --------------------------------------------------|------------|
+| `testWithdrawalERC20`             | _withdraw() small amount, no queue                | Yes        |
+| `testWithdrawalEther`             | _withdraw() small amount, no queue                | Yes        |
+| `testWithdrawalBadData`           | _withdraw() with data parameter too small         | No         |
+| `testWithdrawalUnconfiguredToken` | _withdraw() with unconfigured child / root token  | No         |
+| `testWithdrawalLargeWithdrawal`   | _withdraw() with large value                      | Yes        |
+| `testWithdrawalLargeWithdrawal`   | _withdraw() causing high flow rate                | Yes        |
+| `testHighFlowRate`                | _withdraw() with withdrawal queue active          | Yes        |
+| `testFinaliseQueuedWithdrawalERC20` | finaliseQueuedWithdrawal for an ERC20           | Yes        |
+| `testFinaliseQueuedWithdrawalEther` | finaliseQueuedWithdrawal for a Ether            | Yes        |
+| `testFinaliseQueuedWithdrawalOutOfBounds` | finaliseQueuedWithdrawal when index is out of range for all withdrawals | No       |
+| `testFinaliseQueuedWithdrawalAlreadyProcessed` | finaliseQueuedWithdrawal for index already processed | No       |
+| `testFinaliseQueuedWithdrawalTooEarly` | finaliseQueuedWithdrawal before withdrawal delay | No       |
+| `testFinaliseQueuedWithdrawalsAggregatedERC20` | finaliseQueuedWithdrawalsAggregated for ERC20 | Yes |
+| `testFinaliseQueuedWithdrawalsAggregatedEther` | finaliseQueuedWithdrawalsAggregated for Ether | Yes |
+| `testFinaliseQueuedWithdrawalsAggregatedOutOfBounds` | finaliseQueuedWithdrawalsAggregated when index is out of range for all withdrawals | No       |
+| `testFinaliseQueuedWithdrawalsAggregatedAlreadyProcessed` | finaliseQueuedWithdrawalsAggregated for index already processed | No       |
+| `testFinaliseQueuedWithdrawalsAggregatedTooEarly` | finaliseQueuedWithdrawalsAggregated before withdrawal delay | No       |
+| `testFinaliseQueuedWithdrawalsAggregatedMismatch` | finaliseQueuedWithdrawalsAggregated with mismatch tokens | No |
+| `testFinaliseQueuedWithdrawalsAggregatedNoIndices` | finaliseQueuedWithdrawalsAggregated with indices array zero length | No |
+| `testFinaliseQueuedWithdrawalsReentrancy` | finaliseQueuedWithdrawals for reentrancy attacks | No |
+| `testFinaliseQueuedWithdrawalsAggregatedReentrancy` | finaliseQueuedWithdrawalsAggregated for reentrancy attacks | No |
+
+----
+
 ## Child ERC20 Bridge
 
 **Contract**: [ChildERC20Bridge.sol](../../src/child/ChildERC20Bridge.sol)
@@ -337,33 +403,33 @@ All of these tests are in test/forge/root/flowrate/FlowRateDetection.t.sol.
 
 **Uninitialized testing**
 
-| Test name                      | Description                                       | Happy Case |
-|--------------------------------|---------------------------------------------------|------------|
-| testUninitFlowRateBuckets      | flowRateBuckets(address) returns an empty bucket. | NA         |
-| testUnWithdrawalQueueActivated | withdrawalQueueActivated returns false.           | NA         |
+| Test name                        | Description                                       | Happy Case |
+|----------------------------------|---------------------------------------------------|------------|
+| `testUninitFlowRateBuckets`      | flowRateBuckets(address) returns an empty bucket. | NA         |
+| `testUnWithdrawalQueueActivated` | withdrawalQueueActivated returns false.           | NA         |
 
 **Control functions tests:**
 
-| Test name                           | Description                                                        | Happy Case |
-|-------------------------------------|--------------------------------------------------------------------|------------|
-| testActivateWithdrawalQueue         | _activateWithdrawalQueue().                                        | Yes        |
-| testDeactivateWithdrawalQueue       | _deactivateWithdrawalQueue() when withdrawalQueueActivate is true. | Yes        |
-| testSetFlowRateThreshold            | _setFlowRateThreshold() with valid values                          | Yes        |
-| testSetFlowRateThresholdBadToken    | _setFlowRateThreshold() with token address = 0                     | No         |
-| testSetFlowRateThresholdBadCapacity | _setFlowRateThreshold() with capacity = 0                          | No         |
-| testSetFlowRateThresholdBadFillRate | _setFlowRateThreshold() with refill rate = 0                       | No         |
+| Test name                             | Description                                                        | Happy Case |
+|---------------------------------------|--------------------------------------------------------------------|------------|
+| `testActivateWithdrawalQueue`         | _activateWithdrawalQueue().                                        | Yes        |
+| `testDeactivateWithdrawalQueue`       | _deactivateWithdrawalQueue() when withdrawalQueueActivate is true. | Yes        |
+| `testSetFlowRateThreshold`            | _setFlowRateThreshold() with valid values                          | Yes        |
+| `testSetFlowRateThresholdBadToken`    | _setFlowRateThreshold() with token address = 0                     | No         |
+| `testSetFlowRateThresholdBadCapacity` | _setFlowRateThreshold() with capacity = 0                          | No         |
+| `testSetFlowRateThresholdBadFillRate` | _setFlowRateThreshold() with refill rate = 0                       | No         |
 
 **Operational functions tests:**
 
-| Test name                            | Description                                                          | Happy Case |
-|--------------------------------------|----------------------------------------------------------------------|------------|
-| testUpdateFlowRateBucketSingle       | _updateFlowRateBucket() with a single call for a configured token    | Yes        |
-| testUpdateFlowRateBucketMultiple     | _updateFlowRateBucket() with a multiple calls for a configured token | Yes        |
-| testUpdateFlowRateBucketOverflow     | _updateFlowRateBucket() when the bucket overflows                    | Yes        |
-| testUpdateFlowRateBucketJustEmpty    | _updateFlowRateBucket() when the bucket is exactly empty.            | Yes        |
-| testUpdateFlowRateBucketEmpty        | _updateFlowRateBucket() when the bucket has underflowed.             | Yes        |
-| testUpdateFlowRateBucketAfterEmpty   | _updateFlowRateBucket() after the bucket was empty.                  | Yes        |
-| testUpdateFlowRateBucketUnconfigured | _updateFlowRateBucket() unconfigured bucket.                         | No         |
+| Test name                              | Description                                                          | Happy Case |
+|----------------------------------------|----------------------------------------------------------------------|------------|
+| `testUpdateFlowRateBucketSingle`       | _updateFlowRateBucket() with a single call for a configured token    | Yes        |
+| `testUpdateFlowRateBucketMultiple`     | _updateFlowRateBucket() with a multiple calls for a configured token | Yes        |
+| `testUpdateFlowRateBucketOverflow`     | _updateFlowRateBucket() when the bucket overflows                    | Yes        |
+| `testUpdateFlowRateBucketJustEmpty`    | _updateFlowRateBucket() when the bucket is exactly empty.            | Yes        |
+| `testUpdateFlowRateBucketEmpty`        | _updateFlowRateBucket() when the bucket has underflowed.             | Yes        |
+| `testUpdateFlowRateBucketAfterEmpty`   | _updateFlowRateBucket() after the bucket was empty.                  | Yes        |
+| `testUpdateFlowRateBucketUnconfigured` | _updateFlowRateBucket() unconfigured bucket.                         | No         |
 
 
 ## Flow Rate Withdrawal Queue
@@ -371,36 +437,36 @@ This section defines tests for contracts/root/flowrate/FlowRateWithdrawalQueue.s
 
 **Uninitialized testing:**
 
-| Test name                         | Description                                                                   | Happy Case |
-|-----------------------------------|-------------------------------------------------------------------------------|------------|
-| testUninitWithdrawalQueue         | withdrawalDelay() returns zero.                                               | NA         |
-| testEmptyProcessWithdrawal        | _processWithdrawal with no elements in the queue.                             | No         |
-| testEmptyPendingWithdrawalsLength | getPendingWithdrawalsLength returns a zero length array.                      | NA         |
-| testEmptyGetPendingWithdrawals1   | getPendingWithdrawals with no elements in the queue and no requested indices. | NA         |  
-| testEmptyGetPendingWithdrawals2   | getPendingWithdrawals with no elements in the queue and a requested index.    | NA         |  
-| testEmptyFindPendingWithdrawals   | findPendingWithdrawals with no elements in the queue.                         | NA         | 
+| Test name                           | Description                                                                   | Happy Case |
+|-------------------------------------|-------------------------------------------------------------------------------|------------|
+| `testUninitWithdrawalQueue`         | withdrawalDelay() returns zero.                                               | NA         |
+| `testEmptyProcessWithdrawal`        | _processWithdrawal with no elements in the queue.                             | No         |
+| `testEmptyPendingWithdrawalsLength` | getPendingWithdrawalsLength returns a zero length array.                      | NA         |
+| `testEmptyGetPendingWithdrawals1`   | getPendingWithdrawals with no elements in the queue and no requested indices. | NA         |  
+| `testEmptyGetPendingWithdrawals2`   | getPendingWithdrawals with no elements in the queue and a requested index.    | NA         |  
+| `testEmptyFindPendingWithdrawals`   | findPendingWithdrawals with no elements in the queue.                         | NA         | 
 
 **Control function tests:**
 
-| Test name               | Description                                         | Happy Case |
-|-------------------------|-----------------------------------------------------|------------|
-| testInitWithdrawalQueue | __FlowRateWithdrawalQueue_init().                   | Yes        |
-| testSetWithdrawalDelay  | _setWithdrawalDelay can confugre a withdrawal delay | Yes        |
+| Test name                 | Description                                         | Happy Case |
+|---------------------------|-----------------------------------------------------|------------|
+| `testInitWithdrawalQueue` | __FlowRateWithdrawalQueue_init().                   | Yes        |
+| `testSetWithdrawalDelay`  | _setWithdrawalDelay can confugre a withdrawal delay | Yes        |
 
 **Operational function tests:**
 
-| Test name                  | Description                                                      | Happy Case |
-|----------------------------|------------------------------------------------------------------|------------|
-| testEnqueueWithdrawal      | _enqueueWithdrawal                                               | Yes        |
-| testEnqueueTwoWithdrawals  | _enqueueWithdrawal with two different tokens.                    | Yes        |
-| testEnqueueZeroToken       | _enqueueWithdrawal with a token that is address(0)               | No         |
-| testProcessOneEntry        | _processWithdrawal with one entry in the queue.                  | Yes        | 
-| testProcessTwoEntries      | _processWithdrawal with two entries in the queue.                | Yes        |
-| testProcessOutOfOrder      | Process withdrawals out of order.                                | Yes        |
-| testProcessOutside         | _processWithdrawal for entry outside array.                      | No         |
-| testProcessTooEarly        | _processWithdrawal before withdrawal delay.                      | No         |
-| testAlreadyProcessed       | _processWithdrawal when already processed.                       | No         |
-| testGetPendingWithdrawals  | getPendingWithdrawals for a range of scenarios                   | NA         |
-| testFindPendingWithdrawals | findPendingWithdrawals for a range of scenarios                  | NA         |
-| testEnqueueProcessMultiple | Enqueue one token, process the token, and repeat multiple times. | Yes        |
+| Test name                    | Description                                                      | Happy Case |
+|------------------------------|------------------------------------------------------------------|------------|
+| `testEnqueueWithdrawal`      | _enqueueWithdrawal                                               | Yes        |
+| `testEnqueueTwoWithdrawals`  | _enqueueWithdrawal with two different tokens.                    | Yes        |
+| `testEnqueueZeroToken`       | _enqueueWithdrawal with a token that is address(0)               | No         |
+| `testProcessOneEntry`        | _processWithdrawal with one entry in the queue.                  | Yes        | 
+| `testProcessTwoEntries`      | _processWithdrawal with two entries in the queue.                | Yes        |
+| `testProcessOutOfOrder`      | Process withdrawals out of order.                                | Yes        |
+| `testProcessOutside`         | _processWithdrawal for entry outside array.                      | No         |
+| `testProcessTooEarly`        | _processWithdrawal before withdrawal delay.                      | No         |
+| `testAlreadyProcessed`       | _processWithdrawal when already processed.                       | No         |
+| `testGetPendingWithdrawals`  | getPendingWithdrawals for a range of scenarios                   | NA         |
+| `testFindPendingWithdrawals` | findPendingWithdrawals for a range of scenarios                  | NA         |
+| `testEnqueueProcessMultiple` | Enqueue one token, process the token, and repeat multiple times. | Yes        |
 
