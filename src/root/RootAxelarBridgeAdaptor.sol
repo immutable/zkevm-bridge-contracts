@@ -15,8 +15,6 @@ import {
 } from "../interfaces/root/IRootAxelarBridgeAdaptor.sol";
 import {IRootERC20Bridge} from "../interfaces/root/IRootERC20Bridge.sol";
 
-// TODO Note: this will have to be an AxelarExecutable contract in order to receive messages from child chain
-
 /**
  * @notice RootAxelarBridgeAdaptor is a bridge adaptor that allows the RootERC20Bridge to communicate with the Axelar Gateway.
  */
@@ -30,10 +28,8 @@ contract RootAxelarBridgeAdaptor is
     using SafeERC20 for IERC20Metadata;
 
     IRootERC20Bridge public rootBridge;
-    string public childBridgeAdaptor;
     string public childChain;
     IAxelarGasService public gasService;
-    mapping(uint256 => string) public chainIdToChainName;
 
     constructor(address _gateway) AxelarExecutable(_gateway) {}
 

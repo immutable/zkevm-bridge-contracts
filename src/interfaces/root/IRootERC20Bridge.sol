@@ -91,6 +91,7 @@ interface IRootERC20BridgeEvents {
 }
 
 interface IRootERC20BridgeErrors {
+    /// @notice Error when the caller is not the variable manager role.
     error NotVariableManager();
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();

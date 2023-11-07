@@ -3,7 +3,7 @@ pragma solidity ^0.8.21;
 
 import {Script, console2} from "forge-std/Script.sol";
 
-import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
+import {ChildERC20Bridge, IChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {Utils} from "./Utils.sol";
 
@@ -32,8 +32,21 @@ contract InitializeChildContracts is Script {
         vm.createSelectFork(childRpcUrl);
         vm.startBroadcast(deployerPrivateKey);
 
+        // TODO update
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(1),
+            pauser: address(2),
+            unpauser: address(3),
+            variableManager: address(4),
+            adaptorManager: address(5)
+        });
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), rootBridgeAdaptorString, childTokenTemplate, rootChainName, rootIMXToken
+            roles,
+            address(childAxelarBridgeAdaptor),
+            rootBridgeAdaptorString,
+            childTokenTemplate,
+            rootChainName,
+            rootIMXToken
         );
 
         childAxelarBridgeAdaptor.initialize(rootChainName, address(childERC20Bridge), childGasService);

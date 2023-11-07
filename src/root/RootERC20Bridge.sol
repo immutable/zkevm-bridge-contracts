@@ -3,7 +3,7 @@ pragma solidity ^0.8.21;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -24,8 +24,7 @@ import {IWETH} from "../interfaces/root/IWETH.sol";
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
 contract RootERC20Bridge is
-    AccessControl,
-    Initializable,
+    AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
     IRootERC20Bridge,
     IRootERC20BridgeEvents,
     IRootERC20BridgeErrors
@@ -69,7 +68,7 @@ contract RootERC20Bridge is
     uint256 public imxCumulativeDepositLimit;
 
     /**
-     * @notice Initilization function for RootERC20Bridge.
+     * @notice Initialization function for RootERC20Bridge.
      * @param newRoles Struct containing addresses of roles.
      * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
      * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.

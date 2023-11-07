@@ -7,7 +7,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
-import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
+import {ChildERC20Bridge, IChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {WETH} from "../src/test/root/WETH.sol";
 import {IWETH} from "../src/interfaces/root/IWETH.sol";
@@ -42,7 +42,16 @@ contract Utils is Test {
         childTokenTemplate.initialize(address(1), "Test", "TST", 18);
         childBridge = new ChildERC20Bridge();
         childBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockAxelarGateway));
-        childBridge.initialize(address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX);
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
+        childBridge.initialize(
+            roles, address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX
+        );
         childBridgeAdaptor.initialize("ROOT", address(childBridge), address(axelarGasService));
 
         bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, "TEST NAME", "TNM", 18);
