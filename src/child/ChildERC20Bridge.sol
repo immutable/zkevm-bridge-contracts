@@ -229,6 +229,10 @@ contract ChildERC20Bridge is
     }
 
     function _withdrawWIMX(address receiver, uint256 amount) private {
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+
         uint256 expectedBalance = address(this).balance + amount;
 
         IWIMX wIMX = IWIMX(wIMXToken);
