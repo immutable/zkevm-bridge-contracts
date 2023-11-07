@@ -123,11 +123,14 @@ The tests below are solely related to the portion of the flow involving the L1 b
 | `test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX`                   | Withdrawal emits a `RootChainERC20WithdrawEvent` when withdrawing IMX tokens.                           | Yes        |
 | `test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX_DifferentReceiver` | Withdrawal emits a `RootChainERC20WithdrawEvent` when withdrawing IMX tokens with a different receiver. | Yes        |
 
-#### ETH (TODO: )
+#### ETH (Not Implemented)
 
-| Test                                                                             | Description                                                                                              | Happy Path |
-|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|------------|
-
+| Test                                                                           | Description                                                              | Happy Path |
+|--------------------------------------------------------------------------------|--------------------------------------------------------------------------|------------|
+| `test_onMessageReceive_TransfersETH`                                           | ETH withdrawal transfers native ETH to withdrawer address.               | Yes        |
+| `test_onMessageReceive_TransfersETH_DifferentReceiver`                         | ETH withdrawal transfers native ETH to a specified receiver address.     | Yes        |
+| `test_onMessageReceive_EmitsRootChainETHWithdrawEventForETH`                   | ETH withdrawal emits a `RootChainETHWithdrawEvent` when withdrawing ETH. | Yes        |
+| `test_onMessageReceive_EmitsRootChainETHWithdrawEventForETH_DifferentReceiver` | ETH withdrawal emits a `RootChainETHWithdrawEvent` when withdrawing ETH. | Yes        |
 
 ### Control Operations
 
@@ -244,13 +247,13 @@ Tests for the `mapToken` function, which maps a token on the L1 bridge contract 
 
 | Test                                                                 | Description                                                                          | Happy Path |
 |----------------------------------------------------------------------|--------------------------------------------------------------------------------------|------------|
-| `test_WithdrawIMX_ReducesBalance`                                    | Verifies that the `withdrawIMX` function reduces the user's balance.                 | Yes        |
-| `test_WithdrawIMXTo_ReducesBalance`                                  | Verifies that the `withdrawIMXTo` function reduces the user's balance.               | Yes        |
-| `test_WithdrawIMX_PaysFee`                                           | Verifies that the `withdrawIMX` function pays the withdrawal fee.                    | Yes        |
-| `test_WithdrawIMXTo_PaysFee`                                         | Verifies that the `withdrawIMXTo` function pays the withdrawal fee.                  | Yes        |
-| `test_WithdrawIMX_CallsBridgeAdaptor`                                | Verifies that the `withdrawIMX` function calls the bridge adaptor.                   | Yes        |
+| `test_withdrawIMX_ReducesBalance`                                    | Verifies that the `withdrawIMX` function reduces the user's balance.                 | Yes        |
+| `test_withdrawIMXTo_ReducesBalance`                                  | Verifies that the `withdrawIMXTo` function reduces the user's balance.               | Yes        |
+| `test_withdrawIMX_PaysFee`                                           | Verifies that the `withdrawIMX` function pays the withdrawal fee.                    | Yes        |
+| `test_withdrawIMXTo_PaysFee`                                         | Verifies that the `withdrawIMXTo` function pays the withdrawal fee.                  | Yes        |
+| `test_withdrawIMX_CallsBridgeAdaptor`                                | Verifies that the `withdrawIMX` function calls the bridge adaptor.                   | Yes        |
 | `test_withdrawIMXTo_CallsBridgeAdaptor`                              | Verifies that the `withdrawIMXTo` function calls the bridge adaptor.                 | Yes        |
-| `test_WithdrawIMX_EmitsNativeIMXWithdrawEvent`                       | Verifies that the `withdrawIMX` function emits Native IMX Withdraw event.            | Yes        |
+| `test_withdrawIMX_EmitsNativeIMXWithdrawEvent`                       | Verifies that the `withdrawIMX` function emits Native IMX Withdraw event.            | Yes        |
 | `test_withdrawIMXTo_EmitsNativeIMXWithdrawEvent`                     | Verifies that the `withdrawIMXTo` function emits Native IMX Withdraw event.          | Yes        |
 | `test_withdrawIMXToWithDifferentAccount_CallsBridgeAdaptor`          | Verifies `withdrawIMXTo` with a different account calling the bridge adaptor.        | Yes        |
 | `test_withdrawIMXToWithDifferentAccount_EmitsNativeIMXWithdrawEvent` | Verifies `withdrawIMXTo` emits Native IMX Withdraw event with a different account.   | Yes        |
@@ -258,7 +261,23 @@ Tests for the `mapToken` function, which maps a token on the L1 bridge contract 
 | `test_RevertIf_ZeroAmountIsProvided`                                 | Should revert if zero amount is provided in the `withdrawIMX` call.                  | No         |
 | `test_RevertsIf_withdrawIMXToCalledWithInsufficientFund`             | Should revert if the IMX value provided is less than amount requested for withdrawal | No         |
 
-#### ETH (TODO: )
+#### ETH (Not Implemented)
+
+| Test                                                                 | Description                                                                          | Happy Path |
+|----------------------------------------------------------------------|--------------------------------------------------------------------------------------|------------|
+| `test_withdrawETH_ReducesBalance`                                    | Verifies that the `withdrawETH` function reduces the user's balance.                 | Yes        |
+| `test_withdrawETHTo_ReducesBalance`                                  | Verifies that the `withdrawETHTo` function reduces the user's balance.               | Yes        |
+| `test_withdrawETH_PaysFee`                                           | Verifies that the `withdrawETH` function pays the withdrawal fee.                    | Yes        |
+| `test_withdrawETHTo_PaysFee`                                         | Verifies that the `withdrawETHTo` function pays the withdrawal fee.                  | Yes        |
+| `test_withdrawETH_CallsBridgeAdaptor`                                | Verifies that the `withdrawETH` function calls the bridge adaptor.                   | Yes        |
+| `test_withdrawETHTo_CallsBridgeAdaptor`                              | Verifies that the `withdrawETHTo` function calls the bridge adaptor.                 | Yes        |
+| `test_withdrawETH_EmitsETHWithdrawEvent`                             | Verifies that the `withdrawETH` function emits Native IMX Withdraw event.            | Yes        |
+| `test_withdrawETHTo_EmitsETHWithdrawEvent`                           | Verifies that the `withdrawETHTo` function emits Native IMX Withdraw event.          | Yes        |
+| `test_withdrawETHToWithDifferentAccount_CallsBridgeAdaptor`          | Verifies `withdrawETHTo` with a different account calling the bridge adaptor.        | Yes        |
+| `test_withdrawETHToWithDifferentAccount_EmitsNativeETHWithdrawEvent` | Verifies `withdrawETHTo` emits Native IMX Withdraw event with a different account.   | Yes        |
+| `test_RevertsIf_WithdrawETHCalledWithInsufficientFund`               | Should revert if `withdrawETH` when called with insufficient funds.                  | No         |
+| `test_RevertIf_ZeroAmountIsProvided`                                 | Should revert if zero amount is provided in the `withdrawETH` call.                  | No         |
+| `test_RevertsIf_withdrawETHToCalledWithInsufficientFund`             | Should revert if the IMX value provided is less than amount requested for withdrawal | No         |
 
 
 
