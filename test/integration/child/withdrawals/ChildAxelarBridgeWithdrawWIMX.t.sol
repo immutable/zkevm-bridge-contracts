@@ -63,7 +63,6 @@ contract ChildERC20BridgeWithdrawWIMXIntegrationTest is
             abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
-
         childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
     }
 
