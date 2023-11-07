@@ -61,6 +61,28 @@ contract RootERC20Bridge is
     /// @dev A limit of zero indicates unlimited.
     uint256 public imxCumulativeDepositLimit;
 
+    function initialize(
+        address newRootBridgeAdaptor,
+        address newChildERC20Bridge,
+        string memory newChildBridgeAdaptor,
+        address newChildTokenTemplate,
+        address newRootIMXToken,
+        address newRootWETHToken,
+        string memory newChildChain,
+        uint256 newImxCumulativeDepositLimit
+    ) external virtual initializer {
+         __RootERC20Bridge_init(
+            newRootBridgeAdaptor, 
+            newChildERC20Bridge, 
+            newChildBridgeAdaptor, 
+            newChildTokenTemplate, 
+            newRootIMXToken, 
+            newRootWETHToken, 
+            newChildChain, 
+            newImxCumulativeDepositLimit
+        );
+    }
+
     /**
      * @notice Initilization function for RootERC20Bridge.
      * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
@@ -73,7 +95,7 @@ contract RootERC20Bridge is
      * @param newImxCumulativeDepositLimit The cumulative IMX deposit limit.
      * @dev Can only be called once.
      */
-    function initialize(
+    function __RootERC20Bridge_init(
         address newRootBridgeAdaptor,
         address newChildERC20Bridge,
         string memory newChildBridgeAdaptor,
@@ -82,7 +104,7 @@ contract RootERC20Bridge is
         address newRootWETHToken,
         string memory newChildChain,
         uint256 newImxCumulativeDepositLimit
-    ) public initializer {
+    ) internal {
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
                 || newChildTokenTemplate == address(0) || newRootIMXToken == address(0) || newRootWETHToken == address(0)
@@ -351,7 +373,7 @@ contract RootERC20Bridge is
         }
     }
 
-    function _withdraw(bytes memory data) private {
+    function _withdraw(bytes memory data) internal virtual {
         (address rootToken, address withdrawer, address receiver, uint256 amount) =
             abi.decode(data, (address, address, address, uint256));
         address childToken = rootTokenToChildToken[rootToken];
