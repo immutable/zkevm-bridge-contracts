@@ -21,6 +21,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
     string public ROOT_CHAIN_NAME = "ROOT_CHAIN";
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
+    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     address constant NATIVE_ETH = address(0xeee);
 
     ChildERC20Bridge public childERC20Bridge;
@@ -51,7 +52,8 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             ROOT_ADAPTOR_ADDRESS,
             address(childERC20),
             ROOT_CHAIN_NAME,
-            IMX_TOKEN_ADDRESS
+            IMX_TOKEN_ADDRESS,
+            WIMX_TOKEN_ADDRESS
         );
 
         childAxelarBridgeAdaptor.initialize(

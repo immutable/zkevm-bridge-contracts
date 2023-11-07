@@ -11,6 +11,7 @@ import {ChildERC20Bridge, IChildERC20Bridge} from "../src/child/ChildERC20Bridge
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {WETH} from "../src/test/root/WETH.sol";
 import {IWETH} from "../src/interfaces/root/IWETH.sol";
+import {WIMX} from "../src/child/WIMX.sol";
 
 import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
@@ -35,6 +36,9 @@ contract Utils is Test {
         string memory rootAdaptor = Strings.toHexString(address(99999));
         rootIMX = address(555555);
         rootToken = address(44444);
+        address childWIMX = address(0xabc);
+
+        deployCodeTo("WIMX.sol", childWIMX);
 
         axelarGasService = new MockAxelarGasService();
         mockAxelarGateway = new MockAxelarGateway();
@@ -50,7 +54,7 @@ contract Utils is Test {
             adaptorManager: address(this)
         });
         childBridge.initialize(
-            roles, address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX
+            roles, address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX, childWIMX
         );
         childBridgeAdaptor.initialize("ROOT", address(childBridge), address(axelarGasService));
 

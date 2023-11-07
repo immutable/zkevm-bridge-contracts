@@ -23,6 +23,7 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
+    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     ChildERC20 public childTokenTemplate;
     ChildERC20 public rootToken;
     ChildERC20 public childToken;
@@ -53,7 +54,8 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
             ROOT_BRIDGE_ADAPTOR,
             address(childTokenTemplate),
             ROOT_CHAIN_NAME,
-            ROOT_IMX_TOKEN
+            ROOT_IMX_TOKEN,
+            WIMX_TOKEN_ADDRESS
         );
 
         bytes memory mapTokenData =
