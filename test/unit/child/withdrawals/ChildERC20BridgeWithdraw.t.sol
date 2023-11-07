@@ -95,7 +95,7 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         bytes32 bridgeSlotBytes32 = bytes32(bridgeSlot);
         vm.store(address(childToken), bridgeSlotBytes32, bytes32(uint256(uint160(address(0x123)))));
 
-        vm.expectRevert(BridgeNotSet.selector);
+        vm.expectRevert(IncorrectBridgeAddress.selector);
         childBridge.withdraw(IChildERC20(address(childToken)), 100);
     }
 

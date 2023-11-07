@@ -40,6 +40,7 @@ contract ChildERC20Bridge is
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     address public constant NATIVE_ETH = address(0xeee);
+    address public constant NATIVE_IMX = address(0xfff);
 
     IChildERC20BridgeAdaptor public bridgeAdaptor;
 
@@ -109,12 +110,13 @@ contract ChildERC20Bridge is
         if (!Strings.equal(messageSourceChain, rootChain)) {
             revert InvalidSourceChain();
         }
-
         if (!Strings.equal(sourceAddress, rootERC20BridgeAdaptor)) {
             revert InvalidSourceAddress();
         }
-        if (data.length == 0) {
-            revert InvalidData();
+        if (data.length <= 32) {
+            // Data must always be greater than 32.
+            // 32 bytes for the signature, and at least some information for the payload
+            revert InvalidData("Data too short");
         }
 
         if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
@@ -122,7 +124,7 @@ contract ChildERC20Bridge is
         } else if (bytes32(data[:32]) == DEPOSIT_SIG) {
             _deposit(data[32:]);
         } else {
-            revert InvalidData();
+            revert InvalidData("Unsupported action signature");
         }
     }
 
@@ -134,29 +136,65 @@ contract ChildERC20Bridge is
         _withdraw(childToken, receiver, amount);
     }
 
+    function withdrawIMX(uint256 amount) external payable {
+        _withdrawIMX(msg.sender, amount);
+    }
+
+    function withdrawIMXTo(address receiver, uint256 amount) external payable {
+        _withdrawIMX(receiver, amount);
+    }
+
+    function _withdrawIMX(address receiver, uint256 amount) private {
+        if (msg.value < amount) {
+            revert InsufficientValue();
+        }
+
+        uint256 expectedBalance = address(this).balance - (msg.value - amount);
+
+        _withdraw(IChildERC20(NATIVE_IMX), receiver, amount);
+
+        if (address(this).balance != expectedBalance) {
+            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        }
+    }
+
     function _withdraw(IChildERC20 childToken, address receiver, uint256 amount) private {
-        if (address(childToken).code.length == 0) {
-            revert EmptyTokenContract();
+        if (address(childToken) == address(0)) {
+            revert ZeroAddress();
+        }
+        if (amount == 0) {
+            revert ZeroAmount();
         }
 
-        address rootToken = childToken.rootToken();
+        address rootToken;
+        uint256 feeAmount = msg.value;
 
-        if (rootTokenToChildToken[rootToken] != address(childToken)) {
-            revert NotMapped();
-        }
+        if (address(childToken) == NATIVE_IMX) {
+            feeAmount = msg.value - amount;
+            rootToken = rootIMXToken;
+        } else {
+            if (address(childToken).code.length == 0) {
+                revert EmptyTokenContract();
+            }
+            rootToken = childToken.rootToken();
 
-        // A mapped token should never have root token unset
-        if (rootToken == address(0)) {
-            revert ZeroAddressRootToken();
-        }
+            if (rootTokenToChildToken[rootToken] != address(childToken)) {
+                revert NotMapped();
+            }
 
-        // A mapped token should never have the bridge unset
-        if (childToken.bridge() != address(this)) {
-            revert BridgeNotSet();
-        }
+            // A mapped token should never have root token unset
+            if (rootToken == address(0)) {
+                revert ZeroAddressRootToken();
+            }
 
-        if (!childToken.burn(msg.sender, amount)) {
-            revert BurnFailed();
+            // A mapped token should never have the bridge unset
+            if (childToken.bridge() != address(this)) {
+                revert IncorrectBridgeAddress();
+            }
+
+            if (!childToken.burn(msg.sender, amount)) {
+                revert BurnFailed();
+            }
         }
 
         // TODO Should we enforce receiver != 0? old poly contracts don't
@@ -165,9 +203,14 @@ contract ChildERC20Bridge is
         bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
 
         // Send the message to the bridge adaptor and up to root chain
-        bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
-        emit ChildChainERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
+        bridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
+
+        if (address(childToken) == NATIVE_IMX) {
+            emit ChildChainNativeIMXWithdraw(rootToken, msg.sender, receiver, amount);
+        } else {
+            emit ChildChainERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
+        }
     }
 
     function _mapToken(bytes calldata data) private {

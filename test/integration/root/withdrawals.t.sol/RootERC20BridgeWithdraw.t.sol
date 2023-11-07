@@ -63,7 +63,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         imxToken.transfer(address(rootBridge), 100 ether);
     }
 
-    function test_RevertsIf_WithdrawWithInvalidSourceAddress() public {
+    function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
@@ -73,7 +73,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         axelarAdaptor.execute(commandId, "INVALID", sourceAddress, data);
     }
 
-    function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
+    function test_RevertsIf_WithdrawWithInvalidSourceAddress() public {
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
@@ -89,7 +89,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Data too short"));
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
@@ -99,7 +99,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
