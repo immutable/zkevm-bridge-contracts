@@ -16,7 +16,7 @@ import {Utils} from "../../../utils.t.sol";
 import {WIMX} from "../../../../src/child/WIMX.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
-contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
+contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
@@ -47,32 +47,32 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         );
     }
 
-    function test_RevertsIf_WithdrawWIMXCalledWithInsufficientFund() public {
+    function test_RevertsIf_WithdrawWIMXToCalledWithInsufficientFund() public {
         uint256 withdrawAmount = 101 ether;
         uint256 withdrawFee = 300;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
         vm.expectRevert(bytes("Wrapped IMX: Insufficient balance"));
-        childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
     }
 
-    function test_RevertsIf_WithdrawWIMXCalledWithInsufficientAllowance() public {
+    function test_RevertsIf_WithdrawWIMXToCalledWithInsufficientAllowance() public {
         uint256 withdrawAmount = 99 ether;
         uint256 withdrawFee = 300;
 
         wIMXToken.approve(address(childBridge), withdrawAmount - 1);
         vm.expectRevert(bytes("Wrapped IMX: Insufficient allowance"));
-        childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
     }
 
     function test_RevertsIf_ZeroAmountIsProvided() public {
         uint256 withdrawFee = 300;
 
         vm.expectRevert(ZeroAmount.selector);
-        childBridge.withdrawWIMX{value: withdrawFee}(0);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), 0);
     }
 
-    function test_WithdrawWIMX_CallsBridgeAdaptor() public {
+    function test_WithdrawWIMXTo_CallsBridgeAdaptor() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -85,40 +85,68 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
             withdrawFee,
             abi.encodeWithSelector(mockAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
-        childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
     }
 
-    function test_WithdrawWIMX_EmitsWrappedIMXWithdrawEvent() public {
+    function test_WithdrawWIMXToWithDifferentAccount_CallsBridgeAdaptor() public {
+        address receiver = address(0xabcd);
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
+
+        bytes memory predictedPayload =
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), receiver, withdrawAmount);
+        wIMXToken.approve(address(childBridge), withdrawAmount);
+
+        vm.expectCall(
+            address(mockAdaptor),
+            withdrawFee,
+            abi.encodeWithSelector(mockAdaptor.sendMessage.selector, predictedPayload, address(this))
+        );
+        childBridge.withdrawWIMXTo{value: withdrawFee}(receiver, withdrawAmount);
+    }
+
+    function test_WithdrawWIMXTo_EmitsWrappedIMXWithdrawEvent() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
         vm.expectEmit(address(childBridge));
         emit ChildChainWrappedIMXWithdraw(ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
-        childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
     }
 
-    function test_WithdrawWIMX_ReducesBalance() public {
+    function test_WithdrawWIMXToWithDifferentAccount_EmitsWrappedIMXWithdrawEvent() public {
+        address receiver = address(0xabcd);
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
+
+        wIMXToken.approve(address(childBridge), withdrawAmount);
+        vm.expectEmit(address(childBridge));
+        emit ChildChainWrappedIMXWithdraw(ROOT_IMX_TOKEN, address(this), receiver, withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(receiver, withdrawAmount);
+    }
+
+    function test_WithdrawWIMXTo_ReducesBalance() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         uint256 preBal = wIMXToken.balanceOf(address(this));
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
-        childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
 
         uint256 postBal = wIMXToken.balanceOf(address(this));
         assertEq(postBal, preBal - withdrawAmount, "Balance not reduced");
     }
 
-    function test_WithdrawWIMX_PaysFee() public {
+    function test_WithdrawWIMXTo_PaysFee() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         uint256 preBal = address(this).balance;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
-        childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
 
         uint256 postBal = address(this).balance;
         assertEq(postBal, preBal - withdrawFee, "Fee not paid");
