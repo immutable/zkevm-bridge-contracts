@@ -301,7 +301,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_RevertIf_onMessageReceiveCalledWithDataLengthZero() public {
         bytes memory data = "";
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Data too short"));
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
@@ -309,7 +309,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         bytes memory data =
             abi.encode("FAKEDATA", address(rootToken), rootToken.name(), rootToken.symbol(), rootToken.decimals());
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 

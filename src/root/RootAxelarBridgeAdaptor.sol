@@ -74,7 +74,7 @@ contract RootAxelarBridgeAdaptor is
         );
 
         gateway.callContract(_childChain, _childBridgeAdaptor, payload);
-        emit AxelarMessage(_childChain, _childBridgeAdaptor, payload);
+        emit AxelarMessageSent(_childChain, _childBridgeAdaptor, payload);
     }
 
     /**
@@ -84,6 +84,7 @@ contract RootAxelarBridgeAdaptor is
         internal
         override
     {
+        emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
         rootBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
 }

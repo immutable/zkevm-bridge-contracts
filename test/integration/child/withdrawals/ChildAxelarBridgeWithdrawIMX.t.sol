@@ -17,7 +17,7 @@ import {Utils} from "../../../utils.t.sol";
 import {WETH} from "../../../../src/test/root/WETH.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 
-contract ChildERC20BridgeWithdrawIntegrationTest is
+contract ChildERC20BridgeWithdrawIMXIntegrationTest is
     Test,
     IChildERC20BridgeEvents,
     IChildAxelarBridgeAdaptorEvents,
@@ -27,12 +27,9 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
-    address constant IMX_TOKEN_ADDRESS = address(0xccc);
+    address constant ROOT_IMX_TOKEN = address(555555);
     address constant NATIVE_ETH = address(0xeee);
     address constant WRAPPED_ETH = address(0xddd);
-
-    uint256 constant withdrawFee = 200;
-    uint256 constant withdrawAmount = 99999999999;
 
     ChildERC20Bridge public childBridge;
     ChildAxelarBridgeAdaptor public axelarAdaptor;
@@ -47,30 +44,27 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
             childIntegrationSetup();
     }
 
-    /**
-     * @dev A future test will assert that the computed childToken is the same as what gets deployed on L2.
-     *      This test uses the same code as the mapToken function does to calculate this address, so we can
-     *      not consider it sufficient.
-     */
-    function test_withdraw_CallsBridgeAdaptor() public {
-        ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
+    function test_WithdrawIMX_CallsBridgeAdaptor() public {
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
 
         bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, rootToken, address(this), address(this), withdrawAmount);
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
         vm.expectCall(
             address(axelarAdaptor),
             withdrawFee,
             abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
-        childBridge.withdraw{value: withdrawFee}(childToken, withdrawAmount);
+        childBridge.withdrawIMX{value: withdrawFee + withdrawAmount}(withdrawAmount);
     }
 
-    function test_withdraw_Calls_AxelarGateway() public {
-        ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
+    function test_WithdrawIMX_CallsAxelarGateway() public {
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
 
         bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, rootToken, address(this), address(this), withdrawAmount);
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
         vm.expectCall(
             address(mockAxelarGateway),
             0,
@@ -82,14 +76,16 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
             )
         );
 
-        childBridge.withdraw{value: withdrawFee}(childToken, withdrawAmount);
+        childBridge.withdrawIMX{value: withdrawFee + withdrawAmount}(withdrawAmount);
     }
 
-    function test_withdraw_Calls_GasService() public {
-        ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
+    function test_WithdrawIMX_CallsGasService() public {
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
 
         bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, rootToken, address(this), address(this), withdrawAmount);
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
+
         vm.expectCall(
             address(axelarGasService),
             withdrawFee,
@@ -103,39 +99,35 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
             )
         );
 
-        childBridge.withdraw{value: withdrawFee}(childToken, withdrawAmount);
+        childBridge.withdrawIMX{value: withdrawFee + withdrawAmount}(withdrawAmount);
     }
 
-    function test_withdraw_emits_AxelarMessageSentEvent() public {
-        ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
+    function test_WithdrawIMX_EmitsAxelarMessageEvent() public {
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
 
         bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, rootToken, address(this), address(this), withdrawAmount);
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
-        childBridge.withdraw{value: withdrawFee}(childToken, withdrawAmount);
+
+        childBridge.withdrawIMX{value: withdrawFee + withdrawAmount}(withdrawAmount);
     }
 
-    function test_withdraw_BurnsFundsAndTransfersGas() public {
-        ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
+    function test_WithdrawIMX_ReducesBalance() public {
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
 
-        uint256 preBal = childToken.balanceOf(address(this));
+        uint256 preBal = address(this).balance;
         uint256 preGasBal = address(axelarGasService).balance;
 
-        childBridge.withdraw{value: withdrawFee}(childToken, withdrawAmount);
+        childBridge.withdrawIMX{value: withdrawFee + withdrawAmount}(withdrawAmount);
 
-        uint256 postBal = childToken.balanceOf(address(this));
+        uint256 postBal = address(this).balance;
         uint256 postGasBal = address(axelarGasService).balance;
 
-        assertEq(postBal, preBal - withdrawAmount, "Balance not reduced");
-        assertEq(postGasBal, preGasBal + withdrawFee, "Gas not transferred");
-    }
-
-    function test_RevertIf_WithdrawWithNoGas() public {
-        ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
-
-        vm.expectRevert(NoGas.selector);
-        childBridge.withdraw(childToken, withdrawAmount);
+        assertEq(postBal, preBal - withdrawFee - withdrawAmount, "Balance not reduced");
+        assertEq(postGasBal, preGasBal + withdrawFee, "Gas service not getting paid");
     }
 }

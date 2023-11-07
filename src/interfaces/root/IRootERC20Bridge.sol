@@ -116,7 +116,7 @@ interface IRootERC20BridgeErrors {
     /// @notice Error when the given child chain bridge adaptor is invalid.
     error InvalidChildERC20BridgeAdaptor();
     /// @notice Error when a message received has invalid data.
-    error InvalidData();
+    error InvalidData(string reason);
     /// @notice Error when a message received has invalid source address.
     error InvalidSourceAddress();
     /// @notice Error when a message received has invalid source chain.
