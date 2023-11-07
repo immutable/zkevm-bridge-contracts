@@ -12,7 +12,7 @@ import {Utils} from "./Utils.sol";
 contract InitializeChildContracts is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("CHILD_PRIVATE_KEY");
-        ChildERC20Bridge childERC20Bridge = ChildERC20Bridge(vm.envAddress("CHILD_ERC20_BRIDGE"));
+        ChildERC20Bridge childERC20Bridge = ChildERC20Bridge(payable(vm.envAddress("CHILD_ERC20_BRIDGE")));
         ChildAxelarBridgeAdaptor childAxelarBridgeAdaptor =
             ChildAxelarBridgeAdaptor(vm.envAddress("CHILD_BRIDGE_ADAPTOR"));
         address childTokenTemplate = vm.envAddress("CHILDCHAIN_CHILD_TOKEN_TEMPLATE");
