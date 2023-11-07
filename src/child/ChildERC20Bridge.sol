@@ -258,7 +258,7 @@ contract ChildERC20Bridge is
     }
 
     function updateBridgeAdaptor(address newBridgeAdaptor) external override /*onlyOwner*/ {
-        if (!(hasRole(VARIABLE_MANAGER_ROLE, msg.sender))){
+        if (!(hasRole(VARIABLE_MANAGER_ROLE, msg.sender))) {
             revert NotVariableManager();
         }
         if (newBridgeAdaptor == address(0)) {

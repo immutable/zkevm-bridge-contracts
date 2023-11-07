@@ -49,7 +49,11 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         childBridge = new ChildERC20Bridge();
         childBridge.initialize(
             roles,
-            address(mockAdaptor), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN
+            address(mockAdaptor),
+            ROOT_BRIDGE_ADAPTOR,
+            address(childTokenTemplate),
+            ROOT_CHAIN_NAME,
+            ROOT_IMX_TOKEN
         );
 
         bytes memory mapTokenData =
