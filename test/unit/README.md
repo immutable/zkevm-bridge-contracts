@@ -1,63 +1,72 @@
 # Test Plan
-This document outlines the tests associated with this project. It is currently not complete as there are capabilities that are still under development. In addition, the document covers unit testing only and does not cover integration test scenarios.
+This document outlines the test plan for this project. 
 
 ## Root ERC20 Bridge
 **Contract**: [RootERC20Bridge.sol](../../src/root/RootERC20Bridge.sol)
+
 **Test Contracts**: [RootERC20Bridge.t.sol](./root/RootERC20Bridge.t.sol), [RootERC20BridgeWithdraw.t.sol](./root/withdrawals/RootERC20BridgeWithdraw.t.sol) 
 
 ### Initialization
-| Test                                                    | Description                                                                           | Happy Path |
-|---------------------------------------------------------|---------------------------------------------------------------------------------------|------------|
-| `test_InitializeBridge`                                 | Test initialization of the bridge                                                     | Yes        |
-| `test_RevertIf_InitializeTwice`                         | Should revert if initialized twice                                                    | No         |
-| `test_RevertIf_InitializeWithAZeroAddressAll`           | Should revert if initialized with a zero address for all arguments                    | No         |
-| `test_RevertIf_InitializeWithAZeroAddressChildBridge`   | Should revert if initialized with a zero address for the child bridge argument        | No         |
-| `test_RevertIf_InitializeWithAZeroAddressIMXToken`      | Should revert if initialized with a zero address for the IMX token argument           | No         |
-| `test_RevertIf_InitializeWithAZeroAddressRootAdapter`   | Should revert if initialized with a zero address for the root bridge adapter argument | No         |
-| `test_RevertIf_InitializeWithAZeroAddressTokenTemplate` | Should revert if initialized with a zero address for the token template argument      | No         |
-| `test_RevertIf_InitializeWithAZeroAddressWETHToken`     | Should revert if initialized with a zero address for the WETH token argument          | No         |
-| `test_RevertIf_InitializeWithEmptyChildAdapter`         | Should revert if initialized with an empty child adapter argument                     | No         |
+The `RootERC20Bridge` contract is upgradeable. These tests verify the initialization of the contract.
+
+| Test                                                    | Description                                                                                        | Happy Path |
+|---------------------------------------------------------|----------------------------------------------------------------------------------------------------|------------|
+| `test_InitializeBridge`                                 | Test initialization of the bridge, sets the correct values                                         | Yes        |
+| `test_RevertIf_InitializeTwice`                         | Should revert if attempting to initalize a second time                                             | No         |
+| `test_RevertIf_InitializeWithAZeroAddressAll`           | Should revert if attempting to initialize with a zero address for all arguments                    | No         |
+| `test_RevertIf_InitializeWithAZeroAddressChildBridge`   | Should revert if attempting to initialize with a zero address for the child bridge argument        | No         |
+| `test_RevertIf_InitializeWithAZeroAddressIMXToken`      | Should revert if attempting to initialize with a zero address for the IMX token argument           | No         |
+| `test_RevertIf_InitializeWithAZeroAddressRootAdapter`   | Should revert if attempting to initialize with a zero address for the root bridge adapter argument | No         |
+| `test_RevertIf_InitializeWithAZeroAddressTokenTemplate` | Should revert if attempting to initialize with a zero address for the token template argument      | No         |
+| `test_RevertIf_InitializeWithAZeroAddressWETHToken`     | Should revert if attempting to initialize with a zero address for the WETH token argument          | No         |
+| `test_RevertIf_InitializeWithEmptyChildAdapter`         | Should revert if attempting to initialize with an empty child adapter argument                     | No         |
 
 ### Map Token
-| Test                                          | Description                                                               | Happy Path |
-|-----------------------------------------------|---------------------------------------------------------------------------|------------|
-| `test_mapToken_SetsTokenMapping`              | Verifies that the mapToken function sets the token mapping.               | Yes        |
-| `test_mapToken_CallsAdaptor`                  | Verifies that the mapToken function calls the bridge adapter              | Yes        |
-| `test_mapToken_EmitsTokenMappedEvent`         | Verifies that the mapToken function emits a `TokenMappedEvent` event.     | Yes        |
-| `test_RevertIf_mapTokenCalledTwice`           | Should revert if the mapToken function is called twice for the same token | No         |
-| `test_RevertIf_mapTokenCalledWithETHAddress`  | Should revert if the mapToken function is called for native ETH           | No         |
-| `test_RevertIf_mapTokenCalledWithIMXAddress`  | Should revert if the mapToken function is called for IMX                  | No         |
-| `test_RevertIf_mapTokenCalledWithZeroAddress` | Should revert if the mapToken function is called with a zero address      | No         |
+Tests for the `mapToken` function.
+- A mapped token cannot be mapped again
+- ETH and IMX cannot be mapped
+
+| Test                                          | Description                                                           | Happy Path |
+|-----------------------------------------------|-----------------------------------------------------------------------|------------|
+| `test_mapToken_SetsTokenMapping`              | Verifies that the mapToken function sets the token mapping.           | Yes        |
+| `test_mapToken_CallsAdaptor`                  | Verifies that the mapToken function calls the bridge adapter          | Yes        |
+| `test_mapToken_EmitsTokenMappedEvent`         | Verifies that the mapToken function emits a `TokenMappedEvent` event. | Yes        |
+| `test_RevertIf_mapTokenCalledWithZeroAddress` | Should revert if the mapToken function is called with a zero address  | No         |
+| `test_RevertIf_mapTokenCalledTwice`           | Should revert if the mapToken is already mapped                       | No         |
+| `test_RevertIf_mapTokenCalledWithETHAddress`  | Should revert if attempting to map native or wrapped ETH              | No         |
+| `test_RevertIf_mapTokenCalledWithIMXAddress`  | Should revert if attempting to map IMX                                | No         |
 
 ### Deposits (L1 -> L2)
+Tests are related to the deposit operations of the bridge. This involves depositing tokens on the L1 contract to redeem corresponding tokens on L2. 
+The behavior varies subtly depending on whether the deposited token is a standard ERC20 token, Wrapped IMX, Native ETH, or Wrapped ETH.
+
 #### Standard ERC20 Tokens
 
-| Test                                                        | Description                                                                                    | Happy Path |
-|-------------------------------------------------------------|------------------------------------------------------------------------------------------------|------------|
-| `test_depositCallsSendMessage`                              | Calls the send message function when depositing                                                | Yes        |
-| `test_depositEmitsChildChainERC20DepositEvent`              | Emits the child chain ERC20 deposit event when depositing an ERC20 token                       | Yes        |
-| `test_depositTransfersToken`                                | Verifies that the deposit function transfers the specified token to the specified child chain. | Yes        |
-| `test_depositToCallsSendMessage`                            | Calls the send message function when depositing to a child chain account                       | Yes        |
-| `test_depositToEmitsChildChainERC20DepositEvent`            | Verifies that the depositToETH function emits a ChildChainERC20DepositEven event.              | Yes        |
-| `test_depositToTransfersToken`                              | Verifies that the depositToETH function transfers the specified token to the child chain.      | Yes        |
-| `test_RevertIf_depositAmountIsZero`                         | Should revert if the deposit amount is zero                                                    | No         |
-| `test_RevertIf_depositCalledWhenTokenApprovalNotProvided`   | Should revert if the deposit function is called when token approval is not provided            | No         |
-| `test_RevertIf_depositCalledWithUnmappedToken`              | Should revert if the deposit function is called with an unmapped token                         | No         |
-| `test_RevertIf_depositCalledWithZeroAddress`                | Should revert if the deposit function is called with a zero address                            | No         |
-| `test_RevertIf_depositToAmountIsZero`                       | Should revert if the depositTo amount is zero                                                  | No         |
-| `test_RevertIf_depositToCalledWhenTokenApprovalNotProvided` | Should revert if the depositTo function is called when token approval is not provided          | No         |
-| `test_RevertIf_depositToCalledWithUnmappedToken`            | Should revert if the depositTo function is called with an unmapped token                       | No         |
-| `test_RevertIf_depositToCalledWithZeroAddress`              | Should revert if the depositTo function is called with a zero address                          | No         |
+| Test                                                        | Description                                                                                  | Happy Path |
+|-------------------------------------------------------------|----------------------------------------------------------------------------------------------|------------|
+| `test_depositTransfersToken`                                | Verifies that `deposit()` transfers tokens from the user to the bridge.                      | Yes        |
+| `test_depositToTransfersToken`                              | Verifies that `depositTo()` transfers tokens from the user to the bridge.                    | Yes        |
+| `test_depositCallsSendMessage`                              | Verifies that `deposit()` sends cross-chain message through the underlying bridge adaptor.   | Yes        |
+| `test_depositToCallsSendMessage`                            | Verifies that `depositTo()` sends cross-chain message through the underlying bridge adaptor. | Yes        |
+| `test_depositEmitsChildChainERC20DepositEvent`              | Verifies that `deposit()` emits the correct deposit event when depositing an ERC20 token     | Yes        |
+| `test_depositToEmitsChildChainERC20DepositEvent`            | Verifies that `depositTo()` emits the correct deposit event when depositing an ERC20 token   | Yes        |
+| `test_RevertIf_depositAmountIsZero`                         | Should revert if `deposit()` is called with a zero deposit amount                            | No         |
+| `test_RevertIf_depositToAmountIsZero`                       | Should revert if `depositTo()` is called with a zero deposit amount                          | No         |
+| `test_RevertIf_depositCalledWhenTokenApprovalNotProvided`   | Should revert if the `deposit()` function is called when token approval is not provided      | No         |
+| `test_RevertIf_depositToCalledWhenTokenApprovalNotProvided` | Should revert if the `depositTo()` function is called when token approval is not provided    | No         |
+| `test_RevertIf_depositCalledWithUnmappedToken`              | Should revert if the `deposit()` function is called with an unmapped token                   | No         |
+| `test_RevertIf_depositToCalledWithUnmappedToken`            | Should revert if the `depositTo()` function is called with an unmapped token                 | No         |
+| `test_RevertIf_depositCalledWithZeroAddress`                | Should revert if the `deposit()` function is called with a zero address                      | No         |
+| `test_RevertIf_depositToCalledWithZeroAddress`              | Should revert if the `depositTo()` function is called with a zero address                    | No         |
 
 #### IMX Token
+Tests specifically for the behavior related to IMX token deposits, in addition to the shared tests for standard ERC20 token behavior listed above.
 
 | Test                                                 | Description                                                                                            | Happy Path |
 |------------------------------------------------------|--------------------------------------------------------------------------------------------------------|------------|
-| `test_depositIMXEmitsIMXDepositEvent`                | Emits the IMX deposit event when depositing IMX                                                        | Yes        |
+| `test_depositIMXEmitsIMXDepositEvent`                | Verifies that `deposit()` emits the `IMXDepositEvent` event when depositing IMX                        | Yes        |
+| `test_depositToIMXEmitsIMXDepositEvent`              | Verifies that `depositTo()` emits the `IMXDepositEvent` when depositing IMX                            | Yes        |
 | `test_deposit_whenSettingImxDepositLimitToUnlimited` | Verifies that the deposit function can still be called when the IMX deposit limit is set to unlimited. | Yes        |
-| `test_depositToIMXEmitsIMXDepositEvent`              | Verifies that the depositToETH function emits a IMXDepositEven event.                                  | Yes        |
-| `test_depositToWETHEmitsWETHDepositEvent`            | Verifies that the depositToETH function emits a WETHDepositEven event when depositing WETH.            | Yes        |
-| `test_depositToWETHTransfersToken`                   | Verifies that the depositToETH function transfers WETH to the child chain.                             | Yes        |
 | `test_RevertsIf_IMXDepositLimitExceeded`             | Should revert if the IMX deposit limit is exceeded                                                     | No         |
 | `test_RevertsIf_IMXDepositLimitTooLow`               | Should revert if the IMX deposit limit is too low                                                      | No         |
 
@@ -67,6 +76,8 @@ This document outlines the tests associated with this project. It is currently n
 |-----------------------------------------------|---------------------------------------------------------------------------------------------|------------|
 | `test_depositETHCallsSendMessage`             | Calls the send message function when depositing ETH                                         | Yes        |
 | `test_depositETHEmitsNativeEthDepositEvent`   | Emits the native ETH deposit event when depositing ETH                                      | Yes        |
+| `test_depositToWETHEmitsWETHDepositEvent`     | Verifies that the depositToETH function emits a WETHDepositEven event when depositing WETH. | Yes        |
+| `test_depositToWETHTransfersToken`            | Verifies that the depositToETH function transfers WETH to the child chain.                  | Yes        |
 | `test_depositTransfersNativeAsset`            | Verifies that the deposit function transfers the native asset to the specified child chain. | Yes        |
 | `test_depositToETHCallsSendMessage`           | Verifies that the depositToETH function calls the sendMessage function.                     | Yes        |
 | `test_depositToETHEmitsNativeEthDepositEvent` | Verifies that the depositToETH function emits a NativeEthDepositEven event.                 | Yes        |
@@ -254,19 +265,19 @@ This document outlines the tests associated with this project. It is currently n
 **Contract:** [RootAxelarBridgeAdapter.sol](../../src/root/RootAxelarBridgeAdaptor.sol)
 **Test Contracts:** [RootAxelarBridgeAdapter.t.sol](./root/RootAxelarBridgeAdaptor.t.sol)
 
-| Test Function Name                                   | Description                                                     | Happy Path or Failure |
-|------------------------------------------------------|-----------------------------------------------------------------|-----------------------|
-| `test_Initialize`                                    | Test `initialize()` sets correct values                         | Yes                   |
-| `test_RevertWhen_InitializeGivenEmptyChildChainName` | Constructor should revert when given an empty child chain name. | No                    |
-| `test_RevertWhen_InitializeGivenZeroAddress`         | `initialize()` should revert when given a zero address.         | No                    |
-| `test_Execute_CallsBridge`                           | `execute` should call the `RootERC20Bridge` contract.          | Yes                   |
-| `test_Execute_EmitsAdaptorExecuteEvent`              | `execute` should emit the `AdaptorExecute` event.               | Yes                   |
-| `test_sendMessage_CallsGasService`                   | `sendMessage` calls the Gas Service.                            | Yes                   |
-| `test_sendMessage_CallsGateway`                      | `sendMessage` calls the Gateway.                                | Yes                   |
-| `test_sendMessage_EmitsAxelarMessageSentEvent`       | `sendMessage` emits the `AxelarMessageSent` event.              | Yes                   |
-| `test_sendMessage_GivesCorrectRefundRecipient`       | `sendMessage` gives the correct refund recipient.               | Yes                   |
-| `test_RevertIf_mapTokenCalledByNonRootBridge`        | `mapToken` reverts when called by a non-root bridge.            | No                    |
-| `test_RevertIf_mapTokenCalledWithNoValue`            | `mapToken` reverts when called with no value.                   | No                    |
+| Test Function Name                                   | Description                                                     | Happy Path |
+|------------------------------------------------------|-----------------------------------------------------------------|------------|
+| `test_Initialize`                                    | Test `initialize()` sets correct values                         | Yes        |
+| `test_RevertWhen_InitializeGivenEmptyChildChainName` | Constructor should revert when given an empty child chain name. | No         |
+| `test_RevertWhen_InitializeGivenZeroAddress`         | `initialize()` should revert when given a zero address.         | No         |
+| `test_Execute_CallsBridge`                           | `execute` should call the `RootERC20Bridge` contract.           | Yes        |
+| `test_Execute_EmitsAdaptorExecuteEvent`              | `execute` should emit the `AdaptorExecute` event.               | Yes        |
+| `test_sendMessage_CallsGasService`                   | `sendMessage` calls the Gas Service.                            | Yes        |
+| `test_sendMessage_CallsGateway`                      | `sendMessage` calls the Gateway.                                | Yes        |
+| `test_sendMessage_EmitsAxelarMessageSentEvent`       | `sendMessage` emits the `AxelarMessageSent` event.              | Yes        |
+| `test_sendMessage_GivesCorrectRefundRecipient`       | `sendMessage` gives the correct refund recipient.               | Yes        |
+| `test_RevertIf_mapTokenCalledByNonRootBridge`        | `mapToken` reverts when called by a non-root bridge.            | No         |
+| `test_RevertIf_mapTokenCalledWithNoValue`            | `mapToken` reverts when called with no value.                   | No         |
 
 --- 
 
@@ -274,15 +285,15 @@ This document outlines the tests associated with this project. It is currently n
 Contract: [ChildAxelarBridgeAdaptor.sol](../../src/child/ChildAxelarBridgeAdaptor.sol)
 Test Contracts: [ChildAxelarBridgeAdaptor.t.sol](./child/ChildAxelarBridgeAdaptor.t.sol)
 
-| Test Function Name                               | Description                                             | Happy Path or Failure |
-|--------------------------------------------------|---------------------------------------------------------|-----------------------|
-| `test_Initialize`                                | Test `initialize()` sets correct values                 | Yes                   |
-| `test_Execute_CallsBridge`                       | `execute` should call the `ChildERC20Bridge` contract.  | Yes                   |
-| `test_Execute_EmitsAdaptorExecuteEvent`          | `execute` should emits the `AdaptorExecute` event.      | Yes                   |
-| `test_sendMessage_CallsGasService`               | `sendMessage` calls the Gas Service.                    | Yes                   |
-| `test_sendMessage_CallsGateway`                  | `sendMessage` calls the Gateway.                        | Yes                   |
-| `test_sendMessage_EmitsAxelarMessageSentEvent`   | `sendMessage` emits the AxelarMessageSent event.        | Yes                   |
-| `test_sendMessage_GivesCorrectRefundRecipient`   | `sendMessage` gives the correct refund recipient.       | Yes                   |
-| `test_RevertIf_InitializeGivenZeroAddress`       | `initialize` reverts when given a zero address.         | No                    |
-| `test_RevertIf_sendMessageCalledByNonRootBridge` | `sendMessage` reverts when called by a non-root bridge. | No                    |
-| `test_RevertIf_sendMessageCalledWithNoValue`     | `sendMessage` reverts when called with no value.        | No                    |
+| Test Function Name                               | Description                                             | Happy Path |
+|--------------------------------------------------|---------------------------------------------------------|------------|
+| `test_Initialize`                                | Test `initialize()` sets correct values                 | Yes        |
+| `test_Execute_CallsBridge`                       | `execute` should call the `ChildERC20Bridge` contract.  | Yes        |
+| `test_Execute_EmitsAdaptorExecuteEvent`          | `execute` should emits the `AdaptorExecute` event.      | Yes        |
+| `test_sendMessage_CallsGasService`               | `sendMessage` calls the Gas Service.                    | Yes        |
+| `test_sendMessage_CallsGateway`                  | `sendMessage` calls the Gateway.                        | Yes        |
+| `test_sendMessage_EmitsAxelarMessageSentEvent`   | `sendMessage` emits the AxelarMessageSent event.        | Yes        |
+| `test_sendMessage_GivesCorrectRefundRecipient`   | `sendMessage` gives the correct refund recipient.       | Yes        |
+| `test_RevertIf_InitializeGivenZeroAddress`       | `initialize` reverts when given a zero address.         | No         |
+| `test_RevertIf_sendMessageCalledByNonRootBridge` | `sendMessage` reverts when called by a non-root bridge. | No         |
+| `test_RevertIf_sendMessageCalledWithNoValue`     | `sendMessage` reverts when called with no value.        | No         |
