@@ -33,6 +33,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
     address constant NATIVE_ETH = address(0xeee);
     address constant WRAPPED_ETH = address(0xddd);
     uint256 constant UNLIMITED_DEPOSIT_LIMIT = 0;
+    address public constant NATIVE_IMX = address(0xfff);
 
     uint256 constant withdrawAmount = 0.5 ether;
 
@@ -66,6 +67,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         rootBridge.mapToken{value: 1}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
+        imxToken.transfer(address(rootBridge), 100 ether);
     }
 
     function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
@@ -126,6 +128,24 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
     }
 
+    function test_withdrawIMX_TransfersIMX() public {
+        bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), address(this), withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        uint256 thisPreBal = imxToken.balanceOf(address(this));
+        uint256 bridgePreBal = imxToken.balanceOf(address(rootBridge));
+
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+
+        uint256 thisPostBal = imxToken.balanceOf(address(this));
+        uint256 bridgePostBal = imxToken.balanceOf(address(rootBridge));
+
+        assertEq(thisPostBal, thisPreBal + withdrawAmount, "Incorrect user balance after withdraw");
+        assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
+    }
+
     function test_withdraw_TransfersTokens_DifferentReceiver() public {
         address receiver = address(987654321);
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), receiver, withdrawAmount);
@@ -140,6 +160,25 @@ contract RootERC20BridgeWithdrawIntegrationTest is
 
         uint256 receiverPostBal = token.balanceOf(receiver);
         uint256 bridgePostBal = token.balanceOf(address(rootBridge));
+
+        assertEq(receiverPostBal, receiverPreBal + withdrawAmount, "Incorrect user balance after withdraw");
+        assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
+    }
+
+    function test_withdrawIMX_TransfersIMX_DifferentReceiver() public {
+        address receiver = address(987654321);
+        bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), receiver, withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        uint256 receiverPreBal = imxToken.balanceOf(receiver);
+        uint256 bridgePreBal = imxToken.balanceOf(address(rootBridge));
+
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+
+        uint256 receiverPostBal = imxToken.balanceOf(receiver);
+        uint256 bridgePostBal = imxToken.balanceOf(address(rootBridge));
 
         assertEq(receiverPostBal, receiverPreBal + withdrawAmount, "Incorrect user balance after withdraw");
         assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
@@ -162,6 +201,17 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
+    function test_withdrawIMX_EmitsRootChainERC20WithdrawEvent() public {
+        bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), address(this), withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        vm.expectEmit();
+        emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), address(this), withdrawAmount);
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+    }
+
     function test_withdraw_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
         address receiver = address(987654321);
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), receiver, withdrawAmount);
@@ -173,6 +223,18 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         emit RootChainERC20Withdraw(
             address(token), rootBridge.rootTokenToChildToken(address(token)), address(this), receiver, withdrawAmount
         );
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+    }
+
+    function test_withdrawIMX_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
+        address receiver = address(987654321);
+        bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), receiver, withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        vm.expectEmit();
+        emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), receiver, withdrawAmount);
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 }
