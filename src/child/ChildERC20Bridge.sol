@@ -151,6 +151,14 @@ contract ChildERC20Bridge is
         _withdrawIMX(receiver, amount);
     }
 
+    function withdrawWIMX(uint256 amount) external payable {
+        _withdrawWIMX(msg.sender, amount);
+    }
+
+    function withdrawWIMXTo(address receiver, uint256 amount) external payable {
+        _withdrawWIMX(receiver, amount);
+    }
+
     function _withdrawIMX(address receiver, uint256 amount) private {
         if (msg.value < amount) {
             revert InsufficientValue();
@@ -179,11 +187,6 @@ contract ChildERC20Bridge is
         if (address(childToken) == NATIVE_IMX) {
             feeAmount = msg.value - amount;
             rootToken = rootIMXToken;
-        } else if (address(childToken) == wIMXToken) {
-            rootToken = rootIMXToken;
-            IWIMX wIMX = IWIMX(wIMXToken);
-            require(wIMX.transferFrom(msg.sender, address(this), amount), "ChildERC20Bridge: fail to transfer wIMX");
-            wIMX.withdraw(amount);
         } else {
             if (address(childToken).code.length == 0) {
                 revert EmptyTokenContract();
@@ -223,6 +226,26 @@ contract ChildERC20Bridge is
         } else {
             emit ChildChainERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
         }
+    }
+
+    function _withdrawWIMX(address receiver, uint256 amount) private {
+        uint256 expectedBalance = address(this).balance + amount;
+
+        IWIMX wIMX = IWIMX(wIMXToken);
+        if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
+            revert TransferWIMXFailed();
+        }
+        wIMX.withdraw(amount);
+
+        if (address(this).balance != expectedBalance) {
+            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        }
+
+        bytes memory payload = abi.encode(WITHDRAW_SIG, rootIMXToken, msg.sender, receiver, amount);
+
+        bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
+
+        emit ChildChainWrappedIMXWithdraw(rootIMXToken, msg.sender, receiver, amount);
     }
 
     function _mapToken(bytes calldata data) private {

@@ -35,6 +35,9 @@ interface IChildERC20BridgeEvents {
     event ChildChainNativeIMXWithdraw(
         address indexed rootToken, address depositor, address indexed receiver, uint256 amount
     );
+    event ChildChainWrappedIMXWithdraw(
+        address indexed rootToken, address depositor, address indexed receiver, uint256 amount
+    );
 
     event ChildChainERC20Deposit(
         address indexed rootToken,
@@ -93,6 +96,8 @@ interface IChildERC20BridgeErrors {
     error IncorrectBridgeAddress();
     /// @notice Error when a call to the given child token's `burn` function fails.
     error BurnFailed();
+    /// @notice Error when a call to WIMX token's `transferFrom` fails.
+    error TransferWIMXFailed();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
 }
