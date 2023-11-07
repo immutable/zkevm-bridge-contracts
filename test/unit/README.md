@@ -242,32 +242,32 @@ Tests for the `mapToken` function, which maps a token on the L1 bridge contract 
 
 #### IMX (Wrapped and Native)
 
-| Test                                                                 | Description                                                                    | Happy Path |
-|----------------------------------------------------------------------|--------------------------------------------------------------------------------|------------|
-| `test_WithdrawIMX_CallsBridgeAdaptor`                                | Test that the `withdrawIMX` function calls the bridge adaptor.                 | Yes        |
-| `test_WithdrawIMX_EmitsNativeIMXWithdrawEvent`                       | Test that the `withdrawIMX` function emits Native IMX Withdraw event.          | Yes        |
-| `test_WithdrawIMX_PaysFee`                                           | Test that the `withdrawIMX` function pays the withdrawal fee.                  | Yes        |
-| `test_WithdrawIMX_ReducesBalance`                                    | Test that the `withdrawIMX` function reduces the user's balance.               | Yes        |
-| `test_WithdrawIMX_PaysFee`                                           | Test that the `withdrawIMXTo` function pays the withdrawal fee.                | Yes        |
-| `test_WithdrawIMX_ReducesBalance`                                    | Test that the `withdrawIMXTo` function reduces the user's balance.             | Yes        |
-| `test_withdrawIMXToWithDifferentAccount_CallsBridgeAdaptor`          | Test `withdrawIMXTo` with a different account calling the bridge adaptor.      | Yes        |
-| `test_withdrawIMXToWithDifferentAccount_EmitsNativeIMXWithdrawEvent` | Test `withdrawIMXTo` emits Native IMX Withdraw event with a different account. | Yes        |
-| `test_withdrawIMXTo_CallsBridgeAdaptor`                              | Test that the `withdrawIMXTo` function calls the bridge adaptor.               | Yes        |
-| `test_withdrawIMXTo_EmitsNativeIMXWithdrawEvent`                     | Test that the `withdrawIMXTo` function emits Native IMX Withdraw event.        | Yes        |
-| `test_RevertsIf_WithdrawIMXCalledWithInsufficientFund`               | Test `withdrawIMX` when called with insufficient funds.                        | No         |
-| `test_RevertIf_ZeroAmountIsProvided`                                 | Test reverting when zero amount is provided in the `withdrawIMX` call.         | No         |
-| `test_RevertsIf_withdrawIMXToCalledWithInsufficientFund`             | Test `withdrawIMXTo` when called with insufficient funds.                      | No         |
+| Test                                                                 | Description                                                                          | Happy Path |
+|----------------------------------------------------------------------|--------------------------------------------------------------------------------------|------------|
+| `test_WithdrawIMX_ReducesBalance`                                    | Verifies that the `withdrawIMX` function reduces the user's balance.                 | Yes        |
+| `test_WithdrawIMXTo_ReducesBalance`                                  | Verifies that the `withdrawIMXTo` function reduces the user's balance.               | Yes        |
+| `test_WithdrawIMX_PaysFee`                                           | Verifies that the `withdrawIMX` function pays the withdrawal fee.                    | Yes        |
+| `test_WithdrawIMXTo_PaysFee`                                         | Verifies that the `withdrawIMXTo` function pays the withdrawal fee.                  | Yes        |
+| `test_WithdrawIMX_CallsBridgeAdaptor`                                | Verifies that the `withdrawIMX` function calls the bridge adaptor.                   | Yes        |
+| `test_withdrawIMXTo_CallsBridgeAdaptor`                              | Verifies that the `withdrawIMXTo` function calls the bridge adaptor.                 | Yes        |
+| `test_WithdrawIMX_EmitsNativeIMXWithdrawEvent`                       | Verifies that the `withdrawIMX` function emits Native IMX Withdraw event.            | Yes        |
+| `test_withdrawIMXTo_EmitsNativeIMXWithdrawEvent`                     | Verifies that the `withdrawIMXTo` function emits Native IMX Withdraw event.          | Yes        |
+| `test_withdrawIMXToWithDifferentAccount_CallsBridgeAdaptor`          | Verifies `withdrawIMXTo` with a different account calling the bridge adaptor.        | Yes        |
+| `test_withdrawIMXToWithDifferentAccount_EmitsNativeIMXWithdrawEvent` | Verifies `withdrawIMXTo` emits Native IMX Withdraw event with a different account.   | Yes        |
+| `test_RevertsIf_WithdrawIMXCalledWithInsufficientFund`               | Should revert if `withdrawIMX` when called with insufficient funds.                  | No         |
+| `test_RevertIf_ZeroAmountIsProvided`                                 | Should revert if zero amount is provided in the `withdrawIMX` call.                  | No         |
+| `test_RevertsIf_withdrawIMXToCalledWithInsufficientFund`             | Should revert if the IMX value provided is less than amount requested for withdrawal | No         |
 
 #### ETH (TODO: )
 
 
 
 ### Control Operations
-| Test                                                     | Description                                                 | Happy Path |
-|----------------------------------------------------------|-------------------------------------------------------------|------------|
-| `test_updateBridgeAdaptor`                               | `updateBridgeAdaptor()` function                            | Yes        |
-| `test_RevertIf_updateBridgeAdaptorCalledByNonOwner`      | `updateBridgeAdaptor()` reverts if called by non-owner      | No         |
-| `test_RevertIf_updateBridgeAdaptorCalledWithZeroAddress` | `updateBridgeAdaptor()` reverts if called with zero address | No         |
+| Test                                                     | Description                                                             | Happy Path |
+|----------------------------------------------------------|-------------------------------------------------------------------------|------------|
+| `test_updateBridgeAdaptor`                               | Update child bridge adaptor address function                            | Yes        |
+| `test_RevertIf_updateBridgeAdaptorCalledByNonOwner`      | Should reverts if called by non-owner                                   | No         |
+| `test_RevertIf_updateBridgeAdaptorCalledWithZeroAddress` | Should revert if called with new adapter address being the zero address | No         |
 
 ----
 
@@ -276,19 +276,19 @@ Tests for the `mapToken` function, which maps a token on the L1 bridge contract 
 **Contract:** [RootAxelarBridgeAdapter.sol](../../src/root/RootAxelarBridgeAdaptor.sol)
 **Test Contracts:** [RootAxelarBridgeAdapter.t.sol](./root/RootAxelarBridgeAdaptor.t.sol)
 
-| Test Function Name                                   | Description                                                     | Happy Path |
-|------------------------------------------------------|-----------------------------------------------------------------|------------|
-| `test_Initialize`                                    | Test `initialize()` sets correct values                         | Yes        |
-| `test_RevertWhen_InitializeGivenEmptyChildChainName` | Constructor should revert when given an empty child chain name. | No         |
-| `test_RevertWhen_InitializeGivenZeroAddress`         | `initialize()` should revert when given a zero address.         | No         |
-| `test_Execute_CallsBridge`                           | `execute` should call the `RootERC20Bridge` contract.           | Yes        |
-| `test_Execute_EmitsAdaptorExecuteEvent`              | `execute` should emit the `AdaptorExecute` event.               | Yes        |
-| `test_sendMessage_CallsGasService`                   | `sendMessage` calls the Gas Service.                            | Yes        |
-| `test_sendMessage_CallsGateway`                      | `sendMessage` calls the Gateway.                                | Yes        |
-| `test_sendMessage_EmitsAxelarMessageSentEvent`       | `sendMessage` emits the `AxelarMessageSent` event.              | Yes        |
-| `test_sendMessage_GivesCorrectRefundRecipient`       | `sendMessage` gives the correct refund recipient.               | Yes        |
-| `test_RevertIf_mapTokenCalledByNonRootBridge`        | `mapToken` reverts when called by a non-root bridge.            | No         |
-| `test_RevertIf_mapTokenCalledWithNoValue`            | `mapToken` reverts when called with no value.                   | No         |
+| Test Function Name                                   | Description                                                       | Happy Path |
+|------------------------------------------------------|-------------------------------------------------------------------|------------|
+| `test_Initialize`                                    | Verifies that `initialize()` sets correct values                  | Yes        |
+| `test_RevertWhen_InitializeGivenEmptyChildChainName` | `initialize()` should revert if given an empty root chain name.   | No         |
+| `test_RevertWhen_InitializeGivenZeroAddress`         | `initialize()` should revert if given a zero root bridge address. | No         |
+| `test_sendMessage_CallsGasService`                   | `sendMessage` calls the Gas Service.                              | Yes        |
+| `test_sendMessage_CallsGateway`                      | `sendMessage` calls the Gateway.                                  | Yes        |
+| `test_sendMessage_EmitsAxelarMessageSentEvent`       | `sendMessage` emits the `AxelarMessageSent` event.                | Yes        |
+| `test_sendMessage_GivesCorrectRefundRecipient`       | `sendMessage` gives the correct refund recipient.                 | Yes        |
+| `test_Execute_CallsBridge`                           | `execute` should call the configured `RootERC20Bridge` contract.  | Yes        |
+| `test_Execute_EmitsAdaptorExecuteEvent`              | `execute` should emit the `AdaptorExecute` event.                 | Yes        |
+| `test_RevertIf_mapTokenCalledByNonRootBridge`        | `mapToken` should reverts when called by a non-root bridge.       | No         |
+| `test_RevertIf_mapTokenCalledWithNoValue`            | `mapToken` should reverts when called with no value.              | No         |
 
 --- 
 
@@ -296,15 +296,15 @@ Tests for the `mapToken` function, which maps a token on the L1 bridge contract 
 Contract: [ChildAxelarBridgeAdaptor.sol](../../src/child/ChildAxelarBridgeAdaptor.sol)
 Test Contracts: [ChildAxelarBridgeAdaptor.t.sol](./child/ChildAxelarBridgeAdaptor.t.sol)
 
-| Test Function Name                               | Description                                             | Happy Path |
-|--------------------------------------------------|---------------------------------------------------------|------------|
-| `test_Initialize`                                | Test `initialize()` sets correct values                 | Yes        |
-| `test_Execute_CallsBridge`                       | `execute` should call the `ChildERC20Bridge` contract.  | Yes        |
-| `test_Execute_EmitsAdaptorExecuteEvent`          | `execute` should emits the `AdaptorExecute` event.      | Yes        |
-| `test_sendMessage_CallsGasService`               | `sendMessage` calls the Gas Service.                    | Yes        |
-| `test_sendMessage_CallsGateway`                  | `sendMessage` calls the Gateway.                        | Yes        |
-| `test_sendMessage_EmitsAxelarMessageSentEvent`   | `sendMessage` emits the AxelarMessageSent event.        | Yes        |
-| `test_sendMessage_GivesCorrectRefundRecipient`   | `sendMessage` gives the correct refund recipient.       | Yes        |
-| `test_RevertIf_InitializeGivenZeroAddress`       | `initialize` reverts when given a zero address.         | No         |
-| `test_RevertIf_sendMessageCalledByNonRootBridge` | `sendMessage` reverts when called by a non-root bridge. | No         |
-| `test_RevertIf_sendMessageCalledWithNoValue`     | `sendMessage` reverts when called with no value.        | No         |
+| Test Function Name                               | Description                                                          | Happy Path |
+|--------------------------------------------------|----------------------------------------------------------------------|------------|
+| `test_Initialize`                                | Verifies `initialize()` sets correct values                          | Yes        |
+| `test_RevertIf_InitializeGivenZeroAddress`       | `initialize` should revert if given a zero child bridge address.     | No         |
+| `test_sendMessage_CallsGasService`               | Verifies `sendMessage` calls the Gas Service.                        | Yes        |
+| `test_sendMessage_CallsGateway`                  | Verifies `sendMessage` calls the Gateway.                            | Yes        |
+| `test_sendMessage_EmitsAxelarMessageSentEvent`   | Verifies `sendMessage` emits the `AxelarMessageSent` event.          | Yes        |
+| `test_sendMessage_GivesCorrectRefundRecipient`   | Verifies `sendMessage` gives the correct refund recipient.           | Yes        |
+| `test_RevertIf_sendMessageCalledByNonRootBridge` | `sendMessage` reverts when called by a non-root bridge.              | No         |
+| `test_RevertIf_sendMessageCalledWithNoValue`     | `sendMessage` reverts when called with no value.                     | No         |
+| `test_Execute_CallsBridge`                       | Verifies `execute` calls the configured `ChildERC20Bridge` contract. | Yes        |
+| `test_Execute_EmitsAdaptorExecuteEvent`          | Verifies `execute` emits the `AdaptorExecute` event.                 | Yes        |
