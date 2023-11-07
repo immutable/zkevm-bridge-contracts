@@ -16,7 +16,7 @@ import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 
-contract ChildERC20BridgewithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
+contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
@@ -105,7 +105,7 @@ contract ChildERC20BridgewithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
-    function test_WithdrawIMX_ReducesBalance() public {
+    function test_WithdrawIMXTo_ReducesBalance() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -117,7 +117,7 @@ contract ChildERC20BridgewithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         assertEq(postBal, preBal - withdrawAmount - withdrawFee, "Balance not reduced");
     }
 
-    function test_WithdrawIMX_PaysFee() public {
+    function test_WithdrawIMXTo_PaysFee() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
