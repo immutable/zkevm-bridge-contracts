@@ -37,8 +37,10 @@ Tests for the `mapToken` function.
 | `test_RevertIf_mapTokenCalledWithIMXAddress`  | Should revert if attempting to map IMX                                | No         |
 
 ### Deposits (L1 -> L2)
-Tests are related to the deposit operations of the bridge. This involves depositing tokens on the L1 contract to redeem corresponding tokens on L2. 
-The behavior varies subtly depending on whether the deposited token is a standard ERC20 token, Wrapped IMX, Native ETH, or Wrapped ETH.
+The tests relate to the deposit feature of the bridge. 
+This operation involves depositing tokens on the L1 contract to mint corresponding tokens on L2. 
+The behavior varies slightly depending on whether the deposited token is a standard ERC20, Wrapped IMX, Native ETH, or Wrapped ETH. 
+The tests described below are solely related to the portion of this flow related to the L1 bridge contract (i.e., `RootERC20Bridge.sol`), which involves processing a user's deposit request and dispatching a cross-chain message through an underlying bridge adapter.
 
 #### Standard ERC20 Tokens
 
@@ -71,27 +73,32 @@ Tests specifically for the behavior related to IMX token deposits, in addition t
 | `test_RevertsIf_IMXDepositLimitTooLow`               | Should revert if the IMX deposit limit is too low                                                      | No         |
 
 #### ETH (Native and Wrapped)
+Tests specifically for the behavior related to native ETH and wrapped ETH deposits.
 
-| Test                                          | Description                                                                                 | Happy Path |
-|-----------------------------------------------|---------------------------------------------------------------------------------------------|------------|
-| `test_depositETHCallsSendMessage`             | Calls the send message function when depositing ETH                                         | Yes        |
-| `test_depositETHEmitsNativeEthDepositEvent`   | Emits the native ETH deposit event when depositing ETH                                      | Yes        |
-| `test_depositToWETHEmitsWETHDepositEvent`     | Verifies that the depositToETH function emits a WETHDepositEven event when depositing WETH. | Yes        |
-| `test_depositToWETHTransfersToken`            | Verifies that the depositToETH function transfers WETH to the child chain.                  | Yes        |
-| `test_depositTransfersNativeAsset`            | Verifies that the deposit function transfers the native asset to the specified child chain. | Yes        |
-| `test_depositToETHCallsSendMessage`           | Verifies that the depositToETH function calls the sendMessage function.                     | Yes        |
-| `test_depositToETHEmitsNativeEthDepositEvent` | Verifies that the depositToETH function emits a NativeEthDepositEven event.                 | Yes        |
-| `test_depositToTransfersNativeAsset`          | Verifies that the depositToETH function transfers the native asset to the child chain.      | Yes        |
-| `test_RevertIf_depositETHAmountIsZero`        | Should revert if the depositETH amount is zero                                              | No         |
-| `test_RevertIf_depositETHInsufficientValue`   | Should revert if the depositETH function is called with insufficient value                  | No         |
-| `test_RevertIf_depositToETHAmountIsZero`      | Should revert if the depositToETH amount is zero                                            | No         |
-| `test_RevertIf_depositToETHInsufficientValue` | Should revert if the depositToETH function is called with insufficient value                | No         |
-| `test_depositWETHCallsSendMessage`            | Verifies that the depositWETH function calls the sendMessage function.                      | Yes        |
-| `test_depositWETHEmitsNativeDepositEvent`     | Verifies that the depositWETH function emits a NativeDepositEven event.                     | Yes        |
-| `test_depositWETHTransfersToken`              | Verifies that the depositWETH function transfers WETH to the child chain.                   | Yes        |
+| Test                                          | Description                                                                                                    | Happy Path |
+|-----------------------------------------------|----------------------------------------------------------------------------------------------------------------|------------|
+| `test_depositTransfersNativeAsset`            | Depositing native ETH using `depositETH()` transfers ETH to the bridge.                                        | Yes        |
+| `test_depositToTransfersNativeAsset`          | Depositing native ETH using `depositToETH()` transfers ETH to the bridge.                                      | Yes        |
+| `test_depositWETHTransfersToken`              | Depositing wrapped ETH transfers WETH to the bridge.                                                           | Yes        |
+| `test_depositToWETHTransfersToken`            | Depositing wrapped ETH transfers WETH to the bridge.                                                           | Yes        |
+| `test_depositETHCallsSendMessage`             | Depositing native ETH sends cross-chain message through the bridge adapter                                     | Yes        |
+| `test_depositToETHCallsSendMessage`           | Depositing native ETH sends cross-chain message through the bridge adapter                                     | Yes        |
+| `test_depositWETHCallsSendMessage`            | Depositing wrapped ETH sends cross-chain message through the bridge adapter                                    | Yes        |
+| `test_depositETHEmitsNativeEthDepositEvent`   | Depositing native ETH sends cross-chain message through the bridge adapter emits the `NativeETHDeposit` event  | Yes        |
+| `test_depositToETHEmitsNativeEthDepositEvent` | Depositing native ETH sends cross-chain message through the bridge adapter emits the `NativeETHDeposit` event  | Yes        |
+| `test_depositWETHEmitsNativeDepositEvent`     | Depositing wrapped ETH sends cross-chain message through the bridge adapter emits the `NativeETHDeposit` event | Yes        |
+| `test_depositToWETHEmitsWETHDepositEvent`     | Depositing wrapped ETH sends cross-chain message through the bridge adapter emits the `WETHDeposit` event      | Yes        |
+| `test_RevertIf_depositETHAmountIsZero`        | Should revert if the ETH deposit amount is zero                                                                | No         |
+| `test_RevertIf_depositToETHAmountIsZero`      | Should revert if the ETH deposit amount is zero                                                                | No         |
+| `test_RevertIf_depositETHInsufficientValue`   | Should revert if the ETH deposit is called with insufficient value                                             | No         |
+| `test_RevertIf_depositToETHInsufficientValue` | Should revert if the ETH deposit  is called with insufficient value                                            | No         |
 
 
 ### Withdrawal (L2 -> L1)
+The tests relate to the withdrawal feature of the bridge. This operation involves burning tokens on the L2 bridge contract to unlock corresponding tokens on L1. 
+The behavior of this feature varies slightly depending on whether the token being withdrawn is a standard ERC20, Wrapped IMX, or ETH. 
+The tests below are solely related to the portion of the flow involving the L1 bridge contract (i.e., `RootERC20Bridge.sol`), wherein a withdrawal flow initiated on L2, is processed on L1.
+
 #### Standard ERC20 Tokens
 
 | Test                                                                       | Description                                                                                               | Happy Path |
