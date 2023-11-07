@@ -123,27 +123,6 @@ This document outlines the tests associated with this project. It is currently n
 
 ----
 
-## Root ERC20 Bridge Adapter
-
-**Contract:** [RootERC20BridgeAdapter.sol](../../src/root/bridge_adapters/RootERC20BridgeAdapter.sol)
-**Test Contracts:** [RootERC20BridgeAdapter.t.sol](./root/bridge_adapters/RootERC20BridgeAdapter.t.sol)
-
-| Test Function Name                                   | Description                                                     | Happy Path or Failure |
-|------------------------------------------------------|-----------------------------------------------------------------|-----------------------|
-| `test_Initialize`                                    | Ensure initialized state matches expected                       | Yes                   |
-| `test_RevertWhen_InitializeGivenEmptyChildChainName` | Constructor should revert when given an empty child chain name. | No                    |
-| `test_RevertWhen_InitializeGivenZeroAddress`         | `initialize()` should revert when given a zero address.         | No                    |
-| `test_Execute_CallsBridge`                           | `execute` should calls the `RootERC20Bridge` contract.          | Yes                   |
-| `test_Execute_EmitsAdaptorExecuteEvent`              | `execute` should emit the `AdaptorExecute` event.               | Yes                   |
-| `test_sendMessage_CallsGasService`                   | `sendMessage` calls the Gas Service.                            | Yes                   |
-| `test_sendMessage_CallsGateway`                      | `sendMessage` calls the Gateway.                                | Yes                   |
-| `test_sendMessage_EmitsAxelarMessageSentEvent`       | `sendMessage` emits the `AxelarMessageSent` event.              | Yes                   |
-| `test_sendMessage_GivesCorrectRefundRecipient`       | `sendMessage` gives the correct refund recipient.               | Yes                   |
-| `test_RevertIf_mapTokenCalledByNonRootBridge`        | `mapToken` reverts when called by a non-root bridge.            | No                    |
-| `test_RevertIf_mapTokenCalledWithNoValue`            | `mapToken` reverts when called with no value.                   | No                    |
-
-----
-
 ## Child ERC20 Bridge
 
 **Contract**: [ChildERC20Bridge.sol](../../src/child/ChildERC20Bridge.sol)
@@ -267,3 +246,43 @@ This document outlines the tests associated with this project. It is currently n
 | `test_updateBridgeAdaptor`                               | `updateBridgeAdaptor()` function                            | Yes        |
 | `test_RevertIf_updateBridgeAdaptorCalledByNonOwner`      | `updateBridgeAdaptor()` reverts if called by non-owner      | No         |
 | `test_RevertIf_updateBridgeAdaptorCalledWithZeroAddress` | `updateBridgeAdaptor()` reverts if called with zero address | No         |
+
+----
+
+## Root Axelar Bridge Adapter
+
+**Contract:** [RootAxelarBridgeAdapter.sol](../../src/root/RootAxelarBridgeAdaptor.sol)
+**Test Contracts:** [RootAxelarBridgeAdapter.t.sol](./root/RootAxelarBridgeAdaptor.t.sol)
+
+| Test Function Name                                   | Description                                                     | Happy Path or Failure |
+|------------------------------------------------------|-----------------------------------------------------------------|-----------------------|
+| `test_Initialize`                                    | Test `initialize()` sets correct values                         | Yes                   |
+| `test_RevertWhen_InitializeGivenEmptyChildChainName` | Constructor should revert when given an empty child chain name. | No                    |
+| `test_RevertWhen_InitializeGivenZeroAddress`         | `initialize()` should revert when given a zero address.         | No                    |
+| `test_Execute_CallsBridge`                           | `execute` should call the `RootERC20Bridge` contract.          | Yes                   |
+| `test_Execute_EmitsAdaptorExecuteEvent`              | `execute` should emit the `AdaptorExecute` event.               | Yes                   |
+| `test_sendMessage_CallsGasService`                   | `sendMessage` calls the Gas Service.                            | Yes                   |
+| `test_sendMessage_CallsGateway`                      | `sendMessage` calls the Gateway.                                | Yes                   |
+| `test_sendMessage_EmitsAxelarMessageSentEvent`       | `sendMessage` emits the `AxelarMessageSent` event.              | Yes                   |
+| `test_sendMessage_GivesCorrectRefundRecipient`       | `sendMessage` gives the correct refund recipient.               | Yes                   |
+| `test_RevertIf_mapTokenCalledByNonRootBridge`        | `mapToken` reverts when called by a non-root bridge.            | No                    |
+| `test_RevertIf_mapTokenCalledWithNoValue`            | `mapToken` reverts when called with no value.                   | No                    |
+
+--- 
+
+## Child Axelar Bridge Adapter
+Contract: [ChildAxelarBridgeAdaptor.sol](../../src/child/ChildAxelarBridgeAdaptor.sol)
+Test Contracts: [ChildAxelarBridgeAdaptor.t.sol](./child/ChildAxelarBridgeAdaptor.t.sol)
+
+| Test Function Name                               | Description                                             | Happy Path or Failure |
+|--------------------------------------------------|---------------------------------------------------------|-----------------------|
+| `test_Initialize`                                | Test `initialize()` sets correct values                 | Yes                   |
+| `test_Execute_CallsBridge`                       | `execute` should call the `ChildERC20Bridge` contract.  | Yes                   |
+| `test_Execute_EmitsAdaptorExecuteEvent`          | `execute` should emits the `AdaptorExecute` event.      | Yes                   |
+| `test_sendMessage_CallsGasService`               | `sendMessage` calls the Gas Service.                    | Yes                   |
+| `test_sendMessage_CallsGateway`                  | `sendMessage` calls the Gateway.                        | Yes                   |
+| `test_sendMessage_EmitsAxelarMessageSentEvent`   | `sendMessage` emits the AxelarMessageSent event.        | Yes                   |
+| `test_sendMessage_GivesCorrectRefundRecipient`   | `sendMessage` gives the correct refund recipient.       | Yes                   |
+| `test_RevertIf_InitializeGivenZeroAddress`       | `initialize` reverts when given a zero address.         | No                    |
+| `test_RevertIf_sendMessageCalledByNonRootBridge` | `sendMessage` reverts when called by a non-root bridge. | No                    |
+| `test_RevertIf_sendMessageCalledWithNoValue`     | `sendMessage` reverts when called with no value.        | No                    |
