@@ -11,6 +11,7 @@ import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {WETH} from "../src/test/root/WETH.sol";
 import {IWETH} from "../src/interfaces/root/IWETH.sol";
+import {WIMX} from "../src/child/WIMX.sol";
 
 import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
@@ -35,6 +36,8 @@ contract Utils is Test {
         rootIMX = address(555555);
         rootToken = address(44444);
         address childWIMX = address(0xabc);
+
+        deployCodeTo("WIMX.sol", childWIMX);
 
         axelarGasService = new MockAxelarGasService();
         mockAxelarGateway = new MockAxelarGateway();
