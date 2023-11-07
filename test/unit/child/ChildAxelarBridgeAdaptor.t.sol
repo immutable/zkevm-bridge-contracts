@@ -34,7 +34,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         axelarAdaptor.initialize(ROOT_CHAIN_NAME, address(mockChildERC20Bridge), address(mockChildAxelarGasService));
     }
 
-    function test_Constructor_SetsValues() public {
+    function test_Initialize() public {
         assertEq(address(axelarAdaptor.childBridge()), address(mockChildERC20Bridge), "childBridge not set");
         assertEq(address(axelarAdaptor.gateway()), address(mockChildAxelarGateway), "gateway not set");
         assertEq(axelarAdaptor.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
