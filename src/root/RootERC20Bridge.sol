@@ -392,6 +392,8 @@ contract RootERC20Bridge is
         address childToken;
         if (address(rootToken) == rootIMXToken) {
             childToken = NATIVE_IMX;
+        } else if (address(rootToken) == NATIVE_ETH) {
+            childToken = childETHToken;
         } else {
             childToken = rootTokenToChildToken[rootToken];
             if (childToken == address(0)) {

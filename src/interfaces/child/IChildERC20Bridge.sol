@@ -90,6 +90,8 @@ interface IChildERC20BridgeEvents {
     event ChildChainWrappedIMXWithdraw(
         address indexed rootToken, address indexed depositor, address indexed receiver, uint256 amount
     );
+    /// @notice Emitted when a child chain ETH withdrawal is initiated.
+    event ChildChainEthWithdraw(address indexed depositor, address indexed receiver, uint256 amount);
     /// @notice Emitted when a root chain ERC20 deposit is completed on the child chain.
     event ChildChainERC20Deposit(
         address indexed rootToken,

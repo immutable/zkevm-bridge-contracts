@@ -147,6 +147,13 @@ contract ChildERC20Bridge is
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
     }
 
+    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
+        if (newBridgeAdaptor == address(0)) {
+            revert ZeroAddress();
+        }
+        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
+    }
+
     /**
      * @inheritdoc IChildERC20Bridge
      */
@@ -273,6 +280,14 @@ contract ChildERC20Bridge is
             }
 
             rootToken = rootIMXToken;
+        } else if (childTokenAddr == childETHToken) {
+            // Wrapped ETH.
+            IChildERC20 childToken = IChildERC20(childTokenAddr);
+            rootToken = NATIVE_ETH;
+
+            if (!childToken.burn(msg.sender, amount)) {
+                revert BurnFailed();
+            }
         } else {
             // Other ERC20 Tokens
             IChildERC20 childToken = IChildERC20(childTokenAddr);
@@ -311,6 +326,8 @@ contract ChildERC20Bridge is
             emit ChildChainNativeIMXWithdraw(rootToken, msg.sender, receiver, amount);
         } else if (childTokenAddr == wIMXToken) {
             emit ChildChainWrappedIMXWithdraw(rootToken, msg.sender, receiver, amount);
+        } else if (childTokenAddr == childETHToken) {
+            emit ChildChainEthWithdraw(msg.sender, receiver, amount);
         } else {
             emit ChildChainERC20Withdraw(rootToken, childTokenAddr, msg.sender, receiver, amount);
         }
