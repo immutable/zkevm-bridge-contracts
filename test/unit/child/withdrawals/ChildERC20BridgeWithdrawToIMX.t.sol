@@ -105,7 +105,7 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
-    function test_WithdrawIMX_ReducesBalance() public {
+    function test_WithdrawIMXTo_ReducesBalance() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -117,7 +117,7 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         assertEq(postBal, preBal - withdrawAmount - withdrawFee, "Balance not reduced");
     }
 
-    function test_WithdrawIMX_PaysFee() public {
+    function test_WithdrawIMXTo_PaysFee() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
