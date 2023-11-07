@@ -21,8 +21,8 @@ The `RootERC20Bridge` contract is upgradeable. These tests verify the initializa
 | `test_RevertIf_InitializeWithAZeroAddressWETHToken`     | Should revert if attempting to initialize with a zero address for the WETH token argument          | No         |
 | `test_RevertIf_InitializeWithEmptyChildAdapter`         | Should revert if attempting to initialize with an empty child adapter argument                     | No         |
 
-### Map Token
-Tests for the `mapToken` function.
+### Map Token (L1 -> L2)
+Tests for the `mapToken` function, which maps a token on the L1 bridge contract to a newly created token on the L2 bridge contract.
 - A mapped token cannot be mapped again
 - ETH and IMX cannot be mapped
 
@@ -38,7 +38,7 @@ Tests for the `mapToken` function.
 
 ### Deposits (L1 -> L2)
 The tests relate to the deposit feature of the bridge. 
-This operation involves depositing tokens on the L1 contract to mint corresponding tokens on L2. 
+This operation involves depositing tokens on the L1 contract to mint (or redeem) corresponding tokens on L2. 
 The behavior varies slightly depending on whether the deposited token is a standard ERC20, Wrapped IMX, Native ETH, or Wrapped ETH. 
 The tests described below are solely related to the portion of this flow related to the L1 bridge contract (i.e., `RootERC20Bridge.sol`), which involves processing a user's deposit request and dispatching a cross-chain message through an underlying bridge adapter.
 
@@ -64,13 +64,13 @@ The tests described below are solely related to the portion of this flow related
 #### IMX Token
 Tests specifically for the behavior related to IMX token deposits, in addition to the shared tests for standard ERC20 token behavior listed above.
 
-| Test                                                 | Description                                                                                            | Happy Path |
-|------------------------------------------------------|--------------------------------------------------------------------------------------------------------|------------|
-| `test_depositIMXEmitsIMXDepositEvent`                | Verifies that `deposit()` emits the `IMXDepositEvent` event when depositing IMX                        | Yes        |
-| `test_depositToIMXEmitsIMXDepositEvent`              | Verifies that `depositTo()` emits the `IMXDepositEvent` when depositing IMX                            | Yes        |
-| `test_deposit_whenSettingImxDepositLimitToUnlimited` | Verifies that the deposit function can still be called when the IMX deposit limit is set to unlimited. | Yes        |
-| `test_RevertsIf_IMXDepositLimitExceeded`             | Should revert if the IMX deposit limit is exceeded                                                     | No         |
-| `test_RevertsIf_IMXDepositLimitTooLow`               | Should revert if the IMX deposit limit is too low                                                      | No         |
+| Test                                                 | Description                                                                                                 | Happy Path |
+|------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|------------|
+| `test_depositIMXEmitsIMXDepositEvent`                | Verifies that `deposit()` emits the `IMXDepositEvent` event when depositing IMX                             | Yes        |
+| `test_depositToIMXEmitsIMXDepositEvent`              | Verifies that `depositTo()` emits the `IMXDepositEvent` when depositing IMX for different recipient address | Yes        |
+| `test_deposit_whenSettingImxDepositLimitToUnlimited` | Verifies that the deposit function can still be called when the IMX deposit limit is set to unlimited.      | Yes        |
+| `test_RevertsIf_IMXDepositLimitExceeded`             | Should revert if the IMX deposit limit is exceeded                                                          | No         |
+| `test_RevertsIf_IMXDepositLimitTooLow`               | Should revert if the IMX deposit limit is too low                                                           | No         |
 
 #### ETH (Native and Wrapped)
 Tests specifically for the behavior related to native ETH and wrapped ETH deposits.
@@ -101,27 +101,27 @@ The tests below are solely related to the portion of the flow involving the L1 b
 
 #### Standard ERC20 Tokens
 
-| Test                                                                       | Description                                                                                               | Happy Path |
-|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|------------|
-| `test_onMessageReceive_EmitsRootChainERC20WithdrawEvent`                   | Emits a `RootChainERC20WithdrawEvent` when a message is received.                                         | Yes        |
-| `test_onMessageReceive_EmitsRootChainERC20WithdrawEvent_DifferentReceiver` | Emits a `RootChainERC20WithdrawEvent` when a message is received for any token with a different receiver. | Yes        |
-| `test_onMessageReceive_TransfersTokens`                                    | Transfers tokens when a message is received.                                                              | Yes        |
-| `test_onMessageReceive_TransfersTokens_DifferentReceiver`                  | Transfers tokens to a different receiver when a message is received.                                      | Yes        |
-| `test_RevertsIf_OnMessageReceiveWithInvalidSignature`                      | Should revert if the message signature is invalid.                                                        | No         |
-| `test_RevertsIf_OnMessageReceiveWithInvalidSourceAddress`                  | Should revert if the message source address is invalid.                                                   | No         |
-| `test_RevertsIf_OnMessageReceiveWithInvalidSourceChain`                    | Should revert if the message source chain is invalid.                                                     | No         |
-| `test_RevertsIf_OnMessageReceiveWithUnmappedToken`                         | Should revert if the message token is not mapped to a root chain token.                                   | No         |
-| `test_RevertsIf_OnMessageReceiveWithZeroDataLength`                        | Should revert if the message data length is zero.                                                         | No         |
-| `test_RevertsIf_WithdrawWithInvalidSender`                                 | Should revert if the sender of the withdraw request is invalid.                                           | No         |
+| Test                                                                       | Description                                                                                                             | Happy Path |
+|----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|------------|
+| `test_onMessageReceive_TransfersTokens`                                    | Withdraw transfers tokens to withdrawer address.                                                                        | Yes        |
+| `test_onMessageReceive_TransfersTokens_DifferentReceiver`                  | Withdraw transfers tokens to a specified recipient address.                                                             | Yes        |
+| `test_onMessageReceive_EmitsRootChainERC20WithdrawEvent`                   | Withdraw emits a `RootChainERC20WithdrawEvent` when a withdrawal message is received.                                   | Yes        |
+| `test_onMessageReceive_EmitsRootChainERC20WithdrawEvent_DifferentReceiver` | Withdraw emits a `RootChainERC20WithdrawEvent` when a withdrawal message with a different receiver address is received. | Yes        |
+| `test_RevertsIf_OnMessageReceiveWithUnmappedToken`                         | Should revert if the token is not already mapped on the root chain.                                                     | No         |
+| `test_RevertsIf_WithdrawWithInvalidSender`                                 | Should revert if the caller of `OnMessageReceive()` function is not the root chain bridge adapter                       | No         |
+| `test_RevertsIf_OnMessageReceiveWithInvalidSignature`                      | Should revert if the message signature is not for a withdrawal action.                                                  | No         |
+| `test_RevertsIf_OnMessageReceiveWithInvalidSourceAddress`                  | Should revert if the message source address is not the child bridge adapter.                                            | No         |
+| `test_RevertsIf_OnMessageReceiveWithInvalidSourceChain`                    | Should revert if the message source chain is not the child chain id.                                                    | No         |
+| `test_RevertsIf_OnMessageReceiveWithZeroDataLength`                        | Should revert if the message data length is zero.                                                                       | No         |
 
 #### IMX Token (Native and Wrapped)
 
-| Test                                                                             | Description                                                                                                | Happy Path |
-|----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|------------|
-| `test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX`                   | Emits a `RootChainERC20WithdrawEvent` when a message is received for IMX tokens.                           | Yes        |
-| `test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX_DifferentReceiver` | Emits a `RootChainERC20WithdrawEvent` when a message is received for IMX tokens with a different receiver. | Yes        |
-| `test_onMessageReceive_TransfersIMXTokens`                                       | Transfers IMX tokens when a message is received.                                                           | Yes        |
-| `test_onMessageReceive_TransfersIMXTokens_DifferentReceiver`                     | Transfers IMX tokens to a different receiver when a message is received.                                   | Yes        |
+| Test                                                                             | Description                                                                                             | Happy Path |
+|----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|------------|
+| `test_onMessageReceive_TransfersIMXTokens`                                       | Withdrawal transfers IMX tokens when a message is received.                                             | Yes        |
+| `test_onMessageReceive_TransfersIMXTokens_DifferentReceiver`                     | Withdrawal transfers IMX tokens to a different receiver when a message is received.                     | Yes        |
+| `test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX`                   | Withdrawal emits a `RootChainERC20WithdrawEvent` when withdrawing IMX tokens.                           | Yes        |
+| `test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX_DifferentReceiver` | Withdrawal emits a `RootChainERC20WithdrawEvent` when withdrawing IMX tokens with a different receiver. | Yes        |
 
 #### ETH (TODO: )
 
@@ -131,12 +131,12 @@ The tests below are solely related to the portion of the flow involving the L1 b
 
 ### Control Operations
 
-| Test                                                          | Description                                                         | Happy Path |
-|---------------------------------------------------------------|---------------------------------------------------------------------|------------|
-| `test_updateRootBridgeAdaptor_UpdatesRootBridgeAdaptor`       | Updates the bridge adaptor address                                  | Yes        |
-| `test_updateRootBridgeAdaptor_EmitsNewRootBridgeAdaptorEvent` | Updating adapter address should emit `NewRootBridgeAdaptor` event   | Yes        |
-| `test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner`       | Should revert if the function is called by a non-owner              | No         |
-| `test_RevertIf_updateRootBridgeAdaptorCalledWithZeroAddress`  | Should revert if the function is called with a zero adaptor address | No         |
+| Test                                                          | Description                                                              | Happy Path |
+|---------------------------------------------------------------|--------------------------------------------------------------------------|------------|
+| `test_updateRootBridgeAdaptor_UpdatesRootBridgeAdaptor`       | Updates the bridge adaptor address                                       | Yes        |
+| `test_updateRootBridgeAdaptor_EmitsNewRootBridgeAdaptorEvent` | Updating bridge adapter address should emit `NewRootBridgeAdaptor` event | Yes        |
+| `test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner`       | Should revert if the function is not called by the owner                 | No         |
+| `test_RevertIf_updateRootBridgeAdaptorCalledWithZeroAddress`  | Should revert if the function is called with a zero adaptor address      | No         |
 
 
 ----
@@ -147,112 +147,116 @@ The tests below are solely related to the portion of the flow involving the L1 b
 **Test Contracts**: [ChildERC20Bridge.t.sol](./child/ChildERC20Bridge.t.sol), [ChildERC20BridgeWithdraw.t.sol](./child/withdrawals/ChildERC20BridgeWithdraw.t.sol), [ChildERC20BridgeWithdrawIMX.t.sol](./child/withdrawals/ChildERC20BridgeWithdrawIMX.t.sol), [ChildERC20BridgeWithdrawTo.t.sol](./child/withdrawals/ChildERC20BridgeWithdrawTo.t.sol), [ChildERC20BridgeWithdrawToIMX.t.sol](./child/withdrawals/ChildERC20BridgeWithdrawToIMX.t.sol)
 
 ### Initialization
-| Test Function Name                                                    | Description                                                                    | Happy Path  |
-|-----------------------------------------------------------------------|--------------------------------------------------------------------------------|-------------|
-| `test_Initialize`                                                     | Test initialization function                                                   | Yes         |
-| `test_RevertIfInitializeTwice`                                        | `initialize()`should revert if initialization is called twice                  | No          |
-| `test_RevertIf_InitializeWithAZeroAddressAdapter`                     | `initialize()`should revert if initialized with a zero address adapter         | No          |
-| `test_RevertIf_InitializeWithAZeroAddressAll`                         | `initialize()`should revert if initialized with a zero address all             | No          |
-| `test_RevertIf_InitializeWithAZeroAddressChildTemplate`               | `initialize()`should revert if initialized with a zero address child template  | No          |
-| `test_RevertIf_InitializeWithAZeroAddressIMXToken`                    | `initialize()`should revert if initialized with a zero address IMX token       | No          |
-| `test_RevertIf_InitializeWithAnEmptyBridgeAdaptorString`              | `initialize()`should revert if initialized with an empty bridge adaptor string | No          |
-| `test_RevertIf_InitializeWithAnEmptyChainNameString`                  | `initialize()`should revert if initialized with an empty chain name string     | No          |
+The `ChildERC20Bridge` contract is upgradeable. These tests verify the initialization of the contract.
+
+| Test Function Name                                                    | Description                                                                   | Happy Path  |
+|-----------------------------------------------------------------------|-------------------------------------------------------------------------------|-------------|
+| `test_Initialize`                                                     | Test initialization function                                                  | Yes         |
+| `test_RevertIfInitializeTwice`                                        | Should revert if attempting to initialize more than once                      | No          |
+| `test_RevertIf_InitializeWithAZeroAddressAdapter`                     | Should revert if attempting to initialize with a zero address adapter         | No          |
+| `test_RevertIf_InitializeWithAZeroAddressAll`                         | Should revert if attempting to initialize with a zero address all             | No          |
+| `test_RevertIf_InitializeWithAZeroAddressChildTemplate`               | Should revert if attempting to initialize with a zero address child template  | No          |
+| `test_RevertIf_InitializeWithAZeroAddressIMXToken`                    | Should revert if attempting to initialize with a zero address IMX token       | No          |
+| `test_RevertIf_InitializeWithAnEmptyBridgeAdaptorString`              | Should revert if attempting to initialize with an empty bridge adaptor string | No          |
+| `test_RevertIf_InitializeWithAnEmptyChainNameString`                  | Should revert if attempting to initialize with an empty chain name string     | No          |
 
 ### Cross-chain Message Processing
-| Test                                                                  | Description                                                               | Happy Path |
-|-----------------------------------------------------------------------|---------------------------------------------------------------------------|------------|
-| `test_RevertIf_onMessageReceiveCalledTwice`                           | `_onMessageReceive()` should revert if called twice                       | No         |
-| `test_RevertIf_onMessageReceiveCalledWithDataInvalid`                 | `_onMessageReceive()` should revert with invalid data                     | No         |
-| `test_RevertIf_onMessageReceiveCalledWithDataLengthZero`              | `_onMessageReceive()` should revert with zero data length                 | No         |
-| `test_RevertIf_onMessageReceiveCalledWithMsgSenderNotBridgeAdaptor`   | `_onMessageReceive()` should revert if msg sender is not bridge adaptor   | No         |
-| `test_RevertIf_onMessageReceiveCalledWithSourceAddressNotRootAdaptor` | `_onMessageReceive()` should revert if source address is not root adaptor | No         |
-| `test_RevertIf_onMessageReceiveCalledWithSourceChainNotRootChain`     | `_onMessageReceive()` should revert if source chain is not root chain     | No         |
-| `test_RevertIf_onMessageReceiveCalledWithZeroAddress`                 | `_onMessageReceive()` should revert with zero address                     | No         |
+| Test                                                                  | Description                                                                        | Happy Path |
+|-----------------------------------------------------------------------|------------------------------------------------------------------------------------|------------|
+| `test_RevertIf_onMessageReceiveCalledTwice`                           | Should revert if message is delivered more than once                               | No         |
+| `test_RevertIf_onMessageReceiveCalledWithDataInvalid`                 | Should revert with message contains invalid data                                   | No         |
+| `test_RevertIf_onMessageReceiveCalledWithDataLengthZero`              | Should revert with message data is empty                                           | No         |
+| `test_RevertIf_onMessageReceiveCalledWithMsgSenderNotBridgeAdaptor`   | Should revert if `onMessageReceive()` caller is not the child chain bridge adaptor | No         |
+| `test_RevertIf_onMessageReceiveCalledWithSourceAddressNotRootAdaptor` | Should revert if source address is not root chain adaptor                          | No         |
+| `test_RevertIf_onMessageReceiveCalledWithSourceChainNotRootChain`     | Should revert if source chain is not root chain id                                 | No         |
+| `test_RevertIf_onMessageReceiveCalledWithZeroAddress`                 | Should revert if root token address is zero address                                | No         |
 
-### Map Token Operation (L1 -> L2)
-| Test                                          | Description                                                   | Happy Path |
-|-----------------------------------------------|---------------------------------------------------------------|------------|
-| `test_onMessageReceive_EmitsTokenMappedEvent` | Test `TokenMapped` event emitted when mapping token           | Yes        |
-| `test_onMessageReceive_SetsTokenMapping`      | Test token mapping is set                                     | Yes        |
-| `test_onMessageReceive_DeploysERC20`          | `_mapToken()` deploys ERC20 token                             | Yes        |
-| `test_RevertIf_mapTokenCalledWithETHAddress`  | `_mapToken()` should revert if mapping token with ETH address | No         |
-| `test_RevertIf_mapTokenCalledWithIMXAddress`  | `_mapToken()` should revert if mapping token with IMX address | No         |
+### Map Token (L1 -> L2)
+Tests for the `mapToken` function, which maps a token on the L1 bridge contract to a newly created token on the L2 bridge contract.
 
-### Deposits Token Operation (L1 -> L2)
+| Test                                          | Description                                             | Happy Path |
+|-----------------------------------------------|---------------------------------------------------------|------------|
+| `test_onMessageReceive_SetsTokenMapping`      | Verifies token mapping is set correctly                 | Yes        |
+| `test_onMessageReceive_EmitsTokenMappedEvent` | Verifies `TokenMapped` event emitted when mapping token | Yes        |
+| `test_onMessageReceive_DeploysERC20`          | Verifies mapping deploys new ERC20 token                | Yes        |
+| `test_RevertIf_mapTokenCalledWithETHAddress`  | Verifies mapping reverts if token refers to ETH         | No         |
+| `test_RevertIf_mapTokenCalledWithIMXAddress`  | Verifies mapping reverts if token refers to IMX address | No         |
+
+### Deposits Token (L1 -> L2)
 #### Standard ERC20
 
-| Test                                                             | Description                                                 | Happy Path |
-|------------------------------------------------------------------|-------------------------------------------------------------|------------|
-| `test_onMessageReceive_Deposit_EmitsChildChainERC20DepositEvent` | Test onMessageReceive emits child chain ERC20 deposit event | Yes        |
-| `test_onMessageReceive_Deposit_IncreasesTotalSupply`             | Test onMessageReceive increases total supply                | Yes        |
-| `test_onMessageReceive_Deposit_TransfersTokensToReceiver`        | Test onMessageReceive transfers tokens to the receiver      | Yes        |
-| `test_RevertIf_onMessageReceive_DepositWithEmptyContract`        | `_deposit()` should revert if empty contract                | No         |
-| `test_RevertIf_onMessageReceive_Deposit_NotMapped`               | `_deposit()` should revert if token is not mapped           | No         |
-| `test_RevertIf_onMessageReceive_Deposit_ReceiverZeroAddress`     | `_deposit()` should revert if receiver as zero address      | No         |
-| `test_RevertIf_onMessageReceive_Deposit_RootZeroAddress`         | `_deposit()` should revert if root address as zero address  | No         |
+| Test                                                             | Description                                            | Happy Path |
+|------------------------------------------------------------------|--------------------------------------------------------|------------|
+| `test_onMessageReceive_Deposit_TransfersTokensToReceiver`        | Verifies deposit transfers tokens to the receiver      | Yes        |
+| `test_onMessageReceive_Deposit_EmitsChildChainERC20DepositEvent` | Verifies deposit emits child chain ERC20 deposit event | Yes        |
+| `test_onMessageReceive_Deposit_IncreasesTotalSupply`             | Verifies deposit increases total supply                | Yes        |
+| `test_RevertIf_onMessageReceive_DepositWithEmptyContract`        | Should revert if empty contract                        | No         |
+| `test_RevertIf_onMessageReceive_Deposit_NotMapped`               | Should revert if token is not mapped                   | No         |
+| `test_RevertIf_onMessageReceive_Deposit_ReceiverZeroAddress`     | Should revert if receiver address is zero address      | No         |
+| `test_RevertIf_onMessageReceive_Deposit_RootZeroAddress`         | Should revert if root token address as zero address    | No         |
 
 #### ETH
 
-| Test                                                             | Description                                                 | Happy Path |
-|------------------------------------------------------------------|-------------------------------------------------------------|------------|
-| `test_onMessageReceive_DepositETH_EmitsETHDepositEvent`          | Test onMessageReceive emits ETH deposit event               | Yes        |
-| `test_onMessageReceive_DepositETH_IncreasesTotalSupply`          | Test onMessageReceive increases total supply                | Yes        |
-| `test_onMessageReceive_DepositETH_TransfersTokensToReceiver`     | Test onMessageReceive transfers tokens to the receiver      | Yes        |
+| Test                                                             | Description                                               | Happy Path |
+|------------------------------------------------------------------|-----------------------------------------------------------|------------|
+| `test_onMessageReceive_DepositETH_TransfersTokensToReceiver`     | Verifies deposit ETH transfers tokens to the receiver     | Yes        |
+| `test_onMessageReceive_DepositETH_IncreasesTotalSupply`          | Verifies deposit ETH increases total supply on the bridge | Yes        |
+| `test_onMessageReceive_DepositETH_EmitsETHDepositEvent`          | Verifies deposit ETH emits `ETHDeposit` event             | Yes        |
 
 #### IMX
 
-| Test                                                             | Description                                                 | Happy Path |
-|------------------------------------------------------------------|-------------------------------------------------------------|------------|
-| `test_onMessageReceive_DepositIMX_BalancesChanged`               | Test onMessageReceive balances changed on IMX deposit       | Yes        |
-| `test_onMessageReceive_DepositIMX_EmitsIMXDepositEvent`          | Test onMessageReceive emits IMX deposit event               | Yes        |
-| `test_RevertIf_onMessageReceive_DepositIMX_InsufficientBalance`  | `_deposit()` should revert if insufficient balance          | No         |
+| Test                                                             | Description                                                                  | Happy Path |
+|------------------------------------------------------------------|------------------------------------------------------------------------------|------------|
+| `test_onMessageReceive_DepositIMX_BalancesChanged`               | Verifies deposit IMX updates bridge's balance                                | Yes        |
+| `test_onMessageReceive_DepositIMX_EmitsIMXDepositEvent`          | Test onMessageReceive emits IMX deposit event                                | Yes        |
+| `test_RevertIf_onMessageReceive_DepositIMX_InsufficientBalance`  | Should revert if the bridge does not have sufficient IMX to transfer to user | No         |
 
 ### Withdrawals (L2 -> L1)
 
 #### Standard ERC20 Token
 
-| Test                                                               | Description                                                                    | Happy Path |
-|--------------------------------------------------------------------|--------------------------------------------------------------------------------|------------|
-| `test_withdraw_CallsBridgeAdaptor`                                 | Test that the `withdraw` function calls the bridge adaptor.                    | Yes        |
-| `test_withdraw_EmitsERC20WithdrawEvent`                            | Test that the `withdraw` function emits ERC20 Withdraw event.                  | Yes        |
-| `test_withdraw_PaysFee`                                            | Test that the `withdraw` function pays the withdrawal fee.                     | Yes        |
-| `test_withdraw_ReducesBalance`                                     | Test that the `withdraw` function reduces the user's balance.                  | Yes        |
-| `test_withdraw_ReducesTotalSupply`                                 | Test that the `withdraw` function reduces the total supply.                    | Yes        |
-| `test_withdrawTo_CallsBridgeAdaptor`                               | Test that the `withdrawTo` function calls the bridge adaptor.                  | Yes        |
-| `test_withdrawTo_EmitsERC20WithdrawEvent`                          | Test that the `withdrawTo` function emits ERC20 Withdraw event.                | Yes        |
-| `test_withdrawTo_PaysFee`                                          | Test that the `withdrawTo` function pays the withdrawal fee.                   | Yes        |
-| `test_withdrawTo_ToDifferentReceiverCallsMockAdaptor`              | Test `withdrawTo` to a different receiver calling the mock adaptor.            | Yes        |
-| `test_withdrawTo_ReducesBalance`                                   | Test that the `withdrawTo` function reduces the user's balance.                | Yes        |
-| `test_withdrawTo_ReducesTotalSupply`                               | Test that the `withdrawTo` function reduces the total supply.                  | Yes        |
-| `test_RevertIf_ZeroAmountIsProvided`                               | Test reverting when zero amount is provided in the `withdraw` call.            | No         |
-| `test_RevertsIf_WithdrawCalledWithAChildTokenThatHasWrongBridge`   | Test withdrawal with child token having the wrong bridge.                      | No         |
-| `test_RevertsIf_WithdrawCalledWithAChildTokenWithUnsetRootToken`   | Test withdrawal with a child token having an unset root token.                 | No         |
-| `test_RevertsIf_WithdrawCalledWithEmptyChildToken`                 | Test withdrawal with an empty child token.                                     | No         |
-| `test_RevertsIf_WithdrawCalledWithUnmappedToken`                   | Test withdrawal with an unmapped token.                                        | No         |
-| `test_RevertsIf_WithdrawWhenBurnFails`                             | Test withdrawal when the burn operation fails.                                 | No         |
-| `test_RevertsIf_WithdrawToCalledWithAChildTokenThatHasWrongBridge` | Test `withdrawTo` with a child token having the wrong bridge.                  | No         |
-| `test_RevertsIf_WithdrawToCalledWithAChildTokenWithUnsetRootToken` | Test `withdrawTo` with a child token having an unset root token.               | No         |
-| `test_RevertsIf_WithdrawToCalledWithEmptyChildToken`               | Test `withdrawTo` with an empty child token.                                   | No         |
-| `test_RevertsIf_WithdrawToCalledWithUnmappedToken`                 | Test `withdrawTo` with an unmapped token.                                      | No         |
-| `test_RevertsIf_WithdrawToWhenBurnFails`                           | Test `withdrawTo` when the burn operation fails.                               | No         |
+| Test                                                               | Description                                                                     | Happy Path |
+|--------------------------------------------------------------------|---------------------------------------------------------------------------------|------------|
+| `test_withdrawTo_ReducesBalance`                                   | Verifies that the `withdrawTo` function reduces the user's balance.             | Yes        |
+| `test_withdraw_ReducesBalance`                                     | Verifies that the `withdraw` function reduces the user's balance.               | Yes        |
+| `test_withdrawTo_ReducesTotalSupply`                               | Verifies that the `withdrawTo` function reduces the total supply for the token. | Yes        |
+| `test_withdraw_ReducesTotalSupply`                                 | Verifies that the `withdraw` function reduces the total supply for the token.   | Yes        |
+| `test_withdraw_PaysFee`                                            | Verifies that the `withdraw` function pays the withdrawal fee.                  | Yes        |
+| `test_withdrawTo_PaysFee`                                          | Verifies that the `withdrawTo` function pays the withdrawal fee.                | Yes        |
+| `test_withdraw_CallsBridgeAdaptor`                                 | Verifies that the `withdraw` function calls the bridge adaptor.                 | Yes        |
+| `test_withdrawTo_CallsBridgeAdaptor`                               | Verifies that the `withdrawTo` function calls the bridge adaptor.               | Yes        |
+| `test_withdraw_EmitsERC20WithdrawEvent`                            | Verifies that the `withdraw` function emits ERC20 Withdraw event.               | Yes        |
+| `test_withdrawTo_EmitsERC20WithdrawEvent`                          | Verifies that the `withdrawTo` function emits ERC20 Withdraw event.             | Yes        |
+| `test_withdrawTo_ToDifferentReceiverCallsMockAdaptor`              | Verifies `withdrawTo` to a different receiver calling the mock adaptor.         | Yes        |
+| `test_RevertIf_ZeroAmountIsProvided`                               | Should revert zero amount is provided in the `withdraw` call.                   | No         |
+| `test_RevertsIf_WithdrawCalledWithAChildTokenThatHasWrongBridge`   | Should revert bridge associated with the child token is incorrect.              | No         |
+| `test_RevertsIf_WithdrawCalledWithAChildTokenWithUnsetRootToken`   | Should revert the root token associated with a child token is unset.            | No         |
+| `test_RevertsIf_WithdrawCalledWithEmptyChildToken`                 | Should revert an empty child token is invalid.                                  | No         |
+| `test_RevertsIf_WithdrawCalledWithUnmappedToken`                   | Should revert if token is not already mapped.                                   | No         |
+| `test_RevertsIf_WithdrawWhenBurnFails`                             | Should revert if burning the child token fails operation fails.                 | No         |
+| `test_RevertsIf_WithdrawToCalledWithAChildTokenThatHasWrongBridge` | Should revert bridge associated with the child token is incorrect.              | No         |
+| `test_RevertsIf_WithdrawToCalledWithAChildTokenWithUnsetRootToken` | Should revert the root token associated with a child token is unset..           | No         |
+| `test_RevertsIf_WithdrawToCalledWithEmptyChildToken`               | Should revert an empty child token is invalid.                                  | No         |
+| `test_RevertsIf_WithdrawToCalledWithUnmappedToken`                 | Should revert if token is not already mapped.                                   | No         |
+| `test_RevertsIf_WithdrawToWhenBurnFails`                           | Should revert if burning the child token fails operation fails                  | No         |
 
 #### IMX (Wrapped and Native)
 
 | Test                                                                 | Description                                                                    | Happy Path |
 |----------------------------------------------------------------------|--------------------------------------------------------------------------------|------------|
-| `test_RevertsIf_WithdrawIMXCalledWithInsufficientFund`               | Test `withdrawIMX` when called with insufficient funds.                        | No         |
 | `test_WithdrawIMX_CallsBridgeAdaptor`                                | Test that the `withdrawIMX` function calls the bridge adaptor.                 | Yes        |
 | `test_WithdrawIMX_EmitsNativeIMXWithdrawEvent`                       | Test that the `withdrawIMX` function emits Native IMX Withdraw event.          | Yes        |
 | `test_WithdrawIMX_PaysFee`                                           | Test that the `withdrawIMX` function pays the withdrawal fee.                  | Yes        |
 | `test_WithdrawIMX_ReducesBalance`                                    | Test that the `withdrawIMX` function reduces the user's balance.               | Yes        |
-| `test_RevertIf_ZeroAmountIsProvided`                                 | Test reverting when zero amount is provided in the `withdrawIMX` call.         | No         |
-| `test_RevertsIf_withdrawIMXToCalledWithInsufficientFund`             | Test `withdrawIMXTo` when called with insufficient funds.                      | No         |
 | `test_WithdrawIMX_PaysFee`                                           | Test that the `withdrawIMXTo` function pays the withdrawal fee.                | Yes        |
 | `test_WithdrawIMX_ReducesBalance`                                    | Test that the `withdrawIMXTo` function reduces the user's balance.             | Yes        |
 | `test_withdrawIMXToWithDifferentAccount_CallsBridgeAdaptor`          | Test `withdrawIMXTo` with a different account calling the bridge adaptor.      | Yes        |
 | `test_withdrawIMXToWithDifferentAccount_EmitsNativeIMXWithdrawEvent` | Test `withdrawIMXTo` emits Native IMX Withdraw event with a different account. | Yes        |
 | `test_withdrawIMXTo_CallsBridgeAdaptor`                              | Test that the `withdrawIMXTo` function calls the bridge adaptor.               | Yes        |
 | `test_withdrawIMXTo_EmitsNativeIMXWithdrawEvent`                     | Test that the `withdrawIMXTo` function emits Native IMX Withdraw event.        | Yes        |
+| `test_RevertsIf_WithdrawIMXCalledWithInsufficientFund`               | Test `withdrawIMX` when called with insufficient funds.                        | No         |
+| `test_RevertIf_ZeroAmountIsProvided`                                 | Test reverting when zero amount is provided in the `withdrawIMX` call.         | No         |
+| `test_RevertsIf_withdrawIMXToCalledWithInsufficientFund`             | Test `withdrawIMXTo` when called with insufficient funds.                      | No         |
 
 #### ETH (TODO: )
 
