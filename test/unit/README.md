@@ -141,7 +141,6 @@ The tests below are solely related to the portion of the flow involving the L1 b
 | `test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner`       | Should revert if the function is not called by the owner                 | No         |
 | `test_RevertIf_updateRootBridgeAdaptorCalledWithZeroAddress`  | Should revert if the function is called with a zero adaptor address      | No         |
 
-
 ----
 
 ## Child ERC20 Bridge
@@ -280,7 +279,6 @@ Tests for the `mapToken` function, which maps a token on the L1 bridge contract 
 | `test_RevertsIf_withdrawETHToCalledWithInsufficientFund`             | Should revert if the IMX value provided is less than amount requested for withdrawal | No         |
 
 
-
 ### Control Operations
 | Test                                                     | Description                                                             | Happy Path |
 |----------------------------------------------------------|-------------------------------------------------------------------------|------------|
@@ -327,3 +325,82 @@ Test Contracts: [ChildAxelarBridgeAdaptor.t.sol](./child/ChildAxelarBridgeAdapto
 | `test_RevertIf_sendMessageCalledWithNoValue`     | `sendMessage` reverts when called with no value.                     | No         |
 | `test_Execute_CallsBridge`                       | Verifies `execute` calls the configured `ChildERC20Bridge` contract. | Yes        |
 | `test_Execute_EmitsAdaptorExecuteEvent`          | Verifies `execute` emits the `AdaptorExecute` event.                 | Yes        |
+
+--- 
+
+**The following section defines tests relating to flow rate detection and withdrawal queue management functionality. 
+This is functionality that will largely be reused from [prior implementations](https://github.com/immutable/poly-core-contracts/blob/main/test/forge/root/flowrate/README.md) which have already been audited by ToB.**
+
+## Flow Rate Detection
+This section defines tests for contracts/root/flowrate/FlowRateDetection.sol.
+All of these tests are in test/forge/root/flowrate/FlowRateDetection.t.sol.
+
+**Uninitialized testing**
+
+| Test name                      | Description                                       | Happy Case |
+|--------------------------------|---------------------------------------------------|------------|
+| testUninitFlowRateBuckets      | flowRateBuckets(address) returns an empty bucket. | NA         |
+| testUnWithdrawalQueueActivated | withdrawalQueueActivated returns false.           | NA         |
+
+**Control functions tests:**
+
+| Test name                           | Description                                                        | Happy Case |
+|-------------------------------------|--------------------------------------------------------------------|------------|
+| testActivateWithdrawalQueue         | _activateWithdrawalQueue().                                        | Yes        |
+| testDeactivateWithdrawalQueue       | _deactivateWithdrawalQueue() when withdrawalQueueActivate is true. | Yes        |
+| testSetFlowRateThreshold            | _setFlowRateThreshold() with valid values                          | Yes        |
+| testSetFlowRateThresholdBadToken    | _setFlowRateThreshold() with token address = 0                     | No         |
+| testSetFlowRateThresholdBadCapacity | _setFlowRateThreshold() with capacity = 0                          | No         |
+| testSetFlowRateThresholdBadFillRate | _setFlowRateThreshold() with refill rate = 0                       | No         |
+
+**Operational functions tests:**
+
+| Test name                            | Description                                                          | Happy Case |
+|--------------------------------------|----------------------------------------------------------------------|------------|
+| testUpdateFlowRateBucketSingle       | _updateFlowRateBucket() with a single call for a configured token    | Yes        |
+| testUpdateFlowRateBucketMultiple     | _updateFlowRateBucket() with a multiple calls for a configured token | Yes        |
+| testUpdateFlowRateBucketOverflow     | _updateFlowRateBucket() when the bucket overflows                    | Yes        |
+| testUpdateFlowRateBucketJustEmpty    | _updateFlowRateBucket() when the bucket is exactly empty.            | Yes        |
+| testUpdateFlowRateBucketEmpty        | _updateFlowRateBucket() when the bucket has underflowed.             | Yes        |
+| testUpdateFlowRateBucketAfterEmpty   | _updateFlowRateBucket() after the bucket was empty.                  | Yes        |
+| testUpdateFlowRateBucketUnconfigured | _updateFlowRateBucket() unconfigured bucket.                         | No         |
+
+
+## Flow Rate Withdrawal Queue
+This section defines tests for contracts/root/flowrate/FlowRateWithdrawalQueue.sol
+
+**Uninitialized testing:**
+
+| Test name                         | Description                                                                   | Happy Case |
+|-----------------------------------|-------------------------------------------------------------------------------|------------|
+| testUninitWithdrawalQueue         | withdrawalDelay() returns zero.                                               | NA         |
+| testEmptyProcessWithdrawal        | _processWithdrawal with no elements in the queue.                             | No         |
+| testEmptyPendingWithdrawalsLength | getPendingWithdrawalsLength returns a zero length array.                      | NA         |
+| testEmptyGetPendingWithdrawals1   | getPendingWithdrawals with no elements in the queue and no requested indices. | NA         |  
+| testEmptyGetPendingWithdrawals2   | getPendingWithdrawals with no elements in the queue and a requested index.    | NA         |  
+| testEmptyFindPendingWithdrawals   | findPendingWithdrawals with no elements in the queue.                         | NA         | 
+
+**Control function tests:**
+
+| Test name               | Description                                         | Happy Case |
+|-------------------------|-----------------------------------------------------|------------|
+| testInitWithdrawalQueue | __FlowRateWithdrawalQueue_init().                   | Yes        |
+| testSetWithdrawalDelay  | _setWithdrawalDelay can confugre a withdrawal delay | Yes        |
+
+**Operational function tests:**
+
+| Test name                  | Description                                                      | Happy Case |
+|----------------------------|------------------------------------------------------------------|------------|
+| testEnqueueWithdrawal      | _enqueueWithdrawal                                               | Yes        |
+| testEnqueueTwoWithdrawals  | _enqueueWithdrawal with two different tokens.                    | Yes        |
+| testEnqueueZeroToken       | _enqueueWithdrawal with a token that is address(0)               | No         |
+| testProcessOneEntry        | _processWithdrawal with one entry in the queue.                  | Yes        | 
+| testProcessTwoEntries      | _processWithdrawal with two entries in the queue.                | Yes        |
+| testProcessOutOfOrder      | Process withdrawals out of order.                                | Yes        |
+| testProcessOutside         | _processWithdrawal for entry outside array.                      | No         |
+| testProcessTooEarly        | _processWithdrawal before withdrawal delay.                      | No         |
+| testAlreadyProcessed       | _processWithdrawal when already processed.                       | No         |
+| testGetPendingWithdrawals  | getPendingWithdrawals for a range of scenarios                   | NA         |
+| testFindPendingWithdrawals | findPendingWithdrawals for a range of scenarios                  | NA         |
+| testEnqueueProcessMultiple | Enqueue one token, process the token, and repeat multiple times. | Yes        |
+
