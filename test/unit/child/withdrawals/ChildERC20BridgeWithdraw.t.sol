@@ -13,7 +13,6 @@ import {
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
-import {WIMX} from "../../../../src/child/WIMX.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 
@@ -23,10 +22,10 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
+    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     ChildERC20 public childTokenTemplate;
     ChildERC20 public rootToken;
     ChildERC20 public childToken;
-    WIMX public wIMXToken;
     address public childETHToken;
     ChildERC20Bridge public childBridge;
     MockAdaptor public mockAdaptor;
@@ -38,8 +37,6 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "Test", "TST", 18);
 
-        wIMXToken = new WIMX();
-
         mockAdaptor = new MockAdaptor();
 
         childBridge = new ChildERC20Bridge();
@@ -49,7 +46,7 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
             address(childTokenTemplate),
             ROOT_CHAIN_NAME,
             ROOT_IMX_TOKEN,
-            address(wIMXToken)
+            WIMX_TOKEN_ADDRESS
         );
 
         bytes memory mapTokenData =
