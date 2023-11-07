@@ -20,6 +20,7 @@ contract InitializeChildContracts is Script {
         string memory childRpcUrl = vm.envString("CHILD_RPC_URL");
         string memory rootChainName = vm.envString("ROOT_CHAIN_NAME");
         address rootIMXToken = vm.envAddress("ROOT_IMX_ADDRESS");
+        address wIMXToken = vm.envAddress("CHILD_WIMX_ADDRESS");
         address childGasService = vm.envAddress("CHILD_GAS_SERVICE_ADDRESS"); // Not yet used.
 
         /**
@@ -33,7 +34,12 @@ contract InitializeChildContracts is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         childERC20Bridge.initialize(
-            address(childAxelarBridgeAdaptor), rootBridgeAdaptorString, childTokenTemplate, rootChainName, rootIMXToken
+            address(childAxelarBridgeAdaptor),
+            rootBridgeAdaptorString,
+            childTokenTemplate,
+            rootChainName,
+            rootIMXToken,
+            wIMXToken
         );
 
         childAxelarBridgeAdaptor.initialize(rootChainName, address(childERC20Bridge), childGasService);

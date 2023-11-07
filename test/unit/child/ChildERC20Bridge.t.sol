@@ -20,6 +20,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
+    address constant CHILD_WIMX_TOKEN = address(0xabc);
     address constant NATIVE_ETH = address(0xeee);
     ChildERC20 public childTokenTemplate;
     ChildERC20 public rootToken;
@@ -35,7 +36,12 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         childBridge = new ChildERC20Bridge();
         childBridge.initialize(
-            address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN
+            address(this),
+            ROOT_BRIDGE_ADAPTOR,
+            address(childTokenTemplate),
+            ROOT_CHAIN_NAME,
+            ROOT_IMX_TOKEN,
+            CHILD_WIMX_TOKEN
         );
     }
 
@@ -52,44 +58,59 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
         childBridge.initialize(
-            address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN
+            address(this),
+            ROOT_BRIDGE_ADAPTOR,
+            address(childTokenTemplate),
+            ROOT_CHAIN_NAME,
+            ROOT_IMX_TOKEN,
+            CHILD_WIMX_TOKEN
         );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdapter() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
+        bridge.initialize(address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildTemplate() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(1));
+        bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(0));
+        bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(0), address(1));
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressWIMXToken() public {
+        ChildERC20Bridge bridge = new ChildERC20Bridge();
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(0));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(address(0), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(0));
+        bridge.initialize(address(0), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(0), address(0));
     }
 
     function test_RevertIf_InitializeWithAnEmptyBridgeAdaptorString() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(InvalidRootERC20BridgeAdaptor.selector);
-        bridge.initialize(address(this), "", address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN);
+        bridge.initialize(
+            address(this), "", address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN
+        );
     }
 
     function test_RevertIf_InitializeWithAnEmptyChainNameString() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(InvalidRootChain.selector);
-        bridge.initialize(address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), "", ROOT_IMX_TOKEN);
+        bridge.initialize(
+            address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), "", ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN
+        );
     }
 
     function test_onMessageReceive_EmitsTokenMappedEvent() public {

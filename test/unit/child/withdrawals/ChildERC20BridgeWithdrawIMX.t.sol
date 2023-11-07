@@ -19,6 +19,7 @@ contract ChildERC20BridgeWithdrawIMXUnitTest is Test, IChildERC20BridgeEvents, I
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
+    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     ChildERC20 public childTokenTemplate;
     ChildERC20Bridge public childBridge;
     MockAdaptor public mockAdaptor;
@@ -31,7 +32,12 @@ contract ChildERC20BridgeWithdrawIMXUnitTest is Test, IChildERC20BridgeEvents, I
 
         childBridge = new ChildERC20Bridge();
         childBridge.initialize(
-            address(mockAdaptor), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN
+            address(mockAdaptor),
+            ROOT_BRIDGE_ADAPTOR,
+            address(childTokenTemplate),
+            ROOT_CHAIN_NAME,
+            ROOT_IMX_TOKEN,
+            WIMX_TOKEN_ADDRESS
         );
     }
 

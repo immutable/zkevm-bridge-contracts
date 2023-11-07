@@ -34,6 +34,7 @@ contract Utils is Test {
         string memory rootAdaptor = Strings.toHexString(address(99999));
         rootIMX = address(555555);
         rootToken = address(44444);
+        address childWIMX = address(0xabc);
 
         axelarGasService = new MockAxelarGasService();
         mockAxelarGateway = new MockAxelarGateway();
@@ -41,7 +42,9 @@ contract Utils is Test {
         childTokenTemplate.initialize(address(1), "Test", "TST", 18);
         childBridge = new ChildERC20Bridge();
         childBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockAxelarGateway));
-        childBridge.initialize(address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX);
+        childBridge.initialize(
+            address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX, childWIMX
+        );
         childBridgeAdaptor.initialize("ROOT", address(childBridge), address(axelarGasService));
 
         bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, "TEST NAME", "TNM", 18);

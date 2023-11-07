@@ -15,6 +15,7 @@ import {
 } from "../interfaces/child/IChildERC20Bridge.sol";
 import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
+import {IWIMX} from "../interfaces/child/IWIMX.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
@@ -54,6 +55,8 @@ contract ChildERC20Bridge is
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
     address public childETHToken;
+    /// @dev The address of the wrapped IMX token on L2.
+    address public wIMXToken;
 
     /**
      * @notice Initilization function for RootERC20Bridge.
@@ -69,9 +72,13 @@ contract ChildERC20Bridge is
         string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
         string memory newRootChain,
-        address newRootIMXToken
+        address newRootIMXToken,
+        address newWIMXToken
     ) public initializer {
-        if (newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)) {
+        if (
+            newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
+                || newWIMXToken == address(0)
+        ) {
             revert ZeroAddress();
         }
 
@@ -88,6 +95,7 @@ contract ChildERC20Bridge is
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
         rootChain = newRootChain;
         rootIMXToken = newRootIMXToken;
+        wIMXToken = newWIMXToken;
 
         IChildERC20 clonedETHToken =
             IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
@@ -171,6 +179,11 @@ contract ChildERC20Bridge is
         if (address(childToken) == NATIVE_IMX) {
             feeAmount = msg.value - amount;
             rootToken = rootIMXToken;
+        } else if (address(childToken) == wIMXToken) {
+            rootToken = rootIMXToken;
+            IWIMX wIMX = IWIMX(wIMXToken);
+            require(wIMX.transferFrom(msg.sender, address(this), amount), "ChildERC20Bridge: fail to transfer wIMX");
+            wIMX.withdraw(amount);
         } else {
             if (address(childToken).code.length == 0) {
                 revert EmptyTokenContract();
