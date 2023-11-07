@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 // TODO: This is likely able to become a generic bridge adaptor, not just for ERC20 tokens.
 interface IRootERC20BridgeAdaptor {
