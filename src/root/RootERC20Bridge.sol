@@ -222,6 +222,7 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
+     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens. Please approach such cases with great care.
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
         _depositToken(rootToken, msg.sender, amount);
@@ -229,6 +230,7 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
+     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens. Please approach such cases with great care.
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
         _depositToken(rootToken, receiver, amount);
