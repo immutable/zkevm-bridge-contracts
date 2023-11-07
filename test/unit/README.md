@@ -123,10 +123,31 @@ This document outlines the tests associated with this project. It is currently n
 
 ----
 
+## Root ERC20 Bridge Adapter
+
+**Contract:** [RootERC20BridgeAdapter.sol](../../src/root/bridge_adapters/RootERC20BridgeAdapter.sol)
+**Test Contracts:** [RootERC20BridgeAdapter.t.sol](./root/bridge_adapters/RootERC20BridgeAdapter.t.sol)
+
+| Test Function Name                                   | Description                                                     | Happy Path or Failure |
+|------------------------------------------------------|-----------------------------------------------------------------|-----------------------|
+| `test_Initialize`                                    | Ensure initialized state matches expected                       | Yes                   |
+| `test_RevertWhen_InitializeGivenEmptyChildChainName` | Constructor should revert when given an empty child chain name. | No                    |
+| `test_RevertWhen_InitializeGivenZeroAddress`         | `initialize()` should revert when given a zero address.         | No                    |
+| `test_Execute_CallsBridge`                           | `execute` should calls the `RootERC20Bridge` contract.          | Yes                   |
+| `test_Execute_EmitsAdaptorExecuteEvent`              | `execute` should emit the `AdaptorExecute` event.               | Yes                   |
+| `test_sendMessage_CallsGasService`                   | `sendMessage` calls the Gas Service.                            | Yes                   |
+| `test_sendMessage_CallsGateway`                      | `sendMessage` calls the Gateway.                                | Yes                   |
+| `test_sendMessage_EmitsAxelarMessageSentEvent`       | `sendMessage` emits the `AxelarMessageSent` event.              | Yes                   |
+| `test_sendMessage_GivesCorrectRefundRecipient`       | `sendMessage` gives the correct refund recipient.               | Yes                   |
+| `test_RevertIf_mapTokenCalledByNonRootBridge`        | `mapToken` reverts when called by a non-root bridge.            | No                    |
+| `test_RevertIf_mapTokenCalledWithNoValue`            | `mapToken` reverts when called with no value.                   | No                    |
+
+----
+
 ## Child ERC20 Bridge
 
 **Contract**: [ChildERC20Bridge.sol](../../src/child/ChildERC20Bridge.sol)
-**Test Contracts**: [ChildERC20Bridge.t.sol](./child/ChildERC20Bridge.t.sol), [ChildERC20BridgeWithdraw.t.sol](./child/withdrawals/ChildERC20BridgeWithdraw.t.sol)
+**Test Contracts**: [ChildERC20Bridge.t.sol](./child/ChildERC20Bridge.t.sol), [ChildERC20BridgeWithdraw.t.sol](./child/withdrawals/ChildERC20BridgeWithdraw.t.sol), [ChildERC20BridgeWithdrawIMX.t.sol](./child/withdrawals/ChildERC20BridgeWithdrawIMX.t.sol), [ChildERC20BridgeWithdrawTo.t.sol](./child/withdrawals/ChildERC20BridgeWithdrawTo.t.sol), [ChildERC20BridgeWithdrawToIMX.t.sol](./child/withdrawals/ChildERC20BridgeWithdrawToIMX.t.sol)
 
 ### Initialization
 | Test Function Name                                                    | Description                                                                    | Happy Path  |
