@@ -163,7 +163,7 @@ contract ChildERC20BridgewithdrawIMXToIntegrationTest is
         childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
 
-    function test_withdrawIMXTo_EmitsAxelarMessageEvent() public {
+    function test_withdrawIMXTo_EmitsAxelarMessageSentEvent() public {
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -176,7 +176,7 @@ contract ChildERC20BridgewithdrawIMXToIntegrationTest is
         childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
     }
 
-    function test_withdrawIMXToWithDifferentAccount_EmitsAxelarMessageEvent() public {
+    function test_withdrawIMXToWithDifferentAccount_EmitsAxelarMessageSentEvent() public {
         address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;

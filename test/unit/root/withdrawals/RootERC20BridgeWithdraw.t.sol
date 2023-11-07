@@ -20,13 +20,16 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
     string constant CHILD_CHAIN_NAME = "test";
+    address constant UnmappedToken = address(0xbbb);
     address constant IMX_TOKEN = address(0xccc);
     address constant WRAPPED_ETH = address(0xddd);
+    address public constant NATIVE_IMX = address(0xfff);
     uint256 constant mapTokenFee = 300;
     uint256 constant withdrawAmount = 0.5 ether;
     uint256 constant UNLIMITED_IMX_DEPOSIT_LIMIT = 0;
 
     ERC20PresetMinterPauser public token;
+    ERC20PresetMinterPauser public imxToken;
     RootERC20Bridge public rootBridge;
     MockAdaptor public mockAxelarAdaptor;
     MockAxelarGateway public mockAxelarGateway;
@@ -36,6 +39,8 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         token = new ERC20PresetMinterPauser("Test", "TST");
         token.mint(address(this), 100 ether);
         deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), IMX_TOKEN);
+        imxToken = ERC20PresetMinterPauser(IMX_TOKEN);
+        imxToken.mint(address(this), 100 ether);
 
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
@@ -68,14 +73,14 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     }
 
     function test_RevertsIf_WithdrawWithInvalidSender() public {
-        bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN, address(this), address(this), withdrawAmount);
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), withdrawAmount);
 
         vm.expectRevert(NotBridgeAdaptor.selector);
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
     function test_RevertsIf_OnMessageReceiveWithInvalidSourceChain() public {
-        bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN, address(this), address(this), withdrawAmount);
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), withdrawAmount);
 
         vm.prank(address(mockAxelarAdaptor));
         vm.expectRevert(InvalidSourceChain.selector);
@@ -83,7 +88,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     }
 
     function test_RevertsIf_OnMessageReceiveWithInvalidSourceAddress() public {
-        bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN, address(this), address(this), withdrawAmount);
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), withdrawAmount);
 
         console2.log(CHILD_CHAIN_NAME);
         console2.log(rootBridge.childChain());
@@ -102,15 +107,14 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     }
 
     function test_RevertsIf_OnMessageReceiveWithInvalidSignature() public {
-        bytes memory data = abi.encode(keccak256("RANDOM"), IMX_TOKEN, address(this), address(this), withdrawAmount);
-
+        bytes memory data = abi.encode(keccak256("RANDOM"), token, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
         vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
     function test_RevertsIf_OnMessageReceiveWithUnmappedToken() public {
-        bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN, address(this), address(this), withdrawAmount);
+        bytes memory data = abi.encode(WITHDRAW_SIG, UnmappedToken, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
         vm.expectRevert(NotMapped.selector);
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
@@ -135,6 +139,23 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         );
     }
 
+    function test_onMessageReceive_TransfersIMXTokens() public {
+        // Give bridge some IMX tokens
+        imxToken.transfer(address(rootBridge), 100 ether);
+
+        uint256 thisPreBal = imxToken.balanceOf(address(this));
+        uint256 bridgePreBal = imxToken.balanceOf(address(rootBridge));
+
+        bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), address(this), withdrawAmount);
+        vm.prank(address(mockAxelarAdaptor));
+        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        assertEq(imxToken.balanceOf(address(this)), thisPreBal + withdrawAmount, "IMX not transferred to receiver");
+        assertEq(
+            imxToken.balanceOf(address(rootBridge)), bridgePreBal - withdrawAmount, "IMX not transferred from bridge"
+        );
+    }
+
     function test_onMessageReceive_TransfersTokens_DifferentReceiver() public {
         address receiver = address(123456);
         // Need to first map the token.
@@ -152,6 +173,26 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         assertEq(token.balanceOf(receiver), receiverPreBal + withdrawAmount, "Tokens not transferred to receiver");
         assertEq(
             token.balanceOf(address(rootBridge)), bridgePreBal - withdrawAmount, "Tokens not transferred from bridge"
+        );
+    }
+
+    function test_onMessageReceive_TransfersIMXTokens_DifferentReceiver() public {
+        address receiver = address(123456);
+        // Give bridge some IMX tokens
+        imxToken.transfer(address(rootBridge), 100 ether);
+
+        uint256 receiverPreBal = imxToken.balanceOf(address(receiver));
+        uint256 bridgePreBal = imxToken.balanceOf(address(rootBridge));
+
+        bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), receiver, withdrawAmount);
+        vm.prank(address(mockAxelarAdaptor));
+        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        assertEq(
+            imxToken.balanceOf(address(receiver)), receiverPreBal + withdrawAmount, "IMX not transferred to receiver"
+        );
+        assertEq(
+            imxToken.balanceOf(address(rootBridge)), bridgePreBal - withdrawAmount, "IMX not transferred from bridge"
         );
     }
 
@@ -174,6 +215,17 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
+    function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX() public {
+        // Give bridge some IMX tokens
+        imxToken.transfer(address(rootBridge), 100 ether);
+
+        bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), address(this), withdrawAmount);
+        vm.expectEmit();
+        emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), address(this), withdrawAmount);
+        vm.prank(address(mockAxelarAdaptor));
+        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+    }
+
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
         address receiver = address(123456);
         // Need to first map the token.
@@ -186,6 +238,18 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         emit RootChainERC20Withdraw(
             address(token), rootBridge.rootTokenToChildToken(address(token)), address(this), receiver, withdrawAmount
         );
+        vm.prank(address(mockAxelarAdaptor));
+        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+    }
+
+    function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX_DifferentReceiver() public {
+        address receiver = address(123456);
+        // Give bridge some IMX tokens
+        imxToken.transfer(address(rootBridge), 100 ether);
+
+        bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), receiver, withdrawAmount);
+        vm.expectEmit();
+        emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), receiver, withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
