@@ -108,6 +108,13 @@ contract ChildERC20Bridge is
         childETHToken = address(clonedETHToken);
     }
 
+    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
+        if (newBridgeAdaptor == address(0)) {
+            revert ZeroAddress();
+        }
+        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
+    }
+
     /**
      * @inheritdoc IChildERC20Bridge
      * @dev This is only callable by the child chain bridge adaptor.
@@ -142,45 +149,31 @@ contract ChildERC20Bridge is
     }
 
     function withdraw(IChildERC20 childToken, uint256 amount) external payable {
-        _withdraw(childToken, msg.sender, amount);
+        _withdraw(address(childToken), msg.sender, amount);
     }
 
     function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external payable {
-        _withdraw(childToken, receiver, amount);
+        _withdraw(address(childToken), receiver, amount);
     }
 
     function withdrawIMX(uint256 amount) external payable {
-        _withdrawIMX(msg.sender, amount);
+        _withdraw(NATIVE_IMX, msg.sender, amount);
     }
 
     function withdrawIMXTo(address receiver, uint256 amount) external payable {
-        _withdrawIMX(receiver, amount);
+        _withdraw(NATIVE_IMX, receiver, amount);
     }
 
     function withdrawWIMX(uint256 amount) external payable {
-        _withdrawWIMX(msg.sender, amount);
+        _withdraw(wIMXToken, msg.sender, amount);
     }
 
     function withdrawWIMXTo(address receiver, uint256 amount) external payable {
-        _withdrawWIMX(receiver, amount);
+        _withdraw(wIMXToken, receiver, amount);
     }
 
-    function _withdrawIMX(address receiver, uint256 amount) private {
-        if (msg.value < amount) {
-            revert InsufficientValue();
-        }
-
-        uint256 expectedBalance = address(this).balance - (msg.value - amount);
-
-        _withdraw(IChildERC20(NATIVE_IMX), receiver, amount);
-
-        if (address(this).balance != expectedBalance) {
-            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
-        }
-    }
-
-    function _withdraw(IChildERC20 childToken, address receiver, uint256 amount) private {
-        if (address(childToken) == address(0)) {
+    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private {
+        if (childTokenAddr == address(0)) {
             revert ZeroAddress();
         }
         if (amount == 0) {
@@ -189,11 +182,34 @@ contract ChildERC20Bridge is
 
         address rootToken;
         uint256 feeAmount = msg.value;
+        if (childTokenAddr == NATIVE_IMX) {
+            // Native IMX.
+            if (msg.value < amount) {
+                revert InsufficientValue();
+            }
 
-        if (address(childToken) == NATIVE_IMX) {
             feeAmount = msg.value - amount;
             rootToken = rootIMXToken;
+        } else if (childTokenAddr == wIMXToken) {
+            // Wrapped IMX.
+            // Transfer and unwrap IMX.
+            uint256 expectedBalance = address(this).balance + amount;
+
+            IWIMX wIMX = IWIMX(wIMXToken);
+            if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
+                revert TransferWIMXFailed();
+            }
+            wIMX.withdraw(amount);
+
+            if (address(this).balance != expectedBalance) {
+                revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+            }
+
+            rootToken = rootIMXToken;
         } else {
+            // Other ERC20 Tokens
+            IChildERC20 childToken = IChildERC20(childTokenAddr);
+
             if (address(childToken).code.length == 0) {
                 revert EmptyTokenContract();
             }
@@ -218,44 +234,19 @@ contract ChildERC20Bridge is
             }
         }
 
-        // TODO Should we enforce receiver != 0? old poly contracts don't
-
         // Encode the message payload
         bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
 
         // Send the message to the bridge adaptor and up to root chain
-
         bridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
-        if (address(childToken) == NATIVE_IMX) {
+        if (childTokenAddr == NATIVE_IMX) {
             emit ChildChainNativeIMXWithdraw(rootToken, msg.sender, receiver, amount);
+        } else if (childTokenAddr == wIMXToken) {
+            emit ChildChainWrappedIMXWithdraw(rootToken, msg.sender, receiver, amount);
         } else {
-            emit ChildChainERC20Withdraw(rootToken, address(childToken), msg.sender, receiver, amount);
+            emit ChildChainERC20Withdraw(rootToken, childTokenAddr, msg.sender, receiver, amount);
         }
-    }
-
-    function _withdrawWIMX(address receiver, uint256 amount) private {
-        if (amount == 0) {
-            revert ZeroAmount();
-        }
-
-        uint256 expectedBalance = address(this).balance + amount;
-
-        IWIMX wIMX = IWIMX(wIMXToken);
-        if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
-            revert TransferWIMXFailed();
-        }
-        wIMX.withdraw(amount);
-
-        if (address(this).balance != expectedBalance) {
-            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
-        }
-
-        bytes memory payload = abi.encode(WITHDRAW_SIG, rootIMXToken, msg.sender, receiver, amount);
-
-        bridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
-
-        emit ChildChainWrappedIMXWithdraw(rootIMXToken, msg.sender, receiver, amount);
     }
 
     function _mapToken(bytes calldata data) private {
@@ -324,12 +315,5 @@ contract ChildERC20Bridge is
             Address.sendValue(payable(receiver), amount);
             emit IMXDeposit(address(rootToken), sender, receiver, amount);
         }
-    }
-
-    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
-        if (newBridgeAdaptor == address(0)) {
-            revert ZeroAddress();
-        }
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
     }
 }
