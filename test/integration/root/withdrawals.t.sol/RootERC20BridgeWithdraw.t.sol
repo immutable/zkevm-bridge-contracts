@@ -18,6 +18,7 @@ import {
 } from "../../../../src/root/RootAxelarBridgeAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 import {WETH} from "../../../../src/test/root/WETH.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 contract RootERC20BridgeWithdrawIntegrationTest is
     Test,
@@ -44,6 +45,8 @@ contract RootERC20BridgeWithdrawIntegrationTest is
     MockAxelarGateway public mockAxelarGateway;
     MockAxelarGasService public axelarGasService;
 
+    receive() external payable {}
+
     function setUp() public {
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
@@ -61,6 +64,8 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
         imxToken.transfer(address(rootBridge), 100 ether);
+        // Give bridge some ETH
+        Address.sendValue(payable(rootBridge), 100 ether);
     }
 
     function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
@@ -139,6 +144,24 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
     }
 
+    function test_withdrawETH_TransfersETH() public {
+        bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        uint256 thisPreBal = address(this).balance;
+        uint256 bridgePreBal = address(rootBridge).balance;
+
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+
+        uint256 thisPostBal = address(this).balance;
+        uint256 bridgePostBal = address(rootBridge).balance;
+
+        assertEq(thisPostBal, thisPreBal + withdrawAmount, "Incorrect user balance after withdraw");
+        assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
+    }
+
     function test_withdraw_TransfersTokens_DifferentReceiver() public {
         address receiver = address(987654321);
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), receiver, withdrawAmount);
@@ -177,6 +200,25 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
     }
 
+    function test_withdrawETH_TransfersETH_DifferentReceiver() public {
+        address receiver = address(987654321);
+        bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        uint256 receiverPreBal = address(receiver).balance;
+        uint256 bridgePreBal = address(rootBridge).balance;
+
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+
+        uint256 receiverPostBal = address(receiver).balance;
+        uint256 bridgePostBal = address(rootBridge).balance;
+
+        assertEq(receiverPostBal, receiverPreBal + withdrawAmount, "Incorrect user balance after withdraw");
+        assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
+    }
+
     function test_withdraw_EmitsRootChainERC20WithdrawEvent() public {
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
 
@@ -205,6 +247,19 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
+    function test_withdrawETH_EmitsRootChainERC20WithdrawEvent() public {
+        bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        vm.expectEmit();
+        emit RootChainERC20Withdraw(
+            NATIVE_ETH, address(rootBridge.childETHToken()), address(this), address(this), withdrawAmount
+        );
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+    }
+
     function test_withdraw_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
         address receiver = address(987654321);
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), receiver, withdrawAmount);
@@ -228,6 +283,20 @@ contract RootERC20BridgeWithdrawIntegrationTest is
 
         vm.expectEmit();
         emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), receiver, withdrawAmount);
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
+    }
+
+    function test_withdrawETH_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
+        address receiver = address(987654321);
+        bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
+
+        bytes32 commandId = bytes32("testCommandId");
+        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+
+        vm.expectEmit();
+        emit RootChainERC20Withdraw(
+            NATIVE_ETH, address(rootBridge.childETHToken()), address(this), receiver, withdrawAmount
+        );
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 }
