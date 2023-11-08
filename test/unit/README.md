@@ -183,29 +183,30 @@ Tests: [RootERC20FlowRate.t.sol](./root/RootERC20FlowRate.t.sol)
 
 
 **Operational functions testing:**
-| Test name                       |Description                                        | Happy Case |
-|---------------------------------| --------------------------------------------------|------------|
-| `testWithdrawalERC20`             | _withdraw() small amount, no queue                | Yes        |
-| `testWithdrawalEther`             | _withdraw() small amount, no queue                | Yes        |
-| `testWithdrawalBadData`           | _withdraw() with data parameter too small         | No         |
-| `testWithdrawalUnconfiguredToken` | _withdraw() with unconfigured child / root token  | No         |
-| `testWithdrawalLargeWithdrawal`   | _withdraw() with large value                      | Yes        |
-| `testWithdrawalLargeWithdrawal`   | _withdraw() causing high flow rate                | Yes        |
-| `testHighFlowRate`                | _withdraw() with withdrawal queue active          | Yes        |
-| `testFinaliseQueuedWithdrawalERC20` | finaliseQueuedWithdrawal for an ERC20           | Yes        |
-| `testFinaliseQueuedWithdrawalEther` | finaliseQueuedWithdrawal for a Ether            | Yes        |
-| `testFinaliseQueuedWithdrawalOutOfBounds` | finaliseQueuedWithdrawal when index is out of range for all withdrawals | No       |
-| `testFinaliseQueuedWithdrawalAlreadyProcessed` | finaliseQueuedWithdrawal for index already processed | No       |
-| `testFinaliseQueuedWithdrawalTooEarly` | finaliseQueuedWithdrawal before withdrawal delay | No       |
-| `testFinaliseQueuedWithdrawalsAggregatedERC20` | finaliseQueuedWithdrawalsAggregated for ERC20 | Yes |
-| `testFinaliseQueuedWithdrawalsAggregatedEther` | finaliseQueuedWithdrawalsAggregated for Ether | Yes |
-| `testFinaliseQueuedWithdrawalsAggregatedOutOfBounds` | finaliseQueuedWithdrawalsAggregated when index is out of range for all withdrawals | No       |
-| `testFinaliseQueuedWithdrawalsAggregatedAlreadyProcessed` | finaliseQueuedWithdrawalsAggregated for index already processed | No       |
-| `testFinaliseQueuedWithdrawalsAggregatedTooEarly` | finaliseQueuedWithdrawalsAggregated before withdrawal delay | No       |
-| `testFinaliseQueuedWithdrawalsAggregatedMismatch` | finaliseQueuedWithdrawalsAggregated with mismatch tokens | No |
-| `testFinaliseQueuedWithdrawalsAggregatedNoIndices` | finaliseQueuedWithdrawalsAggregated with indices array zero length | No |
-| `testFinaliseQueuedWithdrawalsReentrancy` | finaliseQueuedWithdrawals for reentrancy attacks | No |
-| `testFinaliseQueuedWithdrawalsAggregatedReentrancy` | finaliseQueuedWithdrawalsAggregated for reentrancy attacks | No |
+
+| Test name                                                 | Description                                                                        | Happy Case |
+|-----------------------------------------------------------|------------------------------------------------------------------------------------|------------|
+| `testWithdrawalERC20`                                     | _withdraw() small amount, no queue                                                 | Yes        |
+| `testWithdrawalEther`                                     | _withdraw() small amount, no queue                                                 | Yes        |
+| `testWithdrawalBadData`                                   | _withdraw() with data parameter too small                                          | No         |
+| `testWithdrawalUnconfiguredToken`                         | _withdraw() with unconfigured child / root token                                   | No         |
+| `testWithdrawalLargeWithdrawal`                           | _withdraw() with large value                                                       | Yes        |
+| `testWithdrawalLargeWithdrawal`                           | _withdraw() causing high flow rate                                                 | Yes        |
+| `testHighFlowRate`                                        | _withdraw() with withdrawal queue active                                           | Yes        |
+| `testFinaliseQueuedWithdrawalERC20`                       | finaliseQueuedWithdrawal for an ERC20                                              | Yes        |
+| `testFinaliseQueuedWithdrawalEther`                       | finaliseQueuedWithdrawal for a Ether                                               | Yes        |
+| `testFinaliseQueuedWithdrawalOutOfBounds`                 | finaliseQueuedWithdrawal when index is out of range for all withdrawals            | No         |
+| `testFinaliseQueuedWithdrawalAlreadyProcessed`            | finaliseQueuedWithdrawal for index already processed                               | No         |
+| `testFinaliseQueuedWithdrawalTooEarly`                    | finaliseQueuedWithdrawal before withdrawal delay                                   | No         |
+| `testFinaliseQueuedWithdrawalsAggregatedERC20`            | finaliseQueuedWithdrawalsAggregated for ERC20                                      | Yes        |
+| `testFinaliseQueuedWithdrawalsAggregatedEther`            | finaliseQueuedWithdrawalsAggregated for Ether                                      | Yes        |
+| `testFinaliseQueuedWithdrawalsAggregatedOutOfBounds`      | finaliseQueuedWithdrawalsAggregated when index is out of range for all withdrawals | No         |
+| `testFinaliseQueuedWithdrawalsAggregatedAlreadyProcessed` | finaliseQueuedWithdrawalsAggregated for index already processed                    | No         |
+| `testFinaliseQueuedWithdrawalsAggregatedTooEarly`         | finaliseQueuedWithdrawalsAggregated before withdrawal delay                        | No         |
+| `testFinaliseQueuedWithdrawalsAggregatedMismatch`         | finaliseQueuedWithdrawalsAggregated with mismatch tokens                           | No         |
+| `testFinaliseQueuedWithdrawalsAggregatedNoIndices`        | finaliseQueuedWithdrawalsAggregated with indices array zero length                 | No         |
+| `testFinaliseQueuedWithdrawalsReentrancy`                 | finaliseQueuedWithdrawals for reentrancy attacks                                   | No         |
+| `testFinaliseQueuedWithdrawalsAggregatedReentrancy`       | finaliseQueuedWithdrawalsAggregated for reentrancy attacks                         | No         |
 
 ----
 
