@@ -59,7 +59,7 @@ contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents,
         vm.prank(address(childBridge));
         childToken.mint(address(this), 1000000 ether);
         childToken.approve(address(childBridge), 1000000 ether);
-        
+
         childETHToken = ChildERC20(childBridge.childETHToken());
         vm.prank(address(childBridge));
         childETHToken.mint(address(this), 100 ether);
@@ -100,8 +100,7 @@ contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents,
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
-        bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
+        bytes memory predictedPayload = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
 
         vm.expectCall(
             address(mockAdaptor),

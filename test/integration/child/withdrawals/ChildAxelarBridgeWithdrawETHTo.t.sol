@@ -75,8 +75,7 @@ contract ChildERC20BridgeWithdrawETHToIntegrationTest is
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
-        bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
+        bytes memory predictedPayload = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
         vm.expectCall(
             address(axelarAdaptor),
             withdrawFee,
@@ -111,8 +110,7 @@ contract ChildERC20BridgeWithdrawETHToIntegrationTest is
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
-        bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
+        bytes memory predictedPayload = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
         vm.expectCall(
             address(mockAxelarGateway),
             0,
@@ -145,8 +143,7 @@ contract ChildERC20BridgeWithdrawETHToIntegrationTest is
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
-        bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
+        bytes memory predictedPayload = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);

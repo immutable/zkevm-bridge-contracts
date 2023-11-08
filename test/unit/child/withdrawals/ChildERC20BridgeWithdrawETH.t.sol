@@ -59,7 +59,7 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
         vm.prank(address(childBridge));
         childToken.mint(address(this), 1000000 ether);
         childToken.approve(address(childBridge), 1000000 ether);
-        
+
         childETHToken = ChildERC20(childBridge.childETHToken());
         vm.prank(address(childBridge));
         childETHToken.mint(address(this), 100 ether);
