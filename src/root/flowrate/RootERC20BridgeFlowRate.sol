@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -34,7 +34,7 @@ contract RootERC20BridgeFlowRate is
         address newRootIMXToken, 
         address newRootWETHToken, 
         string memory newChildChain, 
-        address newImxCumulativeDepositLimit,
+        uint256 newImxCumulativeDepositLimit,
         address rateAdmin
         ) external initializer {
 
@@ -153,14 +153,18 @@ contract RootERC20BridgeFlowRate is
      * @dev Called by the ExitHelper.
      *      Only when not paused.
      */
-    function _withdraw(bytes calldata data) internal override {
+    function _withdraw(bytes memory data) internal override {
         (address rootToken, address withdrawer, address receiver, uint256 amount) =
             abi.decode(data, (address, address, address, uint256));
-        address childToken = rootTokenToChildToken[rootToken];
-        if (childToken == address(0)) {
-            revert NotMapped();
+        address childToken;
+        if (address(rootToken) == rootIMXToken) {
+            childToken = NATIVE_IMX;
+        } else {
+            childToken = rootTokenToChildToken[rootToken];
+            if (childToken == address(0)) {
+                revert NotMapped();
+            }
         }
-
         _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
     }
  

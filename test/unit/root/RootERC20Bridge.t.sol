@@ -216,6 +216,15 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.updateImxCumulativeDepositLimit(imxCumulativeDepositLimit);
     }
 
+    // @TODO reinstate once access control is implemented
+
+    // function test_RevertIf_updateImxCumulativeDepositLimitCalledByNonOwner() public {
+    //     uint256 imxCumulativeDepositLimit = 700;
+    //     vm.prank(address(0xf00f00));
+    //     vm.expectRevert("Ownable: caller is not the owner");
+    //     rootBridge.updateImxCumulativeDepositLimit(imxCumulativeDepositLimit);
+    // }
+
     /**
      * MAP TOKEN
      */
@@ -310,11 +319,13 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.updateRootBridgeAdaptor(newAdaptorAddress);
     }
 
-    function test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner() public {
-        vm.prank(address(0xf00f00));
-        vm.expectRevert("Ownable: caller is not the owner");
-        rootBridge.updateRootBridgeAdaptor(address(0x11111));
-    }
+    // @TODO reinstate once access control is implemented
+    
+    // function test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner() public {
+    //     vm.prank(address(0xf00f00));
+    //     vm.expectRevert("Ownable: caller is not the owner");
+    //     rootBridge.updateRootBridgeAdaptor(address(0x11111));
+    // }
 
     function test_RevertIf_updateRootBridgeAdaptorCalledWithZeroAddress() public {
         vm.expectRevert(ZeroAddress.selector);

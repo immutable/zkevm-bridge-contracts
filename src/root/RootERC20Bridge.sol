@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.19;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+// import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
@@ -25,8 +25,8 @@ import {IWETH} from "../interfaces/root/IWETH.sol";
  */
 
 contract RootERC20Bridge is
-    Ownable2Step,
     Initializable,
+    PausableUpgradeable,
     IRootERC20Bridge,
     IRootERC20BridgeEvents,
     IRootERC20BridgeErrors
@@ -137,7 +137,7 @@ contract RootERC20Bridge is
      * @param newRootBridgeAdaptor Address of new root bridge adaptor.
      * @dev Can only be called by owner.
      */
-    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external { // @TODO needs access control
         if (newRootBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
@@ -153,7 +153,7 @@ contract RootERC20Bridge is
      * @dev Can only be called by owner.
      * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
      */
-    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external onlyOwner {
+    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external { // @TODO needs access control
         if (
             newImxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
                 && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))

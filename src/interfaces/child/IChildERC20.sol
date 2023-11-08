@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 // OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
 
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.19;
 
 import {IERC20MetadataUpgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";

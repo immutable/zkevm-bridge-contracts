@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.19;
 
 import {IWIMX} from "../interfaces/child/IWIMX.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";

@@ -7,6 +7,8 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
+import {RootERC20BridgeFlowRate} from "../src/root//flowrate/RootERC20BridgeFlowRate.sol";
+
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {WETH} from "../src/test/root/WETH.sol";
@@ -66,7 +68,7 @@ contract Utils is Test {
         returns (
             ERC20PresetMinterPauser imxToken,
             ERC20PresetMinterPauser token,
-            RootERC20Bridge rootBridge,
+            RootERC20BridgeFlowRate rootBridgeFlowRate,
             RootAxelarBridgeAdaptor axelarAdaptor,
             MockAxelarGateway mockAxelarGateway,
             MockAxelarGasService axelarGasService
@@ -83,13 +85,15 @@ contract Utils is Test {
         // imxToken = ERC20PresetMinterPauser(imxTokenAddress);
         // imxToken.mint(address(this), 1000000 ether);
 
-        rootBridge = new RootERC20Bridge();
+        //rootBridge = new RootERC20Bridge();
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
 
+        rootBridgeFlowRate = new RootERC20BridgeFlowRate();
+
         axelarAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
 
-        rootBridge.initialize(
+        rootBridgeFlowRate.initialize(
             address(axelarAdaptor),
             childBridge,
             Strings.toHexString(childBridgeAdaptor),
@@ -97,10 +101,11 @@ contract Utils is Test {
             imxTokenAddress,
             wethTokenAddress,
             "CHILD",
-            imxCumulativeDepositLimit
+            imxCumulativeDepositLimit,
+            address(this)
         );
 
-        axelarAdaptor.initialize(address(rootBridge), childBridgeName, address(axelarGasService));
+        axelarAdaptor.initialize(address(rootBridgeFlowRate), childBridgeName, address(axelarGasService));
     }
 
     function setupDeposit(
