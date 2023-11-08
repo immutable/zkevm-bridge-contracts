@@ -65,7 +65,7 @@ contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents,
         childETHToken.mint(address(this), 100 ether);
     }
 
-    function test_RevertsIf_WithdrawWEthToCalledWithInsufficientFund() public {
+    function test_RevertsIf_WithdrawEthToCalledWithInsufficientFund() public {
         uint256 withdrawAmount = 101 ether;
         uint256 withdrawFee = 300;
 
