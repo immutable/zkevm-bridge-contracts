@@ -38,6 +38,9 @@ interface IChildERC20BridgeEvents {
     event ChildChainWrappedIMXWithdraw(
         address indexed rootToken, address depositor, address indexed receiver, uint256 amount
     );
+    event ChildChainEthWithdraw(
+        address depositor, address indexed receiver, uint256 amount
+    );
 
     event ChildChainERC20Deposit(
         address indexed rootToken,
