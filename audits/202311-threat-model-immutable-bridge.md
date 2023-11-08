@@ -11,7 +11,7 @@
 
 # Introduction
 
-This document is a threat model for Ether and ERC 20 bridge changes that Immutable have build to integrate with the Axelar GMP, General Messaging Passing 
+This document is a threat model for Ether and ERC 20 bridge changes that Immutable have build to integrate with the Axelar GMP, General Messaging Passing bridge. The Immutable token bridge contract was built from a fork of Polygon Edge's RootERC20Predicate and ChildERC20Predicate contract. Most of the Edge-specific functionality was removed.
 
 ############################################################################################################
 ############################################################################################################
