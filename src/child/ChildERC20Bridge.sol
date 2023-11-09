@@ -64,11 +64,6 @@ contract ChildERC20Bridge is
     receive() external payable {}
 
     /**
-     * @notice Fallback function on recieving native IMX.
-     */
-    receive() external payable {}
-
-    /**
      * @notice Initilization function for RootERC20Bridge.
      * @param newBridgeAdaptor Address of StateSender to send deposit information to.
      * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
