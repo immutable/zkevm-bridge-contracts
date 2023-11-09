@@ -10,6 +10,7 @@ async function run() {
     let rootChainID = requireEnv("ROOT_CHAIN_ID");
     let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
     let rootProxyAdmin = requireEnv("ROOT_PROXY_ADMIN");
+    let rootGatewayAddr = requireEnv("ROOT_GATEWAY_ADDRESS");
 
     // Get admin address
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -67,7 +68,7 @@ async function run() {
     // Deploy root adaptor impl
     let rootAdaptorImplObj = JSON.parse(fs.readFileSync('../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Deploy root adaptor impl...");
-    let rootAdaptorImpl = await deployRootContract(rootAdaptorImplObj, adminWallet);
+    let rootAdaptorImpl = await deployRootContract(rootAdaptorImplObj, adminWallet, rootGatewayAddr);
     await waitForReceipt(rootAdaptorImpl.deployTransaction.hash, rootProvider);
     console.log("Deployed to ROOT_ADAPTOR_IMPL_ADDRESS: ", rootAdaptorImpl.address);
     output += "ROOT_ADAPTOR_IMPL_ADDRESS=" + rootAdaptorImpl.address + "\n";

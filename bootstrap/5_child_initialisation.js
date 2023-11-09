@@ -9,11 +9,13 @@ async function run() {
     let childRPCURL = requireEnv("CHILD_RPC_URL");
     let childChainID = requireEnv("CHILD_CHAIN_ID");
     let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
+    let childGasServiceAddr = requireEnv("CHILD_GAS_SERVICE_ADDRESS");
     let childBridgeAddr = requireEnv("CHILD_BRIDGE_ADDRESS");
-    let childAdapterAddr = requireEnv("CHILD_ADAPTER_ADDRESS");
+    let childAdaptorAddr = requireEnv("CHILD_ADAPTOR_ADDRESS");
     let childTemplateAddr = requireEnv("CHILD_TOKEN_TEMPLATE");
-    let rootAdapterAddr = requireEnv("ROOT_ADAPTER_ADDRESS");
+    let rootAdaptorAddr = requireEnv("ROOT_ADAPTOR_ADDRESS");
     let imxRootAddr = requireEnv("IMX_ROOT_ADDR");
+    let wimxChildAddr = requireEnv("WRAPPED_IMX_ADDRESS");
 
     // Get admin address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
@@ -35,7 +37,7 @@ async function run() {
     console.log("Initialise child bridge...");
     let childBridge = new ethers.Contract(childBridgeAddr, childBridgeObj.abi, childProvider);
     let [priorityFee, maxFee] = await getFee(adminWallet);
-    let resp = await childBridge.connect(adminWallet).initialize(childAdapterAddr, ethers.utils.getAddress(rootAdapterAddr), childTemplateAddr, rootChainName, imxRootAddr, {
+    let resp = await childBridge.connect(adminWallet).initialize(childAdaptorAddr, ethers.utils.getAddress(rootAdaptorAddr), childTemplateAddr, rootChainName, imxRootAddr, wimxChildAddr, {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
@@ -44,9 +46,9 @@ async function run() {
     // Initialise child adaptor
     let childAdaptorObj = JSON.parse(fs.readFileSync('../out/ChildAxelarBridgeAdaptor.sol/ChildAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Initialise child adaptor...");
-    let childAdaptor = new ethers.Contract(childAdapterAddr, childAdaptorObj.abi, childProvider);
+    let childAdaptor = new ethers.Contract(childAdaptorAddr, childAdaptorObj.abi, childProvider);
     [priorityFee, maxFee] = await getFee(adminWallet);
-    resp = await childAdaptor.connect(adminWallet).initialize(childBridgeAddr, {
+    resp = await childAdaptor.connect(adminWallet).initialize(rootChainName, childBridgeAddr, childGasServiceAddr, {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });

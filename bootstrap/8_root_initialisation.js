@@ -10,15 +10,15 @@ async function run() {
     let rootRPCURL = requireEnv("ROOT_RPC_URL");
     let rootChainID = requireEnv("ROOT_CHAIN_ID");
     let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
-    let rootGatewayAddr = requireEnv("ROOT_GATEWAY_ADDRESS");
     let rootGasServiceAddr = requireEnv("ROOT_GAS_SERVICE_ADDRESS");
     let rootBridgeAddr = requireEnv("ROOT_BRIDGE_ADDRESS");
-    let rootAdapterAddr = requireEnv("ROOT_ADAPTER_ADDRESS");
+    let rootAdaptorAddr = requireEnv("ROOT_ADAPTOR_ADDRESS");
     let rootTemplateAddr = requireEnv("ROOT_TOKEN_TEMPLATE");
     let childBridgeAddr = requireEnv("CHILD_BRIDGE_ADDRESS");
-    let childAdapterAddr = requireEnv("CHILD_ADAPTER_ADDRESS");
+    let childAdaptorAddr = requireEnv("CHILD_ADAPTOR_ADDRESS");
     let imxRootAddr = requireEnv("IMX_ROOT_ADDR");
     let wethRootAddr = requireEnv("WETH_ROOT_ADDR");
+    let imxDepositLimit = requireEnv("IMX_DEPOSIT_LIMIT");
 
     // Get admin address
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -39,14 +39,14 @@ async function run() {
     let rootBridgeObj = JSON.parse(fs.readFileSync('../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
     console.log("Initialise root bridge...");
     let rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeObj.abi, rootProvider);
-    let resp = await rootBridge.connect(adminWallet).initialize(rootAdapterAddr, childBridgeAddr, ethers.utils.getAddress(childAdapterAddr), rootTemplateAddr, imxRootAddr, wethRootAddr);
+    let resp = await rootBridge.connect(adminWallet).initialize(rootAdaptorAddr, childBridgeAddr, ethers.utils.getAddress(childAdaptorAddr), rootTemplateAddr, imxRootAddr, wethRootAddr, childChainName, ethers.utils.parseEther(imxDepositLimit));
     await waitForReceipt(resp.hash, rootProvider);
 
     // Initialise root adaptor
     let rootAdaptorObj = JSON.parse(fs.readFileSync('../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Initialise root adaptor...");
-    let rootAdaptor = new ethers.Contract(rootAdapterAddr, rootAdaptorObj.abi, rootProvider);
-    resp = await rootAdaptor.connect(adminWallet).initialize(rootBridgeAddr, childChainName, rootGatewayAddr, rootGasServiceAddr);
+    let rootAdaptor = new ethers.Contract(rootAdaptorAddr, rootAdaptorObj.abi, rootProvider);
+    resp = await rootAdaptor.connect(adminWallet).initialize(rootBridgeAddr, childChainName, rootGasServiceAddr);
     await waitForReceipt(resp.hash, rootProvider);
 }
 

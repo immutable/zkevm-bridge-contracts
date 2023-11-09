@@ -1,8 +1,9 @@
 # Bridge bootstrapping
 
 ## Prerequisite
-1. Coordinate with Axelar to obtain their admin address for initial funding as well as the desired amount in $IMX. (50 IMX in previous discussion).
-2. Fund admin EOA account with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 100 IMX_ (TBD)).
+1. Coordinate with Axelar to obtain their admin address for initial funding as well as the desired amount in $IMX. (500 IMX in previous discussion).
+2. Coordinate with security to obtain the addresses to perform child and root bridge upgrade.
+2. Fund admin EOA account with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 550 IMX_ (TBD)).
 
 
 ## Bootstrapping
@@ -34,9 +35,11 @@ ADMIN_EOA_SECRET=
 AXELAR_EOA=
 ## The amount of fund Axelar requested, unit is in IMX or 10^18 Wei.
 AXELAR_FUND=
-# The address to perform child bridge upgrade.
+## The maximum amount of IMX that can be deposited to L2, unit is in IMX or 10^18 Wei.
+IMX_DEPOSIT_LIMIT=
+## The address to perform child bridge upgrade.
 CHILD_PROXY_ADMIN=
-# The address to perform root adaptor upgrade.
+## The address to perform root adaptor upgrade.
 ROOT_PROXY_ADMIN=
 ```
 3. Fund deployer

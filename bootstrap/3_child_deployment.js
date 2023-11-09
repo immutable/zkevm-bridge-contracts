@@ -10,7 +10,6 @@ async function run() {
     let childChainID = requireEnv("CHILD_CHAIN_ID");
     let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
     let childGatewayAddr = requireEnv("CHILD_GATEWAY_ADDRESS");
-    let childGasServiceAddr = requireEnv("CHILD_GAS_SERVICE_ADDRESS");
     let childProxyAdmin = requireEnv("CHILD_PROXY_ADMIN");
 
     // Get admin address
