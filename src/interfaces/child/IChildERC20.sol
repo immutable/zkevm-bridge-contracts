@@ -25,8 +25,8 @@ interface IChildERC20 is IERC20MetadataUpgradeable {
     function bridge() external view returns (address);
 
     /**
-     * @notice Returns bridge address controlling the child token
-     * @return address Returns the address of the Bridge
+     * @notice Returns the address of the mapped token on the root chain
+     * @return address Returns the address of the root token
      */
     function rootToken() external view returns (address);
 

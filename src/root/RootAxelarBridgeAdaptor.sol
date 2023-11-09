@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.21;
 
+import {AxelarExecutable} from "@axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -20,6 +21,7 @@ import {IRootERC20Bridge} from "../interfaces/root/IRootERC20Bridge.sol";
  * @notice RootAxelarBridgeAdaptor is a bridge adaptor that allows the RootERC20Bridge to communicate with the Axelar Gateway.
  */
 contract RootAxelarBridgeAdaptor is
+    AxelarExecutable,
     Initializable,
     IRootERC20BridgeAdaptor,
     IRootAxelarBridgeAdaptorEvents,
@@ -27,35 +29,30 @@ contract RootAxelarBridgeAdaptor is
 {
     using SafeERC20 for IERC20Metadata;
 
-    address public rootBridge;
-    /// @dev childChain could be immutable, but as of writing this Solidity does not support immutable strings.
-    ///      see: https://ethereum.stackexchange.com/questions/127622/typeerror-immutable-variables-cannot-have-a-non-value-type
+    IRootERC20Bridge public rootBridge;
+    string public childBridgeAdaptor;
     string public childChain;
-    IAxelarGateway public axelarGateway;
     IAxelarGasService public gasService;
     mapping(uint256 => string) public chainIdToChainName;
+
+    constructor(address _gateway) AxelarExecutable(_gateway) {}
 
     /**
      * @notice Initilization function for RootAxelarBridgeAdaptor.
      * @param _rootBridge Address of root bridge contract.
      * @param _childChain Name of child chain.
-     * @param _axelarGateway Address of Axelar Gateway contract.
      * @param _gasService Address of Axelar Gas Service contract.
      */
-    function initialize(address _rootBridge, string memory _childChain, address _axelarGateway, address _gasService)
-        public
-        initializer
-    {
-        if (_rootBridge == address(0) || _axelarGateway == address(0) || _gasService == address(0)) {
+    function initialize(address _rootBridge, string memory _childChain, address _gasService) public initializer {
+        if (_rootBridge == address(0) || _gasService == address(0)) {
             revert ZeroAddresses();
         }
 
         if (bytes(_childChain).length == 0) {
             revert InvalidChildChain();
         }
-        rootBridge = _rootBridge;
+        rootBridge = IRootERC20Bridge(_rootBridge);
         childChain = _childChain;
-        axelarGateway = IAxelarGateway(_axelarGateway);
         gasService = IAxelarGasService(_gasService);
     }
 
@@ -67,7 +64,7 @@ contract RootAxelarBridgeAdaptor is
         if (msg.value == 0) {
             revert NoGas();
         }
-        if (msg.sender != rootBridge) {
+        if (msg.sender != address(rootBridge)) {
             revert CallerNotBridge();
         }
 
@@ -80,7 +77,18 @@ contract RootAxelarBridgeAdaptor is
             address(this), _childChain, _childBridgeAdaptor, payload, refundRecipient
         );
 
-        axelarGateway.callContract(_childChain, _childBridgeAdaptor, payload);
-        emit MapTokenAxelarMessage(_childChain, _childBridgeAdaptor, payload);
+        gateway.callContract(_childChain, _childBridgeAdaptor, payload);
+        emit AxelarMessageSent(_childChain, _childBridgeAdaptor, payload);
+    }
+
+    /**
+     * @dev This function is called by the parent `AxelarExecutable` contract to execute the payload.
+     */
+    function _execute(string calldata sourceChain_, string calldata sourceAddress_, bytes calldata payload_)
+        internal
+        override
+    {
+        emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
+        rootBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
 }

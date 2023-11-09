@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.21;
 
 import {Test, console2} from "forge-std/Test.sol";
@@ -13,18 +13,21 @@ import {
 } from "../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20, ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {MockChildAxelarGateway} from "../../../src/test/child/MockChildAxelarGateway.sol";
+import {MockChildAxelarGasService} from "../../../src/test/child/MockChildAxelarGasService.sol";
 import {Utils} from "../../utils.t.sol";
 
 contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
     string public ROOT_CHAIN_NAME = "ROOT_CHAIN";
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
+    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     address constant NATIVE_ETH = address(0xeee);
 
     ChildERC20Bridge public childERC20Bridge;
     ChildERC20 public childERC20;
     ChildAxelarBridgeAdaptor public childAxelarBridgeAdaptor;
     MockChildAxelarGateway public mockChildAxelarGateway;
+    MockChildAxelarGasService public mockChildAxelarGasService;
 
     function setUp() public {
         childERC20 = new ChildERC20();
@@ -32,6 +35,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
 
         childERC20Bridge = new ChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
+        mockChildAxelarGasService = new MockChildAxelarGasService();
         childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
 
         childERC20Bridge.initialize(
@@ -39,10 +43,13 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             ROOT_ADAPTOR_ADDRESS,
             address(childERC20),
             ROOT_CHAIN_NAME,
-            IMX_TOKEN_ADDRESS
+            IMX_TOKEN_ADDRESS,
+            WIMX_TOKEN_ADDRESS
         );
 
-        childAxelarBridgeAdaptor.initialize(address(childERC20Bridge));
+        childAxelarBridgeAdaptor.initialize(
+            ROOT_CHAIN_NAME, address(childERC20Bridge), address(mockChildAxelarGasService)
+        );
     }
 
     function test_ChildTokenMap() public {
@@ -78,7 +85,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode("invalid payload");
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
@@ -104,7 +111,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = "";
 
-        vm.expectRevert(InvalidData.selector);
+        vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Data too short"));
         childAxelarBridgeAdaptor.execute(commandId, ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, payload);
     }
 
@@ -130,7 +137,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
     /*
      * DEPOSIT
      */
-    function test_deposit_EmitsERC20Deposit() public {
+    function test_deposit_EmitsChildChainERC20Deposit() public {
         address rootTokenAddress = address(456);
         address sender = address(0xff);
         address receiver = address(0xee);
@@ -139,7 +146,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 commandId = bytes32("testCommandId");
 
         vm.expectEmit(address(childERC20Bridge));
-        emit ERC20Deposit(rootTokenAddress, childToken, sender, receiver, amount);
+        emit ChildChainERC20Deposit(rootTokenAddress, childToken, sender, receiver, amount);
 
         childAxelarBridgeAdaptor.execute(
             commandId,
@@ -294,6 +301,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         address rootAddress = address(0x123);
         {
             // Slot is 2 because of the Ownable, Initializable contracts coming first.
+            // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
             uint256 rootTokenToChildTokenMappingSlot = 2;
             address childAddress = address(444444);
             bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);

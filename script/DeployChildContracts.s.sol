@@ -22,13 +22,17 @@ contract DeployChildContracts is Script {
         vm.createSelectFork(childRpcUrl);
         vm.startBroadcast(deployerPrivateKey);
 
+        WIMX wrappedIMX = new WIMX();
+
         ProxyAdmin proxyAdmin = new ProxyAdmin();
 
         ChildERC20 childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 
         ChildERC20Bridge childERC20BridgeImplementation = new ChildERC20Bridge();
-        childERC20BridgeImplementation.initialize(address(1), "0x123", address(1), "root", address(1));
+        childERC20BridgeImplementation.initialize(
+            address(1), "0x123", address(1), "root", address(1), address(wrappedIMX)
+        );
 
         TransparentUpgradeableProxy childERC20BridgeProxy = new TransparentUpgradeableProxy(
             address(childERC20BridgeImplementation),
@@ -45,8 +49,6 @@ contract DeployChildContracts is Script {
             address(proxyAdmin),
             ""
         );
-
-        WIMX wrappedIMX = new WIMX();
 
         vm.stopBroadcast();
 
