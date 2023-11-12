@@ -28,11 +28,11 @@ contract DeployChildContracts is Script {
         childTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(1),
-            pauser: address(2),
-            unpauser: address(3),
-            variableManager: address(4),
-            adaptorManager: address(5)
+            defaultAdmin: address(0x1111),
+            pauser: address(0x2222),
+            unpauser: address(0x3333),
+            variableManager: address(0x4444),
+            adaptorManager: address(0x5555)
         });
 
         ChildERC20Bridge childERC20BridgeImplementation = new ChildERC20Bridge();
