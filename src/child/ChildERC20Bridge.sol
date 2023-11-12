@@ -300,6 +300,9 @@ contract ChildERC20Bridge is
         }
     }
 
+    /**
+     * @inheritdoc IChildERC20Bridge
+     */
     function updateBridgeAdaptor(address newBridgeAdaptor) external override {
         if (!(hasRole(VARIABLE_MANAGER_ROLE, msg.sender))) {
             revert NotVariableManager();
