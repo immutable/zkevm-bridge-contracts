@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
@@ -34,8 +34,8 @@ contract RootERC20BridgeWithdrawIntegrationTest is
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
     address constant WRAPPED_ETH = address(0xddd);
+    uint256 constant UNLIMITED_DEPOSIT_LIMIT = 0;
     address public constant NATIVE_IMX = address(0xfff);
-    uint256 constant UNLIMITED_IMX_DEPOSIT_LIMIT = 0;
 
     uint256 constant withdrawAmount = 0.5 ether;
 
@@ -49,14 +49,21 @@ contract RootERC20BridgeWithdrawIntegrationTest is
     function setUp() public {
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
-        (imxToken, token, rootBridgeFlowRate, axelarAdaptor, mockAxelarGateway, axelarGasService) = rootIntegrationSetup(
+        RootIntegration memory integration = rootIntegrationSetup(
             CHILD_BRIDGE,
             CHILD_BRIDGE_ADAPTOR,
             CHILD_CHAIN_NAME,
             IMX_TOKEN_ADDRESS,
             WRAPPED_ETH,
-            UNLIMITED_IMX_DEPOSIT_LIMIT
+            UNLIMITED_DEPOSIT_LIMIT
         );
+
+        imxToken = integration.imxToken;
+        token = integration.token;
+        rootBridgeFlowRate = integration.rootBridgeFlowRate;
+        axelarAdaptor = integration.axelarAdaptor;
+        mockAxelarGateway = integration.mockAxelarGateway;
+        axelarGasService = integration.axelarGasService;
 
         // Need to first map the token.
         rootBridgeFlowRate.mapToken{value: 1}(token);

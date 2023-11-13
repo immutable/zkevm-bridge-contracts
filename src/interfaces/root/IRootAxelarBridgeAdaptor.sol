@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
 interface IRootAxelarBridgeAdaptorErrors {
     /// @notice Error when a zero address is given when not valid.
