@@ -165,7 +165,81 @@ contract RootERC20BridgeFlowRate is
                 revert NotMapped();
             }
         }
-        _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
+
+        // Update the flow rate checking. Delay the withdrawal if the request was
+        // for a token that has not been configured.
+        bool delayWithdrawalUnknownToken = _updateFlowRateBucket(rootToken, amount);
+        bool delayWithdrawalLargeAmount = false;
+
+        // Delay the withdrawal if the amount is greater than the threshold.
+        if (!delayWithdrawalUnknownToken) {
+            delayWithdrawalLargeAmount = (amount >= largeTransferThresholds[rootToken]);
+        }
+
+        // Ensure storage variable is cached on the stack.
+        bool queueActivated = withdrawalQueueActivated;
+
+        if (delayWithdrawalLargeAmount || delayWithdrawalUnknownToken || queueActivated) {
+            _enqueueWithdrawal(receiver, withdrawer, rootToken, amount);
+            emit QueuedWithdrawal(
+                rootToken,
+                withdrawer,
+                receiver,
+                amount,
+                delayWithdrawalLargeAmount,
+                delayWithdrawalUnknownToken,
+                queueActivated
+            );
+        } else {
+            _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
+        }
     }
+
+    /**
+     * @notice Withdraw a queued withdrawal.
+     * @param receiver Address to withdraw value for.
+     * @param index Offset into array of queued withdrawals.
+     * @dev Only when not paused.
+     */
+    function finaliseQueuedWithdrawal(address receiver, uint256 index) external nonReentrant {
+        (address withdrawer, address token, uint256 amount) = _processWithdrawal(receiver, index);
+        address childToken = rootTokenToChildToken[token];
+        _executeTransfer(token, childToken, withdrawer, receiver, amount);
+    }
+
+    /**
+     * @notice Withdraw one or more queued withdrawals for a specific token, aggregating the amounts.
+     * @param receiver Address to withdraw value for.
+     * @param token Token to do the aggregated withdrawal for.
+     * @param indices Offsets into array of queued withdrawals.
+     * @dev Only when not paused.
+     *   Note that withdrawer in the ERC20Withdraw event emitted in the _executeTransfer function
+     *   will represent the withdrawer of the last bridge transfer.
+     */
+    function finaliseQueuedWithdrawalsAggregated(
+        address receiver,
+        address token,
+        uint256[] calldata indices
+    ) external nonReentrant {
+        if (indices.length == 0) {
+            revert ProvideAtLeastOneIndex();
+        }
+        uint256 total = 0;
+        address withdrawer = address(0);
+        for (uint256 i = 0; i < indices.length; i++) {
+            address actualToken;
+            uint256 amount;
+            (withdrawer, actualToken, amount) = _processWithdrawal(receiver, indices[i]);
+            if (actualToken != token) {
+                revert MixedTokens(token, actualToken);
+            }
+            total += amount;
+        }
+        address childToken = rootTokenToChildToken[token];
+        _executeTransfer(token, childToken, withdrawer, receiver, total);
+    }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapRootERC20PredicateFlowRate;
  
 }
