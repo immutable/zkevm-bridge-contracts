@@ -60,7 +60,7 @@ contract ChildERC20Bridge is
     /// @dev The address of the IMX ERC20 token on L1.
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
-    address public childETHToken;
+    IChildERC20 public childETHToken;
     /// @dev The address of the wrapped IMX token on L2.
     address public wIMXToken;
 
@@ -94,12 +94,8 @@ contract ChildERC20Bridge is
     ) public initializer {
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
-<<<<<<< HEAD
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
-                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0)
-=======
-                || newWIMXToken == address(0)
->>>>>>> 34aac574 (Add wimx)
+                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0) || newWIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -130,43 +126,24 @@ contract ChildERC20Bridge is
         // Clone childERC20 for native eth
         IChildERC20 clonedETHToken =
             IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
-        // Revert if clone fails
-        if (clonedETHToken == 0) {
-            revert CloneFailed();
-        }
         // Initialize
         clonedETHToken.initialize(NATIVE_ETH, "Ethereum", "ETH", 18);
         childETHToken = clonedETHToken;
     }
 
     /**
-     * @dev Sets `bridgeAdaptor` to `newBridgeAdaptor`.
-     * @param newBridgeAdaptor Address of new bridge adaptor.
-     *
-     * Requirements:
-     *
-     * - the caller must be the `owner` of the contract.
-     *
+     * @inheritdoc IChildERC20Bridge
      */
-    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
+    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyRole(ADAPTOR_MANAGER_ROLE) {
         if (newBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
-        BridgeAdaptorUpdated(bridgeAdaptor, newBridgeAdaptor);
+        emit BridgeAdaptorUpdated(address(bridgeAdaptor), newBridgeAdaptor);
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
     }
 
     /**
      * @inheritdoc IChildERC20Bridge
-     *
-     * Requirements:
-     *
-     * - the caller must be the `bridgeAdaptor`
-     * - the `messageSourceChain` must be the `rootChain`
-     * - the `sourceAddress` must be the `rootERC20BridgeAdaptor`
-     * - the `data` must be at least 32 bytes long
-     * - the data must match the signature of either MAP_TOKEN_SIG or DEPOSIT_SIG
-     *
      */
     function onMessageReceive(string calldata messageSourceChain, string calldata sourceAddress, bytes calldata data)
         external
@@ -366,12 +343,7 @@ contract ChildERC20Bridge is
 
         // Deploy child chain token
         IChildERC20 childToken =
-            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken))));
-        // Revert if clone failsq
-        if (childToken == 0) {
-            revert CloneFailed();
-        }
-
+            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken)))); 
         // Map token
         rootTokenToChildToken[rootToken] = address(childToken);
 
@@ -401,14 +373,13 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
-        address childToken;
-
-        if (address(rootToken) != rootIMXToken) {
-            if (address(rootToken) == NATIVE_ETH) {
+        IChildERC20 childToken;
+        if (rootToken != rootIMXToken) {
+            if (rootToken == NATIVE_ETH) {
                 childToken = childETHToken;
             } else {
-                childToken = rootTokenToChildToken[address(rootToken)];
-                if (childToken == address(0)) {
+                childToken = IChildERC20(rootTokenToChildToken[address(rootToken)]);
+                if (address(childToken) == address(0)) {
                     revert NotMapped();
                 }
             }
@@ -417,34 +388,18 @@ contract ChildERC20Bridge is
                 revert EmptyTokenContract();
             }
 
-            if (!IChildERC20(childToken).mint(receiver, amount)) {
+            if (childToken.mint(receiver, amount)) {
                 revert MintFailed();
             }
 
-            if (address(rootToken) == NATIVE_ETH) {
-                emit NativeEthDeposit(address(rootToken), childToken, sender, receiver, amount);
+            if (rootToken == NATIVE_ETH) {
+                emit NativeEthDeposit(rootToken, address(childToken), sender, receiver, amount);
             } else {
-                emit ChildChainERC20Deposit(address(rootToken), childToken, sender, receiver, amount);
+                emit ChildChainERC20Deposit(rootToken, address(childToken), sender, receiver, amount);
             }
         } else {
             Address.sendValue(payable(receiver), amount);
-            emit IMXDeposit(address(rootToken), sender, receiver, amount);
+            emit IMXDeposit(rootToken, sender, receiver, amount);
         }
     }
-<<<<<<< HEAD
-
-    /**
-     * @inheritdoc IChildERC20Bridge
-     */
-    function updateBridgeAdaptor(address newBridgeAdaptor) external override {
-        if (!(hasRole(ADAPTOR_MANAGER_ROLE, msg.sender))) {
-            revert NotVariableManager(msg.sender);
-        }
-        if (newBridgeAdaptor == address(0)) {
-            revert ZeroAddress();
-        }
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
-    }
-=======
->>>>>>> 34aac574 (Add wimx)
 }

@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IChildERC20} from "./IChildERC20.sol";
 
 interface IChildERC20Bridge {
     struct InitializationRoles {
@@ -114,8 +115,6 @@ interface IChildERC20BridgeEvents {
 
 // TODO add parameters to errors if it makes sense
 interface IChildERC20BridgeErrors {
-    /// @notice Error when the caller is not the variable manager role.
-    error NotVariableManager(address caller);
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
     /// @notice Error when the withdrawal amount is zero
