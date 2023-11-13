@@ -133,10 +133,10 @@ contract RootERC20Bridge is
     /**
      * @notice Updates the root bridge adaptor.
      * @param newRootBridgeAdaptor Address of new root bridge adaptor.
-     * @dev Can only be called by owner.
+     * @dev Can only be called by VARIABLE_MANAGER_ROLE.
      */
     function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external {
-        if (!hasRole(VARIABLE_MANAGER_ROLE, msg.sender)) {
+        if (!hasRole(ADAPTOR_MANAGER_ROLE, msg.sender)) {
             revert NotVariableManager();
         }
 
@@ -152,7 +152,7 @@ contract RootERC20Bridge is
     /**
      * @notice Updates the IMX deposit limit.
      * @param newImxCumulativeDepositLimit The new cumulative IMX deposit limit.
-     * @dev Can only be called by owner.
+     * @dev Can only be called by VARIABLE_MANAGER_ROLE.
      * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
      */
     function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external {
