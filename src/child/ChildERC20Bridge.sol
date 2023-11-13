@@ -24,7 +24,7 @@ import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
 contract ChildERC20Bridge is
-    AccessControlUpgradeable,
+    AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
     IChildERC20BridgeErrors,
     IChildERC20Bridge,
     IChildERC20BridgeEvents
