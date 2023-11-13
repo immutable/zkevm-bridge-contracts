@@ -351,7 +351,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
     }
 
-    function test_RevertIf_updateBridgeAdaptorCalledByNotVariableManager() public {
+    function test_RevertIf_updateBridgeAdaptorCalledByNotAdaptorManager() public {
         vm.prank(address(0xf00f00));
         vm.expectRevert(abi.encodeWithSelector(NotVariableManager.selector, 0xf00f00));
         childBridge.updateBridgeAdaptor(address(0x11111));
