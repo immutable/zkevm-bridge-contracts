@@ -44,7 +44,7 @@ contract RootERC20Bridge is
     bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER_ROLE");
     bytes32 public constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
 
-    uint256 public constant NO_DEPOSIT_LIMIT = 0;
+    uint256 public constant UNLIMITED_DEPOSIT = 0;
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
@@ -161,7 +161,7 @@ contract RootERC20Bridge is
         }
 
         if (
-            newImxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+            newImxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))
         ) {
             revert ImxDepositLimitTooLow();
@@ -331,7 +331,7 @@ contract RootERC20Bridge is
             revert ZeroAmount();
         }
         if (
-            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit
         ) {
             revert ImxDepositLimitExceeded();
