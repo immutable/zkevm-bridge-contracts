@@ -137,7 +137,7 @@ contract RootERC20Bridge is
      */
     function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external {
         if (!hasRole(ADAPTOR_MANAGER_ROLE, msg.sender)) {
-            revert NotVariableManager();
+            revert NotVariableManager(msg.sender);
         }
 
         if (newRootBridgeAdaptor == address(0)) {
@@ -157,7 +157,7 @@ contract RootERC20Bridge is
      */
     function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external {
         if (!hasRole(VARIABLE_MANAGER_ROLE, msg.sender)) {
-            revert NotVariableManager();
+            revert NotVariableManager(msg.sender);
         }
 
         if (
