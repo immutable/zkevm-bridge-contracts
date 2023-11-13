@@ -32,6 +32,7 @@ abstract contract FlowRateWithdrawalQueue {
         uint256 timestamp;
     }
     // Mapping of user addresses to withdrawal queue.
+
     mapping(address => PendingWithdrawal[]) private pendingWithdrawals;
 
     // Information found in a search.
@@ -61,11 +62,7 @@ abstract contract FlowRateWithdrawalQueue {
 
     // Indicates a withdrawal has been processed.
     event ProcessedWithdrawal(
-        address indexed token,
-        address indexed withdrawer,
-        address indexed receiver,
-        uint256 amount,
-        uint256 index
+        address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 index
     );
 
     // Indicates that the new withdrawal delay.
@@ -128,10 +125,10 @@ abstract contract FlowRateWithdrawalQueue {
      * @return token The token to transfer to the receiver.
      * @return amount The number of tokens to transfer to the receiver.
      */
-    function _processWithdrawal(
-        address receiver,
-        uint256 index
-    ) internal returns (address withdrawer, address token, uint256 amount) {
+    function _processWithdrawal(address receiver, uint256 index)
+        internal
+        returns (address withdrawer, address token, uint256 amount)
+    {
         PendingWithdrawal[] storage withdrawals = pendingWithdrawals[receiver];
         // Check if the request is beyond the end of the array.
         uint256 length = pendingWithdrawals[receiver].length;
@@ -178,10 +175,11 @@ abstract contract FlowRateWithdrawalQueue {
      * @param indices Offsets into withdrawal queue to fetch information for.
      * @return pending Array of pending withdrawals. Zero fill are returned if the index is beyond the end of the queue.
      */
-    function getPendingWithdrawals(
-        address receiver,
-        uint256[] calldata indices
-    ) external view returns (PendingWithdrawal[] memory pending) {
+    function getPendingWithdrawals(address receiver, uint256[] calldata indices)
+        external
+        view
+        returns (PendingWithdrawal[] memory pending)
+    {
         PendingWithdrawal[] storage withdrawals = pendingWithdrawals[receiver];
         uint256 withdrawalsLength = withdrawals.length;
         pending = new PendingWithdrawal[](indices.length);

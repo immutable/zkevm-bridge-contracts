@@ -82,7 +82,6 @@ contract Utils is Test {
         address wethTokenAddress,
         uint256 imxCumulativeDepositLimit
     ) public returns (RootIntegration memory integrationTest) {
-
         integrationTest.token = new ERC20PresetMinterPauser("Test", "TST");
         integrationTest.token.mint(address(this), 1000000 ether);
 

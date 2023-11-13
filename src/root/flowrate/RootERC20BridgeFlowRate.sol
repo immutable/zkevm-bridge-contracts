@@ -7,9 +7,12 @@ import "./FlowRateDetection.sol";
 import "./FlowRateWithdrawalQueue.sol";
 import "../RootERC20Bridge.sol";
 
-import {IRootERC20BridgeFlowRateEvents, IRootERC20BridgeFlowRateErrors} from "../../interfaces/root/flowrate/IRootERC20BridgeFlowRate.sol";
+import {
+    IRootERC20BridgeFlowRateEvents,
+    IRootERC20BridgeFlowRateErrors
+} from "../../interfaces/root/flowrate/IRootERC20BridgeFlowRate.sol";
 
-contract RootERC20BridgeFlowRate is 
+contract RootERC20BridgeFlowRate is
     RootERC20Bridge,
     ReentrancyGuardUpgradeable,
     FlowRateDetection,
@@ -17,7 +20,6 @@ contract RootERC20BridgeFlowRate is
     IRootERC20BridgeFlowRateEvents,
     IRootERC20BridgeFlowRateErrors
 {
-
     // Constants used for access control
     bytes32 private constant RATE_CONTROL_ROLE = keccak256("RATE");
 
@@ -27,26 +29,25 @@ contract RootERC20BridgeFlowRate is
 
     function initialize(
         InitializationRoles memory newRoles,
-        address newRootBridgeAdaptor, 
-        address newChildERC20Bridge, 
-        string memory newChildBridgeAdaptor, 
-        address newChildTokenTemplate, 
-        address newRootIMXToken, 
-        address newRootWETHToken, 
-        string memory newChildChain, 
+        address newRootBridgeAdaptor,
+        address newChildERC20Bridge,
+        string memory newChildBridgeAdaptor,
+        address newChildTokenTemplate,
+        address newRootIMXToken,
+        address newRootWETHToken,
+        string memory newChildChain,
         uint256 newImxCumulativeDepositLimit,
         address rateAdmin
-        ) external initializer {
-
+    ) external initializer {
         __RootERC20Bridge_init(
             newRoles,
-            newRootBridgeAdaptor, 
-            newChildERC20Bridge, 
-            newChildBridgeAdaptor, 
-            newChildTokenTemplate, 
-            newRootIMXToken, 
-            newRootWETHToken, 
-            newChildChain, 
+            newRootBridgeAdaptor,
+            newChildERC20Bridge,
+            newChildBridgeAdaptor,
+            newChildTokenTemplate,
+            newRootIMXToken,
+            newRootWETHToken,
+            newChildChain,
             newImxCumulativeDepositLimit
         );
 
@@ -55,8 +56,18 @@ contract RootERC20BridgeFlowRate is
         _grantRole(RATE_CONTROL_ROLE, rateAdmin);
     }
 
-     // Ensure initialize from RootERC20Predicate can not be called.
-    function initialize(InitializationRoles memory, address, address, string memory, address, address, address, string memory, uint256) external pure override {
+    // Ensure initialize from RootERC20Predicate can not be called.
+    function initialize(
+        InitializationRoles memory,
+        address,
+        address,
+        string memory,
+        address,
+        address,
+        address,
+        string memory,
+        uint256
+    ) external pure override {
         revert WrongInitializer();
     }
 
@@ -80,7 +91,7 @@ contract RootERC20BridgeFlowRate is
         _deactivateWithdrawalQueue();
     }
 
-      /**
+    /**
      * @notice Set the time in the queue for queued withdrawals.
      * @param delay The number of seconds between when the ExitHelper is called to
      *         complete a crosschain transfer and when finaliseHeldTransfers can be
@@ -144,7 +155,7 @@ contract RootERC20BridgeFlowRate is
         emit RateControlThresholdSet(token, capacity, refillRate, largeTransferThreshold);
     }
 
-       /**
+    /**
      * @notice Complete crosschain transfer of funds.
      * @param data Contains the crosschain transfer information:
      *         - token: Token address on the root chain.
@@ -217,11 +228,10 @@ contract RootERC20BridgeFlowRate is
      *   Note that withdrawer in the ERC20Withdraw event emitted in the _executeTransfer function
      *   will represent the withdrawer of the last bridge transfer.
      */
-    function finaliseQueuedWithdrawalsAggregated(
-        address receiver,
-        address token,
-        uint256[] calldata indices
-    ) external nonReentrant {
+    function finaliseQueuedWithdrawalsAggregated(address receiver, address token, uint256[] calldata indices)
+        external
+        nonReentrant
+    {
         if (indices.length == 0) {
             revert ProvideAtLeastOneIndex();
         }
@@ -242,5 +252,4 @@ contract RootERC20BridgeFlowRate is
 
     // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gapRootERC20PredicateFlowRate;
- 
 }

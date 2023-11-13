@@ -47,9 +47,8 @@ contract RootERC20BridgeWithdrawIntegrationTest is
     RootERC20BridgeFlowRate public rootBridgeFlowRate;
 
     function setUp() public {
+        console2.log("root withdraw setUp");
 
-        console2.log('root withdraw setUp');
-        
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
         RootIntegration memory integration = rootIntegrationSetup(
@@ -61,8 +60,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
             UNLIMITED_DEPOSIT_LIMIT
         );
 
-        console2.log('after rootIntegrationSetup');
-
+        console2.log("after rootIntegrationSetup");
 
         imxToken = integration.imxToken;
         token = integration.token;
@@ -79,7 +77,6 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         // And give the bridge some tokens
         token.transfer(address(rootBridgeFlowRate), 100 ether);
         imxToken.transfer(address(rootBridgeFlowRate), 100 ether);
-
     }
 
     function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
@@ -235,7 +232,11 @@ contract RootERC20BridgeWithdrawIntegrationTest is
 
         vm.expectEmit();
         emit RootChainERC20Withdraw(
-            address(token), rootBridgeFlowRate.rootTokenToChildToken(address(token)), address(this), receiver, withdrawAmount
+            address(token),
+            rootBridgeFlowRate.rootTokenToChildToken(address(token)),
+            address(this),
+            receiver,
+            withdrawAmount
         );
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }

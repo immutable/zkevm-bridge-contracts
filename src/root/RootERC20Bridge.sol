@@ -84,15 +84,15 @@ contract RootERC20Bridge is
         string memory newChildChain,
         uint256 newImxCumulativeDepositLimit
     ) external virtual initializer {
-         __RootERC20Bridge_init(
+        __RootERC20Bridge_init(
             newRoles,
-            newRootBridgeAdaptor, 
-            newChildERC20Bridge, 
-            newChildBridgeAdaptor, 
-            newChildTokenTemplate, 
-            newRootIMXToken, 
-            newRootWETHToken, 
-            newChildChain, 
+            newRootBridgeAdaptor,
+            newChildERC20Bridge,
+            newChildBridgeAdaptor,
+            newChildTokenTemplate,
+            newRootIMXToken,
+            newRootWETHToken,
+            newChildChain,
             newImxCumulativeDepositLimit
         );
     }

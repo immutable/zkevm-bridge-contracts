@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.19;
 
-interface IRootERC20BridgeFlowRate {
-    
-}
+interface IRootERC20BridgeFlowRate {}
 
 interface IRootERC20BridgeFlowRateEvents {
-   /**
+    /**
      * @notice Indicates rate control thresholds have been set for a certain token.
      * @param token The token thresholds applied to.
      * @param capacity The size of the bucket in tokens.
@@ -15,10 +13,7 @@ interface IRootERC20BridgeFlowRateEvents {
      *         and will be put in the withdrawal queue.
      */
     event RateControlThresholdSet(
-        address indexed token,
-        uint256 capacity,
-        uint256 refillRate,
-        uint256 largeTransferThreshold
+        address indexed token, uint256 capacity, uint256 refillRate, uint256 largeTransferThreshold
     );
 
     /**
@@ -44,11 +39,10 @@ interface IRootERC20BridgeFlowRateEvents {
 }
 
 interface IRootERC20BridgeFlowRateErrors {
-   // Error if the RootERC20Predicate initializer is called, and not the one for this contract.
+    // Error if the RootERC20Predicate initializer is called, and not the one for this contract.
     error WrongInitializer();
     // finaliseQueuedWithdrawalsAggregated was called with a zero length indices array.
     error ProvideAtLeastOneIndex();
     // The expected and actual token did not match for an aggregated withdrawal.
     error MixedTokens(address token, address actualToken);
 }
-
