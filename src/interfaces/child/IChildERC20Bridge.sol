@@ -64,7 +64,7 @@ interface IChildERC20BridgeEvents {
 // TODO add parameters to errors if it makes sense
 interface IChildERC20BridgeErrors {
     /// @notice Error when the caller is not the variable manager role.
-    error NotVariableManager();
+    error NotVariableManager(address caller);
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
     /// @notice Error when the withdrawal amount is zero

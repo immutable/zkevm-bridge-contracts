@@ -306,7 +306,7 @@ contract ChildERC20Bridge is
      */
     function updateBridgeAdaptor(address newBridgeAdaptor) external override {
         if (!(hasRole(VARIABLE_MANAGER_ROLE, msg.sender))) {
-            revert NotVariableManager();
+            revert NotVariableManager(msg.sender);
         }
         if (newBridgeAdaptor == address(0)) {
             revert ZeroAddress();
