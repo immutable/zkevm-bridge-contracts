@@ -526,7 +526,9 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner() public {
         vm.prank(address(0xf00f00));
-        vm.expectRevert(NotVariableManager.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(NotVariableManager.selector, 0xf00f00)
+        );
         rootBridge.updateRootBridgeAdaptor(address(0x11111));
     }
 

@@ -82,7 +82,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         });
 
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
+        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressPauser() public {
@@ -96,7 +96,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         });
 
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
+        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressUnpauser() public {
@@ -110,7 +110,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         });
 
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
+        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressVariableManager() public {
@@ -124,7 +124,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         });
 
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
+        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdaptorManager() public {
@@ -138,7 +138,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         });
 
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
+        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdapter() public {
