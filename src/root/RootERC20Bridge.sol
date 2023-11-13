@@ -133,7 +133,7 @@ contract RootERC20Bridge is
     /**
      * @notice Updates the root bridge adaptor.
      * @param newRootBridgeAdaptor Address of new root bridge adaptor.
-     * @dev Can only be called by VARIABLE_MANAGER_ROLE.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
      */
     function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external {
         if (!hasRole(ADAPTOR_MANAGER_ROLE, msg.sender)) {
