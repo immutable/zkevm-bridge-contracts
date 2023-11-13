@@ -62,7 +62,7 @@ contract ChildERC20Bridge is
     address public childETHToken;
 
     /**
-     * @notice Initialization function for RootERC20Bridge.
+     * @notice Initialization function for ChildERC20Bridge.
      * @param newRoles Struct containing addresses of roles.
      * @param newBridgeAdaptor Address of StateSender to send deposit information to.
      * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
