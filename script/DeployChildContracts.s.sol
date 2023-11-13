@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Script, console2} from "forge-std/Script.sol";
 
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
+import {ChildERC20Bridge, IChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {ChildERC20} from "../src/child/ChildERC20.sol";
 import {WIMX} from "../src/child/WIMX.sol";
@@ -27,8 +27,16 @@ contract DeployChildContracts is Script {
         ChildERC20 childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(0x1111),
+            pauser: address(0x2222),
+            unpauser: address(0x3333),
+            variableManager: address(0x4444),
+            adaptorManager: address(0x5555)
+        });
+
         ChildERC20Bridge childERC20BridgeImplementation = new ChildERC20Bridge();
-        childERC20BridgeImplementation.initialize(address(1), "0x123", address(1), "root", address(1));
+        childERC20BridgeImplementation.initialize(roles, address(1), "0x123", address(1), "root", address(1));
 
         TransparentUpgradeableProxy childERC20BridgeProxy = new TransparentUpgradeableProxy(
             address(childERC20BridgeImplementation),

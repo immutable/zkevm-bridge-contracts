@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {
     IChildERC20BridgeEvents,
     IChildERC20BridgeErrors,
@@ -25,8 +24,7 @@ import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
 contract ChildERC20Bridge is
-    Ownable2Step,
-    Initializable,
+    AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
     IChildERC20BridgeErrors,
     IChildERC20Bridge,
     IChildERC20BridgeEvents
@@ -35,6 +33,14 @@ contract ChildERC20Bridge is
 
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
+
+    /**
+     * ROLES
+     */
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER_ROLE");
+    bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER_ROLE");
+    bytes32 public constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
@@ -56,7 +62,8 @@ contract ChildERC20Bridge is
     address public childETHToken;
 
     /**
-     * @notice Initilization function for RootERC20Bridge.
+     * @notice Initialization function for ChildERC20Bridge.
+     * @param newRoles Struct containing addresses of roles.
      * @param newBridgeAdaptor Address of StateSender to send deposit information to.
      * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
@@ -65,13 +72,18 @@ contract ChildERC20Bridge is
      * @dev Can only be called once.
      */
     function initialize(
+        InitializationRoles memory newRoles,
         address newBridgeAdaptor,
         string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
         string memory newRootChain,
         address newRootIMXToken
     ) public initializer {
-        if (newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)) {
+        if (
+            newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
+                || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
+                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0)
+        ) {
             revert ZeroAddress();
         }
 
@@ -82,6 +94,14 @@ contract ChildERC20Bridge is
         if (bytes(newRootChain).length == 0) {
             revert InvalidRootChain();
         }
+
+        __AccessControl_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
+        _grantRole(PAUSER_ROLE, newRoles.pauser);
+        _grantRole(UNPAUSER_ROLE, newRoles.unpauser);
+        _grantRole(VARIABLE_MANAGER_ROLE, newRoles.variableManager);
+        _grantRole(ADAPTOR_MANAGER_ROLE, newRoles.adaptorManager);
 
         rootERC20BridgeAdaptor = newRootERC20BridgeAdaptor;
         childTokenTemplate = newChildTokenTemplate;
@@ -281,7 +301,13 @@ contract ChildERC20Bridge is
         }
     }
 
-    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
+    /**
+     * @inheritdoc IChildERC20Bridge
+     */
+    function updateBridgeAdaptor(address newBridgeAdaptor) external override {
+        if (!(hasRole(ADAPTOR_MANAGER_ROLE, msg.sender))) {
+            revert NotVariableManager(msg.sender);
+        }
         if (newBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }

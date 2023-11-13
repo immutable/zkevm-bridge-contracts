@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IChildERC20Bridge {
+    struct InitializationRoles {
+        address defaultAdmin; // The address which will inherit `DEFAULT_ADMIN_ROLE`.
+        address pauser; // The address which will inherit `PAUSER_ROLE`.
+        address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
+        address variableManager; // The address which will inherit `VARIABLE_MANAGER_ROLE`.
+        address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
+    }
+
     function rootERC20BridgeAdaptor() external view returns (string memory);
     /**
      * @notice Receives a bridge message from root chain, parsing the message type then executing.
@@ -55,6 +63,8 @@ interface IChildERC20BridgeEvents {
 
 // TODO add parameters to errors if it makes sense
 interface IChildERC20BridgeErrors {
+    /// @notice Error when the caller is not the variable manager role.
+    error NotVariableManager(address caller);
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
     /// @notice Error when the withdrawal amount is zero

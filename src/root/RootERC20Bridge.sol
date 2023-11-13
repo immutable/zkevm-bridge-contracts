@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
-import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
-import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
+import {
+    IRootERC20Bridge,
+    IERC20Metadata,
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors
+} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
@@ -23,10 +25,8 @@ import {IWETH} from "../interfaces/root/IWETH.sol";
  * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in RootERC20Bridge.
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
-
 contract RootERC20Bridge is
-    Ownable2Step,
-    Initializable,
+    AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
     IRootERC20Bridge,
     IRootERC20BridgeEvents,
     IRootERC20BridgeErrors
@@ -36,7 +36,15 @@ contract RootERC20Bridge is
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
 
-    uint256 public constant NO_DEPOSIT_LIMIT = 0;
+    /**
+     * ROLES
+     */
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER_ROLE");
+    bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER_ROLE");
+    bytes32 public constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
+
+    uint256 public constant UNLIMITED_DEPOSIT = 0;
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
@@ -63,7 +71,8 @@ contract RootERC20Bridge is
     uint256 public imxCumulativeDepositLimit;
 
     /**
-     * @notice Initilization function for RootERC20Bridge.
+     * @notice Initialization function for RootERC20Bridge.
+     * @param newRoles Struct containing addresses of roles.
      * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
      * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
      * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with (As a checksummed string).
@@ -75,6 +84,7 @@ contract RootERC20Bridge is
      * @dev Can only be called once.
      */
     function initialize(
+        InitializationRoles memory newRoles,
         address newRootBridgeAdaptor,
         address newChildERC20Bridge,
         string memory newChildBridgeAdaptor,
@@ -87,6 +97,8 @@ contract RootERC20Bridge is
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
                 || newChildTokenTemplate == address(0) || newRootIMXToken == address(0) || newRootWETHToken == address(0)
+                || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
+                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -96,6 +108,14 @@ contract RootERC20Bridge is
         if (bytes(newChildChain).length == 0) {
             revert InvalidChildChain();
         }
+
+        __AccessControl_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
+        _grantRole(PAUSER_ROLE, newRoles.pauser);
+        _grantRole(UNPAUSER_ROLE, newRoles.unpauser);
+        _grantRole(VARIABLE_MANAGER_ROLE, newRoles.variableManager);
+        _grantRole(ADAPTOR_MANAGER_ROLE, newRoles.adaptorManager);
 
         childERC20Bridge = newChildERC20Bridge;
         childTokenTemplate = newChildTokenTemplate;
@@ -113,9 +133,13 @@ contract RootERC20Bridge is
     /**
      * @notice Updates the root bridge adaptor.
      * @param newRootBridgeAdaptor Address of new root bridge adaptor.
-     * @dev Can only be called by owner.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
      */
-    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyOwner {
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external {
+        if (!hasRole(ADAPTOR_MANAGER_ROLE, msg.sender)) {
+            revert NotVariableManager(msg.sender);
+        }
+
         if (newRootBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
@@ -128,12 +152,16 @@ contract RootERC20Bridge is
     /**
      * @notice Updates the IMX deposit limit.
      * @param newImxCumulativeDepositLimit The new cumulative IMX deposit limit.
-     * @dev Can only be called by owner.
+     * @dev Can only be called by VARIABLE_MANAGER_ROLE.
      * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
      */
-    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external onlyOwner {
+    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external {
+        if (!hasRole(VARIABLE_MANAGER_ROLE, msg.sender)) {
+            revert NotVariableManager(msg.sender);
+        }
+
         if (
-            newImxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+            newImxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))
         ) {
             revert ImxDepositLimitTooLow();
@@ -303,7 +331,7 @@ contract RootERC20Bridge is
             revert ZeroAmount();
         }
         if (
-            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit
         ) {
             revert ImxDepositLimitExceeded();

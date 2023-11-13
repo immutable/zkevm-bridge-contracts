@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
     ChildERC20Bridge,
+    IChildERC20Bridge,
     IChildERC20BridgeEvents,
     IERC20Metadata,
     IChildERC20BridgeErrors
@@ -30,8 +31,20 @@ contract ChildERC20BridgeWithdrawIMXUnitTest is Test, IChildERC20BridgeEvents, I
         mockAdaptor = new MockAdaptor();
 
         childBridge = new ChildERC20Bridge();
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
         childBridge.initialize(
-            address(mockAdaptor), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN
+            roles,
+            address(mockAdaptor),
+            ROOT_BRIDGE_ADAPTOR,
+            address(childTokenTemplate),
+            ROOT_CHAIN_NAME,
+            ROOT_IMX_TOKEN
         );
     }
 

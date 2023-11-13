@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
@@ -7,6 +7,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
 import {
     ChildERC20Bridge,
+    IChildERC20Bridge,
     IChildERC20BridgeEvents,
     IERC20Metadata,
     IChildERC20BridgeErrors
@@ -37,7 +38,15 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         mockChildAxelarGasService = new MockChildAxelarGasService();
         childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
 
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
         childERC20Bridge.initialize(
+            roles,
             address(childAxelarBridgeAdaptor),
             ROOT_ADAPTOR_ADDRESS,
             address(childERC20),
@@ -298,9 +307,8 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
         address rootAddress = address(0x123);
         {
-            // Slot is 2 because of the Ownable, Initializable contracts coming first.
             // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
-            uint256 rootTokenToChildTokenMappingSlot = 2;
+            uint256 rootTokenToChildTokenMappingSlot = 151;
             address childAddress = address(444444);
             bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);
             bytes32 data = bytes32(uint256(uint160(childAddress)));
