@@ -1,0 +1,50 @@
+name: Coverage Report
+
+on:
+    pull_request:
+
+env:
+  FOUNDRY_PROFILE: ci
+  GITHUB_TOKEN: ${{ secrets.PLATFORM_SA_GITHUB_TOKEN }}
+
+jobs:
+  check:
+    strategy:
+      fail-fast: true
+
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Restore node modules from cache
+        uses: ./.github/actions/node-cache
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
+        id: build
+
+      - name: Run Forge coverage
+        run: |
+          forge coverage --report summary > ./coverage.out
+        id: coverage
+
+      - name: Debug coverage report
+        run: |
+          cat ./coverage.out
+
+      - name: Publish report
+        uses: ./.github/actions/coverage
+        with:
+          coverage: ./coverage.out
+          target: coverage
+        

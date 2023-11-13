@@ -30,3 +30,6 @@ broadcast/DeployRootContracts.s.sol/2500/
 broadcast/DeployChildContracts.s.sol/2501/
 
 node_modules/
+
+# MacOS
+.DS_Store
