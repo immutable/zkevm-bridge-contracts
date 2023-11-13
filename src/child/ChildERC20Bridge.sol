@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
@@ -25,7 +24,7 @@ import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
 contract ChildERC20Bridge is
-    AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
+    AccessControlUpgradeable,
     IChildERC20BridgeErrors,
     IChildERC20Bridge,
     IChildERC20BridgeEvents
@@ -95,6 +94,8 @@ contract ChildERC20Bridge is
         if (bytes(newRootChain).length == 0) {
             revert InvalidRootChain();
         }
+
+        __AccessControl_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
