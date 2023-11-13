@@ -82,16 +82,13 @@ contract Utils is Test {
         address wethTokenAddress,
         uint256 imxCumulativeDepositLimit
     ) public returns (RootIntegration memory integrationTest) {
+
         integrationTest.token = new ERC20PresetMinterPauser("Test", "TST");
         integrationTest.token.mint(address(this), 1000000 ether);
 
         deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), imxTokenAddress);
         integrationTest.imxToken = ERC20PresetMinterPauser(imxTokenAddress);
         integrationTest.imxToken.mint(address(this), 1000000 ether);
-
-        // deployCodeTo("WETH9.sol", abi.encode("Wrapped ETH", "WETH"), wethTokenAddress);
-        // imxToken = ERC20PresetMinterPauser(imxTokenAddress);
-        // imxToken.mint(address(this), 1000000 ether);
 
         integrationTest.rootBridgeFlowRate = new RootERC20BridgeFlowRate();
         integrationTest.mockAxelarGateway = new MockAxelarGateway();
@@ -116,7 +113,8 @@ contract Utils is Test {
             imxTokenAddress,
             wethTokenAddress,
             childBridgeName,
-            imxCumulativeDepositLimit
+            imxCumulativeDepositLimit,
+            address(this)
         );
 
         integrationTest.axelarAdaptor.initialize(

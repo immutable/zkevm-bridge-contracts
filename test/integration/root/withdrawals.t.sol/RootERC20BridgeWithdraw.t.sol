@@ -47,6 +47,9 @@ contract RootERC20BridgeWithdrawIntegrationTest is
     RootERC20BridgeFlowRate public rootBridgeFlowRate;
 
     function setUp() public {
+
+        console2.log('root withdraw setUp');
+        
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
         RootIntegration memory integration = rootIntegrationSetup(
@@ -57,6 +60,9 @@ contract RootERC20BridgeWithdrawIntegrationTest is
             WRAPPED_ETH,
             UNLIMITED_DEPOSIT_LIMIT
         );
+
+        console2.log('after rootIntegrationSetup');
+
 
         imxToken = integration.imxToken;
         token = integration.token;
