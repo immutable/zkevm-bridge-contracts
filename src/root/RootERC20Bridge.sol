@@ -74,6 +74,7 @@ contract RootERC20Bridge is
     uint256 public imxCumulativeDepositLimit;
 
     function initialize(
+        InitializationRoles memory newRoles,
         address newRootBridgeAdaptor,
         address newChildERC20Bridge,
         string memory newChildBridgeAdaptor,
@@ -84,6 +85,7 @@ contract RootERC20Bridge is
         uint256 newImxCumulativeDepositLimit
     ) external virtual initializer {
          __RootERC20Bridge_init(
+            newRoles,
             newRootBridgeAdaptor, 
             newChildERC20Bridge, 
             newChildBridgeAdaptor, 

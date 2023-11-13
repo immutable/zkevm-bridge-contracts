@@ -107,7 +107,7 @@ contract Utils is Test {
             adaptorManager: address(this)
         });
 
-        integrationTest.rootBridge.initialize(
+        integrationTest.rootBridgeFlowRate.initialize(
             roles,
             address(integrationTest.axelarAdaptor),
             childBridge,
@@ -120,7 +120,7 @@ contract Utils is Test {
         );
 
         integrationTest.axelarAdaptor.initialize(
-            address(integrationTest.rootBridge), childBridgeName, address(integrationTest.axelarGasService)
+            address(integrationTest.rootBridgeFlowRate), childBridgeName, address(integrationTest.axelarGasService)
         );
     }
 

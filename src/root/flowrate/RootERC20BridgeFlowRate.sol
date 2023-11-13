@@ -11,7 +11,6 @@ import {IRootERC20BridgeFlowRateEvents, IRootERC20BridgeFlowRateErrors} from "..
 
 contract RootERC20BridgeFlowRate is 
     RootERC20Bridge,
-    AccessControlUpgradeable,
     ReentrancyGuardUpgradeable,
     FlowRateDetection,
     FlowRateWithdrawalQueue,
@@ -27,6 +26,7 @@ contract RootERC20BridgeFlowRate is
     mapping(address => uint256) public largeTransferThresholds;
 
     function initialize(
+        InitializationRoles memory newRoles,
         address newRootBridgeAdaptor, 
         address newChildERC20Bridge, 
         string memory newChildBridgeAdaptor, 
@@ -39,6 +39,7 @@ contract RootERC20BridgeFlowRate is
         ) external initializer {
 
         __RootERC20Bridge_init(
+            newRoles,
             newRootBridgeAdaptor, 
             newChildERC20Bridge, 
             newChildBridgeAdaptor, 
@@ -55,7 +56,7 @@ contract RootERC20BridgeFlowRate is
     }
 
      // Ensure initialize from RootERC20Predicate can not be called.
-    function initialize(address, address, string memory, address, address, address, string memory, uint256) external pure override {
+    function initialize(InitializationRoles memory, address, address, string memory, address, address, address, string memory, uint256) external pure override {
         revert WrongInitializer();
     }
 
