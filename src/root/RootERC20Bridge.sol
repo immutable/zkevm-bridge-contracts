@@ -7,8 +7,12 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
-import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
-import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
+import {
+    IRootERC20Bridge,
+    IERC20Metadata,
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors
+} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
@@ -104,6 +108,8 @@ contract RootERC20Bridge is
         if (bytes(newChildChain).length == 0) {
             revert InvalidChildChain();
         }
+
+        __AccessControl_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
