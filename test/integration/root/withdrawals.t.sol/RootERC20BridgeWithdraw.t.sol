@@ -60,9 +60,13 @@ contract RootERC20BridgeWithdrawIntegrationTest is
 
         // Need to first map the token.
         rootBridgeFlowRate.mapToken{value: 1}(token);
+        //Need to setup the flowRate
+        rootBridgeFlowRate.setRateControlThreshold(address(token), 1000 ether, 100 ether, 10 ether);
+        rootBridgeFlowRate.setRateControlThreshold(IMX_TOKEN_ADDRESS, 1000 ether, 100 ether, 10 ether);
         // And give the bridge some tokens
         token.transfer(address(rootBridgeFlowRate), 100 ether);
         imxToken.transfer(address(rootBridgeFlowRate), 100 ether);
+
     }
 
     function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
