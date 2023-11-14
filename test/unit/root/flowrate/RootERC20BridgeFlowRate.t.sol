@@ -34,6 +34,15 @@ contract RootERC20BridgeFlowRateUnitTest is
     uint256 constant depositFee = 200;
     uint256 constant UNLIMITED_IMX_DEPOSITS = 0;
 
+    uint256 constant CAPACITY = 1000000;
+    uint256 constant REFILL_RATE = 277; // Refill each hour.
+    uint256 constant LARGE = 100000;
+    bytes32 internal constant RATE_CONTROL_ROLE = keccak256("RATE");
+
+    address rateAdmin;
+    address nonAdmin;
+    uint256 withdrawalDelay;
+
     ERC20PresetMinterPauser public token;
     RootERC20BridgeFlowRate public rootBridgeFlowRate;
     MockAdaptor public mockAxelarAdaptor;
@@ -45,6 +54,9 @@ contract RootERC20BridgeFlowRateUnitTest is
         deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), IMX_TOKEN);
 
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
+
+        rateAdmin = makeAddr("rateadmin");
+        nonAdmin = makeAddr("nonadmin");
 
         rootBridgeFlowRate = new RootERC20BridgeFlowRate();
         mockAxelarGateway = new MockAxelarGateway();
@@ -71,8 +83,15 @@ contract RootERC20BridgeFlowRateUnitTest is
             WRAPPED_ETH,
             CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS,
-            address(this)
+            rateAdmin
         );
+
+        withdrawalDelay = rootBridgeFlowRate.withdrawalDelay();
+    }
+
+    function activateWithdrawalQueue() internal {
+        vm.prank(rateAdmin);
+        rootBridgeFlowRate.activateWithdrawalQueue();
     }
 
     /**
@@ -112,6 +131,65 @@ contract RootERC20BridgeFlowRateUnitTest is
             UNLIMITED_IMX_DEPOSITS,
             address(this)
         );
+    }
+
+    function testActivateWithdrawalQueue() public {
+        vm.prank(rateAdmin);
+        rootBridgeFlowRate.activateWithdrawalQueue();
+        assertTrue(rootBridgeFlowRate.withdrawalQueueActivated());
+    }
+
+    function testActivateWithdrawalQueueBadAuth() public {
+        vm.prank(nonAdmin);
+        vm.expectRevert();
+        rootBridgeFlowRate.activateWithdrawalQueue();
+    }
+
+    function testDeactivateWithdrawalQueue() public {
+        activateWithdrawalQueue();
+        vm.prank(rateAdmin);
+        rootBridgeFlowRate.deactivateWithdrawalQueue();
+        assertFalse(rootBridgeFlowRate.withdrawalQueueActivated());
+    }
+
+    function testDeactivateWithdrawalQueueBadAuth() public {
+        activateWithdrawalQueue();
+        vm.prank(nonAdmin);
+        vm.expectRevert();
+        rootBridgeFlowRate.deactivateWithdrawalQueue();
+    }
+
+    function testSetWithdrawalDelay() public {
+        uint256 delay = 1000;
+        vm.prank(rateAdmin);
+        rootBridgeFlowRate.setWithdrawalDelay(delay);
+        assertEq(rootBridgeFlowRate.withdrawalDelay(), delay);
+    }
+
+    function testSetWithdrawalDelayBadAuth() public {
+        uint256 delay = 1000;
+        vm.prank(nonAdmin);
+        vm.expectRevert();
+        rootBridgeFlowRate.setWithdrawalDelay(delay);
+    }
+
+    function testSetRateControlThreshold() public {
+        vm.prank(rateAdmin);
+        vm.expectEmit(true, true, false, true);
+        emit RateControlThresholdSet(address(token), CAPACITY, REFILL_RATE, LARGE);
+        rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
+        assertEq(rootBridgeFlowRate.largeTransferThresholds(address(token)), LARGE);
+        uint256 capacity; 
+        uint256 refillRate;
+        (capacity, , , refillRate) = rootBridgeFlowRate.flowRateBuckets(address(token));
+        assertEq(capacity, CAPACITY, "Capacity");
+        assertEq(refillRate, REFILL_RATE, "Refill rate");
+    }
+
+    function testSetRateControlThresholdBadAuth() public {
+        vm.prank(nonAdmin);
+        vm.expectRevert();
+        rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
     }
 
     //RootBridge initialiser should revert
