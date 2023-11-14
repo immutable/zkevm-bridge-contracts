@@ -65,10 +65,10 @@ contract ChildERC20Bridge is
     address public wIMXToken;
 
     /**
-     * @notice Fallback function on recieving native IMX.
+     * @notice Fallback function on recieving native IMX from WIMX contract.
      */
     receive() external payable {
-        // Revert if sender if not the wIMX token
+        // Revert if sender if not the wIMX token address  (
         // Or the wIMXToken is not set (contract not initialized)
         if (msg.sender != wIMXToken || wIMXToken == address(0)) {
             revert NonWrappedNativeTransfer();

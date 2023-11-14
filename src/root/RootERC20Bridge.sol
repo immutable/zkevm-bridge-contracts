@@ -169,7 +169,7 @@ contract RootERC20Bridge is
      * @dev method to receive the ETH back from the WETH contract when it is unwrapped
      */
     receive() external payable {
-        // Revert if sender if not the wIMX token
+        // Revert if sender is not the WETH token address
         // Or the wIMXToken is not set (contract not initialized)
         if (msg.sender != rootWETHToken || rootWETHToken == address(0)) {
             revert NonWrappedNativeTransfer();
