@@ -170,7 +170,7 @@ contract RootERC20Bridge is
      */
     receive() external payable {
         // Revert if sender is not the WETH token address
-        // Or the WETH contract is not set (contract not initialized)
+        // Or the rootWETHToken is not set (contract not initialized)
         if (msg.sender != rootWETHToken || rootWETHToken == address(0)) {
             revert NonWrappedNativeTransfer();
         }
