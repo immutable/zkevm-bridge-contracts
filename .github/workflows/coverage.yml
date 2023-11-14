@@ -33,9 +33,13 @@ jobs:
           forge build --sizes
         id: build
 
+        # `forge coverage` doesn't have an `exclude-path` flag.
+        # See open issue: https://github.com/foundry-rs/foundry/issues/2988
+        # We manually exclude output for the src/test directory, as well as
+        # the 'Total' row which would be askew with out the full data set.
       - name: Run Forge coverage
         run: |
-          forge coverage --report summary > ./coverage.out
+          forge coverage --report summary | grep -v "src/test" | grep -v "| Total" > ./coverage.out
         id: coverage
 
       - name: Debug coverage report
