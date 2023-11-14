@@ -60,8 +60,6 @@ contract RootERC20BridgeWithdrawIntegrationTest is
             UNLIMITED_DEPOSIT_LIMIT
         );
 
-        console2.log("after rootIntegrationSetup");
-
         imxToken = integration.imxToken;
         token = integration.token;
         rootBridgeFlowRate = integration.rootBridgeFlowRate;
@@ -212,8 +210,6 @@ contract RootERC20BridgeWithdrawIntegrationTest is
 
     function test_withdrawIMX_EmitsRootChainERC20WithdrawEvent() public {
         bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), address(this), withdrawAmount);
-
-        console2.logAddress(IMX_TOKEN_ADDRESS);
 
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
