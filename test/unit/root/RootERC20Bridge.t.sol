@@ -87,6 +87,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(rootBridge.rootWETHToken(), WRAPPED_ETH, "rootWETHToken not set");
     }
 
+    function test_RevertIfNativeTransferIsFromNonWETH() public {
+        vm.expectRevert(NonWrappedNativeTransfer.selector);
+        payable(rootBridge).transfer(1);
+    }
+
     function test_RevertIfInitializeTwice() public {
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),

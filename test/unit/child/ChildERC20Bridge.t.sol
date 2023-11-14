@@ -62,6 +62,11 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertFalse(address(childBridge.childETHToken()).code.length == 0, "childETHToken contract empty");
     }
 
+    function test_RevertIfNativeTransferIsFromNonWIMX() public {
+        vm.expectRevert(NonWrappedNativeTransfer.selector);
+        payable(childBridge).transfer(1);
+    }
+
     function test_RevertIfInitializeTwice() public {
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),

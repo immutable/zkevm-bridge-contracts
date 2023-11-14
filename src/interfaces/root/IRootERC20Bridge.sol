@@ -125,4 +125,6 @@ interface IRootERC20BridgeErrors {
     error ImxDepositLimitExceeded();
     /// @notice Error when the IMX deposit limit is set below the amount of IMX already deposited
     error ImxDepositLimitTooLow();
+    /// @notice Error when native transfer is sent to contract from non wrapped-token address.
+    error NonWrappedNativeTransfer();
 }
