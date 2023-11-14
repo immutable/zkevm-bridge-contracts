@@ -84,11 +84,11 @@ interface IChildERC20BridgeEvents {
     );
     /// @notice Emitted when a child chain native IMX token withdrawal is initiated.
     event ChildChainNativeIMXWithdraw(
-        address indexed rootToken, address depositor, address indexed receiver, uint256 amount
+        address indexed rootToken, address indexed depositor, address indexed receiver, uint256 amount
     );
     /// @notice Emitted when a child chain wrapped IMX withdrawal is initiated.
     event ChildChainWrappedIMXWithdraw(
-        address indexed rootToken, address depositor, address indexed receiver, uint256 amount
+        address indexed rootToken, address indexed depositor, address indexed receiver, uint256 amount
     );
     /// @notice Emitted when a root chain ERC20 deposit is completed on the child chain.
     event ChildChainERC20Deposit(
@@ -99,7 +99,7 @@ interface IChildERC20BridgeEvents {
         uint256 amount
     );
     /// @notice Emitted when a root chain IMX deposit is completed on the child chain.
-    event IMXDeposit(address indexed rootToken, address depositor, address indexed receiver, uint256 amount);
+    event IMXDeposit(address indexed rootToken, address indexed depositor, address indexed receiver, uint256 amount);
     /// @notice Emitted when a root chain ETH deposit is completed on the child chain.
     event NativeEthDeposit(
         address indexed rootToken,

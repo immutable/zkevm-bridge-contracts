@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import {Test} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
@@ -14,7 +13,6 @@ import {
     IChildAxelarBridgeAdaptorErrors
 } from "../../../../src/child/ChildAxelarBridgeAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
-import {WETH} from "../../../../src/test/root/WETH.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 
 contract ChildERC20BridgewithdrawIMXToIntegrationTest is

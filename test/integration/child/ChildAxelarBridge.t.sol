@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
@@ -9,7 +9,6 @@ import {
     ChildERC20Bridge,
     IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20, ChildERC20} from "../../../src/child/ChildERC20.sol";

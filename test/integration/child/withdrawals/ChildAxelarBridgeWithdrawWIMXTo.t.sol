@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -27,11 +27,7 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     Utils
 {
     address constant CHILD_BRIDGE = address(3);
-    address constant CHILD_BRIDGE_ADAPTOR = address(4);
-    string constant CHILD_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(555555);
-    address constant NATIVE_ETH = address(0xeee);
-    address constant WRAPPED_ETH = address(0xddd);
     address constant WRAPPED_IMX = address(0xabc);
 
     ChildERC20Bridge public childBridge;
@@ -105,7 +101,7 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     }
 
     function test_WithdrawWIMXToWithDifferentAccount_CallsAxelarGateway() public {
-        address receiver = address(0xabcd);
+        address receiver = address(0xabcde);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -151,7 +147,7 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     }
 
     function test_WithdrawWIMXToWithDifferentAccount_CallsGasService() public {
-        address receiver = address(0xabcd);
+        address receiver = address(0xabcdf);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
@@ -190,7 +186,7 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     }
 
     function test_WithdrawWIMXToWithDifferentAccount_EmitsAxelarMessageSentEvent() public {
-        address receiver = address(0xabcd);
+        address receiver = address(0xabcda);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
