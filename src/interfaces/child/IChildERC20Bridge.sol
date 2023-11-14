@@ -122,8 +122,6 @@ interface IChildERC20BridgeErrors {
     error ZeroValue();
     /// @notice Error when the contract to mint had no bytecode.
     error EmptyTokenContract();
-    /// @notice Error when contract clone failed.
-    error CloneFailed();
     /// @notice Error when the mint operation failed.
     error MintFailed();
     /// @notice Error when the given root chain name is invalid.

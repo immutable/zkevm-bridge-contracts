@@ -20,7 +20,6 @@ import {Utils} from "../../utils.t.sol";
 import {WETH} from "../../../src/test/root/WETH.sol";
 
 contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
-    // TODO: move me to roles contract
     bytes32 constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
@@ -529,13 +528,14 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner() public {
         address caller = address(0xf00f00);
+        bytes32 role = rootBridge.ADAPTOR_MANAGER_ROLE();
         vm.prank(caller);
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
                 StringsUpgradeable.toHexString(caller),
                 " is missing role ",
-                StringsUpgradeable.toHexString(uint256(ADAPTOR_MANAGER_ROLE), 32)
+                StringsUpgradeable.toHexString(uint256(role), 32)
             )
         );
         rootBridge.updateRootBridgeAdaptor(address(0x11111));

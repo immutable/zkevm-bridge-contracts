@@ -216,7 +216,7 @@ contract ChildERC20Bridge is
     }
 
     /**
-     * @notice Private function to handle withdrawal process for all ERC20 token types.
+     * @notice Private function to handle withdrawal process for all ERC20 and native token types.
      * @param childTokenAddr The address of the child token to withdraw.
      * @param receiver The address to withdraw the tokens to.
      * @param amount The amount of tokens to withdraw.
@@ -312,7 +312,7 @@ contract ChildERC20Bridge is
     }
 
     /**
-     * @notice Private function to handle mapping of root ERC20 tokens to child ERC20 tokens. When mapping messages are recieved.
+     * @notice Private function to handle mapping of root ERC20 tokens to child ERC20 tokens.
      * @param data The data payload of the message.
      *
      * Requirements:
@@ -355,7 +355,7 @@ contract ChildERC20Bridge is
     }
 
     /**
-     * @notice Private function to handle depositing of tokens to the child chain. When deposit messages are recieved.
+     * @notice Private function to handle depositing of ERC20 and native tokens to the child chain.
      * @param data The data payload of the message.
      *
      * Requirements:
