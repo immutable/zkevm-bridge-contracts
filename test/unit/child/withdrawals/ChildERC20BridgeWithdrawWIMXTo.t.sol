@@ -7,7 +7,7 @@ import {
     ChildERC20Bridge,
     IChildERC20Bridge,
     IChildERC20BridgeEvents,
-   IChildERC20BridgeErrors
+    IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
@@ -52,6 +52,13 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
             ROOT_IMX_TOKEN,
             address(wIMXToken)
         );
+    }
+
+    function test_RevertsIf_withdrawWIMXToCalledWithZeroReciever() public {
+        uint256 withdrawAmount = 7 ether;
+
+        vm.expectRevert(ZeroAddress.selector);
+        childBridge.withdrawWIMXTo{value: 1 ether}(address(0), withdrawAmount);
     }
 
     function test_RevertsIf_withdrawWIMXToCalledWithZeroFee() public {

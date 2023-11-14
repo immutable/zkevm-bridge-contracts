@@ -37,8 +37,7 @@ contract ChildERC20BridgeWithdrawWIMXIntegrationTest is
     WIMX public wIMXToken;
 
     function setUp() public {
-        (childBridge, axelarAdaptor, , , , mockAxelarGasService, mockAxelarGateway) =
-            childIntegrationSetup();
+        (childBridge, axelarAdaptor,,,, mockAxelarGasService, mockAxelarGateway) = childIntegrationSetup();
         wIMXToken = WIMX(payable(WRAPPED_IMX));
         Address.sendValue(payable(wIMXToken), 100 ether);
     }

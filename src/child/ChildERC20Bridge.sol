@@ -222,6 +222,7 @@ contract ChildERC20Bridge is
      * Requirements:
      *
      * - `childTokenAddr` must not be the zero address.
+     * - `reciever` must not be the zero address.
      * - `amount` must be greater than zero.
      * - `msg.value` must be greater than zero.
      * - `childToken` must exist.

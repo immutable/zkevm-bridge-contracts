@@ -9,7 +9,7 @@ import {
     IChildERC20BridgeEvents,
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
-import {IChildERC20,ChildERC20} from "../../../../src/child/ChildERC20.sol";
+import {IChildERC20, ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 
@@ -66,7 +66,14 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
         childToken.approve(address(childBridge), 1000000 ether);
     }
 
-       function test_RevertsIf_WithdrawToCalledWithZeroFee() public {
+    function test_RevertsIf_WithdrawToCalledWithZeroReciever() public {
+        uint256 withdrawAmount = 300;
+
+        vm.expectRevert(ZeroAddress.selector);
+        childBridge.withdrawTo{value: 1 ether}(IChildERC20(address(2222222)), address(0), withdrawAmount);
+    }
+
+    function test_RevertsIf_WithdrawToCalledWithZeroFee() public {
         uint256 withdrawAmount = 300;
 
         vm.expectRevert(ZeroValue.selector);
