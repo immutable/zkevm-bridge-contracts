@@ -66,11 +66,8 @@ contract ChildERC20Bridge is
 
     /**
      * @notice Fallback function on recieving native IMX.
-     * @dev Will revert as direct native IMX transfers are not supported.
      */
-    receive() external payable {
-        revert DirectNativeTransfer();
-    }
+    receive() external payable {}
 
     /**
      * @notice Initialization function for ChildERC20Bridge.
@@ -95,7 +92,8 @@ contract ChildERC20Bridge is
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
-                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0) || newWIMXToken == address(0)
+                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0)
+                || newWIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -194,7 +192,7 @@ contract ChildERC20Bridge is
         _withdraw(NATIVE_IMX, msg.sender, amount);
     }
 
-     /**
+    /**
      * @inheritdoc IChildERC20Bridge
      */
     function withdrawIMXTo(address receiver, uint256 amount) external payable {
@@ -343,7 +341,7 @@ contract ChildERC20Bridge is
 
         // Deploy child chain token
         IChildERC20 childToken =
-            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken)))); 
+            IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(rootToken))));
         // Map token
         rootTokenToChildToken[rootToken] = address(childToken);
 
@@ -388,7 +386,7 @@ contract ChildERC20Bridge is
                 revert EmptyTokenContract();
             }
 
-            if (childToken.mint(receiver, amount)) {
+            if (!childToken.mint(receiver, amount)) {
                 revert MintFailed();
             }
 

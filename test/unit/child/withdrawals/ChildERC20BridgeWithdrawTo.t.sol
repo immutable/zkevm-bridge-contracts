@@ -72,14 +72,14 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
 
     function test_RevertsIf_WithdrawToCalledWithEmptyChildToken() public {
         vm.expectRevert(EmptyTokenContract.selector);
-        childBridge.withdrawTo(IChildERC20(address(2222222)), address(this), 100);
+        childBridge.withdrawTo{value: 1 ether}(IChildERC20(address(2222222)), address(this), 100);
     }
 
     function test_RevertsIf_WithdrawToCalledWithUnmappedToken() public {
         ChildERC20 newToken = new ChildERC20();
         newToken.initialize(address(123), "Test", "TST", 18);
         vm.expectRevert(NotMapped.selector);
-        childBridge.withdrawTo(IChildERC20(address(newToken)), address(this), 100);
+        childBridge.withdrawTo{value: 1 ether}(IChildERC20(address(newToken)), address(this), 100);
     }
 
     function test_RevertsIf_WithdrawToCalledWithAChildTokenWithUnsetRootToken() public {
@@ -100,7 +100,7 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
         vm.store(address(childBridge), slot, data);
 
         vm.expectRevert(ZeroAddressRootToken.selector);
-        childBridge.withdrawTo(IChildERC20(address(childToken)), address(this), 100);
+        childBridge.withdrawTo{value: 1 ether}(IChildERC20(address(childToken)), address(this), 100);
     }
 
     function test_RevertsIf_WithdrawToCalledWithAChildTokenThatHasWrongBridge() public {
@@ -110,7 +110,7 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
         vm.store(address(childToken), bridgeSlotBytes32, bytes32(uint256(uint160(address(0x123)))));
 
         vm.expectRevert(IncorrectBridgeAddress.selector);
-        childBridge.withdrawTo(IChildERC20(address(childToken)), address(this), 100);
+        childBridge.withdrawTo{value: 1 ether}(IChildERC20(address(childToken)), address(this), 100);
     }
 
     function test_RevertsIf_WithdrawToWhenBurnFails() public {
@@ -118,7 +118,7 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
         deployCodeTo("ChildERC20FailOnBurn.sol", address(childToken));
 
         vm.expectRevert(BurnFailed.selector);
-        childBridge.withdrawTo(IChildERC20(address(childToken)), address(this), 100);
+        childBridge.withdrawTo{value: 1 ether}(IChildERC20(address(childToken)), address(this), 100);
     }
 
     function test_withdrawTo_CallsBridgeAdaptor() public {

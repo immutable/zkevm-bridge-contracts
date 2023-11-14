@@ -38,7 +38,9 @@ contract DeployChildContracts is Script {
         });
 
         ChildERC20Bridge childERC20BridgeImplementation = new ChildERC20Bridge();
-        childERC20BridgeImplementation.initialize(roles, address(1), "0x123", address(1), "root", address(1), address(wrappedIMX));
+        childERC20BridgeImplementation.initialize(
+            roles, address(1), "0x123", address(1), "root", address(1), address(wrappedIMX)
+        );
 
         TransparentUpgradeableProxy childERC20BridgeProxy = new TransparentUpgradeableProxy(
             address(childERC20BridgeImplementation),

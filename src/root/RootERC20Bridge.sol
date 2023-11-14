@@ -151,7 +151,10 @@ contract RootERC20Bridge is
      * @dev Can only be called by VARIABLE_MANAGER_ROLE.
      * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
      */
-    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external onlyRole(VARIABLE_MANAGER_ROLE) {
+    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit)
+        external
+        onlyRole(VARIABLE_MANAGER_ROLE)
+    {
         if (
             newImxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))

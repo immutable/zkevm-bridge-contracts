@@ -51,7 +51,7 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     }
 
     function test_WithdrawWIMXTo_CallsBridgeAdaptor() public {
-        uint256 withdrawFee = 300;
+        uint256 withdrawFee = 1;
         uint256 withdrawAmount = 7 ether;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);

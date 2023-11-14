@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -17,6 +18,8 @@ import {ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {Utils} from "../../utils.t.sol";
 
 contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
+    // TODO: move me to roles contract
+    bytes32 constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
     address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
@@ -44,7 +47,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             adaptorManager: address(this)
         });
         childBridge.initialize(
-            roles, address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN
+            roles,
+            address(this),
+            ROOT_BRIDGE_ADAPTOR,
+            address(childTokenTemplate),
+            ROOT_CHAIN_NAME,
+            ROOT_IMX_TOKEN,
+            CHILD_WIMX_TOKEN
         );
     }
 
@@ -69,7 +78,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         });
         vm.expectRevert("Initializable: contract is already initialized");
         childBridge.initialize(
-            roles, address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN
+            roles,
+            address(this),
+            ROOT_BRIDGE_ADAPTOR,
+            address(childTokenTemplate),
+            ROOT_CHAIN_NAME,
+            ROOT_IMX_TOKEN,
+            CHILD_WIMX_TOKEN
         );
     }
 
@@ -210,7 +225,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         });
 
         vm.expectRevert(InvalidRootERC20BridgeAdaptor.selector);
-        bridge.initialize(roles, address(this), "", address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN);
+        bridge.initialize(
+            roles, address(this), "", address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN
+        );
     }
 
     function test_RevertIf_InitializeWithAnEmptyChainNameString() public {
@@ -224,7 +241,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         });
 
         vm.expectRevert(InvalidRootChain.selector);
-        bridge.initialize(roles, address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), "", ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN);
+        bridge.initialize(
+            roles, address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), "", ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN
+        );
     }
 
     function test_onMessageReceive_EmitsTokenMappedEvent() public {
@@ -354,9 +373,16 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_RevertIf_updateBridgeAdaptorCalledByNotAdaptorManager() public {
-        vm.prank(address(0xf00f00));
-        // FIXME:!!!
-        // vm.expectRevert(abi.encodeWithSelector(NotVariableManager.selector, 0xf00f00));
+        address caller = address(0xf00f00);
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(caller),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(ADAPTOR_MANAGER_ROLE), 32)
+            )
+        );
         childBridge.updateBridgeAdaptor(address(0x11111));
     }
 

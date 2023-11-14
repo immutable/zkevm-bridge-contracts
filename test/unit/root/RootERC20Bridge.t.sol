@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -19,6 +20,8 @@ import {Utils} from "../../utils.t.sol";
 import {WETH} from "../../../src/test/root/WETH.sol";
 
 contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
+    // TODO: move me to roles contract
+    bytes32 constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
@@ -525,9 +528,16 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner() public {
-        vm.prank(address(0xf00f00));
-        // FIXME: !!!
-        // vm.expectRevert(abi.encodeWithSelector(NotVariableManager.selector, 0xf00f00));
+        address caller = address(0xf00f00);
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(caller),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(ADAPTOR_MANAGER_ROLE), 32)
+            )
+        );
         rootBridge.updateRootBridgeAdaptor(address(0x11111));
     }
 

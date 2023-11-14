@@ -36,7 +36,6 @@ interface IChildERC20Bridge {
      */
     function withdraw(IChildERC20 childToken, uint256 amount) external payable;
 
-
     /**
      * @notice Withdraws `amount` of `childToken` to `receiver` on the rootchain.
      * @param childToken The address of the child token to withdraw.
@@ -45,7 +44,7 @@ interface IChildERC20Bridge {
      */
     function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external payable;
 
-        /**
+    /**
      * @notice Withdraws `amount` of IMX to `msg.sender` on the rootchain.
      * @param amount The amount of IMX to withdraw.
      */
@@ -161,6 +160,4 @@ interface IChildERC20BridgeErrors {
     error TransferWIMXFailed();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
-    /// @notice Error when native IMX is directly transferred to the bridge.
-    error DirectNativeTransfer();
 }
