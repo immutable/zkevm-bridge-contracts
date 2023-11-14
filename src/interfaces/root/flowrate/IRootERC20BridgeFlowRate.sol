@@ -39,7 +39,7 @@ interface IRootERC20BridgeFlowRateEvents {
 }
 
 interface IRootERC20BridgeFlowRateErrors {
-    // Error if the RootERC20Predicate initializer is called, and not the one for this contract.
+    // Error if the RootERC20Bridge initializer is called, and not the one for this contract.
     error WrongInitializer();
     // finaliseQueuedWithdrawalsAggregated was called with a zero length indices array.
     error ProvideAtLeastOneIndex();

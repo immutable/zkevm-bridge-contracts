@@ -5,12 +5,12 @@ pragma solidity 0.8.19;
 /**
  * @title  Flow Rate Withdrawal Queue
  * @author Immutable Pty Ltd (Peter Robinson @drinkcoffee)
- * @notice Queue for withdrawals from the RootERC20PredicateFlowRate.
+ * @notice Queue for withdrawals from the RootERC20BridgeFlowRate.
  * @dev    When withdrawals are delayed, they are put in the queue defined in this contract.
  *         The "queue" is actually a per-user array that gets bigger each time a withdrawal
  *         is added. Users can choose which withdrawals they are interested in and process
  *         just those withdrawals.
- *         Note: This code is part of RootERC20PredicateFlowRate. It has been separated out
+ *         Note: This code is part of RootERC20BridgeFlowRate. It has been separated out
  *         to make it easier to understand the functionality.
  *         Note that this contract is upgradeable.
  */

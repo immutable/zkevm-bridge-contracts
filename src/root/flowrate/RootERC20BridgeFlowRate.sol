@@ -56,7 +56,7 @@ contract RootERC20BridgeFlowRate is
         _grantRole(RATE_CONTROL_ROLE, rateAdmin);
     }
 
-    // Ensure initialize from RootERC20Predicate can not be called.
+    // Ensure initialize from RootERC20Bridge can not be called.
     function initialize(
         InitializationRoles memory,
         address,
