@@ -19,6 +19,7 @@ struct InitializeChildContractsParams {
     address rootERC20BridgeAdaptor;
     string rootChainName;
     address rootIMXToken;
+    address wIMXToken;
     string childRpcUrl;
     uint256 deployerPrivateKey;
     address childGasService;
@@ -30,12 +31,13 @@ contract InitializeChildContracts is Script {
             childAdminAddress: vm.envAddress("CHILD_ADMIN_ADDRESS"),
             childPauserAddress: vm.envAddress("CHILD_PAUSER_ADDRESS"),
             childUnpauserAddress: vm.envAddress("CHILD_UNPAUSER_ADDRESS"),
-            childERC20Bridge: ChildERC20Bridge(vm.envAddress("CHILD_ERC20_BRIDGE")),
+            childERC20Bridge: ChildERC20Bridge(payable(vm.envAddress("CHILD_ERC20_BRIDGE"))),
             childAxelarBridgeAdaptor: ChildAxelarBridgeAdaptor(vm.envAddress("CHILD_BRIDGE_ADAPTOR")),
             childTokenTemplate: vm.envAddress("CHILDCHAIN_CHILD_TOKEN_TEMPLATE"),
             rootERC20BridgeAdaptor: vm.envAddress("ROOT_BRIDGE_ADAPTOR"),
             rootChainName: vm.envString("ROOT_CHAIN_NAME"),
             rootIMXToken: vm.envAddress("ROOT_IMX_ADDRESS"),
+            wIMXToken: vm.envAddress("CHILD_WIMX_ADDRESS"),
             childRpcUrl: vm.envString("CHILD_RPC_URL"),
             deployerPrivateKey: vm.envUint("CHILD_PRIVATE_KEY"),
             childGasService: vm.envAddress("CHILD_GAS_SERVICE_ADDRESS")
@@ -65,7 +67,8 @@ contract InitializeChildContracts is Script {
             rootBridgeAdaptorString,
             params.childTokenTemplate,
             params.rootChainName,
-            params.rootIMXToken
+            params.rootIMXToken,
+            params.wIMXToken
         );
 
         params.childAxelarBridgeAdaptor.initialize(

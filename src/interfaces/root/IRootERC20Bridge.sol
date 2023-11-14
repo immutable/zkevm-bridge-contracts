@@ -91,14 +91,14 @@ interface IRootERC20BridgeEvents {
 }
 
 interface IRootERC20BridgeErrors {
-    /// @notice Error when the caller is not the variable manager role.
-    error NotVariableManager(address caller);
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
     /// @notice Error when there is no gas payment received.
     error ZeroAmount();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
+    /// @notice Error when a message is sent with no gas payment.
+    error NoGas();
     /// @notice Error when the child chain name is invalid.
     error InvalidChildChain();
     /// @notice Error when a token is already mapped.
@@ -127,4 +127,6 @@ interface IRootERC20BridgeErrors {
     error ImxDepositLimitExceeded();
     /// @notice Error when the IMX deposit limit is set below the amount of IMX already deposited
     error ImxDepositLimitTooLow();
+    /// @notice Error when native transfer is sent to contract from non wrapped-token address.
+    error NonWrappedNativeTransfer();
 }

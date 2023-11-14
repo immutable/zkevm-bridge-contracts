@@ -189,6 +189,8 @@ contract WIMXTest is Test {
             "Token supply should be 0.55 after 2nd deposit"
         );
 
+        vm.stopPrank();
+
         // Withdraw 0.5 IMX
         uint256 withdrawlAmt2 = 0.5 ether;
         vm.startPrank(user2);

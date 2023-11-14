@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
@@ -9,7 +9,6 @@ import {
     ChildERC20Bridge,
     IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20, ChildERC20} from "../../../src/child/ChildERC20.sol";
@@ -21,6 +20,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
     string public ROOT_CHAIN_NAME = "ROOT_CHAIN";
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
+    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     address constant NATIVE_ETH = address(0xeee);
 
     ChildERC20Bridge public childERC20Bridge;
@@ -51,7 +51,8 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             ROOT_ADAPTOR_ADDRESS,
             address(childERC20),
             ROOT_CHAIN_NAME,
-            IMX_TOKEN_ADDRESS
+            IMX_TOKEN_ADDRESS,
+            WIMX_TOKEN_ADDRESS
         );
 
         childAxelarBridgeAdaptor.initialize(

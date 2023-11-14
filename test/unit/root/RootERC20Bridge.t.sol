@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -19,6 +20,7 @@ import {Utils} from "../../utils.t.sol";
 import {WETH} from "../../../src/test/root/WETH.sol";
 
 contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
+    bytes32 constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
@@ -83,6 +85,26 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(address(token), rootBridge.childTokenTemplate(), "childTokenTemplate not set");
         assertEq(rootBridge.rootIMXToken(), IMX_TOKEN, "rootIMXToken not set");
         assertEq(rootBridge.rootWETHToken(), WRAPPED_ETH, "rootWETHToken not set");
+    }
+
+    function test_NativeTransferFromWETH() public {
+        address caller = address(0x123a);
+        payable(caller).transfer(2 ether);
+
+        uint256 wETHStorageSlot = 158;
+        vm.store(address(rootBridge), bytes32(wETHStorageSlot), bytes32(uint256(uint160(caller))));
+
+        vm.startPrank(caller);
+        uint256 bal = address(rootBridge).balance;
+        payable(rootBridge).transfer(1 ether);
+        uint256 postBal = address(rootBridge).balance;
+
+        assertEq(bal + 1 ether, postBal, "balance not increased");
+    }
+
+    function test_RevertIfNativeTransferIsFromNonWETH() public {
+        vm.expectRevert(NonWrappedNativeTransfer.selector);
+        payable(rootBridge).transfer(1);
     }
 
     function test_RevertIfInitializeTwice() public {
@@ -434,6 +456,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      * MAP TOKEN
      */
 
+    function test_RevertsIf_MapTokenCalledWithZeroFee() public {
+        vm.expectRevert(NoGas.selector);
+        rootBridge.mapToken(token);
+    }
+
     function test_mapToken_EmitsTokenMappedEvent() public {
         address childToken =
             Clones.predictDeterministicAddress(address(token), keccak256(abi.encodePacked(token)), CHILD_BRIDGE);
@@ -525,8 +552,17 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_updateRootBridgeAdaptorCalledByNonOwner() public {
-        vm.prank(address(0xf00f00));
-        vm.expectRevert(abi.encodeWithSelector(NotVariableManager.selector, 0xf00f00));
+        address caller = address(0xf00f00);
+        bytes32 role = rootBridge.ADAPTOR_MANAGER_ROLE();
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(caller),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(role), 32)
+            )
+        );
         rootBridge.updateRootBridgeAdaptor(address(0x11111));
     }
 
@@ -723,6 +759,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TOKEN
      */
+
+    function test_RevertsIf_DepositTokenWithZeroFee() public {
+        uint256 amount = 100;
+        vm.expectRevert(NoGas.selector);
+        rootBridge.deposit(IERC20Metadata(IMX_TOKEN), amount);
+    }
 
     function test_RevertsIf_IMXDepositLimitExceeded() public {
         uint256 imxCumulativeDepositLimit = 700;

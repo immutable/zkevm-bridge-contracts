@@ -135,11 +135,7 @@ contract RootERC20Bridge is
      * @param newRootBridgeAdaptor Address of new root bridge adaptor.
      * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
      */
-    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external {
-        if (!hasRole(ADAPTOR_MANAGER_ROLE, msg.sender)) {
-            revert NotVariableManager(msg.sender);
-        }
-
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
         if (newRootBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
@@ -155,11 +151,10 @@ contract RootERC20Bridge is
      * @dev Can only be called by VARIABLE_MANAGER_ROLE.
      * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
      */
-    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external {
-        if (!hasRole(VARIABLE_MANAGER_ROLE, msg.sender)) {
-            revert NotVariableManager(msg.sender);
-        }
-
+    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit)
+        external
+        onlyRole(VARIABLE_MANAGER_ROLE)
+    {
         if (
             newImxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))
@@ -173,7 +168,12 @@ contract RootERC20Bridge is
     /**
      * @dev method to receive the ETH back from the WETH contract when it is unwrapped
      */
-    receive() external payable {}
+    receive() external payable {
+        // Revert if sender is not the WETH token address
+        if (msg.sender != rootWETHToken) {
+            revert NonWrappedNativeTransfer();
+        }
+    }
 
     /**
      * @inheritdoc IRootERC20Bridge
@@ -288,6 +288,9 @@ contract RootERC20Bridge is
     }
 
     function _mapToken(IERC20Metadata rootToken) private returns (address) {
+        if (msg.value == 0) {
+            revert NoGas();
+        }
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -329,6 +332,9 @@ contract RootERC20Bridge is
         }
         if (amount == 0) {
             revert ZeroAmount();
+        }
+        if (msg.value == 0) {
+            revert NoGas();
         }
         if (
             address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT
