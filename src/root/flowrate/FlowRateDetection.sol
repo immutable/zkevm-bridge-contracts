@@ -9,7 +9,7 @@ pragma solidity 0.8.19;
  * @dev    Each token has a bucket. The bucket is filled at a constant rate: a number of
  *         tokens per second. The bucket empties each time there is a withdrawal. Withdrawal
  *         requests for tokens that don't have a configured bucket are delayed.
- *         Note: This code is part of RootERC20PredicateFlowRate. It has been separated out
+ *         Note: This code is part of RootERC20BridgeFlowRate. It has been separated out
  *         to make it easier to understand and test the functionality.
  *         Note that this contract is upgradeable.
  */
