@@ -6,7 +6,7 @@ const octokit = githubToken && getOctokit(githubToken);
 const OWNER = 'immutable';
 const REPO = 'zkevm-bridge-contracts';
 const REPORT_TITLE = `# 📃CI Report${EOL}`;
-const REPORT_SUFFIX = `${EOL}For a full HTML report run: forge coverage --report lcov && genhtml --ignore-errors category --branch-coverage --output-dir coverage lcov.info`
+const REPORT_SUFFIX = `${EOL}For a full HTML report run: \`forge coverage --report lcov && genhtml --ignore-errors category --branch-coverage --output-dir coverage lcov.info\``
 const pr = context.payload.number;
 
 const getExistingReportComment = async () => getExistingComment(REPORT_TITLE);
