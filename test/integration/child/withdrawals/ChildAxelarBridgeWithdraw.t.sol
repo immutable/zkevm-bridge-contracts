@@ -20,9 +20,6 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
     IChildAxelarBridgeAdaptorErrors,
     Utils
 {
-    // Define here to avoid error collisions between IChildERC20BridgeErrors and IChildAxelarBridgeAdaptorErrors
-    error ZeroValue();
-
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";
@@ -134,7 +131,7 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
     function test_RevertIf_WithdrawWithNoGas() public {
         ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
 
-        vm.expectRevert(ZeroValue.selector);
+        vm.expectRevert(NoGas.selector);
         childBridge.withdraw(childToken, withdrawAmount);
     }
 }

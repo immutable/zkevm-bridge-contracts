@@ -62,9 +62,24 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertFalse(address(childBridge.childETHToken()).code.length == 0, "childETHToken contract empty");
     }
 
+    function test_NativeTransferFromWIMX() public {
+        address caller = address(0x123a);
+        payable(caller).transfer(2 ether);
+
+        uint256 wIMXStorageSlot = 158;
+        vm.store(address(childBridge), bytes32(wIMXStorageSlot), bytes32(uint256(uint160(caller))));
+
+        vm.startPrank(caller);
+        uint256 bal = address(childBridge).balance;
+        payable(childBridge).transfer(1 ether);
+        uint256 postBal = address(childBridge).balance;
+
+        assertEq(bal + 1 ether, postBal, "balance not increased");
+    }
+
     function test_RevertIfNativeTransferIsFromNonWIMX() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
-        payable(childBridge).transfer(1);
+        payable(childBridge).transfer(1 ether);
     }
 
     function test_RevertIfInitializeTwice() public {

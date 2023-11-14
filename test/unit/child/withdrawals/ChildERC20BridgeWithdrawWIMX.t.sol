@@ -16,11 +16,9 @@ import {WIMX} from "../../../../src/child/WIMX.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
-    address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
-    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     ChildERC20 public childTokenTemplate;
     ChildERC20Bridge public childBridge;
     MockAdaptor public mockAdaptor;
@@ -54,11 +52,11 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         );
     }
 
-    function test_RevertsIf_withdrawIMXCalledWithZeroFee() public {
+    function test_RevertsIf_withdrawWIMXCalledWithZeroFee() public {
         uint256 withdrawAmount = 7 ether;
 
-        vm.expectRevert(ZeroValue.selector);
-        childBridge.withdrawIMX(withdrawAmount);
+        vm.expectRevert(NoGas.selector);
+        childBridge.withdrawWIMX(withdrawAmount);
     }
 
     function test_RevertsIf_WithdrawWIMXCalledWithInsufficientFund() public {
@@ -79,7 +77,7 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
     }
 
-    function test_RevertsIf_ZeroAmountIsProvided() public {
+    function test_RevertsIf_WithdrawWIMXCalledWithZeroAmount() public {
         uint256 withdrawFee = 300;
 
         vm.expectRevert(ZeroAmount.selector);

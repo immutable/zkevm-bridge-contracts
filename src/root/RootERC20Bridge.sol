@@ -170,8 +170,7 @@ contract RootERC20Bridge is
      */
     receive() external payable {
         // Revert if sender is not the WETH token address
-        // Or the rootWETHToken is not set (contract not initialized)
-        if (msg.sender != rootWETHToken || rootWETHToken == address(0)) {
+        if (msg.sender != rootWETHToken) {
             revert NonWrappedNativeTransfer();
         }
     }
@@ -289,6 +288,9 @@ contract RootERC20Bridge is
     }
 
     function _mapToken(IERC20Metadata rootToken) private returns (address) {
+        if (msg.value == 0) {
+            revert NoGas();
+        }
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -330,6 +332,9 @@ contract RootERC20Bridge is
         }
         if (amount == 0) {
             revert ZeroAmount();
+        }
+        if (msg.value == 0) {
+            revert NoGas();
         }
         if (
             address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT

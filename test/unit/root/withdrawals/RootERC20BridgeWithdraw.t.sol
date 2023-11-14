@@ -122,7 +122,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
     function test_onMessageReceive_TransfersTokens() public {
         // Need to first map the token.
-        rootBridge.mapToken(token);
+        rootBridge.mapToken{value: 1 ether}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
 
@@ -159,7 +159,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     function test_onMessageReceive_TransfersTokens_DifferentReceiver() public {
         address receiver = address(123456);
         // Need to first map the token.
-        rootBridge.mapToken(token);
+        rootBridge.mapToken{value: 1 ether}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
 
@@ -198,7 +198,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEvent() public {
         // Need to first map the token.
-        rootBridge.mapToken(token);
+        rootBridge.mapToken{value: 1 ether}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
 
@@ -229,7 +229,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
         address receiver = address(123456);
         // Need to first map the token.
-        rootBridge.mapToken(token);
+        rootBridge.mapToken{value: 1 ether}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
 

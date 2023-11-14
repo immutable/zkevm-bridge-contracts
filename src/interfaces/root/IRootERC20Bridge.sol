@@ -97,6 +97,8 @@ interface IRootERC20BridgeErrors {
     error ZeroAmount();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
+    /// @notice Error when a message is sent with no gas payment.
+    error NoGas();
     /// @notice Error when the child chain name is invalid.
     error InvalidChildChain();
     /// @notice Error when a token is already mapped.

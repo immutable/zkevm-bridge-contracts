@@ -68,9 +68,8 @@ contract ChildERC20Bridge is
      * @notice Fallback function on recieving native IMX from WIMX contract.
      */
     receive() external payable {
-        // Revert if sender if not the wIMX token address
-        // Or the wIMXToken is not set (contract not initialized)
-        if (msg.sender != wIMXToken || wIMXToken == address(0)) {
+        // Revert if sender is not the WIMX token address
+        if (msg.sender != wIMXToken) {
             revert NonWrappedNativeTransfer();
         }
     }
@@ -245,7 +244,7 @@ contract ChildERC20Bridge is
             revert ZeroAmount();
         }
         if (msg.value == 0) {
-            revert ZeroValue();
+            revert NoGas();
         }
 
         address rootToken;
@@ -385,7 +384,7 @@ contract ChildERC20Bridge is
             if (rootToken == NATIVE_ETH) {
                 childToken = childETHToken;
             } else {
-                childToken = IChildERC20(rootTokenToChildToken[address(rootToken)]);
+                childToken = IChildERC20(rootTokenToChildToken[rootToken]);
                 if (address(childToken) == address(0)) {
                     revert NotMapped();
                 }

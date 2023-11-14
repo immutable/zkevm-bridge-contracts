@@ -87,6 +87,21 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(rootBridge.rootWETHToken(), WRAPPED_ETH, "rootWETHToken not set");
     }
 
+    function test_NativeTransferFromWETH() public {
+        address caller = address(0x123a);
+        payable(caller).transfer(2 ether);
+
+        uint256 wETHStorageSlot = 158;
+        vm.store(address(rootBridge), bytes32(wETHStorageSlot), bytes32(uint256(uint160(caller))));
+
+        vm.startPrank(caller);
+        uint256 bal = address(rootBridge).balance;
+        payable(rootBridge).transfer(1 ether);
+        uint256 postBal = address(rootBridge).balance;
+
+        assertEq(bal + 1 ether, postBal, "balance not increased");
+    }
+
     function test_RevertIfNativeTransferIsFromNonWETH() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
         payable(rootBridge).transfer(1);
@@ -441,6 +456,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      * MAP TOKEN
      */
 
+    function test_RevertsIf_MapTokenCalledWithZeroFee() public {
+        vm.expectRevert(NoGas.selector);
+        rootBridge.mapToken(token);
+    }
+
     function test_mapToken_EmitsTokenMappedEvent() public {
         address childToken =
             Clones.predictDeterministicAddress(address(token), keccak256(abi.encodePacked(token)), CHILD_BRIDGE);
@@ -739,6 +759,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TOKEN
      */
+
+    function test_RevertsIf_DepositTokenWithZeroFee() public {
+        uint256 amount = 100;
+        vm.expectRevert(NoGas.selector);
+        rootBridge.deposit(IERC20Metadata(IMX_TOKEN), amount);
+    }
 
     function test_RevertsIf_IMXDepositLimitExceeded() public {
         uint256 imxCumulativeDepositLimit = 700;

@@ -76,7 +76,7 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
     function test_RevertsIf_WithdrawToCalledWithZeroFee() public {
         uint256 withdrawAmount = 300;
 
-        vm.expectRevert(ZeroValue.selector);
+        vm.expectRevert(NoGas.selector);
         childBridge.withdrawTo(IChildERC20(address(2222222)), address(this), withdrawAmount);
     }
 

@@ -22,16 +22,10 @@ contract ChildERC20BridgeWithdrawWIMXIntegrationTest is
     IChildAxelarBridgeAdaptorErrors,
     Utils
 {
-    // TODO: consider moving this to a setup function
-    address constant CHILD_BRIDGE = address(3);
     address constant ROOT_IMX_TOKEN = address(555555);
     address constant WRAPPED_IMX = address(0xabc);
-
     ChildERC20Bridge public childBridge;
     ChildAxelarBridgeAdaptor public axelarAdaptor;
-    address public rootToken;
-    address public rootImxToken;
-    ChildERC20 public childTokenTemplate;
     MockAxelarGasService public mockAxelarGasService;
     MockAxelarGateway public mockAxelarGateway;
     WIMX public wIMXToken;
