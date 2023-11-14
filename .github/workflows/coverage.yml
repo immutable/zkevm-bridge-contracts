@@ -39,7 +39,7 @@ jobs:
         # the 'Total' row which would be askew with out the full data set.
       - name: Run Forge coverage
         run: |
-          forge coverage --report summary | grep -v "src/test" | grep -v "| Total" > ./coverage.out
+          forge coverage --report summary | grep -v "test/" | grep -v "| Total" > ./coverage.out
         id: coverage
 
       - name: Debug coverage report
