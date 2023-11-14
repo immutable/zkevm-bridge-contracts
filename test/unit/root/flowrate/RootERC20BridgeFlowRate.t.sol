@@ -37,13 +37,20 @@ contract RootERC20BridgeFlowRateUnitTest is
     uint256 constant CAPACITY = 1000000;
     uint256 constant REFILL_RATE = 277; // Refill each hour.
     uint256 constant LARGE = 100000;
+
+    uint256 constant CAPACITY_ETH = 1000000 ether;
+    uint256 constant REFILL_RATE_ETH = 277 ether; // Refill each hour.
+    uint256 constant LARGE_ETH = 100000 ether;
+
     bytes32 internal constant RATE_CONTROL_ROLE = keccak256("RATE");
 
     address rateAdmin;
+    address pauseAdmin;
     address nonAdmin;
     uint256 withdrawalDelay;
 
     ERC20PresetMinterPauser public token;
+    ERC20PresetMinterPauser public imxToken;
     RootERC20BridgeFlowRate public rootBridgeFlowRate;
     MockAdaptor public mockAxelarAdaptor;
     MockAxelarGateway public mockAxelarGateway;
@@ -51,11 +58,16 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function setUp() public {
         token = new ERC20PresetMinterPauser("Test", "TST");
+        token.mint(address(this), 100 ether);
         deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), IMX_TOKEN);
+        imxToken = ERC20PresetMinterPauser(IMX_TOKEN);
+        imxToken.mint(address(this), 100 ether);
 
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
         rateAdmin = makeAddr("rateadmin");
+        pauseAdmin = makeAddr("pauseadmin");
+
         nonAdmin = makeAddr("nonadmin");
 
         rootBridgeFlowRate = new RootERC20BridgeFlowRate();
@@ -66,8 +78,8 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
+            pauser: pauseAdmin,
+            unpauser: pauseAdmin,
             variableManager: address(this),
             adaptorManager: address(this)
         });
@@ -92,6 +104,13 @@ contract RootERC20BridgeFlowRateUnitTest is
     function activateWithdrawalQueue() internal {
         vm.prank(rateAdmin);
         rootBridgeFlowRate.activateWithdrawalQueue();
+    }
+
+     function configureFlowRate() internal {
+        vm.startPrank(rateAdmin);
+        rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
+        rootBridgeFlowRate.setRateControlThreshold(NATIVE_ETH, CAPACITY_ETH, REFILL_RATE_ETH, LARGE_ETH);
+        vm.stopPrank();
     }
 
     /**
@@ -132,6 +151,33 @@ contract RootERC20BridgeFlowRateUnitTest is
             address(this)
         );
     }
+
+    function test_RevertIfRootBridgeInitializedDirectly() public {
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
+
+        vm.expectRevert(WrongInitializer.selector);
+        rootBridgeFlowRate.initialize(
+            roles,
+            address(mockAxelarAdaptor),
+            CHILD_BRIDGE,
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(token),
+            IMX_TOKEN,
+            WRAPPED_ETH,
+            CHILD_CHAIN_NAME,
+            UNLIMITED_IMX_DEPOSITS
+        );
+    }
+
+    /**
+     * RATE ROLE ACTIONS
+     */
 
     function testActivateWithdrawalQueue() public {
         vm.prank(rateAdmin);
@@ -192,11 +238,32 @@ contract RootERC20BridgeFlowRateUnitTest is
         rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
     }
 
-    //RootBridge initialiser should revert
+    /**
+     * FLOW RATE WITHDRAW
+     */
 
-    //Flow rate settings with roles
+    //  function testWithdrawalWhenPaused() public {
 
-    //Flow rate withdraw
+    //      // Need to first map the token.
+    //     rootBridgeFlowRate.mapToken(token);
+    //     // And give the bridge some tokens
+    //     token.transfer(address(rootBridgeFlowRate), 100 ether);
 
-    //Processing the queued withdraws
+    //     configureFlowRate();
+
+    //     uint256 amount = 5 ether;
+
+    //     // Fake a crosschain transfer from the child chain to the root chain.
+    //     bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), amount);
+
+
+    //     vm.prank(address(mockAxelarAdaptor));
+    //     rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+    // }
+
+
+    /**
+     * PROCESS QUEUED WITHDRAWALS
+     */
+
 }
