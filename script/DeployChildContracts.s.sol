@@ -29,18 +29,7 @@ contract DeployChildContracts is Script {
         ChildERC20 childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(0x1111),
-            pauser: address(0x2222),
-            unpauser: address(0x3333),
-            variableManager: address(0x4444),
-            adaptorManager: address(0x5555)
-        });
-
         ChildERC20Bridge childERC20BridgeImplementation = new ChildERC20Bridge();
-        childERC20BridgeImplementation.initialize(
-            roles, address(1), "0x123", address(1), "root", address(1), address(wrappedIMX)
-        );
 
         TransparentUpgradeableProxy childERC20BridgeProxy = new TransparentUpgradeableProxy(
             address(childERC20BridgeImplementation),
