@@ -58,8 +58,8 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(childBridge.childTokenTemplate(), address(childTokenTemplate), "childTokenTemplate not set");
         assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
         assertEq(childBridge.rootIMXToken(), ROOT_IMX_TOKEN, "rootIMXToken not set");
-        assertNotEq(childBridge.childETHToken(), address(0), "childETHToken not set");
-        assertNotEq(address(childBridge.childETHToken()).code.length, 0, "childETHToken contract empty");
+        assertFalse(address(childBridge.childETHToken()) == address(0), "childETHToken not set");
+        assertFalse(address(childBridge.childETHToken()).code.length == 0, "childETHToken contract empty");
     }
 
     function test_RevertIfInitializeTwice() public {
