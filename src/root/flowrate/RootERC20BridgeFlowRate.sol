@@ -166,18 +166,8 @@ contract RootERC20BridgeFlowRate is
      *      Only when not paused.
      */
     function _withdraw(bytes memory data) internal override {
-        // @TODO abstract this inside the RootERC20Bridge.sol
-        (address rootToken, address withdrawer, address receiver, uint256 amount) =
-            abi.decode(data, (address, address, address, uint256));
-        address childToken;
-        if (address(rootToken) == rootIMXToken) {
-            childToken = NATIVE_IMX;
-        } else {
-            childToken = rootTokenToChildToken[rootToken];
-            if (childToken == address(0)) {
-                revert NotMapped();
-            }
-        }
+        (address rootToken, address childToken, address withdrawer, address receiver, uint256 amount) =
+            _decodeAndValidateWithdrawal(data);
 
         // Update the flow rate checking. Delay the withdrawal if the request was
         // for a token that has not been configured.

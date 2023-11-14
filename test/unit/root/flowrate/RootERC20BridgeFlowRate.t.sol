@@ -17,7 +17,12 @@ import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 import {WETH} from "../../../../src/test/root/WETH.sol";
 
-contract RootERC20BridgeFlowRateUnitTest is Test, IRootERC20BridgeFlowRateEvents, IRootERC20BridgeFlowRateErrors, Utils {
+contract RootERC20BridgeFlowRateUnitTest is
+    Test,
+    IRootERC20BridgeFlowRateEvents,
+    IRootERC20BridgeFlowRateErrors,
+    Utils
+{
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
@@ -116,5 +121,4 @@ contract RootERC20BridgeFlowRateUnitTest is Test, IRootERC20BridgeFlowRateEvents
     //Flow rate withdraw
 
     //Processing the queued withdraws
-
 }

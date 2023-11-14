@@ -408,9 +408,17 @@ contract RootERC20Bridge is
     }
 
     function _withdraw(bytes memory data) internal virtual {
-        (address rootToken, address withdrawer, address receiver, uint256 amount) =
-            abi.decode(data, (address, address, address, uint256));
-        address childToken;
+        (address rootToken, address childToken, address withdrawer, address receiver, uint256 amount) =
+            _decodeAndValidateWithdrawal(data);
+        _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
+    }
+
+    function _decodeAndValidateWithdrawal(bytes memory data)
+        internal
+        view
+        returns (address rootToken, address childToken, address withdrawer, address receiver, uint256 amount)
+    {
+        (rootToken, withdrawer, receiver, amount) = abi.decode(data, (address, address, address, uint256));
         if (address(rootToken) == rootIMXToken) {
             childToken = NATIVE_IMX;
         } else {
@@ -419,7 +427,6 @@ contract RootERC20Bridge is
                 revert NotMapped();
             }
         }
-        _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
     }
 
     function _executeTransfer(
