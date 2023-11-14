@@ -15,8 +15,6 @@ import {ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {Utils} from "../../utils.t.sol";
 
 contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
-    // TODO: move me to roles contract
-    bytes32 constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
     address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
@@ -373,13 +371,14 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_RevertIf_updateBridgeAdaptorCalledByNotAdaptorManager() public {
         address caller = address(0xf00f00);
+        bytes32 role = childBridge.ADAPTOR_MANAGER_ROLE();
         vm.prank(caller);
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
                 StringsUpgradeable.toHexString(caller),
                 " is missing role ",
-                StringsUpgradeable.toHexString(uint256(ADAPTOR_MANAGER_ROLE), 32)
+                StringsUpgradeable.toHexString(uint256(role), 32)
             )
         );
         childBridge.updateBridgeAdaptor(address(0x11111));

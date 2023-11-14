@@ -121,6 +121,8 @@ contract ChildERC20Bridge is
         rootIMXToken = newRootIMXToken;
         wIMXToken = newWIMXToken;
 
+        // NOTE: how will this behave in an updgrade scenario?
+        // e.g. this clone may already be deployed and we could deploy to the same address if the salt is the same.
         // Clone childERC20 for native eth
         IChildERC20 clonedETHToken =
             IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
