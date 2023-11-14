@@ -48,6 +48,13 @@ contract ChildERC20BridgeWithdrawIMXUnitTest is Test, IChildERC20BridgeEvents, I
         );
     }
 
+    function test_RevertIf_WithdrawIMXCalledWithZeroFee() public {
+        uint256 withdrawAmount = 300;
+
+        vm.expectRevert(ZeroValue.selector);
+        childBridge.withdrawIMX(withdrawAmount);
+    }
+
     function test_RevertsIf_WithdrawIMXCalledWithInsufficientFund() public {
         uint256 withdrawAmount = 7 ether;
 

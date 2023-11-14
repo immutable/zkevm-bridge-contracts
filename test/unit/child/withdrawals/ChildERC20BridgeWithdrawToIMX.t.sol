@@ -52,6 +52,13 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         );
     }
 
+    function test_RevertsIf_withdrawIMXToCalledWithZeroFee() public {
+        uint256 withdrawAmount = 7 ether;
+
+        vm.expectRevert(ZeroValue.selector);
+        childBridge.withdrawIMXTo(address(this), withdrawAmount);
+    }
+
     function test_RevertsIf_withdrawIMXToCalledWithInsufficientFund() public {
         uint256 withdrawAmount = 7 ether;
 
@@ -59,7 +66,7 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         childBridge.withdrawIMXTo{value: withdrawAmount - 1}(address(this), withdrawAmount);
     }
 
-    function test_RevertIf_ZeroAmountIsProvided() public {
+    function test_RevertIf_withdrawIMXToZeroAmountIsProvided() public {
         uint256 withdrawFee = 300;
 
         vm.expectRevert(ZeroAmount.selector);

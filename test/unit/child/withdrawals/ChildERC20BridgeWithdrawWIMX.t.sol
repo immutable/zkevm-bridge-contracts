@@ -54,6 +54,13 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         );
     }
 
+    function test_RevertsIf_withdrawIMXCalledWithZeroFee() public {
+        uint256 withdrawAmount = 7 ether;
+
+        vm.expectRevert(ZeroValue.selector);
+        childBridge.withdrawIMX(withdrawAmount);
+    }
+
     function test_RevertsIf_WithdrawWIMXCalledWithInsufficientFund() public {
         uint256 withdrawAmount = 101 ether;
         uint256 withdrawFee = 300;
