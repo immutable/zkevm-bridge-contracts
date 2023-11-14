@@ -109,4 +109,12 @@ contract RootERC20BridgeFlowRateUnitTest is Test, IRootERC20BridgeFlowRateEvents
         );
     }
 
+    //RootBridge initialiser should revert
+
+    //Flow rate settings with roles
+
+    //Flow rate withdraw
+
+    //Processing the queued withdraws
+
 }

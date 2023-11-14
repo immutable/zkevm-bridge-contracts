@@ -1,6 +1,6 @@
 // Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
 /**
  * @title  Flow Rate Withdrawal Queue
@@ -107,6 +107,7 @@ abstract contract FlowRateWithdrawalQueue {
      * @param amount The amount to withdraw.
      */
     function _enqueueWithdrawal(address receiver, address withdrawer, address token, uint256 amount) internal {
+        // @TODO look at using a mapping instead of an array to make the withdraw function simpler
         if (token == address(0)) {
             revert TokenIsZero(receiver);
         }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -166,6 +166,7 @@ contract RootERC20BridgeFlowRate is
      *      Only when not paused.
      */
     function _withdraw(bytes memory data) internal override {
+        // @TODO abstract this inside the RootERC20Bridge.sol
         (address rootToken, address withdrawer, address receiver, uint256 amount) =
             abi.decode(data, (address, address, address, uint256));
         address childToken;
