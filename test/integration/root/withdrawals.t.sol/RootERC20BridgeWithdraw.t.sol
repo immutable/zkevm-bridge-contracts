@@ -72,7 +72,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         token.transfer(address(rootBridge), 100 ether);
         imxToken.transfer(address(rootBridge), 100 ether);
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
     }
 
     function test_RevertsIf_WithdrawWithInvalidSourceChain() public {

@@ -60,7 +60,7 @@ contract ChildERC20Bridge is
     /// @dev The address of the IMX ERC20 token on L1.
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
-    IChildERC20 public childETHToken;
+    address public childETHToken;
     /// @dev The address of the wrapped IMX token on L2.
     address public wIMXToken;
 
@@ -133,7 +133,7 @@ contract ChildERC20Bridge is
             IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
         // Initialize
         clonedETHToken.initialize(NATIVE_ETH, "Ethereum", "ETH", 18);
-        childETHToken = clonedETHToken;
+        childETHToken = address(clonedETHToken);
     }
 
     /**
@@ -144,13 +144,6 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
         emit BridgeAdaptorUpdated(address(bridgeAdaptor), newBridgeAdaptor);
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
-    }
-
-    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
-        if (newBridgeAdaptor == address(0)) {
-            revert ZeroAddress();
-        }
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
     }
 
@@ -225,6 +218,20 @@ contract ChildERC20Bridge is
      */
     function withdrawWIMXTo(address receiver, uint256 amount) external payable {
         _withdraw(wIMXToken, receiver, amount);
+    }
+
+    /**
+     * @inheritdoc IChildERC20Bridge
+     */
+    function withdrawETH(uint256 amount) external payable {
+        _withdraw(childETHToken, msg.sender, amount);
+    }
+
+    /**
+     * @inheritdoc IChildERC20Bridge
+     */
+    function withdrawETHTo(address receiver, uint256 amount) external payable {
+        _withdraw(childETHToken, receiver, amount);
     }
 
     /**
@@ -399,7 +406,7 @@ contract ChildERC20Bridge is
         IChildERC20 childToken;
         if (rootToken != rootIMXToken) {
             if (rootToken == NATIVE_ETH) {
-                childToken = childETHToken;
+                childToken = IChildERC20(childETHToken);
             } else {
                 childToken = IChildERC20(rootTokenToChildToken[rootToken]);
                 if (address(childToken) == address(0)) {

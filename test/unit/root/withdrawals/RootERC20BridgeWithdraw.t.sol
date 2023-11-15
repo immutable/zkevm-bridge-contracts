@@ -162,7 +162,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
     function test_onMessageReceive_TransfersETH() public {
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
 
         uint256 thisPreBal = address(this).balance;
         uint256 bridgePreBal = address(rootBridge).balance;
@@ -218,7 +218,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     function test_onMessageReceive_TransfersETH_DifferentReceiver() public {
         address receiver = address(123456);
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
 
         uint256 receiverPreBal = address(receiver).balance;
         uint256 bridgePreBal = address(rootBridge).balance;
@@ -263,7 +263,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForETH() public {
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
 
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
         vm.expectEmit();
@@ -305,7 +305,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForETH_DifferentReceiver() public {
         address receiver = address(123456);
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
 
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
         vm.expectEmit();
