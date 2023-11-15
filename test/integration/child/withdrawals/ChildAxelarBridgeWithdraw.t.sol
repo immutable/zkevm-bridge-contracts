@@ -26,15 +26,14 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
     ChildERC20Bridge public childBridge;
     ChildAxelarBridgeAdaptor public axelarAdaptor;
     address public rootToken;
-    MockAxelarGasService public axelarGasService;
+    MockAxelarGasService public mockAxelarGasService;
     MockAxelarGateway public mockAxelarGateway;
 
     address receiver = address(0xabcd);
 
     function setUp() public {
-        address rootImxToken;
         ChildERC20 childTokenTemplate;
-        (childBridge, axelarAdaptor, rootToken, rootImxToken, childTokenTemplate, axelarGasService, mockAxelarGateway) =
+        (childBridge, axelarAdaptor, rootToken,, childTokenTemplate, mockAxelarGasService, mockAxelarGateway) =
             childIntegrationSetup();
     }
 
@@ -82,10 +81,10 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
         bytes memory predictedPayload =
             abi.encode(WITHDRAW_SIG, rootToken, address(this), address(this), withdrawAmount);
         vm.expectCall(
-            address(axelarGasService),
+            address(mockAxelarGasService),
             withdrawFee,
             abi.encodeWithSelector(
-                axelarGasService.payNativeGasForContractCall.selector,
+                mockAxelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
                 childBridge.rootChain(),
                 childBridge.rootERC20BridgeAdaptor(),
@@ -112,12 +111,12 @@ contract ChildERC20BridgeWithdrawIntegrationTest is
         ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(rootToken));
 
         uint256 preBal = childToken.balanceOf(address(this));
-        uint256 preGasBal = address(axelarGasService).balance;
+        uint256 preGasBal = address(mockAxelarGasService).balance;
 
         childBridge.withdraw{value: withdrawFee}(childToken, withdrawAmount);
 
         uint256 postBal = childToken.balanceOf(address(this));
-        uint256 postGasBal = address(axelarGasService).balance;
+        uint256 postGasBal = address(mockAxelarGasService).balance;
 
         assertEq(postBal, preBal - withdrawAmount, "Balance not reduced");
         assertEq(postGasBal, preGasBal + withdrawFee, "Gas not transferred");
