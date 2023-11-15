@@ -426,6 +426,57 @@ contract RootERC20BridgeFlowRateUnitTest is
         assertEq(token.balanceOf(address(rootBridgeFlowRate)), BRIDGED_VALUE - amount, "rootBridgeFlowRate");
     }
 
+    function testFinaliseQueuedWithdrawalEther() public {
+        configureFlowRate();
+        // Need to first map the token.
+        rootBridgeFlowRate.mapToken(token);
+        // And give the bridge some tokens
+        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+
+        vm.deal(address(rootBridgeFlowRate), BRIDGED_VALUE_ETH);
+
+        activateWithdrawalQueue();
+
+        uint256 amount = 5 ether;
+
+        uint256 now1 = 100;
+        vm.warp(now1);
+
+        // Fake a crosschain transfer from the child chain to the root chain.
+        bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, alice, bob, amount);
+
+        address childERC20Token = rootBridgeFlowRate.rootTokenToChildToken(NATIVE_ETH);
+        //emit log_named_address("Child ERC 20 token", childERC20Token);
+
+        vm.prank(address(mockAxelarAdaptor));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(NATIVE_ETH, alice, bob, amount, now1, 0);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, 1, "bob's queue length");
+
+        uint256 now2 = now1 + withdrawalDelay;
+        vm.warp(now2);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, amount, 0);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit RootChainERC20Withdraw(
+            NATIVE_ETH,
+            childERC20Token,
+            alice,
+            bob,
+            amount
+        );
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
+
+        queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, 1, "bob's queue length");
+
+        assertEq(address(rootBridgeFlowRate).balance, BRIDGED_VALUE_ETH - amount, "after Root ERC20 Predicate");
+        assertEq(bob.balance, amount, "after bob");
+    }
+
     //  function testWithdrawalWhenPaused() public {
 
     //      // Need to first map the token.
