@@ -69,6 +69,19 @@ interface IChildERC20Bridge {
      * @param amount The amount of wrapped IMX to withdraw.
      */
     function withdrawWIMXTo(address receiver, uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of ETH to `msg.sender` on the rootchain.
+     * @param amount The amount of ETH to withdraw.
+     */
+    function withdrawETH(uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of ETH to `receiver` on the rootchain.
+     * @param receiver The address to withdraw the ETH to.
+     * @param amount The amount of ETH to withdraw.
+     */
+    function withdrawETHTo(address receiver, uint256 amount) external payable;
 }
 
 interface IChildERC20BridgeEvents {
@@ -90,6 +103,8 @@ interface IChildERC20BridgeEvents {
     event ChildChainWrappedIMXWithdraw(
         address indexed rootToken, address indexed depositor, address indexed receiver, uint256 amount
     );
+    /// @notice Emitted when a child chain ETH withdrawal is initiated.
+    event ChildChainEthWithdraw(address indexed depositor, address indexed receiver, uint256 amount);
     /// @notice Emitted when a root chain ERC20 deposit is completed on the child chain.
     event ChildChainERC20Deposit(
         address indexed rootToken,

@@ -390,8 +390,10 @@ contract RootERC20Bridge is
         (address rootToken, address withdrawer, address receiver, uint256 amount) =
             abi.decode(data, (address, address, address, uint256));
         address childToken;
-        if (address(rootToken) == rootIMXToken) {
+        if (rootToken == rootIMXToken) {
             childToken = NATIVE_IMX;
+        } else if (rootToken == NATIVE_ETH) {
+            childToken = childETHToken;
         } else {
             childToken = rootTokenToChildToken[rootToken];
             if (childToken == address(0)) {
@@ -412,10 +414,11 @@ contract RootERC20Bridge is
         // Tests for this NATIVE_ETH branch not yet written. This should come as part of that PR.
         if (rootToken == NATIVE_ETH) {
             Address.sendValue(payable(receiver), amount);
+            emit RootChainETHWithdraw(NATIVE_ETH, childToken, withdrawer, receiver, amount);
         } else {
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+            emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
         // slither-disable-next-line reentrancy-events
-        emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
     }
 }

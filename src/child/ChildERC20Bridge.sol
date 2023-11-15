@@ -60,7 +60,7 @@ contract ChildERC20Bridge is
     /// @dev The address of the IMX ERC20 token on L1.
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
-    IChildERC20 public childETHToken;
+    address public childETHToken;
     /// @dev The address of the wrapped IMX token on L2.
     address public wIMXToken;
 
@@ -133,7 +133,7 @@ contract ChildERC20Bridge is
             IChildERC20(Clones.cloneDeterministic(childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH))));
         // Initialize
         clonedETHToken.initialize(NATIVE_ETH, "Ethereum", "ETH", 18);
-        childETHToken = clonedETHToken;
+        childETHToken = address(clonedETHToken);
     }
 
     /**
@@ -221,6 +221,20 @@ contract ChildERC20Bridge is
     }
 
     /**
+     * @inheritdoc IChildERC20Bridge
+     */
+    function withdrawETH(uint256 amount) external payable {
+        _withdraw(childETHToken, msg.sender, amount);
+    }
+
+    /**
+     * @inheritdoc IChildERC20Bridge
+     */
+    function withdrawETHTo(address receiver, uint256 amount) external payable {
+        _withdraw(childETHToken, receiver, amount);
+    }
+
+    /**
      * @notice Private function to handle withdrawal process for all ERC20 and native token types.
      * @param childTokenAddr The address of the child token to withdraw.
      * @param receiver The address to withdraw the tokens to.
@@ -273,6 +287,14 @@ contract ChildERC20Bridge is
             }
 
             rootToken = rootIMXToken;
+        } else if (childTokenAddr == childETHToken) {
+            // Wrapped ETH.
+            IChildERC20 childToken = IChildERC20(childTokenAddr);
+            rootToken = NATIVE_ETH;
+
+            if (!childToken.burn(msg.sender, amount)) {
+                revert BurnFailed();
+            }
         } else {
             // Other ERC20 Tokens
             IChildERC20 childToken = IChildERC20(childTokenAddr);
@@ -311,6 +333,8 @@ contract ChildERC20Bridge is
             emit ChildChainNativeIMXWithdraw(rootToken, msg.sender, receiver, amount);
         } else if (childTokenAddr == wIMXToken) {
             emit ChildChainWrappedIMXWithdraw(rootToken, msg.sender, receiver, amount);
+        } else if (childTokenAddr == childETHToken) {
+            emit ChildChainEthWithdraw(msg.sender, receiver, amount);
         } else {
             emit ChildChainERC20Withdraw(rootToken, childTokenAddr, msg.sender, receiver, amount);
         }
@@ -382,7 +406,7 @@ contract ChildERC20Bridge is
         IChildERC20 childToken;
         if (rootToken != rootIMXToken) {
             if (rootToken == NATIVE_ETH) {
-                childToken = childETHToken;
+                childToken = IChildERC20(childETHToken);
             } else {
                 childToken = IChildERC20(rootTokenToChildToken[rootToken]);
                 if (address(childToken) == address(0)) {

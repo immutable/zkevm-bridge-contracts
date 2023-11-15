@@ -65,7 +65,9 @@ interface IRootERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+    /// @notice Emitted when an IMX deposit is initated on the root chain.
     event IMXDeposit(address indexed rootToken, address depositor, address indexed receiver, uint256 amount);
+    /// @notice Emitted when a WETH deposit is initiated on the root chain.
     event WETHDeposit(
         address indexed rootToken,
         address indexed childToken,
@@ -73,6 +75,7 @@ interface IRootERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+    /// @notice Emitted when an ETH deposit initiated on the root chain.
     event NativeEthDeposit(
         address indexed rootToken,
         address indexed childToken,
@@ -80,8 +83,16 @@ interface IRootERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
-
+    /// @notice Emitted when an ERC20 withdrawal is executed on the root chain.
     event RootChainERC20Withdraw(
+        address indexed rootToken,
+        address indexed childToken,
+        address withdrawer,
+        address indexed receiver,
+        uint256 amount
+    );
+    /// @notice Emitted when an ETH withdrawal is executed on the root chain.
+    event RootChainETHWithdraw(
         address indexed rootToken,
         address indexed childToken,
         address withdrawer,
