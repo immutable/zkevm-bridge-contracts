@@ -52,7 +52,7 @@ abstract contract BridgeRoles is AccessControlUpgradeable, PausableUpgradeable {
     function grantAdaptorManagerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(ADAPTOR_MANAGER_ROLE, account);
     }
-    
+
     // Role revoking functions
     /**
      * @notice Function to revoke pauser role from an address
