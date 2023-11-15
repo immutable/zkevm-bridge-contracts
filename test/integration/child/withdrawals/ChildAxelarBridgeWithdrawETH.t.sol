@@ -26,29 +26,17 @@ contract ChildERC20BridgeWithdrawETHIntegrationTest is
     IChildAxelarBridgeAdaptorErrors,
     Utils
 {
-    address constant CHILD_BRIDGE = address(3);
-    address constant CHILD_BRIDGE_ADAPTOR = address(4);
-    string constant CHILD_CHAIN_NAME = "test";
-    address constant ROOT_IMX_TOKEN = address(555555);
     address constant NATIVE_ETH = address(0xeee);
-    address constant WRAPPED_ETH = address(0xddd);
-    address constant WRAPPED_IMX = address(0xabc);
 
     ChildERC20Bridge public childBridge;
     ChildAxelarBridgeAdaptor public axelarAdaptor;
-    address public rootToken;
-    address public rootImxToken;
     ChildERC20 public childTokenTemplate;
-    MockAxelarGasService public axelarGasService;
+    MockAxelarGasService public mockAxelarGasService;
     MockAxelarGateway public mockAxelarGateway;
-    WIMX public wIMXToken;
     ChildERC20 public childETHToken;
 
     function setUp() public {
-        (childBridge, axelarAdaptor, rootToken, rootImxToken, childTokenTemplate, axelarGasService, mockAxelarGateway) =
-            childIntegrationSetup();
-        wIMXToken = WIMX(payable(WRAPPED_IMX));
-        Address.sendValue(payable(wIMXToken), 100 ether);
+        (childBridge, axelarAdaptor,,,, mockAxelarGasService, mockAxelarGateway) = childIntegrationSetup();
 
         childETHToken = ChildERC20(childBridge.childETHToken());
         vm.prank(address(childBridge));
@@ -98,10 +86,10 @@ contract ChildERC20BridgeWithdrawETHIntegrationTest is
             abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
 
         vm.expectCall(
-            address(axelarGasService),
+            address(mockAxelarGasService),
             withdrawFee,
             abi.encodeWithSelector(
-                axelarGasService.payNativeGasForContractCall.selector,
+                mockAxelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
                 childBridge.rootChain(),
                 childBridge.rootERC20BridgeAdaptor(),
@@ -132,13 +120,13 @@ contract ChildERC20BridgeWithdrawETHIntegrationTest is
 
         uint256 preBal = address(this).balance;
         uint256 preTokenBal = childETHToken.balanceOf(address(this));
-        uint256 preGasBal = address(axelarGasService).balance;
+        uint256 preGasBal = address(mockAxelarGasService).balance;
 
         childBridge.withdrawETH{value: withdrawFee}(withdrawAmount);
 
         uint256 postBal = address(this).balance;
         uint256 postTokenBal = childETHToken.balanceOf(address(this));
-        uint256 postGasBal = address(axelarGasService).balance;
+        uint256 postGasBal = address(mockAxelarGasService).balance;
 
         assertEq(postBal, preBal - withdrawFee, "Balance not reduced");
         assertEq(postTokenBal, preTokenBal - withdrawAmount);
