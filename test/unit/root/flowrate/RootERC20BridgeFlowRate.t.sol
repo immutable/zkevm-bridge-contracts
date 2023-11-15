@@ -11,6 +11,11 @@ import {
     IRootERC20BridgeFlowRateErrors,
     IRootERC20Bridge
 } from "../../../../src/root/flowrate/RootERC20BridgeFlowRate.sol";
+import {
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors
+} from "../../../../src/root/RootERC20Bridge.sol";
+import {FlowRateWithdrawalQueue} from "../../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
 import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
@@ -21,6 +26,8 @@ contract RootERC20BridgeFlowRateUnitTest is
     Test,
     IRootERC20BridgeFlowRateEvents,
     IRootERC20BridgeFlowRateErrors,
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors,
     Utils
 {
     address constant CHILD_BRIDGE = address(3);
@@ -42,7 +49,17 @@ contract RootERC20BridgeFlowRateUnitTest is
     uint256 constant REFILL_RATE_ETH = 277 ether; // Refill each hour.
     uint256 constant LARGE_ETH = 100000 ether;
 
+    uint256 constant CHARLIE_REMAINDER = 17;
+    uint256 constant CHARLIE_REMAINDER_ETH = 17 ether;
+
+    uint256 constant BRIDGED_VALUE = CAPACITY * 100;
+    uint256 constant BRIDGED_VALUE_ETH = CAPACITY_ETH * 100;
+
     bytes32 internal constant RATE_CONTROL_ROLE = keccak256("RATE");
+
+    address alice;
+    address bob;
+    address charlie;
 
     address rateAdmin;
     address pauseAdmin;
@@ -67,8 +84,11 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         rateAdmin = makeAddr("rateadmin");
         pauseAdmin = makeAddr("pauseadmin");
-
         nonAdmin = makeAddr("nonadmin");
+
+        alice = makeAddr("alice");
+        bob = makeAddr("bob");
+        charlie = makeAddr("charlie");
 
         rootBridgeFlowRate = new RootERC20BridgeFlowRate();
         mockAxelarGateway = new MockAxelarGateway();
@@ -241,6 +261,115 @@ contract RootERC20BridgeFlowRateUnitTest is
     /**
      * FLOW RATE WITHDRAW
      */
+
+    function testWithdrawalUnconfiguredToken() public {
+        
+        // Need to first map the token.
+        rootBridgeFlowRate.mapToken(token);
+        // And give the bridge some tokens
+        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+
+        uint256 amount = 5;
+
+        uint256 now1 = 100;
+        vm.warp(now1);
+
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, alice, bob, amount);
+
+        vm.prank(address(mockAxelarAdaptor));
+
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(token), alice, bob, amount, false, true, false);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        //assertEq(token.balanceOf(address(charlie)), CHARLIE_REMAINDER, "charlie");
+        assertEq(token.balanceOf(address(alice)), 0, "alice");
+        assertEq(token.balanceOf(address(bob)), 0, "bob");
+        assertEq(token.balanceOf(address(rootBridgeFlowRate)), BRIDGED_VALUE, "rootBridgeFlowRate");
+
+        uint256[] memory indices = new uint256[](1);
+        indices[0] = 0;
+        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending = rootBridgeFlowRate.getPendingWithdrawals(bob, indices);
+        assertEq(pending.length, 1, "Pending withdrawal length");
+        assertEq(pending[0].withdrawer, address(alice), "Withdrawer");
+        assertEq(pending[0].token, address(token), "Token");
+        assertEq(pending[0].amount, amount, "Amount");
+        assertEq(pending[0].timestamp, now1, "Timestamp");
+    }
+
+    function testWithdrawalLargeWithdrawal() public {
+        configureFlowRate();
+        // Need to first map the token.
+        rootBridgeFlowRate.mapToken(token);
+        // And give the bridge some tokens
+        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+
+        uint256 amount = LARGE;
+
+        uint256 now1 = 100;
+        vm.warp(now1);
+
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, alice, bob, amount);
+
+        vm.prank(address(mockAxelarAdaptor));
+
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(token), alice, bob, amount, true, false, false);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        assertEq(token.balanceOf(address(alice)), 0, "alice");
+        assertEq(token.balanceOf(address(bob)), 0, "bob");
+        assertEq(token.balanceOf(address(rootBridgeFlowRate)), BRIDGED_VALUE, "rootBridgeFlowRate");
+
+        uint256[] memory indices = new uint256[](1);
+        indices[0] = 0;
+        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending = rootBridgeFlowRate.getPendingWithdrawals(bob, indices);
+        assertEq(pending.length, 1, "Pending withdrawal length");
+        assertEq(pending[0].withdrawer, address(alice), "Withdrawer");
+        assertEq(pending[0].token, address(token), "Token");
+        assertEq(pending[0].amount, amount, "Amount");
+        assertEq(pending[0].timestamp, now1, "Timestamp");
+    }
+
+    function testHighFlowRate() public {
+        vm.warp(100);
+        configureFlowRate();
+        // Need to first map the token.
+        rootBridgeFlowRate.mapToken(token);
+        // And give the bridge some tokens
+        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+
+        uint256 amount = LARGE - 1;
+        uint256 timesBeforeHighFlowRate = CAPACITY / amount;
+
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, alice, bob, amount);
+
+        address childERC20Token = rootBridgeFlowRate.rootTokenToChildToken(address(token));
+        uint256 total;
+        for (uint256 i = 0; i < timesBeforeHighFlowRate; i++) {
+            vm.prank(address(mockAxelarAdaptor));
+            vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+            emit RootChainERC20Withdraw(
+                address(token),
+                childERC20Token,
+                alice,
+                bob,
+                amount
+            );
+            rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+            assertFalse(rootBridgeFlowRate.withdrawalQueueActivated(), "queue activated!");
+            total += amount;
+            assertEq(token.balanceOf(address(bob)), total, "bob");
+        }
+        assertFalse(rootBridgeFlowRate.withdrawalQueueActivated(), "queue activated!");
+
+        vm.prank(address(mockAxelarAdaptor));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(token), alice, bob, amount, false, false, true);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        assertTrue(rootBridgeFlowRate.withdrawalQueueActivated(), "queue not activated!");
+        assertEq(token.balanceOf(address(bob)), total, "bob");
+    }
 
     //  function testWithdrawalWhenPaused() public {
 
