@@ -261,13 +261,13 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
-    function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForETH() public {
+    function test_onMessageReceive_EmitsRootChainETHWithdrawEventForETH() public {
         // Give bridge some ETH
         deal(address(rootBridge), 100 ether);
 
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
+        emit RootChainETHWithdraw(
             NATIVE_ETH, address(rootBridge.childETHToken()), address(this), address(this), withdrawAmount
         );
         vm.prank(address(mockAxelarAdaptor));
@@ -302,14 +302,14 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
-    function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForETH_DifferentReceiver() public {
+    function test_onMessageReceive_EmitsRootChainETHWithdrawEventForETH_DifferentReceiver() public {
         address receiver = address(123456);
         // Give bridge some ETH
         deal(address(rootBridge), 100 ether);
 
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
+        emit RootChainETHWithdraw(
             NATIVE_ETH, address(rootBridge.childETHToken()), address(this), receiver, withdrawAmount
         );
         vm.prank(address(mockAxelarAdaptor));

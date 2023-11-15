@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
@@ -30,7 +30,6 @@ contract ChildERC20BridgeWithdrawETHIntegrationTest is
 
     ChildERC20Bridge public childBridge;
     ChildAxelarBridgeAdaptor public axelarAdaptor;
-    ChildERC20 public childTokenTemplate;
     MockAxelarGasService public mockAxelarGasService;
     MockAxelarGateway public mockAxelarGateway;
     ChildERC20 public childETHToken;
