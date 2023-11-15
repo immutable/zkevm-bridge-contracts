@@ -390,9 +390,9 @@ contract RootERC20Bridge is
         (address rootToken, address withdrawer, address receiver, uint256 amount) =
             abi.decode(data, (address, address, address, uint256));
         address childToken;
-        if (address(rootToken) == rootIMXToken) {
+        if (rootToken == rootIMXToken) {
             childToken = NATIVE_IMX;
-        } else if (address(rootToken) == NATIVE_ETH) {
+        } else if (rootToken == NATIVE_ETH) {
             childToken = childETHToken;
         } else {
             childToken = rootTokenToChildToken[rootToken];
