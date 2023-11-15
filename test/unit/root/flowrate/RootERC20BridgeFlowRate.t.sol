@@ -30,6 +30,11 @@ contract RootERC20BridgeFlowRateUnitTest is
     IRootERC20BridgeErrors,
     Utils
 {
+
+    event QueuedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 timestamp, uint256 index);
+    // Indicates a withdrawal has been processed.
+    event ProcessedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 index);
+
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
@@ -369,6 +374,56 @@ contract RootERC20BridgeFlowRateUnitTest is
         rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
         assertTrue(rootBridgeFlowRate.withdrawalQueueActivated(), "queue not activated!");
         assertEq(token.balanceOf(address(bob)), total, "bob");
+    }
+
+    function testFinaliseQueuedWithdrawalERC20() public {
+        configureFlowRate();
+       // Need to first map the token.
+        rootBridgeFlowRate.mapToken(token);
+        // And give the bridge some tokens
+        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+
+        activateWithdrawalQueue();
+
+        uint256 amount = 5;
+
+        uint256 now1 = 100;
+        vm.warp(now1);
+
+        // Fake a crosschain transfer from the child chain to the root chain.
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, alice, bob, amount);
+
+        address childERC20Token = rootBridgeFlowRate.rootTokenToChildToken(address(token));
+        //emit log_named_address("Child ERC 20 token", childERC20Token);
+
+        vm.prank(address(mockAxelarAdaptor));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(token), alice, bob, amount, now1, 0);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, 1, "bob's queue length");
+
+        uint256 now2 = now1 + withdrawalDelay;
+        vm.warp(now2);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, amount, 0);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit RootChainERC20Withdraw(
+            address(token),
+            childERC20Token,
+            alice,
+            bob,
+            amount
+        );
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
+
+        queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, 1, "bob's queue length");
+
+        assertEq(token.balanceOf(address(alice)), 0, "alice");
+        assertEq(token.balanceOf(address(bob)), amount, "bob");
+        assertEq(token.balanceOf(address(rootBridgeFlowRate)), BRIDGED_VALUE - amount, "rootBridgeFlowRate");
     }
 
     //  function testWithdrawalWhenPaused() public {
