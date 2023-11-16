@@ -11,10 +11,7 @@ import {
     IRootERC20BridgeFlowRateErrors,
     IRootERC20Bridge
 } from "../../../../src/root/flowrate/RootERC20BridgeFlowRate.sol";
-import {
-    IRootERC20BridgeEvents,
-    IRootERC20BridgeErrors
-} from "../../../../src/root/RootERC20Bridge.sol";
+import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../../../../src/root/RootERC20Bridge.sol";
 import {FlowRateWithdrawalQueue} from "../../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
 import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
@@ -38,6 +35,7 @@ contract ReentrancyAttackERC20 is MockERC20 {
         idx = index;
         attackWithdrawal = true;
     }
+
     function prepareAttackWithdrawalAggregated(uint256[] calldata indices) external {
         idxs = indices;
         attackWithdrawal = false;
@@ -48,13 +46,10 @@ contract ReentrancyAttackERC20 is MockERC20 {
             if (rerun++ < 3) {
                 if (attackWithdrawal) {
                     bridge.finaliseQueuedWithdrawal(to, idx);
-                } 
-                else {
+                } else {
                     bridge.finaliseQueuedWithdrawalsAggregated(to, address(this), idxs);
-
                 }
-            }
-            else {
+            } else {
                 rerun = 0;
             }
         }
@@ -63,7 +58,6 @@ contract ReentrancyAttackERC20 is MockERC20 {
         _transfer(owner, to, value);
         return true;
     }
-
 }
 
 contract RootERC20BridgeFlowRateUnitTest is
@@ -74,10 +68,18 @@ contract RootERC20BridgeFlowRateUnitTest is
     IRootERC20BridgeErrors,
     Utils
 {
-
-    event QueuedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 timestamp, uint256 index);
+    event QueuedWithdrawal(
+        address indexed token,
+        address indexed withdrawer,
+        address indexed receiver,
+        uint256 amount,
+        uint256 timestamp,
+        uint256 index
+    );
     // Indicates a withdrawal has been processed.
-    event ProcessedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 index);
+    event ProcessedWithdrawal(
+        address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 index
+    );
 
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
@@ -177,12 +179,13 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.stopPrank();
     }
 
-     function configureFlowRate() internal {
+    function configureFlowRate() internal {
         vm.startPrank(rateAdmin);
         rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
         rootBridgeFlowRate.setRateControlThreshold(NATIVE_ETH, CAPACITY_ETH, REFILL_RATE_ETH, LARGE_ETH);
         vm.stopPrank();
     }
+
     function transferTokensToChild() internal {
         vm.deal(address(this), 1 ether);
         // Need to first map the token.
@@ -307,9 +310,9 @@ contract RootERC20BridgeFlowRateUnitTest is
         emit RateControlThresholdSet(address(token), CAPACITY, REFILL_RATE, LARGE);
         rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
         assertEq(rootBridgeFlowRate.largeTransferThresholds(address(token)), LARGE);
-        uint256 capacity; 
+        uint256 capacity;
         uint256 refillRate;
-        (capacity, , , refillRate) = rootBridgeFlowRate.flowRateBuckets(address(token));
+        (capacity,,, refillRate) = rootBridgeFlowRate.flowRateBuckets(address(token));
         assertEq(capacity, CAPACITY, "Capacity");
         assertEq(refillRate, REFILL_RATE, "Refill rate");
     }
@@ -325,7 +328,6 @@ contract RootERC20BridgeFlowRateUnitTest is
      */
 
     function testWithdrawalUnconfiguredToken() public {
-        
         transferTokensToChild();
 
         uint256 amount = 5;
@@ -348,7 +350,8 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         uint256[] memory indices = new uint256[](1);
         indices[0] = 0;
-        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending = rootBridgeFlowRate.getPendingWithdrawals(bob, indices);
+        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending =
+            rootBridgeFlowRate.getPendingWithdrawals(bob, indices);
         assertEq(pending.length, 1, "Pending withdrawal length");
         assertEq(pending[0].withdrawer, address(alice), "Withdrawer");
         assertEq(pending[0].token, address(token), "Token");
@@ -379,7 +382,8 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         uint256[] memory indices = new uint256[](1);
         indices[0] = 0;
-        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending = rootBridgeFlowRate.getPendingWithdrawals(bob, indices);
+        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending =
+            rootBridgeFlowRate.getPendingWithdrawals(bob, indices);
         assertEq(pending.length, 1, "Pending withdrawal length");
         assertEq(pending[0].withdrawer, address(alice), "Withdrawer");
         assertEq(pending[0].token, address(token), "Token");
@@ -402,13 +406,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         for (uint256 i = 0; i < timesBeforeHighFlowRate; i++) {
             vm.prank(address(mockAxelarAdaptor));
             vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
-            emit RootChainERC20Withdraw(
-                address(token),
-                childERC20Token,
-                alice,
-                bob,
-                amount
-            );
+            emit RootChainERC20Withdraw(address(token), childERC20Token, alice, bob, amount);
             rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
             assertFalse(rootBridgeFlowRate.withdrawalQueueActivated(), "queue activated!");
             total += amount;
@@ -453,13 +451,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit ProcessedWithdrawal(address(token), alice, bob, amount, 0);
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
-        emit RootChainERC20Withdraw(
-            address(token),
-            childERC20Token,
-            alice,
-            bob,
-            amount
-        );
+        emit RootChainERC20Withdraw(address(token), childERC20Token, alice, bob, amount);
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
 
         queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
@@ -499,13 +491,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, amount, 0);
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
-        emit RootChainETHWithdraw(
-            NATIVE_ETH,
-            childERC20Token,
-            alice,
-            bob,
-            amount
-        );
+        emit RootChainETHWithdraw(NATIVE_ETH, childERC20Token, alice, bob, amount);
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
 
         queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
@@ -540,7 +526,9 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         uint256 now2 = now1 + withdrawalDelay;
         vm.warp(now2);
-        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.IndexOutsideWithdrawalQueue.selector, 1, outOfBoundsIndex));
+        vm.expectRevert(
+            abi.encodeWithSelector(FlowRateWithdrawalQueue.IndexOutsideWithdrawalQueue.selector, 1, outOfBoundsIndex)
+        );
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, outOfBoundsIndex);
     }
 
@@ -573,10 +561,13 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         uint256 now2 = now1 + withdrawalDelay - 1;
         vm.warp(now2);
-        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.WithdrawalRequestTooEarly.selector, now2, now1 + withdrawalDelay));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlowRateWithdrawalQueue.WithdrawalRequestTooEarly.selector, now2, now1 + withdrawalDelay
+            )
+        );
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
     }
-
 
     function prepareForERC20AggregatedTest() public returns (uint256) {
         configureFlowRate();
@@ -676,8 +667,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(token), indices);
 
         assertEq(token.balanceOf(address(bob)), total, "bob");
-    } 
-
+    }
 
     function testFinaliseQueuedWithdrawalsAggregatedEther() public {
         uint256 total = prepareForEtherAggregatedTest();
@@ -715,8 +705,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
 
         assertEq(bob.balance, total, "bob");
-    } 
-
+    }
 
     function testFinaliseQueuedWithdrawalsAggregatedOutOfBounds() public {
         prepareForEtherAggregatedTest();
@@ -729,7 +718,9 @@ contract RootERC20BridgeFlowRateUnitTest is
         indices[7] = outOfBoundsIndex;
 
         vm.warp(block.timestamp + withdrawalDelay);
-        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.IndexOutsideWithdrawalQueue.selector, 10, outOfBoundsIndex));
+        vm.expectRevert(
+            abi.encodeWithSelector(FlowRateWithdrawalQueue.IndexOutsideWithdrawalQueue.selector, 10, outOfBoundsIndex)
+        );
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
     }
 
@@ -744,7 +735,9 @@ contract RootERC20BridgeFlowRateUnitTest is
         indices[7] = alreadyProcessed;
 
         vm.warp(block.timestamp + withdrawalDelay);
-        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.WithdrawalAlreadyProcessed.selector, bob, alreadyProcessed));
+        vm.expectRevert(
+            abi.encodeWithSelector(FlowRateWithdrawalQueue.WithdrawalAlreadyProcessed.selector, bob, alreadyProcessed)
+        );
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
     }
 
@@ -758,10 +751,15 @@ contract RootERC20BridgeFlowRateUnitTest is
         uint256 timeOfFirstQueuedWithdrawal = 1100;
         uint256 timeFirstQueuedWithdrawalReady = timeOfFirstQueuedWithdrawal + withdrawalDelay;
 
-        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.WithdrawalRequestTooEarly.selector, 
-                block.timestamp, timeFirstQueuedWithdrawalReady));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlowRateWithdrawalQueue.WithdrawalRequestTooEarly.selector,
+                block.timestamp,
+                timeFirstQueuedWithdrawalReady
+            )
+        );
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
-    } 
+    }
 
     function testFinaliseQueuedWithdrawalsAggregatedMismatch() public {
         prepareForERC20AggregatedTest();
@@ -824,7 +822,6 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit QueuedWithdrawal(address(attackToken), alice, bob, amount, now1, 0);
         rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
-
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
         assertEq(queueLen, 1, "bob's queue length");
@@ -892,14 +889,11 @@ contract RootERC20BridgeFlowRateUnitTest is
     //     // Fake a crosschain transfer from the child chain to the root chain.
     //     bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), amount);
 
-
     //     vm.prank(address(mockAxelarAdaptor));
     //     rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     // }
 
-
     /**
      * PROCESS QUEUED WITHDRAWALS
      */
-
 }

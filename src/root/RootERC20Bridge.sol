@@ -446,7 +446,7 @@ contract RootERC20Bridge is
             childToken = NATIVE_IMX;
         } else if (rootToken == NATIVE_ETH) {
             childToken = childETHToken;
-       } else {
+        } else {
             childToken = rootTokenToChildToken[rootToken];
             if (childToken == address(0)) {
                 revert NotMapped();
