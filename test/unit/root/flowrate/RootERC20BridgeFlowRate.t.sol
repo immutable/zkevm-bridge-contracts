@@ -424,7 +424,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     function testFinaliseQueuedWithdrawalEther() public {
         configureFlowRate();
         
-
         vm.deal(address(rootBridgeFlowRate), BRIDGED_VALUE_ETH);
 
         activateWithdrawalQueue();
@@ -453,7 +452,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, amount, 0);
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
-        emit RootChainERC20Withdraw(
+        emit RootChainETHWithdraw(
             NATIVE_ETH,
             childERC20Token,
             alice,
