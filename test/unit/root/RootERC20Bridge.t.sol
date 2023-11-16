@@ -450,15 +450,15 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * ON MESSAGE RECEIVED
      */
-    function test_RevertsIf_OnMessageRecievedWhenPaused() public {
+    function test_RevertsIf_OnMessageReceivedWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), 1000);
         vm.expectRevert("Pausable: paused");
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
-    function test_OnMessageRecieveResumesFunctionalityAfterPausing() public {
-        test_RevertsIf_OnMessageRecievedWhenPaused();
+    function test_OnMessageReceiveResumesFunctionalityAfterPausing() public {
+        test_RevertsIf_OnMessageReceivedWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect revert on standard flow, not on pause
         vm.expectRevert(NotBridgeAdaptor.selector);

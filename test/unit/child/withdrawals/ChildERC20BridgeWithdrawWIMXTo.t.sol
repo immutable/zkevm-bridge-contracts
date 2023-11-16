@@ -70,7 +70,7 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
         test_WithdrawWIMXTo_CallsBridgeAdaptor();
     }
 
-    function test_RevertsIf_WithdrawWIMXToCalledWithZeroReciever() public {
+    function test_RevertsIf_WithdrawWIMXToCalledWithZeroReceiver() public {
         uint256 withdrawAmount = 7 ether;
 
         vm.expectRevert(ZeroAddress.selector);

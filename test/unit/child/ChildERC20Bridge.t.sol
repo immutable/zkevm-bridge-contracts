@@ -52,7 +52,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     /**
-     * RECIEVE
+     * RECEIVE
      */
 
     function test_NativeTransferFromWIMX() public {
@@ -397,7 +397,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
      * DEPOSIT ETH
      */
 
-    function test_RevertsIf_OnMessageRecieveWhenPaused() public {
+    function test_RevertsIf_OnMessageReceiveWhenPaused() public {
         pause(IPausable(address(childBridge)));
         bytes memory depositData =
             abi.encode(childBridge.DEPOSIT_SIG(), address(NATIVE_ETH), address(100), address(200), 1000);
@@ -405,8 +405,8 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 
-    function test_OnMessageRecieveResumesFunctionalityAfterPausing() public {
-        test_RevertsIf_OnMessageRecieveWhenPaused();
+    function test_OnMessageReceiveResumesFunctionalityAfterPausing() public {
+        test_RevertsIf_OnMessageReceiveWhenPaused();
         unpause(IPausable(address(childBridge)));
         // Expect success case to pass
         test_onMessageReceive_DepositETH_EmitsETHDepositEvent();

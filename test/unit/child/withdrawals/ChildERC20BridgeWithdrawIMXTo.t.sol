@@ -68,7 +68,7 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         test_withdrawIMXTo_CallsBridgeAdaptor();
     }
 
-    function test_RevertsIf_withdrawIMXToCalledWithZeroReciever() public {
+    function test_RevertsIf_withdrawIMXToCalledWithZeroReceiver() public {
         uint256 withdrawAmount = 7 ether;
 
         vm.expectRevert(ZeroAddress.selector);
