@@ -21,6 +21,50 @@ import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasServi
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 import {WETH} from "../../../../src/test/root/WETH.sol";
+import {MockERC20} from "../../../../src/test/root/MockERC20.sol";
+
+contract ReentrancyAttackERC20 is MockERC20 {
+    RootERC20BridgeFlowRate bridge;
+    uint256 rerun = 0;
+    uint256 idx;
+    uint256[] idxs;
+    bool attackWithdrawal;
+
+    constructor(address payable _bridge) {
+        bridge = RootERC20BridgeFlowRate(_bridge);
+    }
+
+    function prepareAttackWithdrawal(uint256 index) external {
+        idx = index;
+        attackWithdrawal = true;
+    }
+    function prepareAttackWithdrawalAggregated(uint256[] calldata indices) external {
+        idxs = indices;
+        attackWithdrawal = false;
+    }
+
+    function transfer(address to, uint256 value) public override returns (bool) {
+        if (msg.sender == address(bridge)) {
+            if (rerun++ < 3) {
+                if (attackWithdrawal) {
+                    bridge.finaliseQueuedWithdrawal(to, idx);
+                } 
+                else {
+                    bridge.finaliseQueuedWithdrawalsAggregated(to, address(this), idxs);
+
+                }
+            }
+            else {
+                rerun = 0;
+            }
+        }
+
+        address owner = _msgSender();
+        _transfer(owner, to, value);
+        return true;
+    }
+
+}
 
 contract RootERC20BridgeFlowRateUnitTest is
     Test,
@@ -56,6 +100,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     uint256 constant CHARLIE_REMAINDER = 17;
     uint256 constant CHARLIE_REMAINDER_ETH = 17 ether;
+    uint256 constant BANK_OF_CHARLIE_TREASURY = BRIDGED_VALUE + CHARLIE_REMAINDER;
 
     uint256 constant BRIDGED_VALUE = CAPACITY * 100;
     uint256 constant BRIDGED_VALUE_ETH = CAPACITY_ETH * 100;
@@ -144,6 +189,10 @@ contract RootERC20BridgeFlowRateUnitTest is
         rootBridgeFlowRate.mapToken{value: 100}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+    }
+
+    function transferEtherToChild() internal {
+        vm.deal(address(rootBridgeFlowRate), BRIDGED_VALUE_ETH);
     }
 
     /**
@@ -423,9 +472,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function testFinaliseQueuedWithdrawalEther() public {
         configureFlowRate();
-        
-        vm.deal(address(rootBridgeFlowRate), BRIDGED_VALUE_ETH);
-
+        transferEtherToChild();
         activateWithdrawalQueue();
 
         uint256 amount = 5 ether;
@@ -564,7 +611,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function prepareForEtherAggregatedTest() public returns (uint256) {
         configureFlowRate();
-        vm.deal(address(rootBridgeFlowRate), BRIDGED_VALUE_ETH);
+        transferEtherToChild();
         activateWithdrawalQueue();
 
         uint256 numWithdrawalsToQueue = 10;
@@ -591,6 +638,244 @@ contract RootERC20BridgeFlowRateUnitTest is
         assertEq(queueLen, numWithdrawalsToQueue, "bob's array length");
 
         return total;
+    }
+
+    function testFinaliseQueuedWithdrawalsAggregatedERC20() public {
+        uint256 total = prepareForERC20AggregatedTest();
+
+        uint256[] memory indices = new uint256[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            indices[i] = i;
+        }
+
+        vm.warp(block.timestamp + withdrawalDelay);
+
+        address childERC20Token = rootBridgeFlowRate.rootTokenToChildToken(address(token));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 101, 0);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 102, 1);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 103, 2);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 104, 3);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 105, 4);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 106, 5);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 107, 6);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 108, 7);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 109, 8);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(token), alice, bob, 110, 9);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit RootChainERC20Withdraw(address(token), childERC20Token, alice, bob, total);
+        rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(token), indices);
+
+        assertEq(token.balanceOf(address(bob)), total, "bob");
+    } 
+
+
+    function testFinaliseQueuedWithdrawalsAggregatedEther() public {
+        uint256 total = prepareForEtherAggregatedTest();
+
+        uint256[] memory indices = new uint256[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            indices[i] = i;
+        }
+
+        vm.warp(block.timestamp + withdrawalDelay);
+
+        address childERC20Token = rootBridgeFlowRate.rootTokenToChildToken(address(NATIVE_ETH));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 101, 0);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 102, 1);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 103, 2);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 104, 3);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 105, 4);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 106, 5);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 107, 6);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 108, 7);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 109, 8);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit ProcessedWithdrawal(address(NATIVE_ETH), alice, bob, 110, 9);
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit RootChainETHWithdraw(address(NATIVE_ETH), childERC20Token, alice, bob, total);
+        rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
+
+        assertEq(bob.balance, total, "bob");
+    } 
+
+
+    function testFinaliseQueuedWithdrawalsAggregatedOutOfBounds() public {
+        prepareForEtherAggregatedTest();
+
+        uint256[] memory indices = new uint256[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            indices[i] = i;
+        }
+        uint256 outOfBoundsIndex = 15;
+        indices[7] = outOfBoundsIndex;
+
+        vm.warp(block.timestamp + withdrawalDelay);
+        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.IndexOutsideWithdrawalQueue.selector, 10, outOfBoundsIndex));
+        rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
+    }
+
+    function testFinaliseQueuedWithdrawalsAggregatedAlreadyProcessed() public {
+        prepareForEtherAggregatedTest();
+
+        uint256[] memory indices = new uint256[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            indices[i] = i;
+        }
+        uint256 alreadyProcessed = 5;
+        indices[7] = alreadyProcessed;
+
+        vm.warp(block.timestamp + withdrawalDelay);
+        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.WithdrawalAlreadyProcessed.selector, bob, alreadyProcessed));
+        rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
+    }
+
+    function testFinaliseQueuedWithdrawalsAggregatedTooEarly() public {
+        prepareForEtherAggregatedTest();
+
+        uint256[] memory indices = new uint256[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            indices[i] = i;
+        }
+        uint256 timeOfFirstQueuedWithdrawal = 1100;
+        uint256 timeFirstQueuedWithdrawalReady = timeOfFirstQueuedWithdrawal + withdrawalDelay;
+
+        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.WithdrawalRequestTooEarly.selector, 
+                block.timestamp, timeFirstQueuedWithdrawalReady));
+        rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
+    } 
+
+    function testFinaliseQueuedWithdrawalsAggregatedMismatch() public {
+        prepareForERC20AggregatedTest();
+        transferEtherToChild();
+
+        uint256 amount = 6;
+
+        // Fake a crosschain transfer a different token: Ether.
+        bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, alice, bob, amount);
+
+        vm.prank(address(mockAxelarAdaptor));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(NATIVE_ETH), alice, bob, amount, block.timestamp, 10);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        // Indices for a withdrawal for the ERC 20 token and one for Ether
+        uint256[] memory indices = new uint256[](2);
+        indices[0] = 3;
+        indices[1] = 10;
+
+        vm.warp(block.timestamp + withdrawalDelay);
+        vm.expectRevert(abi.encodeWithSelector(MixedTokens.selector, address(token), address(NATIVE_ETH)));
+        rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(token), indices);
+    }
+
+    function testFinaliseQueuedWithdrawalsAggregatedNoIndices() public {
+        prepareForERC20AggregatedTest();
+        transferEtherToChild();
+
+        uint256[] memory indices = new uint256[](0);
+
+        vm.warp(block.timestamp + withdrawalDelay);
+        vm.expectRevert(abi.encodeWithSelector(ProvideAtLeastOneIndex.selector));
+        rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(token), indices);
+    }
+
+    function testFinaliseQueuedWithdrawalReentrancy() public {
+        // Don't bother configuring the token.  - it will end up in the queue
+
+        // Mock transfer tokens to child
+        ReentrancyAttackERC20 attackToken = new ReentrancyAttackERC20(payable(address(rootBridgeFlowRate)));
+        attackToken.mint(charlie, BANK_OF_CHARLIE_TREASURY);
+        vm.startPrank(charlie);
+        vm.deal(charlie, 1 ether);
+        // Need to first map the token.
+        rootBridgeFlowRate.mapToken{value: 100}(attackToken);
+        attackToken.approve(address(rootBridgeFlowRate), BRIDGED_VALUE);
+        rootBridgeFlowRate.deposit{value: 100}(attackToken, BRIDGED_VALUE);
+        vm.stopPrank();
+
+        uint256 amount = 5;
+
+        uint256 now1 = 100;
+        vm.warp(now1);
+
+        // Fake a crosschain transfer from the child chain to the root chain.
+        bytes memory data = abi.encode(WITHDRAW_SIG, attackToken, alice, bob, amount);
+
+        vm.prank(address(mockAxelarAdaptor));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(attackToken), alice, bob, amount, now1, 0);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+
+        uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, 1, "bob's queue length");
+
+        attackToken.prepareAttackWithdrawal(0);
+
+        uint256 now2 = now1 + withdrawalDelay;
+        vm.warp(now2);
+        vm.expectRevert(abi.encodePacked("ReentrancyGuard: reentrant call"));
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
+    }
+
+    function testFinaliseQueuedWithdrawalsAggregatedReentrancy() public {
+        // Don't bother configuring the token.  - it will end up in the queue
+
+        // Mock transfer tokens to child
+        ReentrancyAttackERC20 attackToken = new ReentrancyAttackERC20(payable(address(rootBridgeFlowRate)));
+        attackToken.mint(charlie, BANK_OF_CHARLIE_TREASURY);
+        vm.startPrank(charlie);
+        vm.deal(charlie, 1 ether);
+        // Need to first map the token.
+        rootBridgeFlowRate.mapToken{value: 100}(attackToken);
+        attackToken.approve(address(rootBridgeFlowRate), BRIDGED_VALUE);
+        rootBridgeFlowRate.deposit{value: 100}(attackToken, BRIDGED_VALUE);
+        vm.stopPrank();
+
+        uint256 amount = 5;
+
+        uint256 now1 = 100;
+        vm.warp(now1);
+
+        // Fake a crosschain transfer from the child chain to the root chain.
+        bytes memory data = abi.encode(WITHDRAW_SIG, attackToken, alice, bob, amount);
+
+        vm.prank(address(mockAxelarAdaptor));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(attackToken), alice, bob, amount, now1, 0);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, 1, "bob's queue length");
+
+        uint256[] memory indices = new uint256[](1);
+        indices[0] = 0;
+
+        attackToken.prepareAttackWithdrawalAggregated(indices);
+
+        uint256 now2 = now1 + withdrawalDelay;
+        vm.warp(now2);
+        vm.expectRevert(abi.encodePacked("ReentrancyGuard: reentrant call"));
+        rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(attackToken), indices);
     }
 
     //  function testWithdrawalWhenPaused() public {
