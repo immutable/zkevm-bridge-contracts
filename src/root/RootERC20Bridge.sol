@@ -16,6 +16,7 @@ import {
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
+import {BridgeRoles} from "../common/BridgeRoles.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
@@ -29,20 +30,13 @@ contract RootERC20Bridge is
     AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
     IRootERC20Bridge,
     IRootERC20BridgeEvents,
-    IRootERC20BridgeErrors
+    IRootERC20BridgeErrors,
+    BridgeRoles
 {
     using SafeERC20 for IERC20Metadata;
 
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
-
-    /**
-     * ROLES
-     */
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER_ROLE");
-    bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER_ROLE");
-    bytes32 public constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
 
     uint256 public constant UNLIMITED_DEPOSIT = 0;
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");

@@ -65,8 +65,8 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_NativeTransferFromWIMX() public {
         address caller = address(0x123a);
         payable(caller).transfer(2 ether);
-
-        uint256 wIMXStorageSlot = 158;
+       // forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "wIMXToken" 
+        uint256 wIMXStorageSlot = 208;
         vm.store(address(childBridge), bytes32(wIMXStorageSlot), bytes32(uint256(uint160(caller))));
 
         vm.startPrank(caller);
@@ -605,7 +605,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         address rootAddress = address(0x123);
         {
             // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
-            uint256 rootTokenToChildTokenMappingSlot = 151;
+            uint256 rootTokenToChildTokenMappingSlot = 201;
             address childAddress = address(444444);
             bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);
             bytes32 data = bytes32(uint256(uint160(childAddress)));

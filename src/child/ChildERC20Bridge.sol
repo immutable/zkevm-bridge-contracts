@@ -15,6 +15,7 @@ import {
 import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWIMX} from "../interfaces/child/IWIMX.sol";
+import {BridgeRoles} from "../common/BridgeRoles.sol";
 
 /**
  * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
@@ -28,20 +29,13 @@ contract ChildERC20Bridge is
     AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
     IChildERC20BridgeErrors,
     IChildERC20Bridge,
-    IChildERC20BridgeEvents
+    IChildERC20BridgeEvents,
+    BridgeRoles
 {
     using SafeERC20 for IERC20Metadata;
 
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
-
-    /**
-     * ROLES
-     */
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER_ROLE");
-    bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER_ROLE");
-    bytes32 public constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
@@ -97,8 +91,7 @@ contract ChildERC20Bridge is
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
-                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0)
-                || newWIMXToken == address(0)
+                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0) || newWIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }
