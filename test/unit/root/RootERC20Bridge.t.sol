@@ -103,13 +103,13 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(bal + 1 ether, postBal, "balance not increased");
     }
 
-    function test_RevertIfNativeTransferIsFromNonWETH() public {
+    function test_RevertI_fNativeTransferIsFromNonWETH() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
         (bool ok,) = address(rootBridge).call{value: 1 ether}("");
         assert(ok);
     }
 
-    function test_RevertIfNativeTransferWhenPaused() public {
+    function test_RevertIf_NativeTransferWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
         (bool ok,) = address(rootBridge).call{value: 1 ether}("");
@@ -117,13 +117,13 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_NativeTransferResumesFunctionalityAfterPausing() public {
-        test_RevertIfNativeTransferWhenPaused();
+        test_RevertIf_NativeTransferWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
         test_NativeTransferFromWETH();
     }
 
-    function test_RevertIfInitializeTwice() public {
+    function test_RevertIf_InitializeTwice() public {
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -629,7 +629,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositETH{value: 1000}(1000);
     }
 
-    function test_DeposithETHResumesFunctionalityAfterPausing() public {
+    function test_DepositETHResumesFunctionalityAfterPausing() public {
         test_RevertsIf_DepositETHWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
@@ -1014,7 +1014,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     /**
-     * DEPOSITTO
+     * DEPOSIT TO
      */
 
     function test_RevertsIf_DepositToWhenPaused() public {

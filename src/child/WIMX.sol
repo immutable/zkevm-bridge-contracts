@@ -17,7 +17,7 @@ contract WIMX is IWIMX {
     mapping(address => mapping(address => uint256)) public allowance;
 
     /**
-     * @notice Fallback function on recieving native IMX.
+     * @notice Fallback function on receiving native IMX.
      */
     receive() external payable {
         deposit();

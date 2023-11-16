@@ -121,7 +121,7 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
     }
 
     /**
-     * @notice Fallback function on recieving native IMX from WIMX contract.
+     * @notice Fallback function on receiving native IMX from WIMX contract.
      */
     receive() external payable whenNotPaused {
         // Revert if sender is not the WIMX token address

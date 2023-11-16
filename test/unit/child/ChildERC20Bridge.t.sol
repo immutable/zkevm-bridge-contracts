@@ -71,13 +71,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(bal + 1 ether, postBal, "balance not increased");
     }
 
-    function test_RevertIfNativeTransferIsFromNonWIMX() public {
+    function test_RevertIf_NativeTransferIsFromNonWIMX() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
         (bool ok,) = address(childBridge).call{value: 1 ether}("");
         assert(ok);
     }
 
-    function test_RevertNativeTransferWhenPaused() public {
+    function test_RevertIf_NativeTransferWhenPaused() public {
         pause(IPausable(address(childBridge)));
         vm.expectRevert("Pausable: paused");
         (bool ok,) = address(childBridge).call{value: 1 ether}("");
@@ -85,7 +85,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_NativeTransferResumesFunctionalityAfterPausing() public {
-        test_RevertNativeTransferWhenPaused();
+        test_RevertIf_NativeTransferWhenPaused();
         unpause(IPausable(address(childBridge)));
         // Expect success case to pass
         test_NativeTransferFromWIMX();
