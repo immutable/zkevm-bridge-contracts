@@ -26,6 +26,7 @@ import {IWETH} from "../interfaces/root/IWETH.sol";
  *      and also allows us to decouple vendor-specific messaging logic from the bridge logic.
  * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in RootERC20Bridge.
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
+ * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
  */
 contract RootERC20Bridge is
     AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
@@ -162,11 +163,7 @@ contract RootERC20Bridge is
      * @param newRootBridgeAdaptor Address of new root bridge adaptor.
      * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
      */
-    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external {
-        if (!hasRole(ADAPTOR_MANAGER_ROLE, msg.sender)) {
-            revert NotVariableManager(msg.sender);
-        }
-
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
         if (newRootBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
@@ -182,11 +179,10 @@ contract RootERC20Bridge is
      * @dev Can only be called by VARIABLE_MANAGER_ROLE.
      * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
      */
-    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external {
-        if (!hasRole(VARIABLE_MANAGER_ROLE, msg.sender)) {
-            revert NotVariableManager(msg.sender);
-        }
-
+    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit)
+        external
+        onlyRole(VARIABLE_MANAGER_ROLE)
+    {
         if (
             newImxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))
@@ -200,7 +196,12 @@ contract RootERC20Bridge is
     /**
      * @dev method to receive the ETH back from the WETH contract when it is unwrapped
      */
-    receive() external payable {}
+    receive() external payable {
+        // Revert if sender is not the WETH token address
+        if (msg.sender != rootWETHToken) {
+            revert NonWrappedNativeTransfer();
+        }
+    }
 
     /**
      * @inheritdoc IRootERC20Bridge
@@ -235,10 +236,7 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
-     * @dev TODO when this becomes part of the deposit flow on a token's first bridge, this logic will need to be mostly moved into an internal function.
-     *      Additionally, we need to investigate what the ordering guarantees are. i.e. if we send a map token message, then a bridge token message,
-     *      in the same TX (or even very close but separate transactions), is it possible the order gets reversed? This could potentially make some
-     *      first bridges break and we might then have to separate them and wait for the map to be confirmed.
+     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
      */
     function mapToken(IERC20Metadata rootToken) external payable override returns (address) {
         return _mapToken(rootToken);
@@ -254,6 +252,7 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
+     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
         _depositToken(rootToken, msg.sender, amount);
@@ -261,6 +260,7 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
+     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
         _depositToken(rootToken, receiver, amount);
@@ -315,6 +315,9 @@ contract RootERC20Bridge is
     }
 
     function _mapToken(IERC20Metadata rootToken) private returns (address) {
+        if (msg.value == 0) {
+            revert NoGas();
+        }
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -356,6 +359,9 @@ contract RootERC20Bridge is
         }
         if (amount == 0) {
             revert ZeroAmount();
+        }
+        if (msg.value == 0) {
+            revert NoGas();
         }
         if (
             address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT
@@ -419,9 +425,9 @@ contract RootERC20Bridge is
         returns (address rootToken, address childToken, address withdrawer, address receiver, uint256 amount)
     {
         (rootToken, withdrawer, receiver, amount) = abi.decode(data, (address, address, address, uint256));
-        if (address(rootToken) == rootIMXToken) {
+        if (rootToken == rootIMXToken) {
             childToken = NATIVE_IMX;
-        } else if (address(rootToken) == NATIVE_ETH) {
+        } else if (rootToken == NATIVE_ETH) {
             childToken = childETHToken;
        } else {
             childToken = rootTokenToChildToken[rootToken];
@@ -442,10 +448,11 @@ contract RootERC20Bridge is
         // Tests for this NATIVE_ETH branch not yet written. This should come as part of that PR.
         if (rootToken == NATIVE_ETH) {
             Address.sendValue(payable(receiver), amount);
+            emit RootChainETHWithdraw(NATIVE_ETH, childToken, withdrawer, receiver, amount);
         } else {
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+            emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
         // slither-disable-next-line reentrancy-events
-        emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
     }
 }

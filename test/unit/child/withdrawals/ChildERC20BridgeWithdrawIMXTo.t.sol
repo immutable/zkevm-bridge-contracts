@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
     ChildERC20Bridge,
     IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
-import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
@@ -22,6 +18,7 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
+    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     address constant NATIVE_ETH = address(0xeee);
     ChildERC20 public childTokenTemplate;
     ChildERC20 public rootToken;
@@ -50,8 +47,23 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
             ROOT_BRIDGE_ADAPTOR,
             address(childTokenTemplate),
             ROOT_CHAIN_NAME,
-            ROOT_IMX_TOKEN
+            ROOT_IMX_TOKEN,
+            WIMX_TOKEN_ADDRESS
         );
+    }
+
+    function test_RevertsIf_withdrawIMXToCalledWithZeroReciever() public {
+        uint256 withdrawAmount = 7 ether;
+
+        vm.expectRevert(ZeroAddress.selector);
+        childBridge.withdrawIMXTo{value: 1 ether}(address(0), withdrawAmount);
+    }
+
+    function test_RevertsIf_withdrawIMXToCalledWithZeroFee() public {
+        uint256 withdrawAmount = 7 ether;
+
+        vm.expectRevert(NoGas.selector);
+        childBridge.withdrawIMXTo(address(this), withdrawAmount);
     }
 
     function test_RevertsIf_withdrawIMXToCalledWithInsufficientFund() public {
@@ -61,7 +73,7 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         childBridge.withdrawIMXTo{value: withdrawAmount - 1}(address(this), withdrawAmount);
     }
 
-    function test_RevertIf_ZeroAmountIsProvided() public {
+    function test_RevertIf_withdrawIMXToZeroAmountIsProvided() public {
         uint256 withdrawFee = 300;
 
         vm.expectRevert(ZeroAmount.selector);
