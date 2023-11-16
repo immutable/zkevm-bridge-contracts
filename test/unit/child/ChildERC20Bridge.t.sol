@@ -38,7 +38,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
         childBridge.initialize(
@@ -87,7 +86,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
         vm.expectRevert("Initializable: contract is already initialized");
@@ -108,7 +106,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(0),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
 
@@ -122,7 +119,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(0),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
 
@@ -136,36 +132,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(0),
-            variableManager: address(this),
             adaptorManager: address(this)
-        });
-
-        vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
-    }
-
-    function test_RevertIf_InitializeWithAZeroAddressVariableManager() public {
-        ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            variableManager: address(0),
-            adaptorManager: address(this)
-        });
-
-        vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
-    }
-
-    function test_RevertIf_InitializeWithAZeroAddressAdaptorManager() public {
-        ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            variableManager: address(this),
-            adaptorManager: address(0)
         });
 
         vm.expectRevert(ZeroAddress.selector);
@@ -178,7 +145,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
 
@@ -192,7 +158,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
 
@@ -206,7 +171,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
 
@@ -220,7 +184,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
 
@@ -234,7 +197,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
 
@@ -250,7 +212,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
 

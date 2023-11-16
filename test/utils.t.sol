@@ -50,7 +50,6 @@ contract Utils is Test {
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
         childBridge.initialize(

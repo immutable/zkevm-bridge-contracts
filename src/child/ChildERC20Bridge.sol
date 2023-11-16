@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
@@ -25,13 +24,7 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in RootERC20Bridge.
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
-contract ChildERC20Bridge is
-    AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
-    IChildERC20BridgeErrors,
-    IChildERC20Bridge,
-    IChildERC20BridgeEvents,
-    BridgeRoles
-{
+contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildERC20BridgeEvents, BridgeRoles {
     using SafeERC20 for IERC20Metadata;
 
     /// @dev leave this as the first param for the integration tests
@@ -91,8 +84,7 @@ contract ChildERC20Bridge is
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
-                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0)
-                || newWIMXToken == address(0)
+                || newRoles.adaptorManager == address(0) || newWIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -110,7 +102,6 @@ contract ChildERC20Bridge is
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
         _grantRole(UNPAUSER_ROLE, newRoles.unpauser);
-        _grantRole(VARIABLE_MANAGER_ROLE, newRoles.variableManager);
         _grantRole(ADAPTOR_MANAGER_ROLE, newRoles.adaptorManager);
 
         rootERC20BridgeAdaptor = newRootERC20BridgeAdaptor;

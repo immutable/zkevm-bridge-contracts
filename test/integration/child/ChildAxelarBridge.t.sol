@@ -42,7 +42,6 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
         childERC20Bridge.initialize(

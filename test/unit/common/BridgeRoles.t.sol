@@ -9,7 +9,6 @@ contract Setup is Test {
     address admin = makeAddr("admin");
     address pauser = makeAddr("pauser");
     address unpauser = makeAddr("unpauser");
-    address variableManager = makeAddr("variableManager");
     address adaptorManager = makeAddr("adaptorManager");
 
     MockBridgeRoles mockBridgeRoles;
@@ -24,7 +23,6 @@ contract BridgeRoles is Setup {
         vm.startPrank(admin);
         mockBridgeRoles.grantPauserRole(pauser);
         mockBridgeRoles.grantUnpauserRole(unpauser);
-        mockBridgeRoles.grantVariableManagerRole(variableManager);
         mockBridgeRoles.grantAdaptorManagerRole(adaptorManager);
         vm.stopPrank();
     }
@@ -33,7 +31,6 @@ contract BridgeRoles is Setup {
         vm.startPrank(admin);
         mockBridgeRoles.revokePauserRole(pauser);
         mockBridgeRoles.revokeUnpauserRole(unpauser);
-        mockBridgeRoles.revokeVariableManagerRole(variableManager);
         mockBridgeRoles.revokeAdaptorManagerRole(adaptorManager);
         vm.stopPrank();
     }
@@ -42,7 +39,6 @@ contract BridgeRoles is Setup {
         grantRoles();
         assert(mockBridgeRoles.hasRole(mockBridgeRoles.PAUSER_ROLE(), pauser));
         assert(mockBridgeRoles.hasRole(mockBridgeRoles.UNPAUSER_ROLE(), unpauser));
-        assert(mockBridgeRoles.hasRole(mockBridgeRoles.VARIABLE_MANAGER_ROLE(), variableManager));
         assert(mockBridgeRoles.hasRole(mockBridgeRoles.ADAPTOR_MANAGER_ROLE(), adaptorManager));
     }
 
@@ -51,7 +47,6 @@ contract BridgeRoles is Setup {
         revokeRoles();
         assert(!mockBridgeRoles.hasRole(mockBridgeRoles.PAUSER_ROLE(), pauser));
         assert(!mockBridgeRoles.hasRole(mockBridgeRoles.UNPAUSER_ROLE(), unpauser));
-        assert(!mockBridgeRoles.hasRole(mockBridgeRoles.VARIABLE_MANAGER_ROLE(), variableManager));
         assert(!mockBridgeRoles.hasRole(mockBridgeRoles.ADAPTOR_MANAGER_ROLE(), adaptorManager));
     }
 

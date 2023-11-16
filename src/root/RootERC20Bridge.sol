@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -26,17 +25,14 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in RootERC20Bridge.
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
-contract RootERC20Bridge is
-    AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
-    IRootERC20Bridge,
-    IRootERC20BridgeEvents,
-    IRootERC20BridgeErrors,
-    BridgeRoles
-{
+contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors, BridgeRoles {
     using SafeERC20 for IERC20Metadata;
 
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
+
+    /// @notice Role identifier those who can update the cumulative IMX deposit limit.
+    bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER");
 
     uint256 public constant UNLIMITED_DEPOSIT = 0;
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
@@ -122,6 +118,20 @@ contract RootERC20Bridge is
         childBridgeAdaptor = newChildBridgeAdaptor;
         childChain = newChildChain;
         imxCumulativeDepositLimit = newImxCumulativeDepositLimit;
+    }
+
+    /**
+     * @inheritdoc IRootERC20Bridge
+     */
+    function revokeVariableManagerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        revokeRole(VARIABLE_MANAGER_ROLE, account);
+    }
+
+    /**
+     * @inheritdoc IRootERC20Bridge
+     */
+    function grantVariableManagerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        grantRole(VARIABLE_MANAGER_ROLE, account);
     }
 
     /**

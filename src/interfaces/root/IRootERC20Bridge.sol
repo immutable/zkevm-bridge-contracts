@@ -12,6 +12,16 @@ interface IRootERC20Bridge {
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
     }
 
+    /**
+     * @notice Function to revoke variable manager role from an address
+     */
+    function revokeVariableManagerRole(address account) external;
+
+    /**
+     * @notice Function to grant variable manager role to an address
+     */
+    function grantVariableManagerRole(address account) external;
+
     function childBridgeAdaptor() external view returns (string memory);
     /**
      * @notice Receives a bridge message from child chain, parsing the message type then executing.

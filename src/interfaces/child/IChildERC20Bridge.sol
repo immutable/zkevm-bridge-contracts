@@ -9,7 +9,6 @@ interface IChildERC20Bridge {
         address defaultAdmin; // The address which will inherit `DEFAULT_ADMIN_ROLE`.
         address pauser; // The address which will inherit `PAUSER_ROLE`.
         address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
-        address variableManager; // The address which will inherit `VARIABLE_MANAGER_ROLE`.
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
     }
 

@@ -18,9 +18,6 @@ abstract contract BridgeRoles is AccessControlUpgradeable, PausableUpgradeable {
     /// @notice Role identifier for those who can unpause functionality.
     bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER");
 
-    /// @notice Role identifier those who can update the cumulative IMX deposit limit.
-    bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER");
-
     /// @notice Role identifier for those who can update the bridge adaptor.
     bytes32 public constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER");
 
@@ -37,13 +34,6 @@ abstract contract BridgeRoles is AccessControlUpgradeable, PausableUpgradeable {
      */
     function grantUnpauserRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(UNPAUSER_ROLE, account);
-    }
-
-    /**
-     * @notice Function to grant variable manager role to an address
-     */
-    function grantVariableManagerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(VARIABLE_MANAGER_ROLE, account);
     }
 
     /**
@@ -66,13 +56,6 @@ abstract contract BridgeRoles is AccessControlUpgradeable, PausableUpgradeable {
      */
     function revokeUnpauserRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         revokeRole(UNPAUSER_ROLE, account);
-    }
-
-    /**
-     * @notice Function to revoke variable manager role from an address
-     */
-    function revokeVariableManagerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        revokeRole(VARIABLE_MANAGER_ROLE, account);
     }
 
     /**
