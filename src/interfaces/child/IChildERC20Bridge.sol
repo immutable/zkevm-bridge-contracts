@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IChildERC20} from "./IChildERC20.sol";
 
 interface IChildERC20Bridge {
     struct InitializationRoles {
@@ -27,12 +28,66 @@ interface IChildERC20Bridge {
      * @param newBridgeAdaptor The new child chain bridge adaptor address.
      */
     function updateBridgeAdaptor(address newBridgeAdaptor) external;
+
+    /**
+     * @notice Withdraws `amount` of `childToken` to `msg.sender` on the rootchain.
+     * @param childToken The address of the child token to withdraw.
+     * @param amount The amount of tokens to withdraw.
+     */
+    function withdraw(IChildERC20 childToken, uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of `childToken` to `receiver` on the rootchain.
+     * @param childToken The address of the child token to withdraw.
+     * @param receiver The address to withdraw the tokens to.
+     * @param amount The amount of tokens to withdraw.
+     */
+    function withdrawTo(IChildERC20 childToken, address receiver, uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of IMX to `msg.sender` on the rootchain.
+     * @param amount The amount of IMX to withdraw.
+     */
+    function withdrawIMX(uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of IMX to `receiver` on the rootchain.
+     * @param receiver The address to withdraw the IMX to.
+     * @param amount The amount of IMX to withdraw.
+     */
+    function withdrawIMXTo(address receiver, uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of wrapped IMX to `msg.sender` on the rootchain.
+     * @param amount The amount of wrapped IMX to withdraw.
+     */
+    function withdrawWIMX(uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of wrapped IMX to `receiver` on the rootchain.
+     * @param receiver The address to withdraw the wrapped IMX to.
+     * @param amount The amount of wrapped IMX to withdraw.
+     */
+    function withdrawWIMXTo(address receiver, uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of ETH to `msg.sender` on the rootchain.
+     * @param amount The amount of ETH to withdraw.
+     */
+    function withdrawETH(uint256 amount) external payable;
+
+    /**
+     * @notice Withdraws `amount` of ETH to `receiver` on the rootchain.
+     * @param receiver The address to withdraw the ETH to.
+     * @param amount The amount of ETH to withdraw.
+     */
+    function withdrawETHTo(address receiver, uint256 amount) external payable;
 }
 
 interface IChildERC20BridgeEvents {
     /// @notice Emitted when a map token message is received from the root chain and executed successfully.
     event L2TokenMapped(address rootToken, address childToken);
-
+    /// @notice Emitted when a child chain ERC20 token withdrawal is initiated.
     event ChildChainERC20Withdraw(
         address indexed rootToken,
         address indexed childToken,
@@ -40,10 +95,17 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+    /// @notice Emitted when a child chain native IMX token withdrawal is initiated.
     event ChildChainNativeIMXWithdraw(
-        address indexed rootToken, address depositor, address indexed receiver, uint256 amount
+        address indexed rootToken, address indexed depositor, address indexed receiver, uint256 amount
     );
-
+    /// @notice Emitted when a child chain wrapped IMX withdrawal is initiated.
+    event ChildChainWrappedIMXWithdraw(
+        address indexed rootToken, address indexed depositor, address indexed receiver, uint256 amount
+    );
+    /// @notice Emitted when a child chain ETH withdrawal is initiated.
+    event ChildChainEthWithdraw(address indexed depositor, address indexed receiver, uint256 amount);
+    /// @notice Emitted when a root chain ERC20 deposit is completed on the child chain.
     event ChildChainERC20Deposit(
         address indexed rootToken,
         address indexed childToken,
@@ -51,7 +113,9 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
-    event IMXDeposit(address indexed rootToken, address depositor, address indexed receiver, uint256 amount);
+    /// @notice Emitted when a root chain IMX deposit is completed on the child chain.
+    event IMXDeposit(address indexed rootToken, address indexed depositor, address indexed receiver, uint256 amount);
+    /// @notice Emitted when a root chain ETH deposit is completed on the child chain.
     event NativeEthDeposit(
         address indexed rootToken,
         address indexed childToken,
@@ -59,16 +123,18 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+    /// @notice Emitted when a new bridge adaptor is set.
+    event BridgeAdaptorUpdated(address oldBridgeAdaptor, address newBridgeAdaptor);
 }
 
 // TODO add parameters to errors if it makes sense
 interface IChildERC20BridgeErrors {
-    /// @notice Error when the caller is not the variable manager role.
-    error NotVariableManager();
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
     /// @notice Error when the withdrawal amount is zero
     error ZeroAmount();
+    /// @notice Error when a message is sent with no gas payment.
+    error NoGas();
     /// @notice Error when the contract to mint had no bytecode.
     error EmptyTokenContract();
     /// @notice Error when the mint operation failed.
@@ -103,6 +169,10 @@ interface IChildERC20BridgeErrors {
     error IncorrectBridgeAddress();
     /// @notice Error when a call to the given child token's `burn` function fails.
     error BurnFailed();
+    /// @notice Error when a call to WIMX token's `transferFrom` fails.
+    error TransferWIMXFailed();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
+    /// @notice Error when native transfer is sent to contract from non wrapped-token address.
+    error NonWrappedNativeTransfer();
 }

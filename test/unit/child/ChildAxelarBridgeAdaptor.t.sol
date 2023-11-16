@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
@@ -34,7 +33,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         axelarAdaptor.initialize(ROOT_CHAIN_NAME, address(mockChildERC20Bridge), address(mockChildAxelarGasService));
     }
 
-    function test_Constructor_SetsValues() public {
+    function test_Initialize() public {
         assertEq(address(axelarAdaptor.childBridge()), address(mockChildERC20Bridge), "childBridge not set");
         assertEq(address(axelarAdaptor.gateway()), address(mockChildAxelarGateway), "gateway not set");
         assertEq(axelarAdaptor.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");

@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
-import {IRootERC20Bridge, IERC20Metadata} from "../interfaces/root/IRootERC20Bridge.sol";
-import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../interfaces/root/IRootERC20Bridge.sol";
+import {
+    IRootERC20Bridge,
+    IERC20Metadata,
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors
+} from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
@@ -43,7 +45,7 @@ contract RootERC20Bridge is
     bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER_ROLE");
     bytes32 public constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
 
-    uint256 public constant NO_DEPOSIT_LIMIT = 0;
+    uint256 public constant UNLIMITED_DEPOSIT = 0;
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
@@ -108,6 +110,8 @@ contract RootERC20Bridge is
             revert InvalidChildChain();
         }
 
+        __AccessControl_init();
+
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
         _grantRole(UNPAUSER_ROLE, newRoles.unpauser);
@@ -130,13 +134,9 @@ contract RootERC20Bridge is
     /**
      * @notice Updates the root bridge adaptor.
      * @param newRootBridgeAdaptor Address of new root bridge adaptor.
-     * @dev Can only be called by owner.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
      */
-    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external {
-        if (!hasRole(VARIABLE_MANAGER_ROLE, msg.sender)) {
-            revert NotVariableManager();
-        }
-
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
         if (newRootBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
@@ -149,16 +149,15 @@ contract RootERC20Bridge is
     /**
      * @notice Updates the IMX deposit limit.
      * @param newImxCumulativeDepositLimit The new cumulative IMX deposit limit.
-     * @dev Can only be called by owner.
+     * @dev Can only be called by VARIABLE_MANAGER_ROLE.
      * @dev The limit can decrease, but it can never decrease to below the contract's IMX balance.
      */
-    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit) external {
-        if (!hasRole(VARIABLE_MANAGER_ROLE, msg.sender)) {
-            revert NotVariableManager();
-        }
-
+    function updateImxCumulativeDepositLimit(uint256 newImxCumulativeDepositLimit)
+        external
+        onlyRole(VARIABLE_MANAGER_ROLE)
+    {
         if (
-            newImxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+            newImxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && newImxCumulativeDepositLimit < IERC20Metadata(rootIMXToken).balanceOf(address(this))
         ) {
             revert ImxDepositLimitTooLow();
@@ -170,7 +169,12 @@ contract RootERC20Bridge is
     /**
      * @dev method to receive the ETH back from the WETH contract when it is unwrapped
      */
-    receive() external payable {}
+    receive() external payable {
+        // Revert if sender is not the WETH token address
+        if (msg.sender != rootWETHToken) {
+            revert NonWrappedNativeTransfer();
+        }
+    }
 
     /**
      * @inheritdoc IRootERC20Bridge
@@ -284,6 +288,9 @@ contract RootERC20Bridge is
     }
 
     function _mapToken(IERC20Metadata rootToken) private returns (address) {
+        if (msg.value == 0) {
+            revert NoGas();
+        }
         if (address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -326,8 +333,11 @@ contract RootERC20Bridge is
         if (amount == 0) {
             revert ZeroAmount();
         }
+        if (msg.value == 0) {
+            revert NoGas();
+        }
         if (
-            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != NO_DEPOSIT_LIMIT
+            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT
                 && IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit
         ) {
             revert ImxDepositLimitExceeded();
@@ -380,8 +390,10 @@ contract RootERC20Bridge is
         (address rootToken, address withdrawer, address receiver, uint256 amount) =
             abi.decode(data, (address, address, address, uint256));
         address childToken;
-        if (address(rootToken) == rootIMXToken) {
+        if (rootToken == rootIMXToken) {
             childToken = NATIVE_IMX;
+        } else if (rootToken == NATIVE_ETH) {
+            childToken = childETHToken;
         } else {
             childToken = rootTokenToChildToken[rootToken];
             if (childToken == address(0)) {
@@ -402,10 +414,11 @@ contract RootERC20Bridge is
         // Tests for this NATIVE_ETH branch not yet written. This should come as part of that PR.
         if (rootToken == NATIVE_ETH) {
             Address.sendValue(payable(receiver), amount);
+            emit RootChainETHWithdraw(NATIVE_ETH, childToken, withdrawer, receiver, amount);
         } else {
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
+            emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
         // slither-disable-next-line reentrancy-events
-        emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
     }
 }

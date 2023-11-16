@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
@@ -38,20 +38,20 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         vm.deal(address(stubRootBridge), 99999999999);
     }
 
-    function test_Constructor() public {
+    function test_Initialize() public {
         assertEq(address(axelarAdaptor.rootBridge()), address(stubRootBridge), "rootBridge not set");
         assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
         assertEq(address(axelarAdaptor.gateway()), address(mockAxelarGateway), "axelarGateway not set");
         assertEq(address(axelarAdaptor.gasService()), address(axelarGasService), "axelarGasService not set");
     }
 
-    function test_RevertWhen_InitializerGivenZeroAddress() public {
+    function test_RevertWhen_InitializeGivenZeroAddress() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);
         newAdaptor.initialize(address(0), CHILD_CHAIN_NAME, address(axelarGasService));
     }
 
-    function test_RevertWhen_ConstructorGivenEmptyChildChainName() public {
+    function test_RevertWhen_InitializeGivenEmptyChildChainName() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(InvalidChildChain.selector);
         newAdaptor.initialize(address(this), "", address(axelarGasService));

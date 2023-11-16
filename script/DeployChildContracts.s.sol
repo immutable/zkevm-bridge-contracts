@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Script, console2} from "forge-std/Script.sol";
 
@@ -22,21 +22,14 @@ contract DeployChildContracts is Script {
         vm.createSelectFork(childRpcUrl);
         vm.startBroadcast(deployerPrivateKey);
 
+        WIMX wrappedIMX = new WIMX();
+
         ProxyAdmin proxyAdmin = new ProxyAdmin();
 
         ChildERC20 childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(1),
-            pauser: address(2),
-            unpauser: address(3),
-            variableManager: address(4),
-            adaptorManager: address(5)
-        });
-
         ChildERC20Bridge childERC20BridgeImplementation = new ChildERC20Bridge();
-        childERC20BridgeImplementation.initialize(roles, address(1), "0x123", address(1), "root", address(1));
 
         TransparentUpgradeableProxy childERC20BridgeProxy = new TransparentUpgradeableProxy(
             address(childERC20BridgeImplementation),
@@ -53,8 +46,6 @@ contract DeployChildContracts is Script {
             address(proxyAdmin),
             ""
         );
-
-        WIMX wrappedIMX = new WIMX();
 
         vm.stopBroadcast();
 
