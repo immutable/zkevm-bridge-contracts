@@ -61,7 +61,6 @@ interface IRootERC20Bridge {
 
     /**
      * @notice Initiate sending an ETH deposit message to the child chain.
-     * @custom:requires `rootToken` to already be mapped with `mapToken`.
      * @param amount The amount of tokens to deposit.
      */
     function depositETH(uint256 amount) external payable;
