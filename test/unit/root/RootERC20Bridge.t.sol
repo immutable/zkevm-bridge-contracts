@@ -38,6 +38,9 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     MockAxelarGateway public mockAxelarGateway;
     MockAxelarGasService public axelarGasService;
 
+    address pauser = makeAddr("pauser");
+    address unpauser = makeAddr("unpauser");
+
     function setUp() public {
         token = new ERC20PresetMinterPauser("Test", "TST");
         deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), IMX_TOKEN);
@@ -52,8 +55,8 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
             variableManager: address(this),
             adaptorManager: address(this)
         });
@@ -70,6 +73,18 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
+    }
+
+    function pause() private {
+        vm.startPrank(pauser);
+        rootBridge.pause();
+        vm.stopPrank();
+    }
+
+    function unpause() private {
+        vm.startPrank(unpauser);
+        rootBridge.unpause();
+        vm.stopPrank();
     }
 
     /**
@@ -96,7 +111,8 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
         vm.startPrank(caller);
         uint256 bal = address(rootBridge).balance;
-        payable(rootBridge).transfer(1 ether);
+        (bool ok,) = address(rootBridge).call{value: 1 ether}("");
+        assert(ok);
         uint256 postBal = address(rootBridge).balance;
 
         assertEq(bal + 1 ether, postBal, "balance not increased");
@@ -104,7 +120,15 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIfNativeTransferIsFromNonWETH() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
-        payable(rootBridge).transfer(1);
+        (bool ok,) = address(rootBridge).call{value: 1 ether}("");
+        assert(ok);
+    }
+
+    function test_RevertIfNativeTransferWhenPaused() public {
+        pause();
+        vm.expectRevert("Pausable: paused");
+        (bool ok,) = address(rootBridge).call{value: 1 ether}("");
+        assert(ok);
     }
 
     function test_RevertIfInitializeTwice() public {
@@ -434,6 +458,16 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * UPDATE IMX CUMULATIVE DEPOSIT LIMIT
      */
+    function test_RevertsIf_OnMessageRecievedWhenPaused() public {
+        pause();
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), 1000);
+        vm.expectRevert("Pausable: paused");
+        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+    }
+
+    /**
+     * UPDATE IMX CUMULATIVE DEPOSIT LIMIT
+     */
     function test_RevertsIf_IMXDepositLimitTooLow() public {
         uint256 imxCumulativeDepositLimit = 700;
         uint256 depositAmount = imxCumulativeDepositLimit + 1;
@@ -455,6 +489,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * MAP TOKEN
      */
+
+    function test_RevertsIf_MapTokenWhenPaused() public {
+        pause();
+        vm.expectRevert("Pausable: paused");
+        rootBridge.mapToken(token);
+    }
 
     function test_RevertsIf_MapTokenCalledWithZeroFee() public {
         vm.expectRevert(NoGas.selector);
@@ -575,6 +615,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      * DEPOSIT ETH
      */
 
+    function test_RevertsIf_DepositETHWhenPaused() public {
+        pause();
+        vm.expectRevert("Pausable: paused");
+        rootBridge.depositETH{value: 1000}(1000);
+    }
+
     function test_depositETHCallsSendMessage() public {
         uint256 amount = 1000;
         (, bytes memory predictedPayload) = setupDeposit(NATIVE_ETH, rootBridge, mapTokenFee, depositFee, amount, false);
@@ -608,6 +654,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TO ETH
      */
+
+    function test_RevertsIf_DepositToETHWhenPaused() public {
+        pause();
+        vm.expectRevert("Pausable: paused");
+        rootBridge.depositToETH{value: 1000}(address(this), 1000);
+    }
 
     function test_depositToETHCallsSendMessage() public {
         uint256 amount = 1000;
@@ -759,6 +811,13 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TOKEN
      */
+
+    function test_RevertsIf_DepositTokenWhenPaused() public {
+        uint256 amount = 100;
+        pause();
+        vm.expectRevert("Pausable: paused");
+        rootBridge.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN), amount);
+    }
 
     function test_RevertsIf_DepositTokenWithZeroFee() public {
         uint256 amount = 100;
@@ -928,6 +987,12 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSITTO
      */
+
+    function test_RevertsIf_DepositToWhenPaused() public {
+        pause();
+        vm.expectRevert("Pausable: paused");
+        rootBridge.depositTo{value: 1000}(token, address(this), 1000);
+    }
 
     function test_depositToCallsSendMessage() public {
         uint256 amount = 100;
