@@ -75,11 +75,13 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         //Need to setup the flowRate
         rootBridgeFlowRate.setRateControlThreshold(address(token), 1000 ether, 100 ether, 10 ether);
         rootBridgeFlowRate.setRateControlThreshold(IMX_TOKEN_ADDRESS, 1000 ether, 100 ether, 10 ether);
+        rootBridgeFlowRate.setRateControlThreshold(NATIVE_ETH, 1000 ether, 100 ether, 10 ether);
+
         // And give the bridge some tokens
-        token.transfer(address(rootBridge), 100 ether);
-        imxToken.transfer(address(rootBridge), 100 ether);
+        token.transfer(address(rootBridgeFlowRate), 100 ether);
+        imxToken.transfer(address(rootBridgeFlowRate), 100 ether);
         // Give bridge some ETH
-        deal(address(rootBridge), 100 ether);
+        deal(address(rootBridgeFlowRate), 100 ether);
     }
 
     function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
@@ -162,15 +164,15 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
 
         uint256 thisPreBal = address(this).balance;
-        uint256 bridgePreBal = address(rootBridge).balance;
+        uint256 bridgePreBal = address(rootBridgeFlowRate).balance;
 
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
 
         uint256 thisPostBal = address(this).balance;
-        uint256 bridgePostBal = address(rootBridge).balance;
+        uint256 bridgePostBal = address(rootBridgeFlowRate).balance;
 
         assertEq(thisPostBal, thisPreBal + withdrawAmount, "Incorrect user balance after withdraw");
         assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
@@ -219,15 +221,15 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
 
         uint256 receiverPreBal = address(receiver).balance;
-        uint256 bridgePreBal = address(rootBridge).balance;
+        uint256 bridgePreBal = address(rootBridgeFlowRate).balance;
 
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
 
         uint256 receiverPostBal = address(receiver).balance;
-        uint256 bridgePostBal = address(rootBridge).balance;
+        uint256 bridgePostBal = address(rootBridgeFlowRate).balance;
 
         assertEq(receiverPostBal, receiverPreBal + withdrawAmount, "Incorrect user balance after withdraw");
         assertEq(bridgePostBal, bridgePreBal - withdrawAmount, "Incorrect bridge balance after withdraw");
@@ -265,11 +267,11 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
 
         vm.expectEmit();
         emit RootChainETHWithdraw(
-            NATIVE_ETH, address(rootBridge.childETHToken()), address(this), address(this), withdrawAmount
+            NATIVE_ETH, address(rootBridgeFlowRate.childETHToken()), address(this), address(this), withdrawAmount
         );
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
@@ -309,11 +311,11 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridge.childBridgeAdaptor();
+        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
 
         vm.expectEmit();
         emit RootChainETHWithdraw(
-            NATIVE_ETH, address(rootBridge.childETHToken()), address(this), receiver, withdrawAmount
+            NATIVE_ETH, address(rootBridgeFlowRate.childETHToken()), address(this), receiver, withdrawAmount
         );
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }

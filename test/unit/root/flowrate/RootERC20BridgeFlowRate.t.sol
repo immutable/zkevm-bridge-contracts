@@ -127,8 +127,9 @@ contract RootERC20BridgeFlowRateUnitTest is
     }
 
     function activateWithdrawalQueue() internal {
-        vm.prank(rateAdmin);
+        vm.startPrank(rateAdmin);
         rootBridgeFlowRate.activateWithdrawalQueue();
+        vm.stopPrank();
     }
 
      function configureFlowRate() internal {
@@ -136,6 +137,13 @@ contract RootERC20BridgeFlowRateUnitTest is
         rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
         rootBridgeFlowRate.setRateControlThreshold(NATIVE_ETH, CAPACITY_ETH, REFILL_RATE_ETH, LARGE_ETH);
         vm.stopPrank();
+    }
+    function transferTokensToChild() internal {
+        vm.deal(address(this), 1 ether);
+        // Need to first map the token.
+        rootBridgeFlowRate.mapToken{value: 100}(token);
+        // And give the bridge some tokens
+        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
     }
 
     /**
@@ -269,10 +277,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function testWithdrawalUnconfiguredToken() public {
         
-        // Need to first map the token.
-        rootBridgeFlowRate.mapToken(token);
-        // And give the bridge some tokens
-        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+        transferTokensToChild();
 
         uint256 amount = 5;
 
@@ -304,10 +309,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function testWithdrawalLargeWithdrawal() public {
         configureFlowRate();
-        // Need to first map the token.
-        rootBridgeFlowRate.mapToken(token);
-        // And give the bridge some tokens
-        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+        transferTokensToChild();
 
         uint256 amount = LARGE;
 
@@ -339,10 +341,7 @@ contract RootERC20BridgeFlowRateUnitTest is
     function testHighFlowRate() public {
         vm.warp(100);
         configureFlowRate();
-        // Need to first map the token.
-        rootBridgeFlowRate.mapToken(token);
-        // And give the bridge some tokens
-        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+        transferTokensToChild();
 
         uint256 amount = LARGE - 1;
         uint256 timesBeforeHighFlowRate = CAPACITY / amount;
@@ -378,11 +377,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function testFinaliseQueuedWithdrawalERC20() public {
         configureFlowRate();
-       // Need to first map the token.
-        rootBridgeFlowRate.mapToken(token);
-        // And give the bridge some tokens
-        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
-
+        transferTokensToChild();
         activateWithdrawalQueue();
 
         uint256 amount = 5;
@@ -428,10 +423,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function testFinaliseQueuedWithdrawalEther() public {
         configureFlowRate();
-        // Need to first map the token.
-        rootBridgeFlowRate.mapToken(token);
-        // And give the bridge some tokens
-        token.transfer(address(rootBridgeFlowRate), BRIDGED_VALUE);
+        
 
         vm.deal(address(rootBridgeFlowRate), BRIDGED_VALUE_ETH);
 
@@ -475,6 +467,35 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         assertEq(address(rootBridgeFlowRate).balance, BRIDGED_VALUE_ETH - amount, "after Root ERC20 Predicate");
         assertEq(bob.balance, amount, "after bob");
+    }
+
+    function testFinaliseQueuedWithdrawalOutOfBounds() public {
+        configureFlowRate();
+        transferTokensToChild();
+        activateWithdrawalQueue();
+
+        uint256 amount = 5;
+
+        uint256 now1 = 100;
+        vm.warp(now1);
+
+        // Fake a crosschain transfer from the child chain to the root chain.
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, alice, bob, amount);
+
+        vm.prank(address(mockAxelarAdaptor));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(token), alice, bob, amount, now1, 0);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, 1, "bob's queue length");
+
+        uint256 outOfBoundsIndex = 1;
+
+        uint256 now2 = now1 + withdrawalDelay;
+        vm.warp(now2);
+        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.IndexOutsideWithdrawalQueue.selector, 1, outOfBoundsIndex));
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, outOfBoundsIndex);
     }
 
     //  function testWithdrawalWhenPaused() public {
