@@ -42,7 +42,6 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
         childERC20Bridge.initialize(
@@ -309,7 +308,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         address rootAddress = address(0x123);
         {
             // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
-            uint256 rootTokenToChildTokenMappingSlot = 151;
+            uint256 rootTokenToChildTokenMappingSlot = 201;
             address childAddress = address(444444);
             bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);
             bytes32 data = bytes32(uint256(uint160(childAddress)));

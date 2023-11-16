@@ -40,7 +40,6 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
         childBridge = new ChildERC20Bridge();
@@ -103,7 +102,7 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
         /* Then, set rootTokenToChildToken[address(0)] to the child token (to bypass the NotMapped check) */
 
         // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
-        uint256 rootTokenToChildTokenMappingSlot = 151;
+        uint256 rootTokenToChildTokenMappingSlot = 201;
         bytes32 slot = getMappingStorageSlotFor(address(0), rootTokenToChildTokenMappingSlot);
         bytes32 data = bytes32(uint256(uint160(address(childToken))));
 

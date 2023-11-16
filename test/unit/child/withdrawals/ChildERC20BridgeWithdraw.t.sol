@@ -40,7 +40,6 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
         childBridge = new ChildERC20Bridge();
@@ -97,7 +96,7 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
 
         // Slot is 2 because of the Ownable, Initializable contracts coming first.
         // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
-        uint256 rootTokenToChildTokenMappingSlot = 151;
+        uint256 rootTokenToChildTokenMappingSlot = 201;
         bytes32 slot = getMappingStorageSlotFor(address(0), rootTokenToChildTokenMappingSlot);
         bytes32 data = bytes32(uint256(uint160(address(childToken))));
 

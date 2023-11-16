@@ -9,7 +9,6 @@ import {
     ChildERC20Bridge,
     IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";
@@ -45,7 +44,6 @@ contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents,
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            variableManager: address(this),
             adaptorManager: address(this)
         });
         childBridge.initialize(
