@@ -71,11 +71,12 @@ contract BridgeRoles is Setup {
         bytes32 role = mockBridgeRoles.PAUSER_ROLE();
 
         // No role
-        vm.prank(pauser);
+        address noRole = makeAddr("noRole");
+        vm.prank(noRole);
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                StringsUpgradeable.toHexString(pauser),
+                StringsUpgradeable.toHexString(noRole),
                 " is missing role ",
                 StringsUpgradeable.toHexString(uint256(role), 32)
             )
@@ -84,7 +85,6 @@ contract BridgeRoles is Setup {
 
         // Admin role
         vm.startPrank(admin);
-        mockBridgeRoles.grantUnpauserRole(pauser);
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
@@ -113,11 +113,12 @@ contract BridgeRoles is Setup {
         bytes32 role = mockBridgeRoles.UNPAUSER_ROLE();
 
         // No role
-        vm.prank(unpauser);
+        address noRole = makeAddr("noRole");
+        vm.prank(noRole);
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                StringsUpgradeable.toHexString(unpauser),
+                StringsUpgradeable.toHexString(noRole),
                 " is missing role ",
                 StringsUpgradeable.toHexString(uint256(role), 32)
             )
@@ -126,7 +127,6 @@ contract BridgeRoles is Setup {
 
         // Admin role
         vm.startPrank(admin);
-        mockBridgeRoles.grantPauserRole(unpauser);
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
@@ -139,11 +139,11 @@ contract BridgeRoles is Setup {
         vm.stopPrank();
 
         // Pauser role
-        vm.prank(unpauser);
+        vm.prank(pauser);
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                StringsUpgradeable.toHexString(unpauser),
+                StringsUpgradeable.toHexString(pauser),
                 " is missing role ",
                 StringsUpgradeable.toHexString(uint256(role), 32)
             )

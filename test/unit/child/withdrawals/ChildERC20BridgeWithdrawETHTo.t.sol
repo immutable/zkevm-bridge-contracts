@@ -9,7 +9,6 @@ import {
     ChildERC20Bridge,
     IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";

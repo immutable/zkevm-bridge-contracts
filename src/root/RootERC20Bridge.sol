@@ -5,7 +5,6 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {
     IRootERC20Bridge,
     IERC20Metadata,
@@ -13,12 +12,12 @@ import {
     IRootERC20BridgeErrors
 } from "../interfaces/root/IRootERC20Bridge.sol";
 import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
-import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
 
 /**
- * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
+ * @notice RootERC20Bridge is a bridge that allows ERC20 and native tokens to be bridged from the root chain to the child chain
+ * and facilitates the withdrawals of ERC20 and native tokens from the child chain to the root chain.
  * @dev This contract is designed to be upgradeable.
  * @dev Follows a pattern of using a bridge adaptor to communicate with the child chain. This is because the underlying communication protocol may change,
  *      and also allows us to decouple vendor-specific messaging logic from the bridge logic.
@@ -221,10 +220,16 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         return _mapToken(rootToken);
     }
 
+    /**
+     * @inheritdoc IRootERC20Bridge
+     */
     function depositETH(uint256 amount) external payable {
         _depositETH(msg.sender, amount);
     }
 
+    /**
+     * @inheritdoc IRootERC20Bridge
+     */
     function depositToETH(address receiver, uint256 amount) external payable {
         _depositETH(receiver, amount);
     }

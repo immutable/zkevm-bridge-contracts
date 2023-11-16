@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IChildERC20} from "./IChildERC20.sol";
 
 interface IChildERC20Bridge {
