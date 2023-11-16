@@ -497,6 +497,102 @@ contract RootERC20BridgeFlowRateUnitTest is
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, outOfBoundsIndex);
     }
 
+    function testFinaliseQueuedWithdrawalAlreadyProcessed() public {
+        testFinaliseQueuedWithdrawalERC20();
+        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.WithdrawalAlreadyProcessed.selector, bob, 0));
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
+    }
+
+    function testFinaliseQueuedWithdrawalERC20TooEarly() public {
+        configureFlowRate();
+        transferTokensToChild();
+        activateWithdrawalQueue();
+
+        uint256 amount = 5;
+
+        uint256 now1 = 100;
+        vm.warp(now1);
+
+        // Fake a crosschain transfer from the child chain to the root chain.
+        bytes memory data = abi.encode(WITHDRAW_SIG, token, alice, bob, amount);
+
+        vm.prank(address(mockAxelarAdaptor));
+        vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+        emit QueuedWithdrawal(address(token), alice, bob, amount, now1, 0);
+        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+
+        uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, 1, "bob's queue length");
+
+        uint256 now2 = now1 + withdrawalDelay - 1;
+        vm.warp(now2);
+        vm.expectRevert(abi.encodeWithSelector(FlowRateWithdrawalQueue.WithdrawalRequestTooEarly.selector, now2, now1 + withdrawalDelay));
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
+    }
+
+
+    function prepareForERC20AggregatedTest() public returns (uint256) {
+        configureFlowRate();
+        transferTokensToChild();
+        activateWithdrawalQueue();
+
+        uint256 numWithdrawalsToQueue = 10;
+        uint256 now1 = 1000;
+        uint256 amount = 100;
+        uint256 total = 0;
+
+        for (uint256 i = 0; i < numWithdrawalsToQueue; i++) {
+            now1 += 100;
+            vm.warp(now1);
+            amount += 1;
+            total += amount;
+
+            // Fake a crosschain transfer from the child chain to the root chain.
+            bytes memory data = abi.encode(WITHDRAW_SIG, token, alice, bob, amount);
+
+            vm.prank(address(mockAxelarAdaptor));
+            vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+            emit QueuedWithdrawal(address(token), alice, bob, amount, now1, i);
+            rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        }
+
+        uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, numWithdrawalsToQueue, "bob's array length");
+
+        return total;
+    }
+
+    function prepareForEtherAggregatedTest() public returns (uint256) {
+        configureFlowRate();
+        vm.deal(address(rootBridgeFlowRate), BRIDGED_VALUE_ETH);
+        activateWithdrawalQueue();
+
+        uint256 numWithdrawalsToQueue = 10;
+        uint256 now1 = 1000;
+        uint256 amount = 100;
+        uint256 total = 0;
+
+        for (uint256 i = 0; i < numWithdrawalsToQueue; i++) {
+            now1 += 100;
+            vm.warp(now1);
+            amount += 1;
+            total += amount;
+
+            // Fake a crosschain transfer from the child chain to the root chain.
+            bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, alice, bob, amount);
+
+            vm.prank(address(mockAxelarAdaptor));
+            vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
+            emit QueuedWithdrawal(address(NATIVE_ETH), alice, bob, amount, now1, i);
+            rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        }
+
+        uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
+        assertEq(queueLen, numWithdrawalsToQueue, "bob's array length");
+
+        return total;
+    }
+
     //  function testWithdrawalWhenPaused() public {
 
     //      // Need to first map the token.
