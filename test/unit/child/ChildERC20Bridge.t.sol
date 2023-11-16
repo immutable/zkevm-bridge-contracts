@@ -65,7 +65,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_NativeTransferFromWIMX() public {
         address caller = address(0x123a);
         payable(caller).transfer(2 ether);
-       // forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "wIMXToken" 
+        // forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "wIMXToken"
         uint256 wIMXStorageSlot = 208;
         vm.store(address(childBridge), bytes32(wIMXStorageSlot), bytes32(uint256(uint160(caller))));
 

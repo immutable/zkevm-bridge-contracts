@@ -90,7 +90,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_NativeTransferFromWETH() public {
         address caller = address(0x123a);
         payable(caller).transfer(2 ether);
-        // forge inspect src/root/RootERC20Bridge.sol:RootERC20Bridge storageLayout | grep -B3 -A5 -i "rootWETHToken" 
+        // forge inspect src/root/RootERC20Bridge.sol:RootERC20Bridge storageLayout | grep -B3 -A5 -i "rootWETHToken"
         uint256 wETHStorageSlot = 208;
         vm.store(address(rootBridge), bytes32(wETHStorageSlot), bytes32(uint256(uint160(caller))));
 
