@@ -12,6 +12,16 @@ interface IRootERC20Bridge {
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
     }
 
+    /**
+     * @notice Function to revoke variable manager role from an address
+     */
+    function revokeVariableManagerRole(address account) external;
+
+    /**
+     * @notice Function to grant variable manager role to an address
+     */
+    function grantVariableManagerRole(address account) external;
+
     function childBridgeAdaptor() external view returns (string memory);
     /**
      * @notice Receives a bridge message from child chain, parsing the message type then executing.
@@ -32,6 +42,19 @@ interface IRootERC20Bridge {
      * @return childToken The address of the token to be deployed on the child chain.
      */
     function mapToken(IERC20Metadata rootToken) external payable returns (address);
+
+    /**
+     * @notice Deposits `amount` of ETH to `msg.sender` on the child chain.
+     * @param amount The amount of ETH to deposit.
+     */
+    function depositETH(uint256 amount) external payable;
+
+    /**
+     * @notice Deposits `amount` of ETH to `receiver` on the child chain.
+     * @param receiver The address to deposit the ETH to.
+     * @param amount The amount of ETH to deposit.
+     */
+    function depositToETH(address receiver, uint256 amount) external payable;
 
     /**
      * @notice Initiate sending a deposit message to the child chain.

@@ -1,47 +1,31 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {
     IChildERC20BridgeEvents,
     IChildERC20BridgeErrors,
-    IChildERC20Bridge,
-    IERC20Metadata
+    IChildERC20Bridge
 } from "../interfaces/child/IChildERC20Bridge.sol";
 import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWIMX} from "../interfaces/child/IWIMX.sol";
+import {BridgeRoles} from "../common/BridgeRoles.sol";
 
 /**
- * @notice RootERC20Bridge is a bridge that allows ERC20 tokens to be transferred from the root chain to the child chain.
+ * @notice ChildERC20Bridge is a bridge that handles the depositing ERC20 and native tokens to the child chain from the rootchain
+ * and facilates the withdrawals of ERC20 and native tokens from the child chain to the rootchain.
  * @dev This contract is designed to be upgradeable.
- * @dev Follows a pattern of using a bridge adaptor to communicate with the child chain. This is because the underlying communication protocol may change,
+ * @dev Follows a pattern of using a bridge adaptor to communicate with the root chain. This is because the underlying communication protocol may change,
  *      and also allows us to decouple vendor-specific messaging logic from the bridge logic.
- * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in RootERC20Bridge.
+ * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in ChildERC20Bridge.
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
-contract ChildERC20Bridge is
-    AccessControlUpgradeable, // AccessControlUpgradeable inherits Initializable
-    IChildERC20BridgeErrors,
-    IChildERC20Bridge,
-    IChildERC20BridgeEvents
-{
-    using SafeERC20 for IERC20Metadata;
-
+contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildERC20BridgeEvents, BridgeRoles {
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
-
-    /**
-     * ROLES
-     */
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER_ROLE");
-    bytes32 public constant VARIABLE_MANAGER_ROLE = keccak256("VARIABLE_MANAGER_ROLE");
-    bytes32 public constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
@@ -97,8 +81,7 @@ contract ChildERC20Bridge is
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
-                || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0)
-                || newWIMXToken == address(0)
+                || newRoles.adaptorManager == address(0) || newWIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -116,7 +99,6 @@ contract ChildERC20Bridge is
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
         _grantRole(UNPAUSER_ROLE, newRoles.unpauser);
-        _grantRole(VARIABLE_MANAGER_ROLE, newRoles.variableManager);
         _grantRole(ADAPTOR_MANAGER_ROLE, newRoles.adaptorManager);
 
         rootERC20BridgeAdaptor = newRootERC20BridgeAdaptor;

@@ -58,7 +58,6 @@ contract InitializeChildContracts is Script {
             defaultAdmin: params.childAdminAddress,
             pauser: params.childPauserAddress,
             unpauser: params.childUnpauserAddress,
-            variableManager: params.childAdminAddress,
             adaptorManager: params.childAdminAddress
         });
         params.childERC20Bridge.initialize(
