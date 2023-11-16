@@ -100,6 +100,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         }
 
         __AccessControl_init();
+        __Pausable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);

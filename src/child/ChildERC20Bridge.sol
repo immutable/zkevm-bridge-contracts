@@ -95,6 +95,7 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
         }
 
         __AccessControl_init();
+        __Pausable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
