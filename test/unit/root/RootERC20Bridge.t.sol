@@ -16,7 +16,7 @@ import {
 import {MockAxelarGateway} from "../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../src/test/root/MockAxelarGasService.sol";
 import {MockAdaptor} from "../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../utils.t.sol";
+import {Utils, IPausable} from "../../utils.t.sol";
 import {WETH} from "../../../src/test/root/WETH.sol";
 
 contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
@@ -37,9 +37,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     MockAdaptor public mockAxelarAdaptor;
     MockAxelarGateway public mockAxelarGateway;
     MockAxelarGasService public axelarGasService;
-
-    address pauser = makeAddr("pauser");
-    address unpauser = makeAddr("unpauser");
 
     function setUp() public {
         token = new ERC20PresetMinterPauser("Test", "TST");
@@ -73,18 +70,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
-    }
-
-    function pause() private {
-        vm.startPrank(pauser);
-        rootBridge.pause();
-        vm.stopPrank();
-    }
-
-    function unpause() private {
-        vm.startPrank(unpauser);
-        rootBridge.unpause();
-        vm.stopPrank();
     }
 
     /**
@@ -125,10 +110,17 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIfNativeTransferWhenPaused() public {
-        pause();
+        pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
         (bool ok,) = address(rootBridge).call{value: 1 ether}("");
         assert(ok);
+    }
+
+    function test_NativeTransferResumesFunctionalityAfterPausing() public {
+        test_RevertIfNativeTransferWhenPaused();
+        unpause(IPausable(address(rootBridge)));
+        // Expect success case to pass
+        test_NativeTransferFromWETH();
     }
 
     function test_RevertIfInitializeTwice() public {
@@ -459,7 +451,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      * ON MESSAGE RECEIVED
      */
     function test_RevertsIf_OnMessageRecievedWhenPaused() public {
-        pause();
+        pause(IPausable(address(rootBridge)));
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), 1000);
         vm.expectRevert("Pausable: paused");
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
@@ -467,7 +459,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_OnMessageRecieveResumesFunctionalityAfterPausing() public {
         test_RevertsIf_OnMessageRecievedWhenPaused();
-        unpause();
+        unpause(IPausable(address(rootBridge)));
         // Expect revert on standard flow, not on pause
         vm.expectRevert(NotBridgeAdaptor.selector);
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), 1000);
@@ -500,14 +492,14 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      */
 
     function test_RevertsIf_MapTokenWhenPaused() public {
-        pause();
+        pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
         rootBridge.mapToken(token);
     }
 
     function test_MapTokenResumesFunctionalityAfterPausing() public {
         test_RevertsIf_MapTokenWhenPaused();
-        unpause();
+        unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
         test_mapToken_EmitsTokenMappedEvent();
     }
@@ -632,14 +624,14 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      */
 
     function test_RevertsIf_DepositETHWhenPaused() public {
-        pause();
+        pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
         rootBridge.depositETH{value: 1000}(1000);
     }
 
     function test_DeposithETHResumesFunctionalityAfterPausing() public {
         test_RevertsIf_DepositETHWhenPaused();
-        unpause();
+        unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
         test_depositETHCallsSendMessage();
     }
@@ -679,14 +671,14 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      */
 
     function test_RevertsIf_DepositToETHWhenPaused() public {
-        pause();
+        pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
         rootBridge.depositToETH{value: 1000}(address(this), 1000);
     }
 
     function test_DepositToETHResumesFunctionalityAfterPausing() public {
         test_RevertsIf_DepositToETHWhenPaused();
-        unpause();
+        unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
         test_depositToETHCallsSendMessage();
     }
@@ -844,14 +836,14 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertsIf_DepositTokenWhenPaused() public {
         uint256 amount = 100;
-        pause();
+        pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
         rootBridge.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN), amount);
     }
 
     function test_DepositTokenResumesFunctionalityAfterPausing() public {
         test_RevertsIf_DepositTokenWhenPaused();
-        unpause();
+        unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
         test_depositCallsSendMessage();
     }
@@ -1026,14 +1018,14 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
      */
 
     function test_RevertsIf_DepositToWhenPaused() public {
-        pause();
+        pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
         rootBridge.depositTo{value: 1000}(token, address(this), 1000);
     }
 
     function test_DepositToResumesFunctionalityAfterPausing() public {
         test_RevertsIf_DepositToWhenPaused();
-        unpause();
+        unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
         test_depositToCallsSendMessage();
     }

@@ -17,9 +17,30 @@ import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 
+interface IPausable {
+    function pause() external;
+
+    function unpause() external;
+}
+
 contract Utils is Test {
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
+
+    address pauser = makeAddr("pauser");
+    address unpauser = makeAddr("unpauser");
+
+    function pause(IPausable bridge) public {
+        vm.startPrank(pauser);
+        bridge.pause();
+        vm.stopPrank();
+    }
+
+    function unpause(IPausable bridge) public {
+        vm.startPrank(unpauser);
+        bridge.unpause();
+        vm.stopPrank();
+    }
 
     function childIntegrationSetup()
         public

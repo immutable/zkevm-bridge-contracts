@@ -11,7 +11,7 @@ import {
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../../utils.t.sol";
+import {Utils, IPausable} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
@@ -36,8 +36,8 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
         childBridge = new ChildERC20Bridge();
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
             adaptorManager: address(this)
         });
         childBridge.initialize(
@@ -49,6 +49,23 @@ contract ChildERC20BridgeWithdrawIMXToUnitTest is Test, IChildERC20BridgeEvents,
             ROOT_IMX_TOKEN,
             WIMX_TOKEN_ADDRESS
         );
+    }
+
+    /**
+     * WITHDRAW IMX TO
+     */
+
+    function test_RevertsIf_WithdrawIMXToWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        childBridge.withdrawIMXTo{value: 1 ether}(address(this), 100);
+    }
+
+    function test_WithdrawIMXToResumesFunctionalityAfterPausing() public {
+        test_RevertsIf_WithdrawIMXToWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_withdrawIMXTo_CallsBridgeAdaptor();
     }
 
     function test_RevertsIf_withdrawIMXToCalledWithZeroReciever() public {

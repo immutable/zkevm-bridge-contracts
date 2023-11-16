@@ -11,7 +11,7 @@ import {
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../../utils.t.sol";
+import {Utils, IPausable} from "../../../utils.t.sol";
 import {WIMX} from "../../../../src/child/WIMX.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
@@ -38,8 +38,8 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
         childBridge = new ChildERC20Bridge();
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
             adaptorManager: address(this)
         });
         childBridge.initialize(
@@ -53,14 +53,31 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
         );
     }
 
-    function test_RevertsIf_withdrawWIMXToCalledWithZeroReciever() public {
+    /**
+     * WITHDRAW WIMX TO
+     */
+
+    function test_RevertsIf_WithdrawIMXToWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        childBridge.withdrawWIMXTo{value: 1 ether}(address(this), 100);
+    }
+
+    function test_WithdrawIMXToResumesFunctionalityAfterPausing() public {
+        test_RevertsIf_WithdrawIMXToWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_WithdrawWIMXTo_CallsBridgeAdaptor();
+    }
+
+    function test_RevertsIf_WithdrawWIMXToCalledWithZeroReciever() public {
         uint256 withdrawAmount = 7 ether;
 
         vm.expectRevert(ZeroAddress.selector);
         childBridge.withdrawWIMXTo{value: 1 ether}(address(0), withdrawAmount);
     }
 
-    function test_RevertsIf_withdrawWIMXToCalledWithZeroFee() public {
+    function test_RevertsIf_WithdrawWIMXToCalledWithZeroFee() public {
         uint256 withdrawAmount = 7 ether;
 
         vm.expectRevert(NoGas.selector);
