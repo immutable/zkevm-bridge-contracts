@@ -49,16 +49,6 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
     address public wIMXToken;
 
     /**
-     * @notice Fallback function on recieving native IMX from WIMX contract.
-     */
-    receive() external payable {
-        // Revert if sender is not the WIMX token address
-        if (msg.sender != wIMXToken) {
-            revert NonWrappedNativeTransfer();
-        }
-    }
-
-    /**
      * @notice Initialization function for ChildERC20Bridge.
      * @param newRoles Struct containing addresses of roles.
      * @param newBridgeAdaptor Address of StateSender to send deposit information to.
@@ -131,11 +121,22 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
     }
 
     /**
+     * @notice Fallback function on recieving native IMX from WIMX contract.
+     */
+    receive() external payable whenNotPaused {
+        // Revert if sender is not the WIMX token address
+        if (msg.sender != wIMXToken) {
+            revert NonWrappedNativeTransfer();
+        }
+    }
+
+    /**
      * @inheritdoc IChildERC20Bridge
      */
     function onMessageReceive(string calldata messageSourceChain, string calldata sourceAddress, bytes calldata data)
         external
         override
+        whenNotPaused
     {
         if (msg.sender != address(bridgeAdaptor)) {
             revert NotBridgeAdaptor();
@@ -233,7 +234,7 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
      * - `childToken` must be mapped.
      * - `childToken` must have a the bridge set.
      */
-    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private {
+    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private whenNotPaused {
         if (childTokenAddr == address(0) || receiver == address(0)) {
             revert ZeroAddress();
         }

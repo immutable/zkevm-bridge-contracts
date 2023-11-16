@@ -171,9 +171,9 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
     }
 
     /**
-     * @dev method to receive the ETH back from the WETH contract when it is unwrapped
+     * @notice method to receive the ETH back from the WETH contract when it is unwrapped
      */
-    receive() external payable whenNotPaused() {
+    receive() external payable whenNotPaused {
         // Revert if sender is not the WETH token address
         if (msg.sender != rootWETHToken) {
             revert NonWrappedNativeTransfer();

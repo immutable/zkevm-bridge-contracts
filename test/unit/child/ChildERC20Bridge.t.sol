@@ -26,6 +26,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     address public childETHToken;
     ChildERC20Bridge public childBridge;
 
+    address pauser = makeAddr("pauser");
+    address unpauser = makeAddr("unpauser");
+
     function setUp() public {
         rootToken = new ChildERC20();
         rootToken.initialize(address(456), "Test", "TST", 18);
@@ -36,8 +39,8 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge = new ChildERC20Bridge();
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
             adaptorManager: address(this)
         });
         childBridge.initialize(
@@ -49,6 +52,18 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
             ROOT_IMX_TOKEN,
             CHILD_WIMX_TOKEN
         );
+    }
+
+    function pause() private {
+        vm.startPrank(pauser);
+        childBridge.pause();
+        vm.stopPrank();
+    }
+
+    function unpause() private {
+        vm.startPrank(unpauser);
+        childBridge.unpause();
+        vm.stopPrank();
     }
 
     function test_Initialize() public {
@@ -70,7 +85,8 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         vm.startPrank(caller);
         uint256 bal = address(childBridge).balance;
-        payable(childBridge).transfer(1 ether);
+        (bool ok,) = address(childBridge).call{value: 1 ether}("");
+        assert(ok);
         uint256 postBal = address(childBridge).balance;
 
         assertEq(bal + 1 ether, postBal, "balance not increased");
@@ -78,7 +94,8 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_RevertIfNativeTransferIsFromNonWIMX() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
-        payable(childBridge).transfer(1 ether);
+        (bool ok,) = address(childBridge).call{value: 1 ether}("");
+        assert(ok);
     }
 
     function test_RevertIfInitializeTwice() public {
