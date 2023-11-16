@@ -44,19 +44,6 @@ interface IRootERC20Bridge {
     function mapToken(IERC20Metadata rootToken) external payable returns (address);
 
     /**
-     * @notice Deposits `amount` of ETH to `msg.sender` on the child chain.
-     * @param amount The amount of ETH to deposit.
-     */
-    function depositETH(uint256 amount) external payable;
-
-    /**
-     * @notice Deposits `amount` of ETH to `receiver` on the child chain.
-     * @param receiver The address to deposit the ETH to.
-     * @param amount The amount of ETH to deposit.
-     */
-    function depositToETH(address receiver, uint256 amount) external payable;
-
-    /**
      * @notice Initiate sending a deposit message to the child chain.
      * @custom:requires `rootToken` to already be mapped with `mapToken`.
      * @param rootToken The address of the token on the root chain.
