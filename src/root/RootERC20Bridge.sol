@@ -421,8 +421,6 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         address receiver,
         uint256 amount
     ) internal whenNotPaused {
-        // TODO when withdrawing ETH/WETH, this next section will also need to check for the withdrawal of WETH (i.e. rootToken == NATIVE_ETH || rootToken == CHILD_WETH)
-        // Tests for this NATIVE_ETH branch not yet written. This should come as part of that PR.
         if (rootToken == NATIVE_ETH) {
             Address.sendValue(payable(receiver), amount);
             emit RootChainETHWithdraw(NATIVE_ETH, childToken, withdrawer, receiver, amount);
