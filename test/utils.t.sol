@@ -137,7 +137,6 @@ contract Utils is Test {
             wethTokenAddress,
             childBridgeName,
             imxCumulativeDepositLimit,
-            address(this),
             address(this)
         );
 

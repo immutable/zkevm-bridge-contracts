@@ -148,7 +148,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         mockAxelarAdaptor = new MockAdaptor();
 
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
+            defaultAdmin: superAdmin,
             pauser: pauseAdmin,
             unpauser: unpauseAdmin,
             variableManager: address(this),
@@ -166,8 +166,7 @@ contract RootERC20BridgeFlowRateUnitTest is
             WRAPPED_ETH,
             CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS,
-            rateAdmin,
-            superAdmin
+            rateAdmin
         );
 
         withdrawalDelay = rootBridgeFlowRate.withdrawalDelay();
@@ -243,7 +242,6 @@ contract RootERC20BridgeFlowRateUnitTest is
             WRAPPED_ETH,
             CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS,
-            address(this),
             address(this)
         );
     }
@@ -291,32 +289,6 @@ contract RootERC20BridgeFlowRateUnitTest is
             WRAPPED_ETH,
             CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS,
-            address(0),
-            address(this)
-        );
-    }
-
-    function test_RevertIf_InitializeWithAZeroAddressSuperAdmin() public {
-        RootERC20BridgeFlowRate newRootBridgeFlowRate = new RootERC20BridgeFlowRate();
-        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            variableManager: address(0),
-            adaptorManager: address(this)
-        });
-        vm.expectRevert(ZeroAddress.selector);
-         newRootBridgeFlowRate.initialize(
-            roles,
-            address(mockAxelarAdaptor),
-            CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(token),
-            IMX_TOKEN,
-            WRAPPED_ETH,
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS,
-            address(this),
             address(0)
         );
     }
@@ -437,7 +409,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, token, alice, bob, amount);
 
         vm.prank(address(mockAxelarAdaptor));
-        vm.expectRevert(abi.encodePacked("Pausable: paused"));
+        vm.expectRevert("Pausable: paused");
         rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
@@ -462,7 +434,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         vm.warp(now1 + withdrawalDelay);
 
-        vm.expectRevert(abi.encodePacked("Pausable: paused"));
+        vm.expectRevert("Pausable: paused");
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
     }
 
@@ -490,7 +462,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         uint256[] memory indices = new uint256[](1);
         indices[0] = 0;
 
-        vm.expectRevert(abi.encodePacked("Pausable: paused"));
+        vm.expectRevert("Pausable: paused");
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(token), indices);
     }
 
@@ -498,10 +470,11 @@ contract RootERC20BridgeFlowRateUnitTest is
         pause();
 
         token.mint(charlie, BANK_OF_CHARLIE_TREASURY);
+        vm.deal(charlie, 1 ether);
         vm.startPrank(charlie);
         token.approve(address(rootBridgeFlowRate), BRIDGED_VALUE);
-        vm.expectRevert(abi.encodePacked("Pausable: paused"));
-        rootBridgeFlowRate.deposit(token, BRIDGED_VALUE);
+        vm.expectRevert("Pausable: paused");
+        rootBridgeFlowRate.deposit{value: 100}(token, BRIDGED_VALUE);
     }
 
     function testDepositToWhenPaused() public {
@@ -510,7 +483,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         token.mint(charlie, BANK_OF_CHARLIE_TREASURY);
         vm.startPrank(charlie);
         token.approve(address(rootBridgeFlowRate), BRIDGED_VALUE);
-        vm.expectRevert(abi.encodePacked("Pausable: paused"));
+        vm.expectRevert("Pausable: paused");
         rootBridgeFlowRate.depositTo(token, alice, BRIDGED_VALUE);
     }
 
@@ -520,7 +493,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.deal(charlie, 1 ether);
 
         vm.startPrank(charlie);
-        vm.expectRevert(abi.encodePacked("Pausable: paused"));
+        vm.expectRevert("Pausable: paused");
         rootBridgeFlowRate.depositETH{value: 1 ether}(0.99 ether);
     }
 
@@ -530,9 +503,10 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.deal(charlie, 1 ether);
 
         vm.startPrank(charlie);
-        vm.expectRevert(abi.encodePacked("Pausable: paused"));
+        vm.expectRevert("Pausable: paused");
         rootBridgeFlowRate.depositToETH{value: 1 ether}(alice, 0.99 ether);
     }
+
 
     /**
      * FLOW RATE WITHDRAW
@@ -1041,7 +1015,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         uint256 now2 = now1 + withdrawalDelay;
         vm.warp(now2);
-        vm.expectRevert(abi.encodePacked("ReentrancyGuard: reentrant call"));
+        vm.expectRevert("ReentrancyGuard: reentrant call");
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
     }
 
@@ -1082,29 +1056,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         uint256 now2 = now1 + withdrawalDelay;
         vm.warp(now2);
-        vm.expectRevert(abi.encodePacked("ReentrancyGuard: reentrant call"));
+        vm.expectRevert("ReentrancyGuard: reentrant call");
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(attackToken), indices);
     }
-
-    //  function testWithdrawalWhenPaused() public {
-
-    //      // Need to first map the token.
-    //     rootBridgeFlowRate.mapToken(token);
-    //     // And give the bridge some tokens
-    //     token.transfer(address(rootBridgeFlowRate), 100 ether);
-
-    //     configureFlowRate();
-
-    //     uint256 amount = 5 ether;
-
-    //     // Fake a crosschain transfer from the child chain to the root chain.
-    //     bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), amount);
-
-    //     vm.prank(address(mockAxelarAdaptor));
-    //     rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
-    // }
-
-    /**
-     * PROCESS QUEUED WITHDRAWALS
-     */
 }
