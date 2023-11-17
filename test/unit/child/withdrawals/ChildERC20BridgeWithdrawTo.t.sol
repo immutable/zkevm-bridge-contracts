@@ -11,7 +11,7 @@ import {
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20, ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../../utils.t.sol";
+import {Utils, IPausable} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
@@ -38,8 +38,8 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
 
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
             adaptorManager: address(this)
         });
         childBridge = new ChildERC20Bridge();
@@ -65,7 +65,24 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
         childToken.approve(address(childBridge), 1000000 ether);
     }
 
-    function test_RevertsIf_WithdrawToCalledWithZeroReciever() public {
+    /**
+     * WITHDRAW  TO
+     */
+
+    function test_RevertsIf_WithdrawToWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        childBridge.withdrawTo{value: 1 ether}(IChildERC20(address(childToken)), address(this), 100);
+    }
+
+    function test_WithdrawToResumesFunctionalityAfterUnpausing() public {
+        test_RevertsIf_WithdrawToWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_withdrawTo_CallsBridgeAdaptor();
+    }
+
+    function test_RevertsIf_WithdrawToCalledWithZeroReceiver() public {
         uint256 withdrawAmount = 300;
 
         vm.expectRevert(ZeroAddress.selector);

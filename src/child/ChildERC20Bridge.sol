@@ -49,16 +49,6 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
     address public wIMXToken;
 
     /**
-     * @notice Fallback function on recieving native IMX from WIMX contract.
-     */
-    receive() external payable {
-        // Revert if sender is not the WIMX token address
-        if (msg.sender != wIMXToken) {
-            revert NonWrappedNativeTransfer();
-        }
-    }
-
-    /**
      * @notice Initialization function for ChildERC20Bridge.
      * @param newRoles Struct containing addresses of roles.
      * @param newBridgeAdaptor Address of StateSender to send deposit information to.
@@ -95,6 +85,7 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
         }
 
         __AccessControl_init();
+        __Pausable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
@@ -130,11 +121,22 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
     }
 
     /**
+     * @notice Fallback function on receiving native IMX from WIMX contract.
+     */
+    receive() external payable whenNotPaused {
+        // Revert if sender is not the WIMX token address
+        if (msg.sender != wIMXToken) {
+            revert NonWrappedNativeTransfer();
+        }
+    }
+
+    /**
      * @inheritdoc IChildERC20Bridge
      */
     function onMessageReceive(string calldata messageSourceChain, string calldata sourceAddress, bytes calldata data)
         external
         override
+        whenNotPaused
     {
         if (msg.sender != address(bridgeAdaptor)) {
             revert NotBridgeAdaptor();
@@ -225,14 +227,14 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
      * Requirements:
      *
      * - `childTokenAddr` must not be the zero address.
-     * - `reciever` must not be the zero address.
+     * - `receiver` must not be the zero address.
      * - `amount` must be greater than zero.
      * - `msg.value` must be greater than zero.
      * - `childToken` must exist.
      * - `childToken` must be mapped.
      * - `childToken` must have a the bridge set.
      */
-    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private {
+    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private whenNotPaused {
         if (childTokenAddr == address(0) || receiver == address(0)) {
             revert ZeroAddress();
         }

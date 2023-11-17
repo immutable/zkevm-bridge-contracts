@@ -100,6 +100,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         }
 
         __AccessControl_init();
+        __Pausable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
@@ -170,9 +171,9 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
     }
 
     /**
-     * @dev method to receive the ETH back from the WETH contract when it is unwrapped
+     * @notice method to receive the ETH back from the WETH contract when it is unwrapped
      */
-    receive() external payable {
+    receive() external payable whenNotPaused {
         // Revert if sender is not the WETH token address
         if (msg.sender != rootWETHToken) {
             revert NonWrappedNativeTransfer();
@@ -187,6 +188,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
     function onMessageReceive(string calldata messageSourceChain, string calldata sourceAddress, bytes calldata data)
         external
         override
+        whenNotPaused
     {
         if (msg.sender != address(rootBridgeAdaptor)) {
             revert NotBridgeAdaptor();
@@ -214,7 +216,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
      * @inheritdoc IRootERC20Bridge
      * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
      */
-    function mapToken(IERC20Metadata rootToken) external payable override returns (address) {
+    function mapToken(IERC20Metadata rootToken) external payable override whenNotPaused returns (address) {
         return _mapToken(rootToken);
     }
 
@@ -335,7 +337,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         return childToken;
     }
 
-    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private {
+    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private whenNotPaused {
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -418,9 +420,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         address withdrawer,
         address receiver,
         uint256 amount
-    ) internal {
-        // TODO when withdrawing ETH/WETH, this next section will also need to check for the withdrawal of WETH (i.e. rootToken == NATIVE_ETH || rootToken == CHILD_WETH)
-        // Tests for this NATIVE_ETH branch not yet written. This should come as part of that PR.
+    ) internal whenNotPaused {
         if (rootToken == NATIVE_ETH) {
             Address.sendValue(payable(receiver), amount);
             emit RootChainETHWithdraw(NATIVE_ETH, childToken, withdrawer, receiver, amount);
