@@ -57,7 +57,7 @@ contract RootERC20BridgeFlowRate is
         );
 
         __FlowRateWithdrawalQueue_init();
-
+        __ReentrancyGuard_init();
         _grantRole(DEFAULT_ADMIN_ROLE, superAdmin);
         _grantRole(RATE_CONTROL_ROLE, rateAdmin);
     }
