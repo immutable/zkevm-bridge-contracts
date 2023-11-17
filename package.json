@@ -59,12 +59,5 @@
     },
     "optionalDependencies": {
         "@axelar-network/axelar-local-dev-aptos": "^2.1.1-alpha.4"
-    },
-    "resolutions": {
-        "@nomicfoundation/hardhat-chai-matchers/ethers": "6.8.1",
-        "@nomicfoundation/hardhat-ethers/ethers": "6.8.1",
-        "@nomicfoundation/hardhat-toolbox/ethers": "6.8.1",
-        "@typechain/ethers-v6/ethers": "6.8.1",
-        "@typechain/hardhat/ethers": "6.8.1"
     }
 }
