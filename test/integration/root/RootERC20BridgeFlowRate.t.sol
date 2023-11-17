@@ -13,7 +13,12 @@ import {RootAxelarBridgeAdaptor, IRootAxelarBridgeAdaptorEvents} from "../../../
 import {Utils} from "../../utils.t.sol";
 import {WETH} from "../../../src/test/root/WETH.sol";
 
-contract RootERC20BridgeFlowRateIntegrationTest is Test, IRootERC20BridgeEvents, IRootAxelarBridgeAdaptorEvents, Utils {
+contract RootERC20BridgeFlowRateIntegrationTest is
+    Test,
+    IRootERC20BridgeEvents,
+    IRootAxelarBridgeAdaptorEvents,
+    Utils
+{
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";

@@ -38,7 +38,6 @@ contract RootERC20BridgeFlowRate is
         uint256 newImxCumulativeDepositLimit,
         address rateAdmin
     ) external initializer {
-
         if (rateAdmin == address(0)) {
             revert ZeroAddress();
         }
@@ -158,7 +157,15 @@ contract RootERC20BridgeFlowRate is
         uint256 previousLargeTransferThreshold = largeTransferThresholds[token];
         _setFlowRateThreshold(token, capacity, refillRate);
         largeTransferThresholds[token] = largeTransferThreshold;
-        emit RateControlThresholdSet(token, capacity, refillRate, largeTransferThreshold, previousCapacity, previousRefillRate, previousLargeTransferThreshold);
+        emit RateControlThresholdSet(
+            token,
+            capacity,
+            refillRate,
+            largeTransferThreshold,
+            previousCapacity,
+            previousRefillRate,
+            previousLargeTransferThreshold
+        );
     }
 
     /**

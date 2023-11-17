@@ -11,8 +11,13 @@ interface IRootERC20BridgeFlowRateEvents {
      *         and will be put in the withdrawal queue.
      */
     event RateControlThresholdSet(
-        address indexed token, uint256 capacity, uint256 refillRate, uint256 largeTransferThreshold, 
-        uint256 previousCapacity, uint256 previousRefillRate, uint256 previousLargeTransferThreshold
+        address indexed token,
+        uint256 capacity,
+        uint256 refillRate,
+        uint256 largeTransferThreshold,
+        uint256 previousCapacity,
+        uint256 previousRefillRate,
+        uint256 previousLargeTransferThreshold
     );
 
     /**

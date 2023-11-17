@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 interface IFlowRateWithdrawalQueueEvents {
-   // Indicates a withdrawal has been queued.
+    // Indicates a withdrawal has been queued.
     event EnQueuedWithdrawal(
         address indexed token,
         address indexed withdrawer,
@@ -19,11 +19,10 @@ interface IFlowRateWithdrawalQueueEvents {
 
     // Indicates that the new withdrawal delay.
     event WithdrawalDelayUpdated(uint256 delay, uint256 previousDelay);
-
 }
 
 interface IFlowRateWithdrawalQueueErrors {
-   // // A withdrawal was being processed, but the index is outside of the array.
+    // // A withdrawal was being processed, but the index is outside of the array.
     error IndexOutsideWithdrawalQueue(uint256 lengthOfQueue, uint256 requestedIndex);
 
     // A withdrawal was being processed, but the withdrawal is not yet available.

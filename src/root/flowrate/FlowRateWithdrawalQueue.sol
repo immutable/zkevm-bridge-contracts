@@ -19,10 +19,7 @@ import {
  *         to make it easier to understand the functionality.
  *         Note that this contract is upgradeable.
  */
-abstract contract FlowRateWithdrawalQueue is
-    IFlowRateWithdrawalQueueEvents,
-    IFlowRateWithdrawalQueueErrors
-{
+abstract contract FlowRateWithdrawalQueue is IFlowRateWithdrawalQueueEvents, IFlowRateWithdrawalQueueErrors {
     // One day in seconds.
     uint256 private constant DEFAULT_WITHDRAW_DELAY = 1 days;
 
