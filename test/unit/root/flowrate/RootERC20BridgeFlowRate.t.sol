@@ -75,6 +75,7 @@ contract RootERC20BridgeFlowRateUnitTest is
     IFlowRateWithdrawalQueueErrors,
     Utils
 {
+
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
@@ -102,6 +103,8 @@ contract RootERC20BridgeFlowRateUnitTest is
     uint256 constant BRIDGED_VALUE_ETH = CAPACITY_ETH * 100;
 
     bytes32 internal constant RATE_CONTROL_ROLE = keccak256("RATE");
+    bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER");
+    bytes32 internal constant UNPAUSER_ROLE = keccak256("UNPAUSER");
 
     address alice;
     address bob;
@@ -279,7 +282,7 @@ contract RootERC20BridgeFlowRateUnitTest is
             adaptorManager: address(this)
         });
         vm.expectRevert(ZeroAddress.selector);
-        newRootBridgeFlowRate.initialize(
+         newRootBridgeFlowRate.initialize(
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
@@ -305,7 +308,14 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function testActivateWithdrawalQueueBadAuth() public {
         vm.prank(nonAdmin);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(nonAdmin),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(RATE_CONTROL_ROLE), 32)
+            )
+        );
         rootBridgeFlowRate.activateWithdrawalQueue();
     }
 
@@ -319,7 +329,14 @@ contract RootERC20BridgeFlowRateUnitTest is
     function testDeactivateWithdrawalQueueBadAuth() public {
         activateWithdrawalQueue();
         vm.prank(nonAdmin);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(nonAdmin),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(RATE_CONTROL_ROLE), 32)
+            )
+        );
         rootBridgeFlowRate.deactivateWithdrawalQueue();
     }
 
@@ -333,7 +350,14 @@ contract RootERC20BridgeFlowRateUnitTest is
     function testSetWithdrawalDelayBadAuth() public {
         uint256 delay = 1000;
         vm.prank(nonAdmin);
-        vm.expectRevert();
+       vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(nonAdmin),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(RATE_CONTROL_ROLE), 32)
+            )
+        );
         rootBridgeFlowRate.setWithdrawalDelay(delay);
     }
 
@@ -352,7 +376,14 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function testSetRateControlThresholdBadAuth() public {
         vm.prank(nonAdmin);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(nonAdmin),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(RATE_CONTROL_ROLE), 32)
+            )
+        );
         rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
     }
 
@@ -366,7 +397,14 @@ contract RootERC20BridgeFlowRateUnitTest is
     function testGrantRoleBadAuth() public {
         bytes32 role = RATE_CONTROL_ROLE;
         vm.prank(pauseAdmin);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(pauseAdmin),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(0x00), 32)
+            )
+        );
         rootBridgeFlowRate.grantRole(role, pauseAdmin);
     }
 
@@ -378,7 +416,14 @@ contract RootERC20BridgeFlowRateUnitTest is
 
     function testPauseBadAuth() public {
         vm.prank(unpauseAdmin);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(unpauseAdmin),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(PAUSER_ROLE), 32)
+            )
+        );
         rootBridgeFlowRate.pause();
     }
 
@@ -391,9 +436,17 @@ contract RootERC20BridgeFlowRateUnitTest is
     }
 
     function testUnpauseBadAuth() public {
-        vm.prank(pauseAdmin);
+        vm.startPrank(pauseAdmin);
         rootBridgeFlowRate.pause();
-        vm.expectRevert();
+        vm.startPrank(nonAdmin);
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(nonAdmin),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(UNPAUSER_ROLE), 32)
+            )
+        );
         rootBridgeFlowRate.unpause();
     }
 
@@ -670,18 +723,14 @@ contract RootERC20BridgeFlowRateUnitTest is
         uint256 now2 = now1 + withdrawalDelay;
         vm.warp(now2);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 1, outOfBoundsIndex
-            )
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 1, outOfBoundsIndex)
         );
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, outOfBoundsIndex);
     }
 
     function testFinaliseQueuedWithdrawalAlreadyProcessed() public {
         testFinaliseQueuedWithdrawalERC20();
-        vm.expectRevert(
-            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, bob, 0)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, bob, 0));
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
     }
 
@@ -866,9 +915,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         vm.warp(block.timestamp + withdrawalDelay);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 10, outOfBoundsIndex
-            )
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 10, outOfBoundsIndex)
         );
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
     }
@@ -885,9 +932,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         vm.warp(block.timestamp + withdrawalDelay);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, bob, alreadyProcessed
-            )
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, bob, alreadyProcessed)
         );
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
     }
