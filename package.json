@@ -13,7 +13,9 @@
         "setup": "node axelar-local-dev/scripts/runSetupEnv",
         "check-balance": "node axelar-local-dev/scripts/runCheckBalance",
         "build": "rm -rf artifacts && npx hardhat clean && npx hardhat compile",
-        "build-aptos": "bash ./build-aptos.sh"
+        "build-aptos": "bash ./build-aptos.sh",
+        "startlocaldev": "cd localdev; ./start.sh",
+        "stoplocaldev": "cd localdev; ./stop.sh"
     },
     "author": "",
     "license": "ISC",

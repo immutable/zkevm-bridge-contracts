@@ -2,8 +2,8 @@
 ./stop.sh
 
 # Start root & child chain.
-npx hardhat node --config ./rootchain.config.js --port 8500 &
-npx hardhat node --config ./childchain.config.js --port 8501 &
+npx hardhat node --config ./rootchain.config.js --port 8500 > /dev/null 2>&1 &
+npx hardhat node --config ./childchain.config.js --port 8501 > /dev/null 2>&1 &
 sleep 3
 
 # Setup root & child chain.
