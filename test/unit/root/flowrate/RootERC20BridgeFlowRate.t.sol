@@ -395,7 +395,6 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectRevert(abi.encodePacked("Pausable: paused"));
         rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
-
     }
 
     function testFinaliseQueuedWithdrawalWhenPaused() public {
@@ -471,7 +470,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         rootBridgeFlowRate.depositTo(token, alice, BRIDGED_VALUE);
     }
 
-     function testDepositETHWhenPaused() public {
+    function testDepositETHWhenPaused() public {
         pause();
 
         vm.deal(charlie, 1 ether);
