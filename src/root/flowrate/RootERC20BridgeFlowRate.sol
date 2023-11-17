@@ -37,7 +37,8 @@ contract RootERC20BridgeFlowRate is
         address newRootWETHToken,
         string memory newChildChain,
         uint256 newImxCumulativeDepositLimit,
-        address rateAdmin
+        address rateAdmin,
+        address superAdmin
     ) external initializer {
         __RootERC20Bridge_init(
             newRoles,
@@ -53,6 +54,7 @@ contract RootERC20BridgeFlowRate is
 
         __FlowRateWithdrawalQueue_init();
 
+        _grantRole(DEFAULT_ADMIN_ROLE, superAdmin);
         _grantRole(RATE_CONTROL_ROLE, rateAdmin);
     }
 
