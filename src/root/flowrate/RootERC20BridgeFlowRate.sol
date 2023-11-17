@@ -40,6 +40,11 @@ contract RootERC20BridgeFlowRate is
         address rateAdmin,
         address superAdmin
     ) external initializer {
+
+        if (rateAdmin == address(0) || superAdmin == address(0)) {
+            revert ZeroAddress();
+        }
+
         __RootERC20Bridge_init(
             newRoles,
             newRootBridgeAdaptor,

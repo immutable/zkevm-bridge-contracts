@@ -71,6 +71,19 @@ contract RootERC20Bridge is
     /// @dev A limit of zero indicates unlimited.
     uint256 public imxCumulativeDepositLimit;
 
+    /**
+     * @notice Initialization function for RootERC20Bridge.
+     * @param newRoles Struct containing addresses of roles.
+     * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
+     * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
+     * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with (As a checksummed string).
+     * @param newChildTokenTemplate Address of child token template to clone.
+     * @param newRootIMXToken Address of ERC20 IMX on the root chain.
+     * @param newRootWETHToken Address of ERC20 WETH on the root chain.
+     * @param newChildChain Name of child chain.
+     * @param newImxCumulativeDepositLimit The cumulative IMX deposit limit.
+     * @dev Can not actually be called directly, is overridden in RootERC20BridgeFlowRate
+     */
     function initialize(
         InitializationRoles memory newRoles,
         address newRootBridgeAdaptor,

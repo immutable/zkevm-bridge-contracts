@@ -277,6 +277,56 @@ contract RootERC20BridgeFlowRateUnitTest is
         );
     }
 
+    function test_RevertIf_InitializeWithAZeroAddressRateAdmin() public {
+        RootERC20BridgeFlowRate newRootBridgeFlowRate = new RootERC20BridgeFlowRate();
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(0),
+            adaptorManager: address(this)
+        });
+        vm.expectRevert(ZeroAddress.selector);
+         newRootBridgeFlowRate.initialize(
+            roles,
+            address(mockAxelarAdaptor),
+            CHILD_BRIDGE,
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(token),
+            IMX_TOKEN,
+            WRAPPED_ETH,
+            CHILD_CHAIN_NAME,
+            UNLIMITED_IMX_DEPOSITS,
+            address(0),
+            address(this)
+        );
+    }
+
+    function test_RevertIf_InitializeWithAZeroAddressSuperAdmin() public {
+        RootERC20BridgeFlowRate newRootBridgeFlowRate = new RootERC20BridgeFlowRate();
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(0),
+            adaptorManager: address(this)
+        });
+        vm.expectRevert(ZeroAddress.selector);
+         newRootBridgeFlowRate.initialize(
+            roles,
+            address(mockAxelarAdaptor),
+            CHILD_BRIDGE,
+            CHILD_BRIDGE_ADAPTOR_STRING,
+            address(token),
+            IMX_TOKEN,
+            WRAPPED_ETH,
+            CHILD_CHAIN_NAME,
+            UNLIMITED_IMX_DEPOSITS,
+            address(this),
+            address(0)
+        );
+    }
+
     /**
      * RATE ROLE ACTIONS
      */
