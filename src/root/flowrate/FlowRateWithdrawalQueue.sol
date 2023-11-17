@@ -66,7 +66,7 @@ abstract contract FlowRateWithdrawalQueue {
     );
 
     // Indicates that the new withdrawal delay.
-    event WithdrawalDelayUpdated(uint256 delay);
+    event WithdrawalDelayUpdated(uint256 delay, uint256 previousDelay);
 
     // // A withdrawal was being processed, but the index is outside of the array.
     error IndexOutsideWithdrawalQueue(uint256 lengthOfQueue, uint256 requestedIndex);
@@ -95,8 +95,9 @@ abstract contract FlowRateWithdrawalQueue {
      * @param delay Withdrawal delay in seconds.
      */
     function _setWithdrawalDelay(uint256 delay) internal {
+        uint256 previousDelay = withdrawalDelay;
         withdrawalDelay = delay;
-        emit WithdrawalDelayUpdated(delay);
+        emit WithdrawalDelayUpdated(delay, previousDelay);
     }
 
     /**

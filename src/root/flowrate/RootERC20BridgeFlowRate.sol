@@ -100,9 +100,8 @@ contract RootERC20BridgeFlowRate is
 
     /**
      * @notice Set the time in the queue for queued withdrawals.
-     * @param delay The number of seconds between when the ExitHelper is called to
-     *         complete a crosschain transfer and when finaliseHeldTransfers can be
-     *         called.
+     * @param delay The number of seconds between when the AxelarAdapter is called to
+     *         complete a crosschain transfer.
      * @dev Only RATE role.
      * NOTE: There is no range checking on delay. Delay could be inadvertently be set to
      *       a very large value, representing a large delay. If this is done, the withdrawal
@@ -172,7 +171,7 @@ contract RootERC20BridgeFlowRate is
      *         - withdrawer: Account that initiated the transfer on the child chain.
      *         - receiver: Account to transfer tokens to.
      *         - amount: The number of tokens to transfer.
-     * @dev Called by the ExitHelper.
+     * @dev Called by the AxelarAdapter.
      *      Only when not paused.
      */
     function _withdraw(bytes memory data) internal override {
