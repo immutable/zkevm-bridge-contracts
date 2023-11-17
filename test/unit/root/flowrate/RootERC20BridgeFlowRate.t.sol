@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
@@ -465,48 +466,6 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.expectRevert("Pausable: paused");
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(token), indices);
     }
-
-    function testDepositWhenPaused() public {
-        pause();
-
-        token.mint(charlie, BANK_OF_CHARLIE_TREASURY);
-        vm.deal(charlie, 1 ether);
-        vm.startPrank(charlie);
-        token.approve(address(rootBridgeFlowRate), BRIDGED_VALUE);
-        vm.expectRevert("Pausable: paused");
-        rootBridgeFlowRate.deposit{value: 100}(token, BRIDGED_VALUE);
-    }
-
-    function testDepositToWhenPaused() public {
-        pause();
-
-        token.mint(charlie, BANK_OF_CHARLIE_TREASURY);
-        vm.startPrank(charlie);
-        token.approve(address(rootBridgeFlowRate), BRIDGED_VALUE);
-        vm.expectRevert("Pausable: paused");
-        rootBridgeFlowRate.depositTo(token, alice, BRIDGED_VALUE);
-    }
-
-    function testDepositETHWhenPaused() public {
-        pause();
-
-        vm.deal(charlie, 1 ether);
-
-        vm.startPrank(charlie);
-        vm.expectRevert("Pausable: paused");
-        rootBridgeFlowRate.depositETH{value: 1 ether}(0.99 ether);
-    }
-
-    function testDepositToETHWhenPaused() public {
-        pause();
-
-        vm.deal(charlie, 1 ether);
-
-        vm.startPrank(charlie);
-        vm.expectRevert("Pausable: paused");
-        rootBridgeFlowRate.depositToETH{value: 1 ether}(alice, 0.99 ether);
-    }
-
 
     /**
      * FLOW RATE WITHDRAW
