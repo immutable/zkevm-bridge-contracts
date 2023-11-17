@@ -116,7 +116,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assert(ok);
     }
 
-    function test_NativeTransferResumesFunctionalityAfterPausing() public {
+    function test_NativeTransferResumesFunctionalityAfterUnpausing() public {
         test_RevertIf_NativeTransferWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
@@ -457,7 +457,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
-    function test_OnMessageReceiveResumesFunctionalityAfterPausing() public {
+    function test_OnMessageReceiveResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_OnMessageReceivedWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect revert on standard flow, not on pause
@@ -497,7 +497,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.mapToken(token);
     }
 
-    function test_MapTokenResumesFunctionalityAfterPausing() public {
+    function test_MapTokenResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_MapTokenWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
@@ -629,7 +629,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositETH{value: 1000}(1000);
     }
 
-    function test_DepositETHResumesFunctionalityAfterPausing() public {
+    function test_DepositETHResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_DepositETHWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
@@ -676,7 +676,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositToETH{value: 1000}(address(this), 1000);
     }
 
-    function test_DepositToETHResumesFunctionalityAfterPausing() public {
+    function test_DepositToETHResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_DepositToETHWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
@@ -841,7 +841,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN), amount);
     }
 
-    function test_DepositTokenResumesFunctionalityAfterPausing() public {
+    function test_DepositTokenResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_DepositTokenWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect success case to pass
@@ -1023,7 +1023,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.depositTo{value: 1000}(token, address(this), 1000);
     }
 
-    function test_DepositToResumesFunctionalityAfterPausing() public {
+    function test_DepositToResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_DepositToWhenPaused();
         unpause(IPausable(address(rootBridge)));
         // Expect success case to pass

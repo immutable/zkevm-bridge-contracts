@@ -84,7 +84,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assert(ok);
     }
 
-    function test_NativeTransferResumesFunctionalityAfterPausing() public {
+    function test_NativeTransferResumesFunctionalityAfterUnpausing() public {
         test_RevertIf_NativeTransferWhenPaused();
         unpause(IPausable(address(childBridge)));
         // Expect success case to pass
@@ -405,7 +405,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 
-    function test_OnMessageReceiveResumesFunctionalityAfterPausing() public {
+    function test_OnMessageReceiveResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_OnMessageReceiveWhenPaused();
         unpause(IPausable(address(childBridge)));
         // Expect success case to pass

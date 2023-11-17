@@ -63,7 +63,7 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
         childBridge.withdrawWIMXTo{value: 1 ether}(address(this), 100);
     }
 
-    function test_WithdrawWIMXToResumesFunctionalityAfterPausing() public {
+    function test_WithdrawWIMXToResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_WithdrawWIMXToWhenPaused();
         unpause(IPausable(address(childBridge)));
         // Expect success case to pass

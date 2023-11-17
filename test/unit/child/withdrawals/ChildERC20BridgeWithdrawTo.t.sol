@@ -75,7 +75,7 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
         childBridge.withdrawTo{value: 1 ether}(IChildERC20(address(childToken)), address(this), 100);
     }
 
-    function test_WithdrawToResumesFunctionalityAfterPausing() public {
+    function test_WithdrawToResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_WithdrawToWhenPaused();
         unpause(IPausable(address(childBridge)));
         // Expect success case to pass

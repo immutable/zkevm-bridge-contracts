@@ -62,7 +62,7 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
         childBridge.withdrawETH{value: 1 ether}(100);
     }
 
-    function test_WithdrawETHResumesFunctionalityAfterPausing() public {
+    function test_WithdrawETHResumesFunctionalityAfterUnpausing() public {
         test_RevertsIf_WithdrawETHWhenPaused();
         unpause(IPausable(address(childBridge)));
         // Expect success case to pass
