@@ -47,5 +47,7 @@ async function main() {
 
     console.log("Root deployer now has " + ethers.utils.formatEther(await IMX.balanceOf(rootDeployer.address)) + " IMX.");
     console.log("Root deployer now has " + ethers.utils.formatEther(await rootProvider.getBalance(rootDeployer.address)) + " ETH.");
+
+    console.log("Finished setting up on root chain.");
 }
 main();

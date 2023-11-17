@@ -15,5 +15,6 @@ async function main() {
     ]);
 
     console.log("Child admin EOA now has " + ethers.formatEther(await hardhat.provider.getBalance(childEOA.address)) + " IMX.");
+    console.log("Finished setting up on child chain.")
 }
 main();
