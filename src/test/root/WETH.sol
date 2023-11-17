@@ -17,7 +17,7 @@ contract WETH is IWETH {
     mapping(address => mapping(address => uint256)) public allowance;
 
     /**
-     * @notice Fallback function on recieving native ETH.
+     * @notice Fallback function on receiving native ETH.
      */
     receive() external payable {
         deposit();

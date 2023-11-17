@@ -12,7 +12,7 @@ import {
     IChildERC20BridgeErrors
 } from "../../../src/child/ChildERC20Bridge.sol";
 import {ChildERC20} from "../../../src/child/ChildERC20.sol";
-import {Utils} from "../../utils.t.sol";
+import {Utils, IPausable} from "../../utils.t.sol";
 
 contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
@@ -36,8 +36,8 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge = new ChildERC20Bridge();
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
             adaptorManager: address(this)
         });
         childBridge.initialize(
@@ -51,15 +51,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         );
     }
 
-    function test_Initialize() public {
-        assertEq(address(childBridge.bridgeAdaptor()), address(address(this)), "bridgeAdaptor not set");
-        assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR, "rootERC20BridgeAdaptor not set");
-        assertEq(childBridge.childTokenTemplate(), address(childTokenTemplate), "childTokenTemplate not set");
-        assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
-        assertEq(childBridge.rootIMXToken(), ROOT_IMX_TOKEN, "rootIMXToken not set");
-        assertFalse(address(childBridge.childETHToken()) == address(0), "childETHToken not set");
-        assertFalse(address(childBridge.childETHToken()).code.length == 0, "childETHToken contract empty");
-    }
+    /**
+     * RECEIVE
+     */
 
     function test_NativeTransferFromWIMX() public {
         address caller = address(0x123a);
@@ -70,15 +64,45 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         vm.startPrank(caller);
         uint256 bal = address(childBridge).balance;
-        payable(childBridge).transfer(1 ether);
+        (bool ok,) = address(childBridge).call{value: 1 ether}("");
+        assert(ok);
         uint256 postBal = address(childBridge).balance;
 
         assertEq(bal + 1 ether, postBal, "balance not increased");
     }
 
-    function test_RevertIfNativeTransferIsFromNonWIMX() public {
+    function test_RevertIf_NativeTransferIsFromNonWIMX() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
-        payable(childBridge).transfer(1 ether);
+        (bool ok,) = address(childBridge).call{value: 1 ether}("");
+        assert(ok);
+    }
+
+    function test_RevertIf_NativeTransferWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        (bool ok,) = address(childBridge).call{value: 1 ether}("");
+        assert(ok);
+    }
+
+    function test_NativeTransferResumesFunctionalityAfterUnpausing() public {
+        test_RevertIf_NativeTransferWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_NativeTransferFromWIMX();
+    }
+
+    /**
+     * INITIALIZE
+     */
+
+    function test_Initialize() public {
+        assertEq(address(childBridge.bridgeAdaptor()), address(address(this)), "bridgeAdaptor not set");
+        assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR, "rootERC20BridgeAdaptor not set");
+        assertEq(childBridge.childTokenTemplate(), address(childTokenTemplate), "childTokenTemplate not set");
+        assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
+        assertEq(childBridge.rootIMXToken(), ROOT_IMX_TOKEN, "rootIMXToken not set");
+        assertFalse(address(childBridge.childETHToken()) == address(0), "childETHToken not set");
+        assertFalse(address(childBridge.childETHToken()).code.length == 0, "childETHToken contract empty");
     }
 
     function test_RevertIfInitializeTwice() public {
@@ -369,7 +393,24 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.updateBridgeAdaptor(address(0));
     }
 
-    //Deposit ETH
+    /**
+     * DEPOSIT ETH
+     */
+
+    function test_RevertsIf_OnMessageReceiveWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        bytes memory depositData =
+            abi.encode(childBridge.DEPOSIT_SIG(), address(NATIVE_ETH), address(100), address(200), 1000);
+        vm.expectRevert("Pausable: paused");
+        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
+    }
+
+    function test_OnMessageReceiveResumesFunctionalityAfterUnpausing() public {
+        test_RevertsIf_OnMessageReceiveWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_onMessageReceive_DepositETH_EmitsETHDepositEvent();
+    }
 
     function test_onMessageReceive_DepositETH_EmitsETHDepositEvent() public {
         address sender = address(100);
@@ -426,7 +467,9 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(ChildERC20(predictedChildETHToken).totalSupply(), totalSupplyPre + amount, "totalSupply not increased");
     }
 
-    //Deposit
+    /**
+     * DEPOSIT
+     */
 
     function test_onMessageReceive_DepositIMX_EmitsIMXDepositEvent() public {
         uint256 fundedAmount = 10 ether;

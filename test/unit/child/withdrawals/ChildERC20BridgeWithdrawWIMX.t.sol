@@ -11,7 +11,7 @@ import {
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../../utils.t.sol";
+import {Utils, IPausable} from "../../../utils.t.sol";
 import {WIMX} from "../../../../src/child/WIMX.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
@@ -36,8 +36,8 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         childBridge = new ChildERC20Bridge();
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
             adaptorManager: address(this)
         });
         childBridge.initialize(
@@ -49,6 +49,23 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
             ROOT_IMX_TOKEN,
             address(wIMXToken)
         );
+    }
+
+    /**
+     * WITHDRAW WIMX
+     */
+
+    function test_RevertsIf_WithdrawWIMXWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        childBridge.withdrawWIMX{value: 1 ether}(100);
+    }
+
+    function test_WithdrawWIMXResumesFunctionalityAfterUnpausing() public {
+        test_RevertsIf_WithdrawWIMXWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_WithdrawWIMX_CallsBridgeAdaptor();
     }
 
     function test_RevertsIf_withdrawWIMXCalledWithZeroFee() public {
