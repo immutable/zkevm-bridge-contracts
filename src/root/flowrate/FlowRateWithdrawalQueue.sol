@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {
+    IFlowRateWithdrawalQueueEvents,
+    IFlowRateWithdrawalQueueErrors
+} from "../../interfaces/root/flowrate/IFlowRateWithdrawalQueue.sol";
+
 /**
  * @title  Flow Rate Withdrawal Queue
  * @author Immutable Pty Ltd (Peter Robinson @drinkcoffee)
@@ -14,7 +19,10 @@ pragma solidity 0.8.19;
  *         to make it easier to understand the functionality.
  *         Note that this contract is upgradeable.
  */
-abstract contract FlowRateWithdrawalQueue {
+abstract contract FlowRateWithdrawalQueue is
+    IFlowRateWithdrawalQueueEvents,
+    IFlowRateWithdrawalQueueErrors
+{
     // One day in seconds.
     uint256 private constant DEFAULT_WITHDRAW_DELAY = 1 days;
 
@@ -49,37 +57,6 @@ abstract contract FlowRateWithdrawalQueue {
 
     // The amount of time between a withdrawal request and a user being allowed to withdraw.
     uint256 public withdrawalDelay;
-
-    // Indicates a withdrawal has been queued.
-    event QueuedWithdrawal(
-        address indexed token,
-        address indexed withdrawer,
-        address indexed receiver,
-        uint256 amount,
-        uint256 timestamp,
-        uint256 index
-    );
-
-    // Indicates a withdrawal has been processed.
-    event ProcessedWithdrawal(
-        address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 index
-    );
-
-    // Indicates that the new withdrawal delay.
-    event WithdrawalDelayUpdated(uint256 delay, uint256 previousDelay);
-
-    // // A withdrawal was being processed, but the index is outside of the array.
-    error IndexOutsideWithdrawalQueue(uint256 lengthOfQueue, uint256 requestedIndex);
-
-    // A withdrawal was being processed, but the withdrawal is not yet available.
-    error WithdrawalRequestTooEarly(uint256 timeNow, uint256 currentWithdrawalTime);
-
-    // A withdrawal was being processed, but the token is zero. This indicates that the
-    // withdrawal has already been processed.
-    error WithdrawalAlreadyProcessed(address receiver, uint256 index);
-
-    // Attempting to enqueue a token with token address = 0.
-    error TokenIsZero(address receiver);
 
     /**
      * @notice Initilization function for FlowRateWithdrawalQueue
@@ -117,7 +94,7 @@ abstract contract FlowRateWithdrawalQueue {
         uint256 index = pendingWithdrawals[receiver].length;
         pendingWithdrawals[receiver].push(newPendingWithdrawal);
         // solhint-disable-next-line not-rely-on-time
-        emit QueuedWithdrawal(token, withdrawer, receiver, amount, block.timestamp, index);
+        emit EnQueuedWithdrawal(token, withdrawer, receiver, amount, block.timestamp, index);
     }
 
     /**

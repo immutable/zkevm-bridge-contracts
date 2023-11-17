@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-interface IRootERC20BridgeFlowRate {}
-
 interface IRootERC20BridgeFlowRateEvents {
     /**
      * @notice Indicates rate control thresholds have been set for a certain token.
