@@ -152,9 +152,12 @@ contract RootERC20BridgeFlowRate is
         uint256 refillRate,
         uint256 largeTransferThreshold
     ) external onlyRole(RATE_CONTROL_ROLE) {
+        uint256 previousCapacity = flowRateBuckets[token].capacity;
+        uint256 previousRefillRate = flowRateBuckets[token].refillRate;
+        uint256 previousLargeTransferThreshold = largeTransferThresholds[token];
         _setFlowRateThreshold(token, capacity, refillRate);
         largeTransferThresholds[token] = largeTransferThreshold;
-        emit RateControlThresholdSet(token, capacity, refillRate, largeTransferThreshold);
+        emit RateControlThresholdSet(token, capacity, refillRate, largeTransferThreshold, previousCapacity, previousRefillRate, previousLargeTransferThreshold);
     }
 
     /**

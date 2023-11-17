@@ -324,7 +324,7 @@ contract RootERC20BridgeFlowRateUnitTest is
     function testSetRateControlThreshold() public {
         vm.prank(rateAdmin);
         vm.expectEmit(true, true, false, true);
-        emit RateControlThresholdSet(address(token), CAPACITY, REFILL_RATE, LARGE);
+        emit RateControlThresholdSet(address(token), CAPACITY, REFILL_RATE, LARGE, 0, 0, 0);
         rootBridgeFlowRate.setRateControlThreshold(address(token), CAPACITY, REFILL_RATE, LARGE);
         assertEq(rootBridgeFlowRate.largeTransferThresholds(address(token)), LARGE);
         uint256 capacity;
