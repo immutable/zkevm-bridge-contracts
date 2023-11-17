@@ -75,7 +75,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     IFlowRateWithdrawalQueueErrors,
     Utils
 {
-
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
@@ -282,7 +281,7 @@ contract RootERC20BridgeFlowRateUnitTest is
             adaptorManager: address(this)
         });
         vm.expectRevert(ZeroAddress.selector);
-         newRootBridgeFlowRate.initialize(
+        newRootBridgeFlowRate.initialize(
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
@@ -350,7 +349,7 @@ contract RootERC20BridgeFlowRateUnitTest is
     function testSetWithdrawalDelayBadAuth() public {
         uint256 delay = 1000;
         vm.prank(nonAdmin);
-       vm.expectRevert(
+        vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
                 StringsUpgradeable.toHexString(nonAdmin),
@@ -723,14 +722,18 @@ contract RootERC20BridgeFlowRateUnitTest is
         uint256 now2 = now1 + withdrawalDelay;
         vm.warp(now2);
         vm.expectRevert(
-            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 1, outOfBoundsIndex)
+            abi.encodeWithSelector(
+                IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 1, outOfBoundsIndex
+            )
         );
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, outOfBoundsIndex);
     }
 
     function testFinaliseQueuedWithdrawalAlreadyProcessed() public {
         testFinaliseQueuedWithdrawalERC20();
-        vm.expectRevert(abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, bob, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, bob, 0)
+        );
         rootBridgeFlowRate.finaliseQueuedWithdrawal(bob, 0);
     }
 
@@ -915,7 +918,9 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         vm.warp(block.timestamp + withdrawalDelay);
         vm.expectRevert(
-            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 10, outOfBoundsIndex)
+            abi.encodeWithSelector(
+                IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 10, outOfBoundsIndex
+            )
         );
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
     }
@@ -932,7 +937,9 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         vm.warp(block.timestamp + withdrawalDelay);
         vm.expectRevert(
-            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, bob, alreadyProcessed)
+            abi.encodeWithSelector(
+                IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, bob, alreadyProcessed
+            )
         );
         rootBridgeFlowRate.finaliseQueuedWithdrawalsAggregated(bob, address(NATIVE_ETH), indices);
     }
