@@ -4,10 +4,9 @@ require("@nomicfoundation/hardhat-toolbox");
 module.exports = {
   networks: {
     hardhat: {
-      // Root chain has 12 seconds of block time to mimic Ethereum Mainnet/Sepolia
       mining: {
         auto: false,
-        interval: 12000
+        interval: 1200
       },
       chainId: 2500,
       accounts: [],
