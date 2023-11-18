@@ -15,6 +15,7 @@
         "build": "rm -rf artifacts && npx hardhat clean && npx hardhat compile",
         "build-aptos": "bash ./build-aptos.sh",
         "startlocaldev": "cd localdev; ./start.sh",
+        "startaxelar": "cd localdev; node axelar_setup.js",
         "stoplocaldev": "cd localdev; ./stop.sh"
     },
     "author": "",
