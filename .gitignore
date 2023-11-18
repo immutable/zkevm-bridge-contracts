@@ -33,3 +33,4 @@ node_modules/
 
 # Bootstrap output files
 bootstrap/*.out.tmp
+localdev/.axelar.contracts.json
