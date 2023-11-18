@@ -49,10 +49,10 @@ async function main() {
     })
     await helper.waitForReceipt(resp.hash, rootProvider);
 
-    // Transfer 100 ETH to axelar deployer
+    // Transfer 500 ETH to axelar deployer
     resp = await admin.sendTransaction({
         to: axelarDeployer.address,
-        value: ethers.utils.parseEther("100.0"),
+        value: ethers.utils.parseEther("500.0"),
     })
 
     console.log("Root deployer now has " + ethers.utils.formatEther(await IMX.balanceOf(rootDeployer.address)) + " IMX.");
