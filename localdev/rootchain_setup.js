@@ -33,10 +33,20 @@ async function main() {
     let IMXObj = JSON.parse(fs.readFileSync('../out/ERC20PresetMinterPauser.sol/ERC20PresetMinterPauser.json', 'utf8'));
     console.log("Deploy IMX contract on root chain...");
 
-    let factory = new ContractFactory(IMXObj.abi, IMXObj.bytecode, admin);
-    let IMX = await factory.deploy("Immutable X", "IMX");
+    let IMXFactory = new ContractFactory(IMXObj.abi, IMXObj.bytecode, admin);
+    let IMX = await IMXFactory.deploy("Immutable X", "IMX");
     let txn = IMX.deployTransaction;
     await helper.waitForReceipt(txn.hash, rootProvider);
+    console.log("IMX deployed at: " + IMX.address);
+
+    // Deploy WETH contract
+    let WETHObj = JSON.parse(fs.readFileSync('../out/WETH.sol/WETH.json', 'utf8'))
+    console.log("Deploy WETH contract on root chain...");
+    let WETHFactory = new ContractFactory(WETHObj.abi, WETHObj.bytecode, admin);
+    let WETH = await WETHFactory.deploy();
+    txn = WETH.deployTransaction;
+    await helper.waitForReceipt(txn.hash, rootProvider);
+    console.log("WETH deployed at: " + WETH.address);
 
     // Mint 1100 IMX to root deployer
     let resp = await IMX.connect(admin).mint(rootDeployer.address, ethers.utils.parseEther("1100.0"));
@@ -60,5 +70,10 @@ async function main() {
     console.log("Root axelar now has " + ethers.utils.formatEther(await rootProvider.getBalance(axelarDeployer.address)) + " ETH.");
 
     console.log("Finished setting up on root chain.");
+    let contractData = {
+        IMX_ROOT_ADDR: IMX.address,
+        WETH_ROOT_ADDR: WETH.address,
+    };
+    fs.writeFileSync(".root.contracts.json", JSON.stringify(contractData, null, 2));
 }
 main();

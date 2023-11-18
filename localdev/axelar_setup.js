@@ -135,7 +135,7 @@ async function main() {
         CHILD_GATEWAY_ADDRESS: childGateway.address,
         CHILD_GAS_SERVICE_ADDRESS: childGasService.address,
     };
-    fs.writeFileSync(".axelar.contracts.json", JSON.stringify(contractData));
+    fs.writeFileSync(".axelar.contracts.json", JSON.stringify(contractData, null, 2));
 
     setInterval(async () => {
         if (relaying) return;
