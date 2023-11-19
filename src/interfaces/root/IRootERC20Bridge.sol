@@ -1,9 +1,27 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface IRootERC20Bridge {
+    struct InitializationRoles {
+        address defaultAdmin; // The address which will inherit `DEFAULT_ADMIN_ROLE`.
+        address pauser; // The address which will inherit `PAUSER_ROLE`.
+        address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
+        address variableManager; // The address which will inherit `VARIABLE_MANAGER_ROLE`.
+        address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
+    }
+
+    /**
+     * @notice Function to revoke variable manager role from an address
+     */
+    function revokeVariableManagerRole(address account) external;
+
+    /**
+     * @notice Function to grant variable manager role to an address
+     */
+    function grantVariableManagerRole(address account) external;
+
     function childBridgeAdaptor() external view returns (string memory);
     /**
      * @notice Receives a bridge message from child chain, parsing the message type then executing.
@@ -24,6 +42,19 @@ interface IRootERC20Bridge {
      * @return childToken The address of the token to be deployed on the child chain.
      */
     function mapToken(IERC20Metadata rootToken) external payable returns (address);
+
+    /**
+     * @notice Deposits `amount` of ETH to `msg.sender` on the child chain.
+     * @param amount The amount of ETH to deposit.
+     */
+    function depositETH(uint256 amount) external payable;
+
+    /**
+     * @notice Deposits `amount` of ETH to `receiver` on the child chain.
+     * @param receiver The address to deposit the ETH to.
+     * @param amount The amount of ETH to deposit.
+     */
+    function depositToETH(address receiver, uint256 amount) external payable;
 
     /**
      * @notice Initiate sending a deposit message to the child chain.
@@ -57,7 +88,9 @@ interface IRootERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+    /// @notice Emitted when an IMX deposit is initated on the root chain.
     event IMXDeposit(address indexed rootToken, address depositor, address indexed receiver, uint256 amount);
+    /// @notice Emitted when a WETH deposit is initiated on the root chain.
     event WETHDeposit(
         address indexed rootToken,
         address indexed childToken,
@@ -65,6 +98,7 @@ interface IRootERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
+    /// @notice Emitted when an ETH deposit initiated on the root chain.
     event NativeEthDeposit(
         address indexed rootToken,
         address indexed childToken,
@@ -72,8 +106,16 @@ interface IRootERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
-
+    /// @notice Emitted when an ERC20 withdrawal is executed on the root chain.
     event RootChainERC20Withdraw(
+        address indexed rootToken,
+        address indexed childToken,
+        address withdrawer,
+        address indexed receiver,
+        uint256 amount
+    );
+    /// @notice Emitted when an ETH withdrawal is executed on the root chain.
+    event RootChainETHWithdraw(
         address indexed rootToken,
         address indexed childToken,
         address withdrawer,
@@ -89,6 +131,8 @@ interface IRootERC20BridgeErrors {
     error ZeroAmount();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
+    /// @notice Error when a message is sent with no gas payment.
+    error NoGas();
     /// @notice Error when the child chain name is invalid.
     error InvalidChildChain();
     /// @notice Error when a token is already mapped.
@@ -117,4 +161,6 @@ interface IRootERC20BridgeErrors {
     error ImxDepositLimitExceeded();
     /// @notice Error when the IMX deposit limit is set below the amount of IMX already deposited
     error ImxDepositLimitTooLow();
+    /// @notice Error when native transfer is sent to contract from non wrapped-token address.
+    error NonWrappedNativeTransfer();
 }

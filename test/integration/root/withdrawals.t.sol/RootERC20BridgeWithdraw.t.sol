@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
@@ -33,8 +33,8 @@ contract RootERC20BridgeWithdrawIntegrationTest is
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
     address constant WRAPPED_ETH = address(0xddd);
+    uint256 constant UNLIMITED_DEPOSIT_LIMIT = 0;
     address public constant NATIVE_IMX = address(0xfff);
-    uint256 constant UNLIMITED_IMX_DEPOSIT_LIMIT = 0;
 
     uint256 constant withdrawAmount = 0.5 ether;
 
@@ -50,14 +50,21 @@ contract RootERC20BridgeWithdrawIntegrationTest is
     function setUp() public {
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
-        (imxToken, token, rootBridge, axelarAdaptor, mockAxelarGateway, axelarGasService) = rootIntegrationSetup(
+        RootIntegration memory integration = rootIntegrationSetup(
             CHILD_BRIDGE,
             CHILD_BRIDGE_ADAPTOR,
             CHILD_CHAIN_NAME,
             IMX_TOKEN_ADDRESS,
             WRAPPED_ETH,
-            UNLIMITED_IMX_DEPOSIT_LIMIT
+            UNLIMITED_DEPOSIT_LIMIT
         );
+
+        imxToken = integration.imxToken;
+        token = integration.token;
+        rootBridge = integration.rootBridge;
+        axelarAdaptor = integration.axelarAdaptor;
+        mockAxelarGateway = integration.mockAxelarGateway;
+        axelarGasService = integration.axelarGasService;
 
         // Need to first map the token.
         rootBridge.mapToken{value: 1}(token);
@@ -65,7 +72,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         token.transfer(address(rootBridge), 100 ether);
         imxToken.transfer(address(rootBridge), 100 ether);
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
     }
 
     function test_RevertsIf_WithdrawWithInvalidSourceChain() public {
@@ -247,14 +254,14 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
-    function test_withdrawETH_EmitsRootChainERC20WithdrawEvent() public {
+    function test_withdrawETH_EmitsRootChainETHWithdrawEvent() public {
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
+        emit RootChainETHWithdraw(
             NATIVE_ETH, address(rootBridge.childETHToken()), address(this), address(this), withdrawAmount
         );
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
@@ -286,7 +293,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
-    function test_withdrawETH_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
+    function test_withdrawETH_EmitsRootChainETHWithdrawEvent_DifferentReceiver() public {
         address receiver = address(987654321);
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
 
@@ -294,7 +301,7 @@ contract RootERC20BridgeWithdrawIntegrationTest is
         string memory sourceAddress = rootBridge.childBridgeAdaptor();
 
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
+        emit RootChainETHWithdraw(
             NATIVE_ETH, address(rootBridge.childETHToken()), address(this), receiver, withdrawAmount
         );
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);

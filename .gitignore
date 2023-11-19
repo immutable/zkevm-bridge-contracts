@@ -34,3 +34,5 @@ node_modules/
 # Bootstrap output files
 scripts/bootstrap/*.out.tmp
 scripts/localdev/*.contracts.json
+# MacOS
+.DS_Store

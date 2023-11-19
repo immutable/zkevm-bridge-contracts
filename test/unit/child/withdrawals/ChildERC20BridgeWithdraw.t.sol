@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
     ChildERC20Bridge,
+    IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
-import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";
-import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
+import {IChildERC20, ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../../utils.t.sol";
+import {Utils, IPausable} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
@@ -39,8 +36,15 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
 
         mockAdaptor = new MockAdaptor();
 
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
+            adaptorManager: address(this)
+        });
         childBridge = new ChildERC20Bridge();
         childBridge.initialize(
+            roles,
             address(mockAdaptor),
             ROOT_BRIDGE_ADAPTOR,
             address(childTokenTemplate),
@@ -61,16 +65,40 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         childToken.approve(address(childBridge), 1000000 ether);
     }
 
+    /**
+     * WITHDRAW
+     */
+
+    function test_RevertsIf_WithdrawWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        childBridge.withdraw{value: 1 ether}(IChildERC20(address(childToken)), 100);
+    }
+
+    function test_WithdrawResumesFunctionalityAfterUnpausing() public {
+        test_RevertsIf_WithdrawWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_withdraw_CallsBridgeAdaptor();
+    }
+
+    function test_RevertsIf_WithdrawCalledWithZeroFee() public {
+        uint256 withdrawAmount = 100;
+
+        vm.expectRevert(NoGas.selector);
+        childBridge.withdraw(IChildERC20(address(2222222)), withdrawAmount);
+    }
+
     function test_RevertsIf_WithdrawCalledWithEmptyChildToken() public {
         vm.expectRevert(EmptyTokenContract.selector);
-        childBridge.withdraw(IChildERC20(address(2222222)), 100);
+        childBridge.withdraw{value: 1 ether}(IChildERC20(address(2222222)), 100);
     }
 
     function test_RevertsIf_WithdrawCalledWithUnmappedToken() public {
         ChildERC20 newToken = new ChildERC20();
         newToken.initialize(address(123), "Test", "TST", 18);
         vm.expectRevert(NotMapped.selector);
-        childBridge.withdraw(IChildERC20(address(newToken)), 100);
+        childBridge.withdraw{value: 1 ether}(IChildERC20(address(newToken)), 100);
     }
 
     function test_RevertsIf_WithdrawCalledWithAChildTokenWithUnsetRootToken() public {
@@ -85,14 +113,14 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
 
         // Slot is 2 because of the Ownable, Initializable contracts coming first.
         // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
-        uint256 rootTokenToChildTokenMappingSlot = 2;
+        uint256 rootTokenToChildTokenMappingSlot = 201;
         bytes32 slot = getMappingStorageSlotFor(address(0), rootTokenToChildTokenMappingSlot);
         bytes32 data = bytes32(uint256(uint160(address(childToken))));
 
         vm.store(address(childBridge), slot, data);
 
         vm.expectRevert(ZeroAddressRootToken.selector);
-        childBridge.withdraw(IChildERC20(address(childToken)), 100);
+        childBridge.withdraw{value: 1 ether}(IChildERC20(address(childToken)), 100);
     }
 
     function test_RevertsIf_WithdrawCalledWithAChildTokenThatHasWrongBridge() public {
@@ -102,7 +130,7 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         vm.store(address(childToken), bridgeSlotBytes32, bytes32(uint256(uint160(address(0x123)))));
 
         vm.expectRevert(IncorrectBridgeAddress.selector);
-        childBridge.withdraw(IChildERC20(address(childToken)), 100);
+        childBridge.withdraw{value: 1 ether}(IChildERC20(address(childToken)), 100);
     }
 
     function test_RevertsIf_WithdrawWhenBurnFails() public {
@@ -110,7 +138,7 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
         deployCodeTo("ChildERC20FailOnBurn.sol", address(childToken));
 
         vm.expectRevert(BurnFailed.selector);
-        childBridge.withdraw(IChildERC20(address(childToken)), 100);
+        childBridge.withdraw{value: 1 ether}(IChildERC20(address(childToken)), 100);
     }
 
     function test_withdraw_CallsBridgeAdaptor() public {

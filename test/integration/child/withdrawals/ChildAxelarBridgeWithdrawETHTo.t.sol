@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
@@ -26,29 +26,16 @@ contract ChildERC20BridgeWithdrawETHToIntegrationTest is
     IChildAxelarBridgeAdaptorErrors,
     Utils
 {
-    address constant CHILD_BRIDGE = address(3);
-    address constant CHILD_BRIDGE_ADAPTOR = address(4);
-    string constant CHILD_CHAIN_NAME = "test";
-    address constant ROOT_IMX_TOKEN = address(555555);
     address constant NATIVE_ETH = address(0xeee);
-    address constant WRAPPED_ETH = address(0xddd);
-    address constant WRAPPED_IMX = address(0xabc);
 
     ChildERC20Bridge public childBridge;
     ChildAxelarBridgeAdaptor public axelarAdaptor;
-    address public rootToken;
-    address public rootImxToken;
-    ChildERC20 public childTokenTemplate;
-    MockAxelarGasService public axelarGasService;
+    MockAxelarGasService public mockAxelarGasService;
     MockAxelarGateway public mockAxelarGateway;
-    WIMX public wIMXToken;
     ChildERC20 public childETHToken;
 
     function setUp() public {
-        (childBridge, axelarAdaptor, rootToken, rootImxToken, childTokenTemplate, axelarGasService, mockAxelarGateway) =
-            childIntegrationSetup();
-        wIMXToken = WIMX(payable(WRAPPED_IMX));
-        Address.sendValue(payable(wIMXToken), 100 ether);
+        (childBridge, axelarAdaptor,,,, mockAxelarGasService, mockAxelarGateway) = childIntegrationSetup();
 
         childETHToken = ChildERC20(childBridge.childETHToken());
         vm.prank(address(childBridge));
@@ -157,13 +144,13 @@ contract ChildERC20BridgeWithdrawETHToIntegrationTest is
 
         uint256 preBal = address(this).balance;
         uint256 preTokenBal = childETHToken.balanceOf(address(this));
-        uint256 preGasBal = address(axelarGasService).balance;
+        uint256 preGasBal = address(mockAxelarGasService).balance;
 
         childBridge.withdrawETHTo{value: withdrawFee}(address(this), withdrawAmount);
 
         uint256 postBal = address(this).balance;
         uint256 postTokenBal = childETHToken.balanceOf(address(this));
-        uint256 postGasBal = address(axelarGasService).balance;
+        uint256 postGasBal = address(mockAxelarGasService).balance;
 
         assertEq(postBal, preBal - withdrawFee, "Balance not reduced");
         assertEq(postTokenBal, preTokenBal - withdrawAmount);

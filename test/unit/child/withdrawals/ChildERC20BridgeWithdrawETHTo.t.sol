@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
@@ -7,14 +7,14 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
     ChildERC20Bridge,
+    IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../../utils.t.sol";
+import {Utils, IPausable} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
@@ -40,7 +40,14 @@ contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents,
         mockAdaptor = new MockAdaptor();
 
         childBridge = new ChildERC20Bridge();
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
+            adaptorManager: address(this)
+        });
         childBridge.initialize(
+            roles,
             address(mockAdaptor),
             ROOT_BRIDGE_ADAPTOR,
             address(childTokenTemplate),
@@ -63,6 +70,30 @@ contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents,
         childETHToken = ChildERC20(childBridge.childETHToken());
         vm.prank(address(childBridge));
         childETHToken.mint(address(this), 100 ether);
+    }
+
+    /**
+     * WITHDRAW ETH TO
+     */
+
+    function test_RevertsIf_WithdrawETHToWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        childBridge.withdrawETHTo{value: 1 ether}(address(this), 100);
+    }
+
+    function test_WithdrawETHToResumesFunctionalityAfterUnpausing() public {
+        test_RevertsIf_WithdrawETHToWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_WithdrawETHTo_CallsBridgeAdaptor();
+    }
+
+    function test_RevertsIf_WithdrawETHToCalledWithZeroFee() public {
+        uint256 withdrawAmount = 100;
+
+        vm.expectRevert(NoGas.selector);
+        childBridge.withdrawETHTo(address(this), withdrawAmount);
     }
 
     function test_RevertsIf_WithdrawEthToCalledWithInsufficientFund() public {

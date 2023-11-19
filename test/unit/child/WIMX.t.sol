@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {WIMX} from "../../../src/child/WIMX.sol";
@@ -188,6 +188,8 @@ contract WIMXTest is Test {
             depositAmt1 - withdrawlAmt1 + depositAmt2,
             "Token supply should be 0.55 after 2nd deposit"
         );
+
+        vm.stopPrank();
 
         // Withdraw 0.5 IMX
         uint256 withdrawlAmt2 = 0.5 ether;

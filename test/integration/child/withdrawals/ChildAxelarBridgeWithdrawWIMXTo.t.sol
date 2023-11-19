@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -26,12 +26,7 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     IChildAxelarBridgeAdaptorErrors,
     Utils
 {
-    address constant CHILD_BRIDGE = address(3);
-    address constant CHILD_BRIDGE_ADAPTOR = address(4);
-    string constant CHILD_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(555555);
-    address constant NATIVE_ETH = address(0xeee);
-    address constant WRAPPED_ETH = address(0xddd);
     address constant WRAPPED_IMX = address(0xabc);
 
     ChildERC20Bridge public childBridge;
@@ -51,19 +46,20 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     }
 
     function test_WithdrawWIMXTo_CallsBridgeAdaptor() public {
-        uint256 withdrawFee = 300;
+        address receiver = address(0xabcd);
+        uint256 withdrawFee = 1;
         uint256 withdrawAmount = 7 ether;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
         bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), receiver, withdrawAmount);
         vm.expectCall(
             address(axelarAdaptor),
             withdrawFee,
             abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
         );
 
-        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(receiver, withdrawAmount);
     }
 
     function test_WithdrawWIMXToWithDifferentAccount_CallsBridgeAdaptor() public {
@@ -84,12 +80,13 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     }
 
     function test_WithdrawWIMXTo_CallsAxelarGateway() public {
+        address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
         bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), receiver, withdrawAmount);
         vm.expectCall(
             address(mockAxelarGateway),
             0,
@@ -101,7 +98,7 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
             )
         );
 
-        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(receiver, withdrawAmount);
     }
 
     function test_WithdrawWIMXToWithDifferentAccount_CallsAxelarGateway() public {
@@ -127,30 +124,6 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
     }
 
     function test_WithdrawWIMXTo_CallsGasService() public {
-        uint256 withdrawFee = 300;
-        uint256 withdrawAmount = 7 ether;
-
-        wIMXToken.approve(address(childBridge), withdrawAmount);
-        bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
-
-        vm.expectCall(
-            address(axelarGasService),
-            withdrawFee,
-            abi.encodeWithSelector(
-                axelarGasService.payNativeGasForContractCall.selector,
-                address(axelarAdaptor),
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
-                predictedPayload,
-                address(this)
-            )
-        );
-
-        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
-    }
-
-    function test_WithdrawWIMXToWithDifferentAccount_CallsGasService() public {
         address receiver = address(0xabcd);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
@@ -175,22 +148,48 @@ contract ChildERC20BridgeWithdrawWIMXToIntegrationTest is
         childBridge.withdrawWIMXTo{value: withdrawFee}(receiver, withdrawAmount);
     }
 
-    function test_WithdrawWIMXTo_EmitsAxelarMessageSentEvent() public {
+    function test_WithdrawWIMXToWithDifferentAccount_CallsGasService() public {
+        address receiver = address(0xabcdf);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
         bytes memory predictedPayload =
-            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), receiver, withdrawAmount);
+
+        vm.expectCall(
+            address(axelarGasService),
+            withdrawFee,
+            abi.encodeWithSelector(
+                axelarGasService.payNativeGasForContractCall.selector,
+                address(axelarAdaptor),
+                childBridge.rootChain(),
+                childBridge.rootERC20BridgeAdaptor(),
+                predictedPayload,
+                address(this)
+            )
+        );
+
+        childBridge.withdrawWIMXTo{value: withdrawFee}(receiver, withdrawAmount);
+    }
+
+    function test_WithdrawWIMXTo_EmitsAxelarMessageSentEvent() public {
+        address receiver = address(0xabcd);
+        uint256 withdrawFee = 300;
+        uint256 withdrawAmount = 7 ether;
+
+        wIMXToken.approve(address(childBridge), withdrawAmount);
+        bytes memory predictedPayload =
+            abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), receiver, withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
 
-        childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
+        childBridge.withdrawWIMXTo{value: withdrawFee}(receiver, withdrawAmount);
     }
 
     function test_WithdrawWIMXToWithDifferentAccount_EmitsAxelarMessageSentEvent() public {
-        address receiver = address(0xabcd);
+        address receiver = address(0xabcda);
         uint256 withdrawFee = 300;
         uint256 withdrawAmount = 7 ether;
 

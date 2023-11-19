@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
-    RootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors
+    RootERC20Bridge,
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors,
+    IRootERC20Bridge
 } from "../../../../src/root/RootERC20Bridge.sol";
 import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
@@ -51,8 +54,17 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         mockAxelarAdaptor = new MockAdaptor();
 
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
+
         // The specific ERC20 token template does not matter for these unit tests
         rootBridge.initialize(
+            roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
             CHILD_BRIDGE_ADAPTOR_STRING,
@@ -114,7 +126,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
     function test_onMessageReceive_TransfersTokens() public {
         // Need to first map the token.
-        rootBridge.mapToken(token);
+        rootBridge.mapToken{value: 1 ether}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
 
@@ -150,7 +162,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
     function test_onMessageReceive_TransfersETH() public {
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
 
         uint256 thisPreBal = address(this).balance;
         uint256 bridgePreBal = address(rootBridge).balance;
@@ -166,7 +178,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     function test_onMessageReceive_TransfersTokens_DifferentReceiver() public {
         address receiver = address(123456);
         // Need to first map the token.
-        rootBridge.mapToken(token);
+        rootBridge.mapToken{value: 1 ether}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
 
@@ -206,7 +218,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     function test_onMessageReceive_TransfersETH_DifferentReceiver() public {
         address receiver = address(123456);
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
 
         uint256 receiverPreBal = address(receiver).balance;
         uint256 bridgePreBal = address(rootBridge).balance;
@@ -221,7 +233,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEvent() public {
         // Need to first map the token.
-        rootBridge.mapToken(token);
+        rootBridge.mapToken{value: 1 ether}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
 
@@ -249,13 +261,13 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
-    function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForETH() public {
+    function test_onMessageReceive_EmitsRootChainETHWithdrawEventForETH() public {
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
 
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
+        emit RootChainETHWithdraw(
             NATIVE_ETH, address(rootBridge.childETHToken()), address(this), address(this), withdrawAmount
         );
         vm.prank(address(mockAxelarAdaptor));
@@ -265,7 +277,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
         address receiver = address(123456);
         // Need to first map the token.
-        rootBridge.mapToken(token);
+        rootBridge.mapToken{value: 1 ether}(token);
         // And give the bridge some tokens
         token.transfer(address(rootBridge), 100 ether);
 
@@ -290,14 +302,14 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
     }
 
-    function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForETH_DifferentReceiver() public {
+    function test_onMessageReceive_EmitsRootChainETHWithdrawEventForETH_DifferentReceiver() public {
         address receiver = address(123456);
         // Give bridge some ETH
-        Address.sendValue(payable(rootBridge), 100 ether);
+        deal(address(rootBridge), 100 ether);
 
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
         vm.expectEmit();
-        emit RootChainERC20Withdraw(
+        emit RootChainETHWithdraw(
             NATIVE_ETH, address(rootBridge.childETHToken()), address(this), receiver, withdrawAmount
         );
         vm.prank(address(mockAxelarAdaptor));

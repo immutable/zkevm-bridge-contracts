@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {IWETH} from "../../interfaces/root/IWETH.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
@@ -17,7 +17,7 @@ contract WETH is IWETH {
     mapping(address => mapping(address => uint256)) public allowance;
 
     /**
-     * @notice Fallback function on recieving native ETH.
+     * @notice Fallback function on receiving native ETH.
      */
     receive() external payable {
         deposit();

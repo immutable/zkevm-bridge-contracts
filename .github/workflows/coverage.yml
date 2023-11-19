@@ -1,0 +1,54 @@
+name: Coverage Report
+
+on:
+    pull_request:
+
+env:
+  FOUNDRY_PROFILE: ci
+  GITHUB_TOKEN: ${{ secrets.PLATFORM_SA_GITHUB_TOKEN }}
+
+jobs:
+  check:
+    strategy:
+      fail-fast: true
+
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Restore node modules from cache
+        uses: ./.github/actions/node-cache
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
+        id: build
+
+        # `forge coverage` doesn't have an `exclude-path` flag.
+        # See open issue: https://github.com/foundry-rs/foundry/issues/2988
+        # We manually exclude output for the src/test directory, as well as
+        # the 'Total' row which would be askew with out the full data set.
+      - name: Run Forge coverage
+        run: |
+          forge coverage --report summary | grep -v "test/" | grep -v "| Total" > ./coverage.out
+        id: coverage
+
+      - name: Debug coverage report
+        run: |
+          cat ./coverage.out
+
+      - name: Publish report
+        uses: ./.github/actions/coverage
+        with:
+          coverage: ./coverage.out
+          target: coverage
+        

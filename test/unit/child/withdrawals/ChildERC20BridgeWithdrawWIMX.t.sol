@@ -1,27 +1,24 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
     ChildERC20Bridge,
+    IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
-import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../../utils.t.sol";
+import {Utils, IPausable} from "../../../utils.t.sol";
 import {WIMX} from "../../../../src/child/WIMX.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
-    address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
-    address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     ChildERC20 public childTokenTemplate;
     ChildERC20Bridge public childBridge;
     MockAdaptor public mockAdaptor;
@@ -37,7 +34,14 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         Address.sendValue(payable(wIMXToken), 100 ether);
 
         childBridge = new ChildERC20Bridge();
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
+            adaptorManager: address(this)
+        });
         childBridge.initialize(
+            roles,
             address(mockAdaptor),
             ROOT_BRIDGE_ADAPTOR,
             address(childTokenTemplate),
@@ -45,6 +49,30 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
             ROOT_IMX_TOKEN,
             address(wIMXToken)
         );
+    }
+
+    /**
+     * WITHDRAW WIMX
+     */
+
+    function test_RevertsIf_WithdrawWIMXWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        childBridge.withdrawWIMX{value: 1 ether}(100);
+    }
+
+    function test_WithdrawWIMXResumesFunctionalityAfterUnpausing() public {
+        test_RevertsIf_WithdrawWIMXWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_WithdrawWIMX_CallsBridgeAdaptor();
+    }
+
+    function test_RevertsIf_withdrawWIMXCalledWithZeroFee() public {
+        uint256 withdrawAmount = 7 ether;
+
+        vm.expectRevert(NoGas.selector);
+        childBridge.withdrawWIMX(withdrawAmount);
     }
 
     function test_RevertsIf_WithdrawWIMXCalledWithInsufficientFund() public {
@@ -65,7 +93,7 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
     }
 
-    function test_RevertsIf_ZeroAmountIsProvided() public {
+    function test_RevertsIf_WithdrawWIMXCalledWithZeroAmount() public {
         uint256 withdrawFee = 300;
 
         vm.expectRevert(ZeroAmount.selector);

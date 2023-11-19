@@ -1,46 +1,44 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {
     ChildERC20Bridge,
+    IChildERC20Bridge,
     IChildERC20BridgeEvents,
-    IERC20Metadata,
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
-import {Utils} from "../../../utils.t.sol";
+import {Utils, IPausable} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
-    address constant ROOT_BRIDGE = address(3);
     string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
     address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     ChildERC20 public childTokenTemplate;
-    ChildERC20 public rootToken;
-    ChildERC20 public childToken;
     ChildERC20 public childETHToken;
     ChildERC20Bridge public childBridge;
     MockAdaptor public mockAdaptor;
 
     function setUp() public {
-        rootToken = new ChildERC20();
-        rootToken.initialize(address(456), "Test", "TST", 18);
-
         childTokenTemplate = new ChildERC20();
-        childTokenTemplate.initialize(address(123), "Test", "TST", 18);
 
         mockAdaptor = new MockAdaptor();
 
         childBridge = new ChildERC20Bridge();
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: pauser,
+            unpauser: unpauser,
+            adaptorManager: address(this)
+        });
         childBridge.initialize(
+            roles,
             address(mockAdaptor),
             ROOT_BRIDGE_ADAPTOR,
             address(childTokenTemplate),
@@ -49,20 +47,33 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
             WIMX_TOKEN_ADDRESS
         );
 
-        bytes memory mapTokenData =
-            abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
-
-        vm.prank(address(mockAdaptor));
-        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, mapTokenData);
-
-        childToken = ChildERC20(childBridge.rootTokenToChildToken(address(rootToken)));
-        vm.prank(address(childBridge));
-        childToken.mint(address(this), 1000000 ether);
-        childToken.approve(address(childBridge), 1000000 ether);
-
         childETHToken = ChildERC20(childBridge.childETHToken());
         vm.prank(address(childBridge));
         childETHToken.mint(address(this), 100 ether);
+    }
+
+    /**
+     * WITHDRAW ETH
+     */
+
+    function test_RevertsIf_WithdrawETHWhenPaused() public {
+        pause(IPausable(address(childBridge)));
+        vm.expectRevert("Pausable: paused");
+        childBridge.withdrawETH{value: 1 ether}(100);
+    }
+
+    function test_WithdrawETHResumesFunctionalityAfterUnpausing() public {
+        test_RevertsIf_WithdrawETHWhenPaused();
+        unpause(IPausable(address(childBridge)));
+        // Expect success case to pass
+        test_WithdrawETH_EmitsChildChainEthWithdrawEvent();
+    }
+
+    function test_RevertsIf_WithdrawETHCalledWithZeroFee() public {
+        uint256 withdrawAmount = 100;
+
+        vm.expectRevert(NoGas.selector);
+        childBridge.withdrawETH(withdrawAmount);
     }
 
     function test_RevertsIf_WithdrawEthCalledWithInsufficientFund() public {
