@@ -111,7 +111,6 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
      * @param newRootWETHToken Address of ERC20 WETH on the root chain.
      * @param newChildChain Name of child chain.
      * @param newImxCumulativeDepositLimit The cumulative IMX deposit limit.
-     * @dev Can only be called once.
      */
     function __RootERC20Bridge_init(
         InitializationRoles memory newRoles,
