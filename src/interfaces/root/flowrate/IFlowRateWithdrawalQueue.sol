@@ -22,7 +22,7 @@ interface IFlowRateWithdrawalQueueEvents {
 }
 
 interface IFlowRateWithdrawalQueueErrors {
-    // // A withdrawal was being processed, but the index is outside of the array.
+    // A withdrawal was being processed, but the index is outside of the array.
     error IndexOutsideWithdrawalQueue(uint256 lengthOfQueue, uint256 requestedIndex);
 
     // A withdrawal was being processed, but the withdrawal is not yet available.
