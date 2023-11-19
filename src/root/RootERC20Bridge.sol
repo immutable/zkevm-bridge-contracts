@@ -28,12 +28,7 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
  */
-contract RootERC20Bridge is
-    IRootERC20Bridge,
-    IRootERC20BridgeEvents,
-    IRootERC20BridgeErrors,
-    BridgeRoles
-{
+contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors, BridgeRoles {
     using SafeERC20 for IERC20Metadata;
 
     /// @dev leave this as the first param for the integration tests
