@@ -17,7 +17,7 @@ interface IFlowRateWithdrawalQueueEvents {
         address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 index
     );
 
-    // Indicates that the new withdrawal delay.
+    // Indicates the new withdrawal delay.
     event WithdrawalDelayUpdated(uint256 delay, uint256 previousDelay);
 }
 
