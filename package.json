@@ -10,7 +10,6 @@
         "test": "forge test",
         "lint": "forge fmt",
         "startlocaldev": "cd scripts/localdev; ./start.sh",
-        "startaxelar": "cd scripts/localdev; node axelar_setup.js",
         "stoplocaldev": "cd scripts/localdev; ./stop.sh"
     },
     "author": "",

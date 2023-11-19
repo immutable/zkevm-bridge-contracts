@@ -1,6 +1,6 @@
 'use strict';
 const { ethers: hardhat } = require("hardhat");
-const helper = require("./helpers.js");
+const helper = require("../helpers/helpers.js");
 const { ethers, ContractFactory } = require("ethers");
 const fs = require('fs');
 require('dotenv').config();

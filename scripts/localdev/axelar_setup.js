@@ -1,6 +1,6 @@
 'use strict';
 const { Network, networks, EvmRelayer, relay } = require('@axelar-network/axelar-local-dev');
-const helper = require("./helpers.js");
+const helper = require("../helpers/helpers.js");
 const { ethers } = require("ethers");
 const fs = require('fs');
 require('dotenv').config();
