@@ -3,6 +3,8 @@
 # Stop previous deployment.
 ./stop.sh
 
+mv .env.local .env
+
 # Start root & child chain.
 npx hardhat node --config ./rootchain.config.js --port 8500 > /dev/null 2>&1 &
 npx hardhat node --config ./childchain.config.js --port 8501 > /dev/null 2>&1 &
