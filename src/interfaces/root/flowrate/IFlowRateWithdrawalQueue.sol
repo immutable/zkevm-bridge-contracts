@@ -14,7 +14,12 @@ interface IFlowRateWithdrawalQueueEvents {
 
     // Indicates a withdrawal has been processed.
     event ProcessedWithdrawal(
-        address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 index
+        address indexed token,
+        address indexed withdrawer,
+        address indexed receiver,
+        uint256 amount,
+        uint256 timestamp,
+        uint256 index
     );
 
     // Indicates that the new withdrawal delay.

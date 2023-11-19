@@ -22,7 +22,7 @@ import {Utils} from "../../../utils.t.sol";
 import {WETH} from "../../../../src/test/root/WETH.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
-contract RootERC20BridgeWithdrawIntegrationTest is
+contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
     Test,
     IRootERC20BridgeErrors,
     IRootERC20BridgeEvents,

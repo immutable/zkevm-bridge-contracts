@@ -133,7 +133,7 @@ abstract contract FlowRateWithdrawalQueue is IFlowRateWithdrawalQueueEvents, IFl
         // Zeroize the old queue item to save some gas.
         delete withdrawals[index];
 
-        emit ProcessedWithdrawal(token, withdrawer, receiver, amount, index);
+        emit ProcessedWithdrawal(token, withdrawer, receiver, amount, block.timestamp, index);
     }
 
     /**
