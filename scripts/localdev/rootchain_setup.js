@@ -30,7 +30,7 @@ async function main() {
     ]);
 
     // Deploy IMX contract
-    let IMXObj = JSON.parse(fs.readFileSync('../out/ERC20PresetMinterPauser.sol/ERC20PresetMinterPauser.json', 'utf8'));
+    let IMXObj = JSON.parse(fs.readFileSync('../../out/ERC20PresetMinterPauser.sol/ERC20PresetMinterPauser.json', 'utf8'));
     console.log("Deploy IMX contract on root chain...");
 
     let IMXFactory = new ContractFactory(IMXObj.abi, IMXObj.bytecode, admin);
@@ -40,7 +40,7 @@ async function main() {
     console.log("IMX deployed at: " + IMX.address);
 
     // Deploy WETH contract
-    let WETHObj = JSON.parse(fs.readFileSync('../out/WETH.sol/WETH.json', 'utf8'))
+    let WETHObj = JSON.parse(fs.readFileSync('../../out/WETH.sol/WETH.json', 'utf8'))
     console.log("Deploy WETH contract on root chain...");
     let WETHFactory = new ContractFactory(WETHObj.abi, WETHObj.bytecode, admin);
     let WETH = await WETHFactory.deploy();

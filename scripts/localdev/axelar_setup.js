@@ -79,20 +79,20 @@ async function main() {
     childChain.name = childChainName;
     childChain.chainId = Number(childChainID);
     childChain.provider = childProvider;
-    childChain.ownerWallet = ethers.Wallet.createRandom().connect(childProvider);
-    childChain.operatorWallet = ethers.Wallet.createRandom().connect(childProvider);
-    childChain.relayerWallet = ethers.Wallet.createRandom().connect(childProvider);
+    childChain.ownerWallet = rootChain.ownerWallet.connect(childProvider);
+    childChain.operatorWallet = rootChain.operatorWallet.connect(childProvider);
+    childChain.relayerWallet = rootChain.relayerWallet.connect(childProvider);
     childChain.adminWallets = [
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
-        ethers.Wallet.createRandom().connect(childProvider),
+        rootChain.adminWallets[0].connect(childProvider),
+        rootChain.adminWallets[1].connect(childProvider),
+        rootChain.adminWallets[2].connect(childProvider),
+        rootChain.adminWallets[3].connect(childProvider),
+        rootChain.adminWallets[4].connect(childProvider),
+        rootChain.adminWallets[5].connect(childProvider),
+        rootChain.adminWallets[6].connect(childProvider),
+        rootChain.adminWallets[7].connect(childProvider),
+        rootChain.adminWallets[8].connect(childProvider),
+        rootChain.adminWallets[9].connect(childProvider),
     ];
     childChain.threshold = 3;
     childChain.lastRelayedBlock = await childProvider.getBlockNumber();

@@ -6,17 +6,12 @@
         "node": "^16.0.0 || ^18.0.0"
     },
     "scripts": {
-        "test": "TEST=true mocha examples/tests",
-        "start": "node axelar-local-dev/scripts/runStart",
-        "deploy": "node axelar-local-dev/scripts/runDeploy",
-        "execute": "node axelar-local-dev/scripts/runExecute",
-        "setup": "node axelar-local-dev/scripts/runSetupEnv",
-        "check-balance": "node axelar-local-dev/scripts/runCheckBalance",
-        "build": "rm -rf artifacts && npx hardhat clean && npx hardhat compile",
-        "build-aptos": "bash ./build-aptos.sh",
-        "startlocaldev": "cd localdev; ./start.sh",
-        "startaxelar": "cd localdev; node axelar_setup.js",
-        "stoplocaldev": "cd localdev; ./stop.sh"
+        "build": "forge build",
+        "test": "forge test",
+        "lint": "forge fmt",
+        "startlocaldev": "cd scripts/localdev; ./start.sh",
+        "startaxelar": "cd scripts/localdev; node axelar_setup.js",
+        "stoplocaldev": "cd scripts/localdev; ./stop.sh"
     },
     "author": "",
     "license": "ISC",

@@ -16,5 +16,13 @@ async function main() {
 
     console.log("Child admin EOA now has " + ethers.formatEther(await hardhat.provider.getBalance(childEOA.address)) + " IMX.");
     console.log("Finished setting up on child chain.")
+
+    // TODO: DELETE ME!!!
+    let axelarDeployerKey = helper.requireEnv("AXELAR_CHILD_EOA_SECRET");
+    let axelarDeployer = new ethers.Wallet(axelarDeployerKey);
+    await ethers.provider.send("hardhat_setBalance", [
+        axelarDeployer.address,
+        "0x1B1AE4D6E2EF500000",
+    ]);
 }
 main();

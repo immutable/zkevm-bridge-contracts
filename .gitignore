@@ -32,5 +32,5 @@ broadcast/DeployChildContracts.s.sol/2501/
 node_modules/
 
 # Bootstrap output files
-bootstrap/*.out.tmp
-localdev/*.contracts.json
+scripts/bootstrap/*.out.tmp
+scripts/localdev/*.contracts.json
