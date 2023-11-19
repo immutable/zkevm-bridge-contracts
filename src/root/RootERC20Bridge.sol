@@ -29,7 +29,6 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
  */
 contract RootERC20Bridge is
-    PausableUpgradeable,
     IRootERC20Bridge,
     IRootERC20BridgeEvents,
     IRootERC20BridgeErrors,
