@@ -17,7 +17,7 @@ abstract contract FlowRateDetection {
     // Holds flow rate information for a single token.
     struct Bucket {
         // The number of tokens that can fit in the bucket.
-        // A capacity of zero indicates that flow rate detection is disabled for the token.
+        // A capacity of zero indicates that flow rate detection is not configured for the token.
         uint256 capacity;
         // The number of tokens in the bucket.
         uint256 depth;
