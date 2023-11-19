@@ -434,7 +434,7 @@ contract RootERC20BridgeFlowRateUnitTest is
     function testUnpauseBadAuth() public {
         vm.startPrank(pauseAdmin);
         rootBridgeFlowRate.pause();
-        vm.startPrank(nonAdmin);
+        changePrank(nonAdmin);
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
