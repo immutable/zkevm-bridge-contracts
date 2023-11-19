@@ -95,7 +95,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     uint256 constant LARGE_ETH = 100000 ether;
 
     uint256 constant CHARLIE_REMAINDER = 17;
-    uint256 constant CHARLIE_REMAINDER_ETH = 17 ether;
     uint256 constant BANK_OF_CHARLIE_TREASURY = BRIDGED_VALUE + CHARLIE_REMAINDER;
 
     uint256 constant BRIDGED_VALUE = CAPACITY * 100;
