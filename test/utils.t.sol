@@ -7,6 +7,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
 import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
+import {RootERC20BridgeFlowRate} from "../src/root//flowrate/RootERC20BridgeFlowRate.sol";
 import {ChildERC20Bridge, IChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {WETH} from "../src/test/root/WETH.sol";
@@ -91,7 +92,7 @@ contract Utils is Test {
     struct RootIntegration {
         ERC20PresetMinterPauser imxToken;
         ERC20PresetMinterPauser token;
-        RootERC20Bridge rootBridge;
+        RootERC20BridgeFlowRate rootBridgeFlowRate;
         RootAxelarBridgeAdaptor axelarAdaptor;
         MockAxelarGateway mockAxelarGateway;
         MockAxelarGasService axelarGasService;
@@ -112,11 +113,7 @@ contract Utils is Test {
         integrationTest.imxToken = ERC20PresetMinterPauser(imxTokenAddress);
         integrationTest.imxToken.mint(address(this), 1000000 ether);
 
-        // deployCodeTo("WETH9.sol", abi.encode("Wrapped ETH", "WETH"), wethTokenAddress);
-        // imxToken = ERC20PresetMinterPauser(imxTokenAddress);
-        // imxToken.mint(address(this), 1000000 ether);
-
-        integrationTest.rootBridge = new RootERC20Bridge();
+        integrationTest.rootBridgeFlowRate = new RootERC20BridgeFlowRate();
         integrationTest.mockAxelarGateway = new MockAxelarGateway();
         integrationTest.axelarGasService = new MockAxelarGasService();
 
@@ -130,7 +127,7 @@ contract Utils is Test {
             adaptorManager: address(this)
         });
 
-        integrationTest.rootBridge.initialize(
+        integrationTest.rootBridgeFlowRate.initialize(
             roles,
             address(integrationTest.axelarAdaptor),
             childBridge,
@@ -139,11 +136,12 @@ contract Utils is Test {
             imxTokenAddress,
             wethTokenAddress,
             childBridgeName,
-            imxCumulativeDepositLimit
+            imxCumulativeDepositLimit,
+            address(this)
         );
 
         integrationTest.axelarAdaptor.initialize(
-            address(integrationTest.rootBridge), childBridgeName, address(integrationTest.axelarGasService)
+            address(integrationTest.rootBridgeFlowRate), childBridgeName, address(integrationTest.axelarGasService)
         );
     }
 
