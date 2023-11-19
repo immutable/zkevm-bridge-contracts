@@ -5,7 +5,6 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-// import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
