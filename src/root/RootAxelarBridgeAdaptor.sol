@@ -145,7 +145,7 @@ contract RootAxelarBridgeAdaptor is
      * @param sourceAddress_ The contract address that sent the message on the source chain.
      * @param payload_ The message payload.
      * @custom:assumes `sourceAddress_` is a 20 byte address.
-    */
+     */
     function _execute(string calldata sourceChain_, string calldata sourceAddress_, bytes calldata payload_)
         internal
         override
