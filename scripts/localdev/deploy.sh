@@ -17,3 +17,6 @@ SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap2/6_imx_burning.js
 
 # IMX Rebalancing
 SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap2/7_imx_rebalancing.js
+
+# Initialise root contracts
+SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap2/8_root_initialisation.js
