@@ -22,6 +22,20 @@ interface IRootERC20Bridge {
      */
     function grantVariableManagerRole(address account) external;
 
+        /**
+     * @notice Updates the root bridge adaptor.
+     * @param newRootBridgeAdaptor Address of new root bridge adaptor.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     */
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external;
+
+    /**
+     * @notice Updates the child bridge adaptor.
+     * @param newChildBridgeAdaptor String checksum address of new root bridge adaptor.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     */
+    function updateChildBridgeAdaptor(string memory newChildBridgeAdaptor) external;
+
     function childBridgeAdaptor() external view returns (string memory);
     /**
      * @notice Receives a bridge message from child chain, parsing the message type then executing.

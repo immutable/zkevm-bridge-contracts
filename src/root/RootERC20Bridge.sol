@@ -175,9 +175,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
     }
 
     /**
-     * @notice Updates the root bridge adaptor.
-     * @param newRootBridgeAdaptor Address of new root bridge adaptor.
-     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     * @inheritdoc IRootERC20Bridge
      */
     function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
         if (newRootBridgeAdaptor == address(0)) {
@@ -188,9 +186,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
     }
 
     /**
-     * @notice Updates the child bridge adaptor.
-     * @param newChildBridgeAdaptor String checksum address of new root bridge adaptor.
-     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     * @inheritdoc IRootERC20Bridge
      */
     function updateChildBridgeAdaptor(string memory newChildBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
         if (bytes(newChildBridgeAdaptor).length == 0) {
