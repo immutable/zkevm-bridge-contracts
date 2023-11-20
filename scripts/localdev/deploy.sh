@@ -8,3 +8,6 @@ SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap2/3_child_deployment.js
 
 # Deploy root contracts
 SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap2/4_root_deployment.js
+
+# Initialise child contracts
+SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap2/5_child_initialisation.js
