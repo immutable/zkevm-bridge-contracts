@@ -76,6 +76,8 @@ async function run() {
     console.log("Transfer...")
     let resp = await IMX.connect(adminWallet).transfer(rootBridgeAddr, balanceAmt);
     await helper.waitForReceipt(resp.hash, rootProvider);
+    adminL1Balance = await IMX.balanceOf(adminAddr);
+    rootBridgeBalance = await IMX.balanceOf(rootBridgeAddr);
     console.log("Admin L1 IMX balance: ", ethers.utils.formatEther(adminL1Balance));
     console.log("Root bridge L1 IMX balance: ", ethers.utils.formatEther(rootBridgeBalance));
 }

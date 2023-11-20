@@ -32,7 +32,7 @@ broadcast/DeployChildContracts.s.sol/2501/
 node_modules/
 
 # Bootstrap output files
-scripts/bootstrap/*.out.tmp
+scripts/bootstrap/*.contracts.json
 scripts/localdev/*.contracts.json
 # MacOS
 .DS_Store
