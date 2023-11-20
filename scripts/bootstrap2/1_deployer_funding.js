@@ -7,13 +7,13 @@ const { LedgerSigner } = require('@ethersproject/hardware-wallets')
 
 async function run() {
     // Check environment variables
-    let childRPCURL = requireEnv("CHILD_RPC_URL");
-    let childChainID = requireEnv("CHILD_CHAIN_ID");
-    let adminEOASecret = requireEnv("ADMIN_EOA_SECRET");
-    let axelarEOA = requireEnv("AXELAR_EOA");
-    let axelarFund = requireEnv("AXELAR_FUND");
-    let deployerEOA = requireEnv("CHILD_DEPLOYER_EOA");
-    let deployerFund = requireEnv("CHILD_DEPLOYER_FUND");
+    let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
+    let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
+    let adminEOASecret = helper.requireEnv("CHILD_ADMIN_EOA_SECRET");
+    let axelarEOA = helper.requireEnv("AXELAR_EOA");
+    let axelarFund = helper.requireEnv("AXELAR_FUND");
+    let deployerEOA = helper.requireEnv("CHILD_DEPLOYER_ADDR");
+    let deployerFund = helper.requireEnv("CHILD_DEPLOYER_FUND");
 
     // Get admin EOA address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
@@ -34,10 +34,10 @@ async function run() {
     // Execute
     console.log("Axelar EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(axelarEOA)));
     console.log("Deployer EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(deployerEOA)));
-    console.log("Fund Axelar and deployer in...");
+    console.log("Fund Axelar and deployer on child chain in...");
     await helper.waitForConfirmation();
 
-    let [priorityFee, maxFee] = await getFee(adminWallet);
+    let [priorityFee, maxFee] = await helper.getFee(adminWallet);
     let resp = await adminWallet.sendTransaction({
         to: axelarEOA,
         value: ethers.utils.parseEther(axelarFund),
@@ -46,7 +46,7 @@ async function run() {
     })
     await helper.waitForReceipt(resp.hash, childProvider);
 
-    [priorityFee, maxFee] = await getFee(adminWallet);
+    [priorityFee, maxFee] = await helper.getFee(adminWallet);
     resp = await adminWallet.sendTransaction({
         to: deployerEOA,
         value: ethers.utils.parseEther(deployerFund),
