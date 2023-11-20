@@ -70,6 +70,50 @@ describe("Bridge e2e test", () => {
         childWIMX = new ethers.Contract(childWIMXAddr, wrappedIMXObj.abi, childProvider);
     })
 
+    it("should successfully deposit IMX to self from L1 to L2", async() => {
+        // Get IMX balance on root & child chains before deposit
+        let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childProvider.getBalance(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("10.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootIMX.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await helper.waitForReceipt(resp.hash, rootProvider);
+
+        // IMX deposit L1 to L2
+        resp = await rootBridge.connect(rootTestWallet).deposit(rootIMX.address, amt, {
+            value: bridgeFee,
+        });
+        await helper.waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let postBalL2;
+
+        while (true) {
+            postBalL2 = await childProvider.getBalance(childTestWallet.address);
+            if (!preBalL2.eq(postBalL2)) {
+                break;
+            }
+            await helper.delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.sub(amt);
+        let expectedPostL2 = preBalL2.add(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(60000)
+
+    it("should successfully withdraw IMX to self from L2 to L1", async() => {
+        // TODO.
+    }).timeout(120000)
+
+    it("should successfully withdraw wIMX to self from L2 to L1", async() => {
+        // TODO.
+    }).timeout(120000)
+
     it("should successfully deposit ETH to self from L1 to L2", async() => {
         // Get ETH balance on root & child chains before deposit
         let preBalL1 = await rootProvider.getBalance(rootTestWallet.address);
@@ -104,4 +148,20 @@ describe("Bridge e2e test", () => {
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(60000)
+
+    it("should successfully deposit wETH to self from L1 to L2", async() => {
+        // TODO.
+    }).timeout(60000)
+
+    it("should successfully withdraw ETH to self from L2 to L1", async() => {
+        // TODO.
+    }).timeout(120000)
+
+    it("should successfully deposit mapped ERC20 Token to self from L1 to L2", async() => {
+        // TODO.
+    }).timeout(60000)
+
+    it("should successfully withdraw mapped ERC20 Token to self from L2 to L1", async() => {
+        // TODO.
+    }).timeout(120000)
 })
