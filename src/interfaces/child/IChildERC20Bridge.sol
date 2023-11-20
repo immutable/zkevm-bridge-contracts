@@ -35,7 +35,7 @@ interface IChildERC20Bridge {
      * @param sourceChain The id of the chain the message originated from.
      * @param sourceAddress The address of the contract on the root chain that sent the message.
      * @param data The data payload of the message.
-     * @dev This function is called by the underlying bridge adaptor on the Child chain, when it receives a validated message from the GMP.
+     * @dev This function is called by the underlying bridge adaptor on the child chain, when it receives a validated message from the GMP.
      */
     function onMessageReceive(string calldata sourceChain, string calldata sourceAddress, bytes calldata data)
         external;

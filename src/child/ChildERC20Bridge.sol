@@ -19,7 +19,7 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  * @title Child ERC20 Bridge
  * @notice ChildERC20Bridge is a bridge contract for the child chain, which enables bridging of standard ERC20 tokens, ETH and IMX from the root chain to the child chain and back.
  * @dev Features:
- *      - Map: A token that is originally created on the Root chain, can be mapped to the child chain, where a wrapped version of the token is created and managed by the bridge.
+ *      - Map: A token that is originally created on the root chain, can be mapped to the child chain, where a wrapped version of the token is created and managed by the bridge.
  *      - Deposit: Standard ERC20 tokens, native ETH, wrapped ETH or IMX that can be deposited on the root chain, and wrapped version of the tokens are issued on the child chain.
  *      - Withdraw: Bridged wrapped tokens can be withdrawn, so that they can be redeemed for their original tokens on the root chain.
  *      - Manage Role Based Access Control

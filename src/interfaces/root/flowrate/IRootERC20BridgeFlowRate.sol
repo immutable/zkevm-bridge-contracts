@@ -28,7 +28,7 @@ interface IRootERC20BridgeFlowRateEvents {
     /**
      * @notice Indicates a withdrawal was queued.
      * @param token Address of token that is being withdrawn.
-     * @param withdrawer Child chain sender of tokens.
+     * @param withdrawer child chain sender of tokens.
      * @param receiver Recipient of tokens.
      * @param amount The number of tokens.
      * @param delayWithdrawalLargeAmount is true if the reason for queuing was a large transfer.
