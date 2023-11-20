@@ -3,7 +3,7 @@
 # Stop previous deployment.
 ./stop.sh
 
-mv .env.local .env
+cp .env.local .env
 
 # Start root & child chain.
 npx hardhat node --config ./rootchain.config.js --port 8500 > /dev/null 2>&1 &
@@ -33,7 +33,13 @@ fi
 echo "Successfully setup root chain and child chain..."
 
 # Fund accounts
-# TODO!
+node ../bootstrap2/1_deployer_funding.js
+if [ $? -ne 0 ]; then
+    ./stop.sh
+    echo "Fail to run 1_deployer_funding.js"
+    exit 1
+fi
+echo "Successfully run 1_deployer_funding.js..."
 
 # Setup axelar
 node axelar_setup.js

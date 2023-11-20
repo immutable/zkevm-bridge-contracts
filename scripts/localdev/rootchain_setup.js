@@ -1,13 +1,14 @@
 'use strict';
 const { ethers: hardhat } = require("hardhat");
-const helper = require("../helpers/helpers.js");
 const { ethers, ContractFactory } = require("ethers");
+const helper = require("../helpers/helpers.js");
 const fs = require('fs');
 require('dotenv').config();
 
 async function main() {
     let rootRPCURL = helper.requireEnv("ROOT_RPC_URL");
     let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
+    let rootAdminKey = helper.requireEnv("ROOT_EOA_SECRET");
     let rootDeployerKey = helper.requireEnv("ROOT_DEPLOYER_SECRET");
     let axelarDeployerKey = helper.requireEnv("AXELAR_ROOT_EOA_SECRET");
 
@@ -20,8 +21,8 @@ async function main() {
     // Get axelar wallet on the root chain.
     let axelarDeployer = new ethers.Wallet(axelarDeployerKey, rootProvider);
     
-    // Generate a key to deploy IMX contract and fund ROOT_DEPLOYER.
-    let admin = ethers.Wallet.createRandom().connect(rootProvider);
+    // Get root admin eoa wallet.
+    let admin = new ethers.Wallet(rootAdminKey, rootProvider);
 
     // Give admin account 10000 ETH.
     await hardhat.provider.send("hardhat_setBalance", [
