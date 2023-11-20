@@ -124,10 +124,7 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
     /**
      * @inheritdoc IChildERC20Bridge
      */
-    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor)
-        external
-        onlyRole(ADAPTOR_MANAGER_ROLE)
-    {
+    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
         if (bytes(newRootBridgeAdaptor).length == 0) {
             revert InvalidRootERC20BridgeAdaptor();
         }
