@@ -43,36 +43,6 @@ async function main() {
     rootChain.threshold = 3;
     rootChain.lastRelayedBlock = await rootProvider.getBlockNumber();
     rootChain.lastExpressedBlock = rootChain.lastRelayedBlock;
-    // Fund accounts
-    let axelarRootEOA = new ethers.Wallet(axelarRootEOAKey, rootProvider);
-    let resp = await axelarRootEOA.sendTransaction({
-        to: rootChain.ownerWallet.address,
-        value: ethers.utils.parseEther("35.0"),
-    })
-    await helper.waitForReceipt(resp.hash, rootProvider);
-    resp = await axelarRootEOA.sendTransaction({
-        to: rootChain.operatorWallet.address,
-        value: ethers.utils.parseEther("35.0"),
-    })
-    await helper.waitForReceipt(resp.hash, rootProvider);
-    resp = await axelarRootEOA.sendTransaction({
-        to: rootChain.relayerWallet.address,
-        value: ethers.utils.parseEther("35.0"),
-    })
-    await helper.waitForReceipt(resp.hash, rootProvider);
-    for (let i = 0; i < 10; i++) {
-        resp = await axelarRootEOA.sendTransaction({
-            to: rootChain.adminWallets[i].address,
-            value: ethers.utils.parseEther("35.0"),
-        })
-        await helper.waitForReceipt(resp.hash, rootProvider);
-    }
-    // Deploy root contracts.
-    await rootChain.deployConstAddressDeployer();
-    await rootChain.deployCreate3Deployer();
-    let rootGateway = await rootChain.deployGateway();
-    let rootGasService = await rootChain.deployGasReceiver();
-    networks.push(rootChain);
 
     // Create child chain.
     let childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
@@ -98,7 +68,8 @@ async function main() {
     childChain.threshold = 3;
     childChain.lastRelayedBlock = await childProvider.getBlockNumber();
     childChain.lastExpressedBlock = childChain.lastRelayedBlock;
-    // Fund accounts
+
+    // Fund accounts on child chain.
     let axelarChildEOA = new ethers.Wallet(axelarChildEOAKey, childProvider);
     resp = await axelarChildEOA.sendTransaction({
         to: childChain.ownerWallet.address,
@@ -128,6 +99,37 @@ async function main() {
     let childGateway = await childChain.deployGateway();
     let childGasService = await childChain.deployGasReceiver();
     networks.push(childChain);
+
+    // Fund accounts on root chain.
+    let axelarRootEOA = new ethers.Wallet(axelarRootEOAKey, rootProvider);
+    let resp = await axelarRootEOA.sendTransaction({
+        to: rootChain.ownerWallet.address,
+        value: ethers.utils.parseEther("35.0"),
+    })
+    await helper.waitForReceipt(resp.hash, rootProvider);
+    resp = await axelarRootEOA.sendTransaction({
+        to: rootChain.operatorWallet.address,
+        value: ethers.utils.parseEther("35.0"),
+    })
+    await helper.waitForReceipt(resp.hash, rootProvider);
+    resp = await axelarRootEOA.sendTransaction({
+        to: rootChain.relayerWallet.address,
+        value: ethers.utils.parseEther("35.0"),
+    })
+    await helper.waitForReceipt(resp.hash, rootProvider);
+    for (let i = 0; i < 10; i++) {
+        resp = await axelarRootEOA.sendTransaction({
+            to: rootChain.adminWallets[i].address,
+            value: ethers.utils.parseEther("35.0"),
+        })
+        await helper.waitForReceipt(resp.hash, rootProvider);
+    }
+    // Deploy root contracts.
+    await rootChain.deployConstAddressDeployer();
+    await rootChain.deployCreate3Deployer();
+    let rootGateway = await rootChain.deployGateway();
+    let rootGasService = await rootChain.deployGasReceiver();
+    networks.push(rootChain);
 
     console.log("Axelar network started.")
     let contractData = {
