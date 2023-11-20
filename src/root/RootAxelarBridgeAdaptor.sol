@@ -70,6 +70,42 @@ contract RootAxelarBridgeAdaptor is
     }
 
     /**
+     * @inheritdoc IRootAxelarBridgeAdaptor
+     */
+    function updateRootBridge(address newRootBridge) external override onlyRole(BRIDGE_MANAGER_ROLE) {
+        if (newRootBridge == address(0)) {
+            revert ZeroAddresses();
+        }
+
+        emit RootBridgeUpdated(address(rootBridge), newRootBridge);
+        rootBridge = IRootERC20Bridge(newRootBridge);
+    }
+
+    /**
+     * @inheritdoc IRootAxelarBridgeAdaptor
+     */
+    function updateChildChain(string memory newChildChain) external override onlyRole(TARGET_MANAGER_ROLE) {
+        if (bytes(newChildChain).length == 0) {
+            revert InvalidChildChain();
+        }
+
+        emit ChildChainUpdated(childChain, newChildChain);
+        childChain = newChildChain;
+    }
+
+    /**
+     * @inheritdoc IRootAxelarBridgeAdaptor
+     */
+    function updateGasService(address newGasService) external override onlyRole(GAS_SERVICE_MANAGER_ROLE) {
+        if (newGasService == address(0)) {
+            revert ZeroAddresses();
+        }
+
+        emit GasServiceUpdated(address(gasService), newGasService);
+        gasService = IAxelarGasService(newGasService);
+    }
+
+    /**
      * @inheritdoc IRootERC20BridgeAdaptor
      * @notice Sends an arbitrary message to the child chain, via the Axelar network.
      */

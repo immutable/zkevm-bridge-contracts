@@ -51,15 +51,55 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
         assertEq(address(axelarAdaptor.gateway()), address(mockAxelarGateway), "axelarGateway not set");
         assertEq(address(axelarAdaptor.gasService()), address(axelarGasService), "axelarGasService not set");
+        assertEq(axelarAdaptor.hasRole(axelarAdaptor.DEFAULT_ADMIN_ROLE(), address(this)), true, "defaultAdmin not set");
+        assertEq(
+            axelarAdaptor.hasRole(axelarAdaptor.BRIDGE_MANAGER_ROLE(), address(this)), true, "bridgeManager not set"
+        );
+        assertEq(
+            axelarAdaptor.hasRole(axelarAdaptor.GAS_SERVICE_MANAGER_ROLE(), address(this)),
+            true,
+            "gasServiceManager not set"
+        );
+        assertEq(
+            axelarAdaptor.hasRole(axelarAdaptor.TARGET_MANAGER_ROLE(), address(this)), true, "targetManager not set"
+        );
     }
 
-    function test_RevertWhen_InitializeGivenZeroAddress() public {
+    function test_RevertIf_InitializeWithZeroAdmin() public {
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        vm.expectRevert(ZeroAddresses.selector);
+        roles.defaultAdmin = address(0);
+        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, address(axelarGasService));
+    }
+
+    function test_RevertIf_InitializeWithZeroBridgeManager() public {
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        vm.expectRevert(ZeroAddresses.selector);
+        roles.bridgeManager = address(0);
+        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, address(axelarGasService));
+    }
+
+    function test_RevertIf_InitializeWithZeroGasServiceManager() public {
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        vm.expectRevert(ZeroAddresses.selector);
+        roles.gasServiceManager = address(0);
+        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, address(axelarGasService));
+    }
+
+    function test_RevertIf_InitializeWithZeroTargetManager() public {
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        vm.expectRevert(ZeroAddresses.selector);
+        roles.targetManager = address(0);
+        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, address(axelarGasService));
+    }
+
+    function test_RevertIf_InitializeGivenZeroAddress() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);
         newAdaptor.initialize(roles, address(0), CHILD_CHAIN_NAME, address(axelarGasService));
     }
 
-    function test_RevertWhen_InitializeGivenEmptyChildChainName() public {
+    function test_RevertIf_InitializeGivenEmptyChildChainName() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(InvalidChildChain.selector);
         newAdaptor.initialize(roles, address(this), "", address(axelarGasService));
