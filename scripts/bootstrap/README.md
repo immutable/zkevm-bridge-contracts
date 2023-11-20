@@ -6,7 +6,7 @@
 3. Obtain the amount to fund deployer on child chain in $IMX. (500 IMX by default).
 4. Coordinate with security to obtain the addresses for different roles.
 5. Fund deployer with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 1100 IMX_ (TBD)).
-6. Fund a test account with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 10 IMX_ (TBD)).
+6. Fund a test account with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 50 IMX_ (TBD)).
 
 
 ## Bootstrapping
