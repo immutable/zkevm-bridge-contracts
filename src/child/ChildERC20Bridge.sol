@@ -109,13 +109,6 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
         childETHToken = address(clonedETHToken);
     }
 
-    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyOwner {
-        if (newBridgeAdaptor == address(0)) {
-            revert ZeroAddress();
-        }
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
-    }
-
     /**
      * @inheritdoc IChildERC20Bridge
      */
