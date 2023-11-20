@@ -156,7 +156,10 @@ describe("Bridge e2e test", () => {
 
         // Approve
         [priorityFee, maxFee] = await helper.getFee(childTestWallet);
-        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amt);
+        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amt, {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
         await helper.waitForReceipt(resp.hash, childProvider);
 
         // wIMX withdraw L2 to L1
@@ -215,7 +218,42 @@ describe("Bridge e2e test", () => {
     }).timeout(60000)
 
     it("should successfully deposit wETH to self from L1 to L2", async() => {
-        // TODO.
+        // Wrap 0.01 ETH
+        let resp = await rootWETH.connect(rootTestWallet).deposit({
+            value: ethers.utils.parseEther("0.01"),
+        })
+        await helper.waitForReceipt(resp.hash, rootProvider);
+
+        // Get ETH balance on root & child chains before withdraw
+        let preBalL1 = await rootWETH.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childETH.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("0.001");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        resp = await rootWETH.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await helper.waitForReceipt(resp.hash, rootProvider);
+
+        // wETH deposit L1 to L2
+        resp = await rootBridge.connect(rootTestWallet).deposit(rootWETH.address, amt, {
+            value: bridgeFee,
+        })
+        await helper.waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootWETH.balanceOf(rootTestWallet.address);
+        let postBalL2 = preBalL2;
+
+        while (postBalL2.eq(preBalL2)) {
+            postBalL2 = await childETH.balanceOf(childTestWallet.address);
+            await helper.delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.sub(amt);
+        let expectedPostL2 = preBalL2.add(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(60000)
 
     it("should successfully withdraw ETH to self from L2 to L1", async() => {
