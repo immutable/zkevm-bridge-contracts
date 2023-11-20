@@ -43,7 +43,7 @@ contract RootAxelarBridgeAdaptor is
     constructor(address _gateway) AxelarExecutable(_gateway) {}
 
     /**
-     * @notice Initilization function for RootAxelarBridgeAdaptor.
+     * @notice Initialization function for RootAxelarBridgeAdaptor.
      * @param newRoles Struct containing addresses of roles.
      * @param _rootBridge Address of root bridge contract.
      * @param _childChain Name of child chain.
