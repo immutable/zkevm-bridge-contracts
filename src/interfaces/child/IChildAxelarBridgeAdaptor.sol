@@ -1,5 +1,10 @@
+// Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
+/**
+ * @title Child Bridge Adaptor Errors
+ * @notice Contains the different error types that can be thrown by a bridge adaptor
+ */
 
 interface IChildAxelarBridgeAdaptor {
     /// @notice Initialization roles used by the adaptor.
@@ -43,6 +48,10 @@ interface IChildAxelarBridgeAdaptorErrors {
     error InvalidRootChain();
 }
 
+/**
+ * @title Child Bridge Adaptor Events
+ * @notice Contains the event types that can be emitted by a bridge adaptor
+ */
 interface IChildAxelarBridgeAdaptorEvents {
     /// @notice Emitted when an Axelar message is sent to the root chain.
     event AxelarMessageSent(string indexed rootChain, string indexed rootBridgeAdaptor, bytes indexed payload);

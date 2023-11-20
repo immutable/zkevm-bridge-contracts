@@ -1,10 +1,10 @@
+// Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 /**
- *
  * @title AdaptorRoles.sol
  * @notice AdaptorRoles.sol is an abstract contract that defines the roles and permissions across the root and child chain adaptor contracts.
  * @dev This contract uses OpenZeppelin's AccessControl contract. This contract is abstract and is intended to be inherited by the root and child chain adaptor contracts.

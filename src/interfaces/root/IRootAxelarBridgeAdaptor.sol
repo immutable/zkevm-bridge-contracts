@@ -1,6 +1,11 @@
+// Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
+/**
+ * @title Root Axelar Bridge Adaptor interface
+ * @notice Defines the functions and types of a root chain bridge adaptor.
+ */
 interface IRootAxelarBridgeAdaptor {
     /// @notice Initialization roles used by the adaptor.
     struct InitializationRoles {
@@ -32,6 +37,10 @@ interface IRootAxelarBridgeAdaptor {
     function updateGasService(address newGasService) external;
 }
 
+/**
+ * @title Root Bridge Adaptor Errors
+ * @notice Contains the different error types that can be thrown by a bridge adaptor
+ */
 interface IRootAxelarBridgeAdaptorErrors {
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddresses();
@@ -43,6 +52,10 @@ interface IRootAxelarBridgeAdaptorErrors {
     error CallerNotBridge();
 }
 
+/**
+ * @title Root Bridge Adaptor Events
+ * @notice Contains the event types that can be emitted by a bridge adaptor
+ */
 interface IRootAxelarBridgeAdaptorEvents {
     /// @notice Emitted when an Axelar message is sent to the child chain.
     event AxelarMessageSent(string indexed childChain, string indexed childBridgeAdaptor, bytes indexed payload);

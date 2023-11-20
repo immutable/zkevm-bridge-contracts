@@ -1,3 +1,4 @@
+// Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
@@ -13,7 +14,19 @@ import {IRootERC20Bridge} from "../interfaces/root/IRootERC20Bridge.sol";
 import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 
 /**
- * @notice RootAxelarBridgeAdaptor is a bridge adaptor that allows the RootERC20Bridge to communicate with the Axelar Gateway.
+ * @notice Facilitates communication between the RootERC20Bridge and the Axelar Gateway. It enables sending and receiving messages to and from the child chain.
+ * @dev Features:
+ *      - Send messages to the child chain via the Axelar Gateway.
+ *      - Receive messages from the child chain via the Axelar Gateway.
+ *      - Manage Role Based Access Control
+ * @dev Roles:
+ *      - An account with a BRIDGE_MANAGER_ROLE can update the root bridge address.
+ *      - An account with a TARGET_MANAGER_ROLE can update the child chain name.
+ *      - An account with a GAS_SERVICE_MANAGER_ROLE can update the gas service address.
+ *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
+ * @dev Note:
+ *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
+ *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
  */
 contract RootAxelarBridgeAdaptor is
     AdaptorRoles,
@@ -30,7 +43,7 @@ contract RootAxelarBridgeAdaptor is
     constructor(address _gateway) AxelarExecutable(_gateway) {}
 
     /**
-     * @notice Initilization function for RootAxelarBridgeAdaptor.
+     * @notice Initialization function for RootAxelarBridgeAdaptor.
      * @param newRoles Struct containing addresses of roles.
      * @param _rootBridge Address of root bridge contract.
      * @param _childChain Name of child chain.
@@ -104,7 +117,6 @@ contract RootAxelarBridgeAdaptor is
 
     /**
      * @inheritdoc IRootERC20BridgeAdaptor
-     * @notice Sends an arbitrary message to the child chain, via the Axelar network.
      */
     function sendMessage(bytes calldata payload, address refundRecipient) external payable override {
         if (msg.value == 0) {
@@ -129,6 +141,10 @@ contract RootAxelarBridgeAdaptor is
 
     /**
      * @dev This function is called by the parent `AxelarExecutable` contract to execute the payload.
+     * @param sourceChain_ The chain id that the message originated from.
+     * @param sourceAddress_ The contract address that sent the message on the source chain.
+     * @param payload_ The message payload.
+     * @custom:assumes `sourceAddress_` is a 20 byte address.
      */
     function _execute(string calldata sourceChain_, string calldata sourceAddress_, bytes calldata payload_)
         internal

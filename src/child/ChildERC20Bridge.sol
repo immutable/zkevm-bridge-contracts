@@ -1,3 +1,4 @@
+// Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
@@ -15,13 +16,29 @@ import {IWIMX} from "../interfaces/child/IWIMX.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
 
 /**
- * @notice ChildERC20Bridge is a bridge that handles the depositing ERC20 and native tokens to the child chain from the rootchain
- * and facilates the withdrawals of ERC20 and native tokens from the child chain to the rootchain.
- * @dev This contract is designed to be upgradeable.
- * @dev Follows a pattern of using a bridge adaptor to communicate with the root chain. This is because the underlying communication protocol may change,
+ * @title Child ERC20 Bridge
+ * @notice ChildERC20Bridge is a bridge contract for the child chain, which enables bridging of standard ERC20 tokens, ETH, wETH, IMX and wIMX from the root chain to the child chain and back.
+ * @dev Features:
+ *      - Map: A token that is originally created on the root chain, can be mapped to the child chain, where a representation of the token is created and managed by the bridge.
+ *      - Deposit: Standard ERC20 tokens, native ETH, wrapped ETH or IMX that can be deposited on the root chain, and wrapped version of the tokens are issued on the child chain.
+ *      - Withdraw: Bridged wrapped tokens can be withdrawn, so that they can be redeemed for their original tokens on the root chain.
+ *      - Manage Role Based Access Control
+ *
+ * @dev Design:
+ *      This contract follows a pattern of using a bridge adaptor to communicate with the child chain. This is because the underlying communication protocol may change,
  *      and also allows us to decouple vendor-specific messaging logic from the bridge logic.
- * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in ChildERC20Bridge.
- * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
+ *      Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in this contract.
+ *      Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
+ *
+ * @dev Roles:
+ *      - An account with a PAUSER_ROLE can pause the contract.
+ *      - An account with an UNPAUSER_ROLE can unpause the contract.
+ *      - An account with an ADAPTOR_MANAGER_ROLE can update the root bridge adaptor address.
+ *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
+ * @dev Note:
+ *      - There is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
+ *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
+ *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
  */
 contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Bridge, IChildERC20BridgeEvents {
     /// @dev leave this as the first param for the integration tests

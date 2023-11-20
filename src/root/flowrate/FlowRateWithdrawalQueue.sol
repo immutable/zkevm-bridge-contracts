@@ -56,7 +56,7 @@ abstract contract FlowRateWithdrawalQueue is IFlowRateWithdrawalQueueEvents, IFl
     uint256 public withdrawalDelay;
 
     /**
-     * @notice Initilization function for FlowRateWithdrawalQueue
+     * @notice Initialization function for FlowRateWithdrawalQueue
      */
     // slither-disable-next-line naming-convention
     function __FlowRateWithdrawalQueue_init() internal {
