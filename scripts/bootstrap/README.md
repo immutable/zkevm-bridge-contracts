@@ -107,15 +107,23 @@ node 4_root_deployment.js
 ```
 node 5_child_initialisation.js
 ```
-10. IMX Burning
+9. IMX Burning
 ```
 node 6_imx_burning.js
 ```
-11. IMX Rebalancing
+10. IMX Rebalancing
 ```
 node 7_imx_rebalancing.js
 ```
-12. Initialise bridge contracts on root chain.
+11. Initialise bridge contracts on root chain.
 ```
 node 8_root_initialisation.js
+```
+12. Set the following environment variable
+```
+TEST_ACCOUNT_SECRET=
+```
+13. Test bridge functions
+```
+npx mocha ../e2e/
 ```

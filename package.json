@@ -11,6 +11,7 @@
         "lint": "forge fmt",
         "startlocaldev": "cd scripts/localdev; ./start.sh",
         "setuplocaldev": "cd scripts/localdev; ./deploy.sh",
+        "testlocaldev": "cd scripts/localdev; npx mocha ../e2e/",
         "stoplocaldev": "cd scripts/localdev; ./stop.sh",
         "startlocalchain": "cd scripts/localdev; LOCAL_CHAIN_ONLY=true ./start.sh",
         "setupaxelar": "cd scripts/localdev; node axelar_setup.js",
