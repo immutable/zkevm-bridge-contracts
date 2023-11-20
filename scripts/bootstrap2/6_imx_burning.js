@@ -44,7 +44,7 @@ async function run() {
     console.log("Multisig balance: ", ethers.utils.formatEther(multisigBal));
 
     if (adminBal.lt(ethers.utils.parseEther("0.01"))) {
-        console.log("IMX Burning has already done, skip.")
+        console.log("IMX Burning has already been done, skip.")
         return;
     }
 
