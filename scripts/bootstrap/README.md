@@ -4,8 +4,10 @@
 1. Coordinate with Axelar to obtain their admin address for initial funding as well as the desired amount in $IMX. (500 IMX in previous discussion).
 2. Obtain the deployer account on both child chain and root chain.
 3. Obtain the amount to fund deployer on child chain in $IMX. (500 IMX by default).
-2. Coordinate with security to obtain the addresses for different roles.
-2. Fund deployer with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 1100 IMX_ (TBD)).
+4. Coordinate with security to obtain the addresses for different roles.
+5. Fund deployer with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 1100 IMX_ (TBD)).
+6. Fund a test account with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 10 IMX_ (TBD)).
+
 
 ## Bootstrapping
 0. Install dependency and compile contracts (Run in root directory)
