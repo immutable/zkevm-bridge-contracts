@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-
 /**
-  * @title Root Axelar Bridge Adaptor interface
-  * @notice Defines the functions and types of a root chain bridge adaptor.
-  */
+ * @title Root Axelar Bridge Adaptor interface
+ * @notice Defines the functions and types of a root chain bridge adaptor.
+ */
 interface IRootAxelarBridgeAdaptor {
     /// @notice Initialization roles used by the adaptor.
     struct InitializationRoles {
