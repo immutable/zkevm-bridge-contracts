@@ -1,9 +1,8 @@
-const { ethers, ContractFactory } = require("ethers");
+const { ContractFactory } = require("ethers");
 
-function delay(time) {
+exports.delay = (time) => {
     return new Promise(resolve => setTimeout(resolve, time));
 }
-
 exports.requireEnv = (envName) => {
     let val = process.env[envName];
     if (val == null || val == "") {
@@ -20,7 +19,7 @@ exports.waitForReceipt = async (txHash, provider) => {
     let receipt;
     while (receipt == null) {
         receipt = await provider.getTransactionReceipt(txHash)
-        await delay(1000);
+        await exports.delay(1000);
     }
     if (receipt.status != 1) {
         throw("Fail to execute: " + txHash);
@@ -31,7 +30,7 @@ exports.waitForConfirmation = async () => {
     if (process.env["SKIP_WAIT_FOR_CONFIRMATION"] == null) {
         for (let i = 10; i >= 0; i--) {
             console.log(i)
-            await delay(1000);
+            await exports.delay(1000);
         }
     }
 }
