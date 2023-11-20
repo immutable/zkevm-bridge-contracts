@@ -597,11 +597,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(address(rootBridge.rootBridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
     }
 
-    function test_updateRootBridgeAdaptor_EmitsNewRootBridgeAdaptorEvent() public {
+    function test_updateRootBridgeAdaptor_EmitsRootBridgeAdaptorUpdatedEvent() public {
         address newAdaptorAddress = address(0x11111);
 
         vm.expectEmit();
-        emit NewRootBridgeAdaptor(address(rootBridge.rootBridgeAdaptor()), newAdaptorAddress);
+        emit RootBridgeAdaptorUpdated(address(rootBridge.rootBridgeAdaptor()), newAdaptorAddress);
 
         rootBridge.updateRootBridgeAdaptor(newAdaptorAddress);
     }
@@ -634,11 +634,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(rootBridge.childBridgeAdaptor(), newAdaptorAddress, "bridgeAdaptor not updated");
     }
 
-    function test_updateChildBridgeAdaptor_EmitsNewChildBridgeAdaptorEvent() public {
+    function test_updateChildBridgeAdaptor_EmitsChildBridgeAdaptorUpdatedEvent() public {
         string memory newAdaptorAddress = Strings.toHexString(address(0x11111));
 
         vm.expectEmit();
-        emit NewChildBridgeAdaptor(rootBridge.childBridgeAdaptor(), newAdaptorAddress);
+        emit ChildBridgeAdaptorUpdated(rootBridge.childBridgeAdaptor(), newAdaptorAddress);
 
         rootBridge.updateChildBridgeAdaptor(newAdaptorAddress);
     }

@@ -89,9 +89,9 @@ interface IRootERC20Bridge {
 
 interface IRootERC20BridgeEvents {
     /// @notice Emitted when the root chain bridge adaptor is updated.
-    event NewRootBridgeAdaptor(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
+    event RootBridgeAdaptorUpdated(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
     /// @notice Emitted when the child chain bridge adaptor is updated.
-    event NewChildBridgeAdaptor(string oldChildBridgeAdaptor, string newChildBridgeAdaptor);
+    event ChildBridgeAdaptorUpdated(string oldChildBridgeAdaptor, string newChildBridgeAdaptor);
     /// @notice Emitted when the IMX deposit limit is updated.
     event NewImxDepositLimit(uint256 oldImxDepositLimit, uint256 newImxDepositLimit);
     /// @notice Emitted when a map token message is sent to the child chain.

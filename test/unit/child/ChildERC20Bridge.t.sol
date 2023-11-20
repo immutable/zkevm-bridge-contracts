@@ -368,7 +368,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         assertEq(address(childBridge.bridgeAdaptor()), address(this), "bridgeAdaptor not set");
         vm.expectEmit(true, true, true, true);
-        emit BridgeAdaptorUpdated(address(childBridge.bridgeAdaptor()), newAdaptorAddress);
+        emit ChildBridgeAdaptorUpdated(address(childBridge.bridgeAdaptor()), newAdaptorAddress);
         childBridge.updateBridgeAdaptor(newAdaptorAddress);
         assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
     }

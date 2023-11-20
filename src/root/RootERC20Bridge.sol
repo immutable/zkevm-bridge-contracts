@@ -181,7 +181,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         if (newRootBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
-        emit NewRootBridgeAdaptor(address(rootBridgeAdaptor), newRootBridgeAdaptor);
+        emit RootBridgeAdaptorUpdated(address(rootBridgeAdaptor), newRootBridgeAdaptor);
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
     }
 
@@ -192,7 +192,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         if (bytes(newChildBridgeAdaptor).length == 0) {
             revert InvalidChildERC20BridgeAdaptor();
         }
-        emit NewChildBridgeAdaptor(childBridgeAdaptor, newChildBridgeAdaptor);
+        emit ChildBridgeAdaptorUpdated(childBridgeAdaptor, newChildBridgeAdaptor);
         childBridgeAdaptor = newChildBridgeAdaptor;
     }
 
