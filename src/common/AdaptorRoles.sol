@@ -7,14 +7,14 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
  *
  * @title AdaptorRoles.sol
  * @notice AdaptorRoles.sol is an abstract contract that defines the roles and permissions across the root and child chain adaptor contracts.
- * @dev This contract uses OpenZeppelin's AccessControl and Pausable contracts. This contract is abstract and is intended to be inherited by the root and child chain adaptor contracts.
+ * @dev This contract uses OpenZeppelin's AccessControl contract. This contract is abstract and is intended to be inherited by the root and child chain adaptor contracts.
  */
 abstract contract AdaptorRoles is AccessControlUpgradeable {
     // Roles
     /// @notice Role identifier for those who can update the bridge used by the adaptor.
     bytes32 public constant BRIDGE_MANAGER_ROLE = keccak256("BRIDGE_MANAGER");
 
-    /// @notice Role identifier for those who update the gas service used by the adaptor.
+    /// @notice Role identifier for those who can update the gas service used by the adaptor.
     bytes32 public constant GAS_SERVICE_MANAGER_ROLE = keccak256("GAS_SERVICE_MANAGER");
 
     /// @notice Role identifier for those who can update targeted bridge used by the adpator (e.g. target is child chain on root adaptors).

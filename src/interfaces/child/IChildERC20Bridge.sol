@@ -127,10 +127,10 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
-    /// @notice Emitted when the root chain bridge adaptor is updated.
-    event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
     /// @notice Emitted when the child chain bridge adaptor is updated.
     event ChildBridgeAdaptorUpdated(address oldChildBridgeAdaptor, address newChildBridgeAdaptor);
+    /// @notice Emitted when the root chain bridge adaptor is updated.
+    event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
 }
 
 // TODO add parameters to errors if it makes sense
