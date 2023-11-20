@@ -326,7 +326,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.updateRootBridgeAdaptor(newAdaptor);
     }
 
-    function test_RevertIf_updateRootBridgeAdaptorCalledByNotTargetManager() public {
+    function test_RevertIf_updateRootBridgeAdaptorCalledByNotAdaptorManager() public {
         address caller = address(0xf00f00);
         bytes32 role = childBridge.ADAPTOR_MANAGER_ROLE();
         vm.prank(caller);
