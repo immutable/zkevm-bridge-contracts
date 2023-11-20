@@ -38,7 +38,7 @@ async function run() {
         adminWallet = new ethers.Wallet(childDeployerSecret, childProvider);
     }
     let adminAddr = await adminWallet.getAddress();
-    console.log("Admin address is: ", adminAddr);
+    console.log("Deployer address is: ", adminAddr);
 
     // Execute
     console.log("Initialise child contracts in...");

@@ -23,7 +23,7 @@ async function run() {
         adminWallet = new ethers.Wallet(rootDeployerSecret, rootProvider);
     }
     let adminAddr = await adminWallet.getAddress();
-    console.log("Admin address is: ", adminAddr);
+    console.log("Deployer address is: ", adminAddr);
 
     // Execute
     console.log("Deploy root contracts in...");
