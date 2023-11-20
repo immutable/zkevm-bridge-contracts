@@ -1,4 +1,25 @@
-# Set prior to 1_deployer_funding.js
+# Bridge bootstrapping
+
+## Prerequisite
+1. Coordinate with Axelar to obtain their admin address for initial funding as well as the desired amount in $IMX. (500 IMX in previous discussion).
+2. Obtain the deployer account on both child chain and root chain.
+3. Obtain the amount to fund deployer on child chain in $IMX. (500 IMX by default).
+2. Coordinate with security to obtain the addresses for different roles.
+2. Fund deployer with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 1100 IMX_ (TBD)).
+
+## Bootstrapping
+0. Install dependency and compile contracts (Run in root directory)
+```
+yarn install
+yarn build
+```
+1. Create environment file
+```
+cd scripts/bootstrap
+cp .env.example .env
+```
+2. Set the following environment variables
+```
 CHILD_CHAIN_NAME=
 CHILD_RPC_URL=
 CHILD_CHAIN_ID=
@@ -51,10 +72,48 @@ ROOT_BRIDGE_UNPAUSER=
 ROOT_BRIDGE_VARIABLE_MANAGER=
 ## The address to be assigned with ADAPTOR_MANAGER_ROLE in root bridge.
 ROOT_BRIDGE_ADAPTOR_MANAGER=
-
-# Set prior to 2_deployment_validation.js
+```
+3. Fund deployer
+```
+node 1_deployer_funding.js
+```
+4. Wait for Axelar to deploy & setup their system and Security team to deploy & setup multisig wallet.
+5. Set the following environment variables
+```
 CHILD_GATEWAY_ADDRESS=
 CHILD_GAS_SERVICE_ADDRESS=
 MULTISIG_CONTRACT_ADDRESS=
 ROOT_GATEWAY_ADDRESS=
 ROOT_GAS_SERVICE_ADDRESS=
+```
+6. Basic contract validation
+
+If multisig is deployed:
+```
+node 2_deployment_validation.js
+```
+If multisig isn't deployed:
+```
+SKIP_MULTISIG_CHECK=true node 2_deployment_validation.js
+```
+7. Deploy bridge contracts on child and root chain.
+```
+node 3_child_deployment.js
+node 4_root_deployment.js
+```
+8. Initialise bridge contracts on child chain.
+```
+node 5_child_initialisation.js
+```
+10. IMX Burning
+```
+node 6_imx_burning.js
+```
+11. IMX Rebalancing
+```
+node 7_imx_rebalancing.js
+```
+12. Initialise bridge contracts on root chain.
+```
+node 8_root_initialisation.js
+```
