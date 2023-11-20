@@ -131,4 +131,7 @@ contract ChildAxelarBridgeAdaptor is
         emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
         childBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapChildAxelarBridgeAdaptor;
 }

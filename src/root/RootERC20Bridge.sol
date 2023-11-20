@@ -488,4 +488,7 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         }
         // slither-disable-next-line reentrancy-events
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapRootERC20Bridge;
 }

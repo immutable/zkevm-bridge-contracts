@@ -429,4 +429,7 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
             emit IMXDeposit(rootToken, sender, receiver, amount);
         }
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapChildERC20Bridge;
 }

@@ -137,4 +137,7 @@ contract RootAxelarBridgeAdaptor is
         emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
         rootBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapRootAxelarBridgeAdaptor;
 }
