@@ -33,7 +33,7 @@ fi
 echo "Successfully setup root chain and child chain..."
 
 # Fund accounts
-node ../bootstrap2/1_deployer_funding.js
+SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap2/1_deployer_funding.js
 if [ $? -ne 0 ]; then
     ./stop.sh
     echo "Fail to run 1_deployer_funding.js"

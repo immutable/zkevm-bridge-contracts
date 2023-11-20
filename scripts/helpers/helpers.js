@@ -28,9 +28,11 @@ exports.waitForReceipt = async (txHash, provider) => {
     console.log(txHash + " succeed.");
 }
 exports.waitForConfirmation = async () => {
-    for (let i = 10; i >= 0; i--) {
-        console.log(i)
-        await delay(1000);
+    if (process.env["SKIP_WAIT_FOR_CONFIRMATION"] == null) {
+        for (let i = 10; i >= 0; i--) {
+            console.log(i)
+            await delay(1000);
+        }
     }
 }
 exports.getFee = async (wallet) => {

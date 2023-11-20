@@ -15,8 +15,9 @@ async function main() {
     let childChainName = helper.requireEnv("CHILD_CHAIN_NAME");
     let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
     let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let axelarRootDeployerKey = helper.requireEnv("AXELAR_ROOT_EOA_SECRET");
-    let axelarChildDeployerKey = helper.requireEnv("AXELAR_CHILD_EOA_SECRET");
+    let axelarRootEOAKey = helper.requireEnv("AXELAR_ROOT_EOA_SECRET");
+    let axelarChildEOAKey = helper.requireEnv("AXELAR_CHILD_EOA_SECRET");
+    let axelarDeployerKey = helper.requireEnv("AXELAR_DEPLOYER_SECRET");
 
     // Create root chain.
     let rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -24,7 +25,7 @@ async function main() {
     rootChain.name = rootChainName;
     rootChain.chainId = Number(rootChainID);
     rootChain.provider = rootProvider;
-    rootChain.ownerWallet = ethers.Wallet.createRandom().connect(rootProvider);
+    rootChain.ownerWallet = new ethers.Wallet(axelarDeployerKey, rootProvider);
     rootChain.operatorWallet = ethers.Wallet.createRandom().connect(rootProvider);
     rootChain.relayerWallet = ethers.Wallet.createRandom().connect(rootProvider);
     rootChain.adminWallets = [
@@ -43,24 +44,24 @@ async function main() {
     rootChain.lastRelayedBlock = await rootProvider.getBlockNumber();
     rootChain.lastExpressedBlock = rootChain.lastRelayedBlock;
     // Fund accounts
-    let axelarRootDeployer = new ethers.Wallet(axelarRootDeployerKey, rootProvider);
-    let resp = await axelarRootDeployer.sendTransaction({
+    let axelarRootEOA = new ethers.Wallet(axelarRootEOAKey, rootProvider);
+    let resp = await axelarRootEOA.sendTransaction({
         to: rootChain.ownerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
     await helper.waitForReceipt(resp.hash, rootProvider);
-    resp = await axelarRootDeployer.sendTransaction({
+    resp = await axelarRootEOA.sendTransaction({
         to: rootChain.operatorWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
     await helper.waitForReceipt(resp.hash, rootProvider);
-    resp = await axelarRootDeployer.sendTransaction({
+    resp = await axelarRootEOA.sendTransaction({
         to: rootChain.relayerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
     await helper.waitForReceipt(resp.hash, rootProvider);
     for (let i = 0; i < 10; i++) {
-        resp = await axelarRootDeployer.sendTransaction({
+        resp = await axelarRootEOA.sendTransaction({
             to: rootChain.adminWallets[i].address,
             value: ethers.utils.parseEther("35.0"),
         })
@@ -98,24 +99,24 @@ async function main() {
     childChain.lastRelayedBlock = await childProvider.getBlockNumber();
     childChain.lastExpressedBlock = childChain.lastRelayedBlock;
     // Fund accounts
-    let axelarChildDeployer = new ethers.Wallet(axelarChildDeployerKey, childProvider);
-    resp = await axelarChildDeployer.sendTransaction({
+    let axelarChildEOA = new ethers.Wallet(axelarChildEOAKey, childProvider);
+    resp = await axelarChildEOA.sendTransaction({
         to: childChain.ownerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
     await helper.waitForReceipt(resp.hash, childProvider);
-    resp = await axelarChildDeployer.sendTransaction({
+    resp = await axelarChildEOA.sendTransaction({
         to: childChain.operatorWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
     await helper.waitForReceipt(resp.hash, childProvider);
-    resp = await axelarChildDeployer.sendTransaction({
+    resp = await axelarChildEOA.sendTransaction({
         to: childChain.relayerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
     await helper.waitForReceipt(resp.hash, childProvider);
     for (let i = 0; i < 10; i++) {
-        resp = await axelarChildDeployer.sendTransaction({
+        resp = await axelarChildEOA.sendTransaction({
             to: childChain.adminWallets[i].address,
             value: ethers.utils.parseEther("35.0"),
         })

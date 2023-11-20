@@ -10,6 +10,7 @@
         "test": "forge test",
         "lint": "forge fmt",
         "startlocaldev": "cd scripts/localdev; ./start.sh",
+        "setuplocaldev": "cd scripts/localdev; ./deploy.sh",
         "stoplocaldev": "cd scripts/localdev; ./stop.sh"
     },
     "author": "",
