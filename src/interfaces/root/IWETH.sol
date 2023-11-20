@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
- * @notice Interface for the Wrapped ETH (WETH) contract.
+ * @notice Interface for the Wrapped ETH (wETH) contract.
  * @dev Interface for the standard wrapped ETH contract deployed on Ethereum: https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
  */
 interface IWETH is IERC20 {

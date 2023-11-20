@@ -14,7 +14,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
  */
 interface IRootERC20Bridge {
     /**
-     * @notice Holds the addresses of accounts that should be assigned different roles in the bridge.
+     * @notice Holds the addresses of accounts that should be assigned different roles in the bridge, during initialization.
      */
     struct InitializationRoles {
         address defaultAdmin; // The address which will inherit `DEFAULT_ADMIN_ROLE`.
@@ -42,8 +42,8 @@ interface IRootERC20Bridge {
 
     /**
      * @notice Receives a bridge message from the child chain.
-     * @param sourceChain The chain the message originated from.
-     * @param sourceAddress The address on the child chain that the message originated from.
+     * @param sourceChain The id of the chain the message originated from.
+     * @param sourceAddress The address of the contract on the child chain that sent the message.
      * @param data The data payload of the message.
      * @dev This function is called by the underlying bridge adaptor on the Root chain, when it receives a validated message from the GMP.
      */
@@ -58,7 +58,7 @@ interface IRootERC20Bridge {
      * @dev The address of the child chain token is deterministic using CREATE2.
      * @param rootToken The address of the token on the root chain.
      * @return childToken The address of the token to be deployed on the child chain.
-     * @dev `msg.value` should cover the bridging fee
+     * @dev The function is `payable` because the message passing protocol requires a fee to be paid.
      */
     function mapToken(IERC20Metadata rootToken) external payable returns (address);
 
@@ -67,7 +67,7 @@ interface IRootERC20Bridge {
      * @custom:requires `rootToken` should already have been mapped with `mapToken()`.
      * @param rootToken The address of the token on the root chain.
      * @param amount The amount of tokens to deposit.
-     * @dev `msg.value` should cover the bridging fee
+     * @dev The function is `payable` because the message passing protocol requires a fee to be paid.
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external payable;
 
@@ -77,13 +77,14 @@ interface IRootERC20Bridge {
      * @param rootToken The address of the token on the root chain.
      * @param receiver The address of the receiver on the child chain, to credit tokens to.
      * @param amount The amount of tokens to deposit.
-     * @dev `msg.value` should cover the bridging fee
+     * @dev The function is `payable` because the message passing protocol requires a fee to be paid.
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable;
 
     /**
      * @notice Deposit ETH to the bridge and issue corresponding wrapped ETH to `msg.sender` on the child chain.
      * @param amount The amount of tokens to deposit.
+     * @dev The function is `payable` because the message passing protocol requires a fee to be paid.
      * @dev the `msg.value` provided should cover the amount to send as well as the bridge fee.
      */
     function depositETH(uint256 amount) external payable;
@@ -91,6 +92,7 @@ interface IRootERC20Bridge {
      * @notice Deposit ETH to the bridge and issue corresponding wrapped ETH to `receiver` address on the child chain.
      * @param receiver The address of the receiver on the child chain.
      * @param amount The amount of tokens to deposit.
+     * @dev The function is `payable` because the message passing protocol requires a fee to be paid.
      * @dev the `msg.value` provided should cover the amount to send as well as the bridge fee.
      */
     function depositToETH(address receiver, uint256 amount) external payable;

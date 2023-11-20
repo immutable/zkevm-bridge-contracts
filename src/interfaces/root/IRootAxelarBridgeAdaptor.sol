@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title Root Bridge Adaptor Errors
- * @notice Contains the different error types that can be thrown by an implementation of the Axelar bridge adaptor.
+ * @notice Contains the different error types that can be thrown by a bridge adaptor
  */
 interface IRootAxelarBridgeAdaptorErrors {
     /// @notice Error when a zero address is given when not valid.
@@ -19,7 +19,7 @@ interface IRootAxelarBridgeAdaptorErrors {
 
 /**
  * @title Root Bridge Adaptor Events
- * @notice Contains the event types that can be emitted by an implementation of the Axelar bridge adaptor.
+ * @notice Contains the event types that can be emitted by a bridge adaptor
  */
 interface IRootAxelarBridgeAdaptorEvents {
     /// @notice Emitted when an Axelar message is sent to the child chain.

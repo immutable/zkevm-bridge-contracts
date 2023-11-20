@@ -34,6 +34,7 @@ interface IFlowRateWithdrawalQueueEvents {
  * @title Withdrawal Queue Errors
  * @notice Defines the error types that can be thrown by an implementation of the flow rate withdrawal queue.
  */
+
 interface IFlowRateWithdrawalQueueErrors {
     // A withdrawal was being processed, but the index is outside of the array.
     error IndexOutsideWithdrawalQueue(uint256 lengthOfQueue, uint256 requestedIndex);

@@ -4,27 +4,32 @@ pragma solidity 0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/**
- * @dev Interface of Wrapped IMX.
- */
+/*
+* @notice Interface for the Wrapped IMX (wIMX) contract.
+* @dev Based on the interface for the standard [Wrapped ETH contract](../root/IWETH.sol)
+*/
 interface IWIMX is IERC20 {
     /**
-     * @dev Emitted when `value` native IMX are deposited from `account`.
+     * @notice Emitted when native ETH is deposited to the contract, and a corresponding amount of wETH are minted
+     * @param account The address of the account that deposited the tokens.
+     * @param value The amount of tokens that were deposited.
      */
     event Deposit(address indexed account, uint256 value);
 
     /**
-     * @dev Emitted when `value` wIMX tokens are withdrawn to `account`.
+     * @notice Emitted when wETH is withdrawn from the contract, and a corresponding amount of wETH are burnt.
+     * @param account The address of the account that withdrew the tokens.
+     * @param value The amount of tokens that were withdrawn.
      */
     event Withdrawal(address indexed account, uint256 value);
 
     /**
-     * @notice Deposit native IMX in the function call and mint the equal amount of wrapped IMX to msg.sender.
+     * @notice Deposit native ETH to the contract and mint an equal amount of wrapped ETH to msg.sender.
      */
     function deposit() external payable;
 
     /**
-     * @notice Withdraw given amount of native IMX to msg.sender and burn the equal amount of wrapped IMX.
+     * @notice Withdraw given amount of native ETH to msg.sender after burning an equal amount of wrapped ETH.
      * @param value The amount to withdraw.
      */
     function withdraw(uint256 value) external;
