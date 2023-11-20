@@ -132,6 +132,26 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     }
 
     /**
+     * @notice Fallback function on receiving native IMX from WIMX contract.
+     */
+    receive() external payable whenNotPaused {
+        // Revert if sender is not the WIMX token address
+        if (msg.sender != wIMXToken) {
+            revert NonWrappedNativeTransfer();
+        }
+    }
+
+    /**
+     * @inheritdoc IChildERC20Bridge
+     */
+    function treasuryDeposit() external payable onlyRole(TREASURY_MANAGER_ROLE) {
+        if (msg.value == 0) {
+            revert ZeroAmount();
+        }
+        emit TreasuryDeposit(msg.sender, msg.value);
+    }
+
+    /**
      * @inheritdoc IChildERC20Bridge
      */
     function updateChildBridgeAdaptor(address newBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
@@ -153,16 +173,6 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
 
         emit RootBridgeAdaptorUpdated(rootERC20BridgeAdaptor, newRootBridgeAdaptor);
         rootERC20BridgeAdaptor = newRootBridgeAdaptor;
-    }
-
-    /**
-     * @notice Fallback function on receiving native IMX from WIMX contract.
-     */
-    receive() external payable whenNotPaused {
-        // Revert if sender is not the WIMX token address
-        if (msg.sender != wIMXToken) {
-            revert NonWrappedNativeTransfer();
-        }
     }
 
     /**

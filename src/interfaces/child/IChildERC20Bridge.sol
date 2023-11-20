@@ -26,6 +26,12 @@ interface IChildERC20Bridge {
     }
 
     /**
+     * @notice Deposit native IMX to the child chain bridge contract.
+     * @dev This function can only be called by callers who have the TREASURY_MANAGER_ROLE.
+     */
+    function treasuryDeposit() external payable;
+
+    /**
      * @notice Get the address of the bridge adaptor on the root chain.
      * @return address of the bridge adaptor on the root chain.
      */
@@ -155,6 +161,8 @@ interface IChildERC20BridgeEvents {
     event ChildBridgeAdaptorUpdated(address oldChildBridgeAdaptor, address newChildBridgeAdaptor);
     /// @notice Emitted when the root chain bridge adaptor is updated.
     event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
+    /// @notice Emittted when a treasury deposit is made.
+    event TreasuryDeposit(address indexed depositor, uint256 amount);
 }
 
 /**
