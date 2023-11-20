@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
+/**
+ * @title Withdrawal Queue Events
+ * @notice Defines event types emitted by the an implementation of the flow rate withdrawal queue.
+ */
 interface IFlowRateWithdrawalQueueEvents {
     // Indicates a withdrawal has been queued.
     event EnQueuedWithdrawal(
@@ -26,7 +30,10 @@ interface IFlowRateWithdrawalQueueEvents {
     // Indicates the new withdrawal delay.
     event WithdrawalDelayUpdated(uint256 delay, uint256 previousDelay);
 }
-
+/**
+ * @title Withdrawal Queue Errors
+ * @notice Defines the error types that can be thrown by an implementation of the flow rate withdrawal queue.
+ */
 interface IFlowRateWithdrawalQueueErrors {
     // A withdrawal was being processed, but the index is outside of the array.
     error IndexOutsideWithdrawalQueue(uint256 lengthOfQueue, uint256 requestedIndex);
