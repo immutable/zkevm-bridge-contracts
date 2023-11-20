@@ -53,7 +53,7 @@ exports.hasDuplicates = (array) => {
     return (new Set(array)).size !== array.length;
 }
 exports.deployChildContract = async (contractObj, adminWallet, ...args) => {
-    let [priorityFee, maxFee] = await getFee(adminWallet);
+    let [priorityFee, maxFee] = await exports.getFee(adminWallet);
     let factory = new ContractFactory(contractObj.abi, contractObj.bytecode, adminWallet);
     return await factory.deploy(...args, {
         maxPriorityFeePerGas: priorityFee,
