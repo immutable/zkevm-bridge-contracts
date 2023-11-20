@@ -4660,6 +4660,11 @@ mnemonist@^0.38.0:
   dependencies:
     obliterator "^2.0.0"
 
+mocha-suppress-logs@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/mocha-suppress-logs/-/mocha-suppress-logs-0.4.1.tgz#e1567ad90a5e953b54d8ddef87ea2c8a05324152"
+  integrity sha512-llHPy1sEEOSoQ04TzixavZjBy2g65Tu64GYaEl3m7JxL5T1XmUhkpifcJSfRxKlCWWFVZ+cLIq4WHmVRBwQpyQ==
+
 mocha@10.2.0, mocha@^10.0.0, mocha@^10.2.0:
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/mocha/-/mocha-10.2.0.tgz#1fd4a7c32ba5ac372e03a17eef435bd00e5c68b8"

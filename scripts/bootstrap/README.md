@@ -125,5 +125,5 @@ TEST_ACCOUNT_SECRET=
 ```
 13. Test bridge functions
 ```
-npx mocha ../e2e/
+npx mocha --require mocha-suppress-logs ../e2e/
 ```

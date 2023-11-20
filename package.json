@@ -11,7 +11,7 @@
         "lint": "forge fmt",
         "local:start": "cd scripts/localdev; ./start.sh",
         "local:setup": "cd scripts/localdev; ./deploy.sh",
-        "local:test": "cd scripts/localdev; npx mocha ../e2e/",
+        "local:test": "cd scripts/localdev; npx mocha --require mocha-suppress-logs ../e2e/",
         "local:chainonly": "cd scripts/localdev; LOCAL_CHAIN_ONLY=true ./start.sh",
         "local:axelaronly": "cd scripts/localdev; node axelar_setup.js",
         "stop": "cd scripts/localdev; ./stop.sh"
@@ -33,6 +33,7 @@
         "dotenv": "^16.0.2",
         "ethers": "5.7.2",
         "kill-port": "^2.0.1",
+        "mocha-suppress-logs": "^0.4.1",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
