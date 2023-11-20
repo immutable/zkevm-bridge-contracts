@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
+import {ChildAxelarBridgeAdaptor, IChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
 import {
     ChildERC20Bridge,
     IChildERC20Bridge,
@@ -54,8 +54,15 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             WIMX_TOKEN_ADDRESS
         );
 
+        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor.InitializationRoles({
+            defaultAdmin: address(this),
+            bridgeManager: address(this),
+            gasServiceManager: address(this),
+            targetManager: address(this)
+        });
+
         childAxelarBridgeAdaptor.initialize(
-            ROOT_CHAIN_NAME, address(childERC20Bridge), address(mockChildAxelarGasService)
+            adaptorRoles, ROOT_CHAIN_NAME, address(childERC20Bridge), address(mockChildAxelarGasService)
         );
     }
 

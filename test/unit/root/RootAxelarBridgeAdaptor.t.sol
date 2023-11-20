@@ -341,7 +341,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         axelarAdaptor.updateChildChain("");
     }
 
-
     /**
      * UPDATE GAS SERVICE
      */

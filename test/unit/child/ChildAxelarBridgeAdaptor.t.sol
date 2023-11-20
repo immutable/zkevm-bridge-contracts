@@ -10,7 +10,8 @@ import {MockChildAxelarGateway} from "../../../src/test/child/MockChildAxelarGat
 import {MockChildAxelarGasService} from "../../../src/test/child/MockChildAxelarGasService.sol";
 import {
     IChildAxelarBridgeAdaptorErrors,
-    IChildAxelarBridgeAdaptorEvents
+    IChildAxelarBridgeAdaptorEvents,
+    IChildAxelarBridgeAdaptor
 } from "../../../src/interfaces/child/IChildAxelarBridgeAdaptor.sol";
 
 contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErrors, IChildAxelarBridgeAdaptorEvents {
@@ -24,13 +25,24 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     MockChildAxelarGateway public mockChildAxelarGateway;
     MockChildAxelarGasService public mockChildAxelarGasService;
 
+    address bridgeManager = makeAddr("bridgeManager");
+    address gasServiceManager = makeAddr("gasServiceManager");
+    address targetManager = makeAddr("targetManager");
+
+    IChildAxelarBridgeAdaptor.InitializationRoles roles = IChildAxelarBridgeAdaptor.InitializationRoles({
+        defaultAdmin: address(this),
+        bridgeManager: bridgeManager,
+        gasServiceManager: gasServiceManager,
+        targetManager: targetManager
+    });
+
     function setUp() public {
         token = new ERC20PresetMinterPauser("Test", "TST");
         mockChildERC20Bridge = new MockChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
         mockChildAxelarGasService = new MockChildAxelarGasService();
         axelarAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
-        axelarAdaptor.initialize(ROOT_CHAIN_NAME, address(mockChildERC20Bridge), address(mockChildAxelarGasService));
+        axelarAdaptor.initialize(roles, ROOT_CHAIN_NAME, address(mockChildERC20Bridge), address(mockChildAxelarGasService));
     }
 
     function test_Initialize() public {
@@ -43,7 +55,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     function test_RevertIf_InitializeGivenZeroAddress() public {
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
         vm.expectRevert(ZeroAddress.selector);
-        newAdaptor.initialize("root", address(0), address(mockChildAxelarGasService));
+        newAdaptor.initialize(roles, "root", address(0), address(mockChildAxelarGasService));
     }
 
     function test_Execute_CallsBridge() public {

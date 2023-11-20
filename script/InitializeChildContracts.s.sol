@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {Script, console2} from "forge-std/Script.sol";
 
 import {ChildERC20Bridge, IChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
-import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
+import {ChildAxelarBridgeAdaptor, IChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {Utils} from "./Utils.sol";
 
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
@@ -13,6 +13,9 @@ struct InitializeChildContractsParams {
     address childAdminAddress;
     address childPauserAddress;
     address childUnpauserAddress;
+    address childBridgeManager;
+    address childGasServiceManager;
+    address childTargetManager;
     ChildERC20Bridge childERC20Bridge;
     ChildAxelarBridgeAdaptor childAxelarBridgeAdaptor;
     address childTokenTemplate;
@@ -31,6 +34,9 @@ contract InitializeChildContracts is Script {
             childAdminAddress: vm.envAddress("CHILD_ADMIN_ADDRESS"),
             childPauserAddress: vm.envAddress("CHILD_PAUSER_ADDRESS"),
             childUnpauserAddress: vm.envAddress("CHILD_UNPAUSER_ADDRESS"),
+            childBridgeManager: vm.envAddress("CHILD_BRIDGE_MANAGER"),
+            childGasServiceManager: vm.envAddress("CHILD_GAS_SERVICE_MANAGER"),
+            childTargetManager: vm.envAddress("CHILD_TARGET_MANAGER"),
             childERC20Bridge: ChildERC20Bridge(payable(vm.envAddress("CHILD_ERC20_BRIDGE"))),
             childAxelarBridgeAdaptor: ChildAxelarBridgeAdaptor(vm.envAddress("CHILD_BRIDGE_ADAPTOR")),
             childTokenTemplate: vm.envAddress("CHILDCHAIN_CHILD_TOKEN_TEMPLATE"),
@@ -70,8 +76,15 @@ contract InitializeChildContracts is Script {
             params.wIMXToken
         );
 
+        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor.InitializationRoles({
+            defaultAdmin: params.childAdminAddress,
+            bridgeManager: params.childBridgeManager,
+            gasServiceManager: params.childGasServiceManager,
+            targetManager: params.childTargetManager
+        });
+
         params.childAxelarBridgeAdaptor.initialize(
-            params.rootChainName, address(params.childERC20Bridge), params.childGasService
+            adaptorRoles, params.rootChainName, address(params.childERC20Bridge), params.childGasService
         );
 
         vm.stopBroadcast();
