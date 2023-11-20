@@ -10,17 +10,17 @@ async function run() {
     // Check environment variables
     let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
     let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let adminDeployerSecret = helper.requireEnv("CHILD_DEPLOYER_SECRET");
+    let childDeployerSecret = helper.requireEnv("CHILD_DEPLOYER_SECRET");
     let childGatewayAddr = helper.requireEnv("CHILD_GATEWAY_ADDRESS");
     let childProxyAdmin = helper.requireEnv("CHILD_PROXY_ADMIN");
 
     // Get admin address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
     let adminWallet;
-    if (adminDeployerSecret == "ledger") {
+    if (childDeployerSecret == "ledger") {
         adminWallet = new LedgerSigner(childProvider);
     } else {
-        adminWallet = new ethers.Wallet(adminDeployerSecret, childProvider);
+        adminWallet = new ethers.Wallet(childDeployerSecret, childProvider);
     }
     let adminAddr = await adminWallet.getAddress();
     console.log("Admin address is: ", adminAddr);
@@ -98,6 +98,6 @@ async function run() {
         WRAPPED_IMX_ADDRESS: wrappedIMX.address,
         CHILD_TOKEN_TEMPLATE: childTokenTemplate.address,
     };
-    fs.writeFileSync(".chil.bridge.contracts.json", JSON.stringify(contractData, null, 2));
+    fs.writeFileSync(".child.bridge.contracts.json", JSON.stringify(contractData, null, 2));
 }
 run();
