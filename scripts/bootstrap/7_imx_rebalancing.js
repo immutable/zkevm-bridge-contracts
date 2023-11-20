@@ -20,7 +20,7 @@ async function run() {
     let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
     let rootDeployerSecret = helper.requireEnv("ROOT_DEPLOYER_SECRET");
     let multisigAddr = helper.requireEnv("MULTISIG_CONTRACT_ADDRESS");
-    let imxRootAddr = helper.requireEnv("ROOT_IMX_ADDR");
+    let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
 
     // Read from contract file.
     let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
@@ -46,7 +46,7 @@ async function run() {
     if (helper.hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
         throw("Duplicate address detected!");
     }
-    if (helper.hasDuplicates([adminAddr, rootBridgeAddr, imxRootAddr])) {
+    if (helper.hasDuplicates([adminAddr, rootBridgeAddr, rootIMXAddr])) {
         throw("Duplicate address detected!");
     }
 
@@ -57,7 +57,7 @@ async function run() {
     let balanceAmt = ethers.utils.parseEther(TOTAL_SUPPLY).sub(bridgeBal).sub(multisigBal);
 
     console.log("The amount to balance on L1 is: ", ethers.utils.formatEther(balanceAmt));
-    let IMX = new ethers.Contract(imxRootAddr, IMX_ABI, rootProvider);
+    let IMX = new ethers.Contract(rootIMXAddr, IMX_ABI, rootProvider);
     let adminL1Balance = await IMX.balanceOf(adminAddr);
     let rootBridgeBalance = await IMX.balanceOf(rootBridgeAddr);
 
