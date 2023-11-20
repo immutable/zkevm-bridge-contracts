@@ -20,6 +20,7 @@ Foundry consists of:
 
 ### Install Dependencies
 ```shell
+$ yarn install
 $ forge install
 ```
 

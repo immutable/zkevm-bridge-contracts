@@ -11,7 +11,10 @@
         "lint": "forge fmt",
         "startlocaldev": "cd scripts/localdev; ./start.sh",
         "setuplocaldev": "cd scripts/localdev; ./deploy.sh",
-        "stoplocaldev": "cd scripts/localdev; ./stop.sh"
+        "stoplocaldev": "cd scripts/localdev; ./stop.sh",
+        "startlocalchain": "cd scripts/localdev; LOCAL_CHAIN_ONLY=true ./start.sh",
+        "setupaxelar": "cd scripts/localdev; node axelar_setup.js",
+        "stoplocalchain": "cd scripts/localdev; ./stop.sh"
     },
     "author": "",
     "license": "ISC",

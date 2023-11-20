@@ -32,16 +32,18 @@ if [ $? -ne 0 ]; then
 fi
 echo "Successfully setup root chain and child chain..."
 
-# Fund accounts
-SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap/1_deployer_funding.js
-if [ $? -ne 0 ]; then
+if [ -z ${LOCAL_CHAIN_ONLY+x} ]; then
+    # Fund accounts
+    SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap/1_deployer_funding.js
+    if [ $? -ne 0 ]; then
+        ./stop.sh
+        echo "Fail to run 1_deployer_funding.js"
+        exit 1
+    fi
+    echo "Successfully run 1_deployer_funding.js..."
+
+    # Setup axelar
+    node axelar_setup.js
+
     ./stop.sh
-    echo "Fail to run 1_deployer_funding.js"
-    exit 1
 fi
-echo "Successfully run 1_deployer_funding.js..."
-
-# Setup axelar
-node axelar_setup.js
-
-./stop.sh
