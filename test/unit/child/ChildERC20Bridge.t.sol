@@ -133,7 +133,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_RevertsIf_treasuryDepositWithZeroValue() public {
-        vm.deal(treasuryManager, 100 ether);
         vm.startPrank(treasuryManager);
         vm.expectRevert(ZeroValue.selector);
         childBridge.treasuryDeposit{value: 0}();
