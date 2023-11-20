@@ -187,7 +187,18 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
     }
 
-    // TODO add updating of child bridge adaptor. Part of SMR-1908
+    /**
+     * @notice Updates the child bridge adaptor.
+     * @param newChildBridgeAdaptor String checksum address of new root bridge adaptor.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     */
+    function updateChildBridgeAdaptor(string memory newChildBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
+        if (bytes(newChildBridgeAdaptor).length == 0) {
+            revert InvalidChildERC20BridgeAdaptor();
+        }
+        emit NewChildBridgeAdaptor(childBridgeAdaptor, newChildBridgeAdaptor);
+        childBridgeAdaptor = newChildBridgeAdaptor;
+    }
 
     /**
      * @notice Updates the IMX deposit limit.

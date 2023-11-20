@@ -44,6 +44,19 @@ interface IRootERC20Bridge {
     function mapToken(IERC20Metadata rootToken) external payable returns (address);
 
     /**
+     * @notice Deposits `amount` of ETH to `msg.sender` on the child chain.
+     * @param amount The amount of ETH to deposit.
+     */
+    function depositETH(uint256 amount) external payable;
+
+    /**
+     * @notice Deposits `amount` of ETH to `receiver` on the child chain.
+     * @param receiver The address to deposit the ETH to.
+     * @param amount The amount of ETH to deposit.
+     */
+    function depositToETH(address receiver, uint256 amount) external payable;
+
+    /**
      * @notice Initiate sending a deposit message to the child chain.
      * @custom:requires `rootToken` to already be mapped with `mapToken`.
      * @param rootToken The address of the token on the root chain.
@@ -58,23 +71,13 @@ interface IRootERC20Bridge {
      * @param amount The amount of tokens to deposit.
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable;
-
-    /**
-     * @notice Initiate sending an ETH deposit message to the child chain.
-     * @param amount The amount of tokens to deposit.
-     */
-    function depositETH(uint256 amount) external payable;
-    /**
-     * @notice Initiate sending an ETH deposit message to the child chain, with a specified receiver.
-     * @param receiver The address of the receiver on the child chain.
-     * @param amount The amount of tokens to deposit.
-     */
-    function depositToETH(address receiver, uint256 amount) external payable;
 }
 
 interface IRootERC20BridgeEvents {
-    /// @notice Emitted when the child chain bridge adaptor is updated.
+    /// @notice Emitted when the root chain bridge adaptor is updated.
     event NewRootBridgeAdaptor(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
+    /// @notice Emitted when the child chain bridge adaptor is updated.
+    event NewChildBridgeAdaptor(string oldChildBridgeAdaptor, string newChildBridgeAdaptor);
     /// @notice Emitted when the IMX deposit limit is updated.
     event NewImxDepositLimit(uint256 oldImxDepositLimit, uint256 newImxDepositLimit);
     /// @notice Emitted when a map token message is sent to the child chain.

@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import {AxelarExecutable} from "@axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {IAxelarGasService} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGasService.sol";
@@ -25,8 +24,6 @@ contract RootAxelarBridgeAdaptor is
     IRootAxelarBridgeAdaptorEvents,
     IRootAxelarBridgeAdaptorErrors
 {
-    using SafeERC20 for IERC20Metadata;
-
     IRootERC20Bridge public rootBridge;
     string public childChain;
     IAxelarGasService public gasService;
