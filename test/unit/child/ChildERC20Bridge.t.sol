@@ -153,6 +153,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
     }
 
+    function test_RevertIf_InitializeWithAZeroAddressTreasuryManager() public {
+        ChildERC20Bridge bridge = new ChildERC20Bridge();
+        roles.treasuryManager = address(0);
+        vm.expectRevert(ZeroAddress.selector);
+        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
+    }
+
     function test_RevertIf_InitializeWithAZeroAddressChildTemplate() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
@@ -168,6 +175,11 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
+        roles.defaultAdmin = address(0);
+        roles.pauser = address(0);
+        roles.unpauser = address(0);
+        roles.adaptorManager = address(0);
+        roles.treasuryManager = address(0);
         bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(0), address(0));
     }
 
