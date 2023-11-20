@@ -10,17 +10,17 @@ async function run() {
     // Check environment variables
     let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
     let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let adminEOASecret = helper.requireEnv("CHILD_ADMIN_EOA_SECRET");
+    let adminDeployerSecret = helper.requireEnv("CHILD_DEPLOYER_SECRET");
     let childGatewayAddr = helper.requireEnv("CHILD_GATEWAY_ADDRESS");
     let childProxyAdmin = helper.requireEnv("CHILD_PROXY_ADMIN");
 
     // Get admin address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
     let adminWallet;
-    if (adminEOASecret == "ledger") {
+    if (adminDeployerSecret == "ledger") {
         adminWallet = new LedgerSigner(childProvider);
     } else {
-        adminWallet = new ethers.Wallet(adminEOASecret, childProvider);
+        adminWallet = new ethers.Wallet(adminDeployerSecret, childProvider);
     }
     let adminAddr = await adminWallet.getAddress();
     console.log("Admin address is: ", adminAddr);
