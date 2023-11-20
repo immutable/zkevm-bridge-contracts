@@ -17,6 +17,7 @@ struct InitializeChildContractsParams {
     address childBridgeManager;
     address childGasServiceManager;
     address childTargetManager;
+    address childTreasuryManager;
     ChildERC20Bridge childERC20Bridge;
     ChildAxelarBridgeAdaptor childAxelarBridgeAdaptor;
     address childTokenTemplate;
@@ -38,6 +39,7 @@ contract InitializeChildContracts is Script {
             childBridgeManager: vm.envAddress("CHILD_BRIDGE_MANAGER"),
             childGasServiceManager: vm.envAddress("CHILD_GAS_SERVICE_MANAGER"),
             childTargetManager: vm.envAddress("CHILD_TARGET_MANAGER"),
+            childTreasuryManager: vm.envAddress("CHILD_TREASURY_MANAGER"),
             childERC20Bridge: ChildERC20Bridge(payable(vm.envAddress("CHILD_ERC20_BRIDGE"))),
             childAxelarBridgeAdaptor: ChildAxelarBridgeAdaptor(vm.envAddress("CHILD_BRIDGE_ADAPTOR")),
             childTokenTemplate: vm.envAddress("CHILDCHAIN_CHILD_TOKEN_TEMPLATE"),
@@ -65,7 +67,8 @@ contract InitializeChildContracts is Script {
             defaultAdmin: params.childAdminAddress,
             pauser: params.childPauserAddress,
             unpauser: params.childUnpauserAddress,
-            adaptorManager: params.childAdminAddress
+            adaptorManager: params.childAdminAddress,
+            treasuryManager: params.childAdminAddress
         });
         params.childERC20Bridge.initialize(
             roles,

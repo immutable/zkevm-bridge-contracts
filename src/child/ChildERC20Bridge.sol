@@ -41,8 +41,11 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
  */
 contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Bridge, IChildERC20BridgeEvents {
-    /// @dev leave this as the first param for the integration tests
+    /// @dev leave this as the first param for the integration tests.
     mapping(address => address) public rootTokenToChildToken;
+
+    /// @dev Role identifier for those who can directly deposit native IMX to the bridge.
+    bytes32 public constant TREASURY_MANAGER_ROLE = keccak256("TREASURY_MANAGER");
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
@@ -88,7 +91,8 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
-                || newRoles.adaptorManager == address(0) || newWIMXToken == address(0)
+                || newRoles.adaptorManager == address(0) || newRoles.treasuryManager == address(0)
+                || newWIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -108,6 +112,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         _grantRole(PAUSER_ROLE, newRoles.pauser);
         _grantRole(UNPAUSER_ROLE, newRoles.unpauser);
         _grantRole(ADAPTOR_MANAGER_ROLE, newRoles.adaptorManager);
+        _grantRole(TREASURY_MANAGER_ROLE, newRoles.treasuryManager);
 
         rootERC20BridgeAdaptor = newRootERC20BridgeAdaptor;
         childTokenTemplate = newChildTokenTemplate;

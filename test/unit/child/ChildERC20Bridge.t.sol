@@ -26,6 +26,14 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     address public childETHToken;
     ChildERC20Bridge public childBridge;
 
+    IChildERC20Bridge.InitializationRoles roles = IChildERC20Bridge.InitializationRoles({
+        defaultAdmin: address(this),
+        pauser: pauser,
+        unpauser: unpauser,
+        adaptorManager: address(this),
+        treasuryManager: address(this)
+    });
+
     function setUp() public {
         rootToken = new ChildERC20();
         rootToken.initialize(address(456), "Test", "TST", 18);
@@ -34,12 +42,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childTokenTemplate.initialize(address(123), "Test", "TST", 18);
 
         childBridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: pauser,
-            unpauser: unpauser,
-            adaptorManager: address(this)
-        });
+
         childBridge.initialize(
             roles,
             address(this),
@@ -110,12 +113,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_RevertIfInitializeTwice() public {
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
         vm.expectRevert("Initializable: contract is already initialized");
         childBridge.initialize(
             roles,
@@ -130,104 +127,52 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_RevertIf_InitializeWithAZeroAddressDefaultAdmin() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(0),
-            pauser: address(this),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
-
+        roles.defaultAdmin = address(0);
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressPauser() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(0),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
-
+        roles.pauser = address(0);
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressUnpauser() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(0),
-            adaptorManager: address(this)
-        });
-
+        roles.unpauser = address(0);
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdapter() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
-
+        roles.adaptorManager = address(0);
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildTemplate() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
-
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(1), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
-
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(0), address(1));
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
-
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(0), ROOT_BRIDGE_ADAPTOR, address(0), ROOT_CHAIN_NAME, address(0), address(0));
     }
 
     function test_RevertIf_InitializeWithAnEmptyBridgeAdaptorString() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
-
         vm.expectRevert(InvalidRootERC20BridgeAdaptor.selector);
         bridge.initialize(
             roles, address(this), "", address(childTokenTemplate), ROOT_CHAIN_NAME, ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN
@@ -236,13 +181,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
     function test_RevertIf_InitializeWithAnEmptyChainNameString() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge();
-        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            adaptorManager: address(this)
-        });
-
         vm.expectRevert(InvalidRootChain.selector);
         bridge.initialize(
             roles, address(this), ROOT_BRIDGE_ADAPTOR, address(childTokenTemplate), "", ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN

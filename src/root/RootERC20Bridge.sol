@@ -49,7 +49,7 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
 contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors {
     using SafeERC20 for IERC20Metadata;
 
-    /// @dev leave this as the first param for the integration tests
+    /// @dev leave this as the first param for the integration tests.
     mapping(address => address) public rootTokenToChildToken;
 
     /// @notice Role identifier those who can update the cumulative IMX deposit limit.
