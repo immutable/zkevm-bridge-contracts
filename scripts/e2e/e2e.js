@@ -104,37 +104,37 @@ describe("Bridge e2e test", () => {
     }).timeout(60000)
 
     it("should successfully withdraw IMX to self from L2 to L1", async() => {
-        // // Get IMX balance on root & child chains before withdraw
-        // let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
-        // let preBalL2 = await childProvider.getBalance(childTestWallet.address);
+        // Get IMX balance on root & child chains before withdraw
+        let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childProvider.getBalance(childTestWallet.address);
 
-        // let amt = ethers.utils.parseEther("1.0");
-        // let bridgeFee = ethers.utils.parseEther("1.0");
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("1.0");
 
-        // // IMX withdraw L2 to L1
-        // let [priorityFee, maxFee] = await helper.getFee(childTestWallet);
-        // let resp = await childBridge.connect(childTestWallet).withdrawIMX(amt, {
-        //     value: bridgeFee,
-        //     maxPriorityFeePerGas: priorityFee,
-        //     maxFeePerGas: maxFee,
-        // });
-        // await helper.waitForReceipt(resp.hash, childProvider);
+        // IMX withdraw L2 to L1
+        let [priorityFee, maxFee] = await helper.getFee(childTestWallet);
+        let resp = await childBridge.connect(childTestWallet).withdrawIMX(amt, {
+            value: amt.add(bridgeFee),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await helper.waitForReceipt(resp.hash, childProvider);
 
-        // let postBalL1 = preBalL1;
-        // let postBalL2 = await childProvider.getBalance(childTestWallet.address);
+        let postBalL1 = preBalL1;
+        let postBalL2 = await childProvider.getBalance(childTestWallet.address);
 
-        // while (postBalL1.eq(preBalL1)) {
-        //     postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
-        //     await helper.delay(1000);
-        // }
+        while (postBalL1.eq(preBalL1)) {
+            postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+            await helper.delay(1000);
+        }
 
-        // // Verify
-        // let receipt = await childProvider.getTransactionReceipt(resp.hash);
-        // let txFee = receipt.cumulativeGasUsed.mul(receipt.effectiveGasPrice);
-        // let expectedPostL1 = preBalL1.add(amt);
-        // let expectedPostL2 = preBalL2.sub(txFee).sub(amt).sub(bridgeFee);
-        // expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
-        // expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+        // Verify
+        let receipt = await childProvider.getTransactionReceipt(resp.hash);
+        let txFee = receipt.cumulativeGasUsed.mul(receipt.effectiveGasPrice);
+        let expectedPostL1 = preBalL1.add(amt);
+        let expectedPostL2 = preBalL2.sub(txFee).sub(amt).sub(bridgeFee);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(120000)
 
     it("should successfully withdraw wIMX to self from L2 to L1", async() => {
