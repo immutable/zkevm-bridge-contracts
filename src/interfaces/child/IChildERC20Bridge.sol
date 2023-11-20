@@ -174,6 +174,8 @@ interface IChildERC20BridgeErrors {
     error InsufficientValue();
     /// @notice Error when the withdrawal amount is zero
     error ZeroAmount();
+    /// @notice Error when a zero msg.value is supplied.
+    error ZeroValue();
     /// @notice Error when a message is sent with no gas payment.
     error NoGas();
     /// @notice Error when the contract to mint had no bytecode.

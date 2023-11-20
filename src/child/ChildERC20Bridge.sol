@@ -146,7 +146,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
      */
     function treasuryDeposit() external payable onlyRole(TREASURY_MANAGER_ROLE) {
         if (msg.value == 0) {
-            revert ZeroAmount();
+            revert ZeroValue();
         }
         emit TreasuryDeposit(msg.sender, msg.value);
     }

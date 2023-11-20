@@ -26,12 +26,14 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     address public childETHToken;
     ChildERC20Bridge public childBridge;
 
+    address treasuryManager = makeAddr("treasuryManager");
+
     IChildERC20Bridge.InitializationRoles roles = IChildERC20Bridge.InitializationRoles({
         defaultAdmin: address(this),
         pauser: pauser,
         unpauser: unpauser,
         adaptorManager: address(this),
-        treasuryManager: address(this)
+        treasuryManager: treasuryManager
     });
 
     function setUp() public {
@@ -92,6 +94,50 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         unpause(IPausable(address(childBridge)));
         // Expect success case to pass
         test_NativeTransferFromWIMX();
+    }
+
+    /**
+     * TREASURY DEPOSIT
+     */
+
+    function test_treasuryDepostIncreasesBalance() public {
+        vm.deal(treasuryManager, 100 ether);
+        vm.startPrank(treasuryManager);
+        uint256 preBal = address(childBridge).balance;
+        childBridge.treasuryDeposit{value: 100 ether}();
+        uint256 postBal = address(childBridge).balance;
+        assertEq(preBal + 100 ether, postBal, "balance not increased");
+        vm.stopPrank();
+    }
+
+    function test_treasuryDepositEmitsEvent() public {
+        vm.deal(treasuryManager, 100 ether);
+        vm.startPrank(treasuryManager);
+        vm.expectEmit(true, true, false, false, address(childBridge));
+        emit TreasuryDeposit(treasuryManager, 100 ether);
+        childBridge.treasuryDeposit{value: 100 ether}();
+        vm.stopPrank();
+    }
+
+    function test_RevertsIf_treasuryDepositCalledFromNonTreasuryManager() public {
+        bytes32 role = childBridge.TREASURY_MANAGER_ROLE();
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(address(this)),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(role), 32)
+            )
+        );
+        childBridge.treasuryDeposit{value: 100 ether}();
+    }
+
+    function test_RevertsIf_treasuryDepositWithZeroValue() public {
+        vm.deal(treasuryManager, 100 ether);
+        vm.startPrank(treasuryManager);
+        vm.expectRevert(ZeroValue.selector);
+        childBridge.treasuryDeposit{value: 0}();
+        vm.stopPrank();
     }
 
     /**
