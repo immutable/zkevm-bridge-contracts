@@ -71,7 +71,7 @@ async function main() {
 
     // Fund accounts on child chain.
     let axelarChildEOA = new ethers.Wallet(axelarChildEOAKey, childProvider);
-    resp = await axelarChildEOA.sendTransaction({
+    let resp = await axelarChildEOA.sendTransaction({
         to: childChain.ownerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
@@ -102,7 +102,7 @@ async function main() {
 
     // Fund accounts on root chain.
     let axelarRootEOA = new ethers.Wallet(axelarRootEOAKey, rootProvider);
-    let resp = await axelarRootEOA.sendTransaction({
+    resp = await axelarRootEOA.sendTransaction({
         to: rootChain.ownerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
