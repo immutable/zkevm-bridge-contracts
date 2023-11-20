@@ -7,6 +7,8 @@ import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.s
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {ChildERC20} from "../src/child/ChildERC20.sol";
+import {IRootERC20BridgeAdaptor} from "../src/interfaces/root/IRootERC20BridgeAdaptor.sol";
+import {IRootAxelarBridgeAdaptor} from "../src/interfaces/root/IRootAxelarBridgeAdaptor.sol";
 import {RootERC20Bridge, IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
@@ -22,6 +24,13 @@ contract DeployRootContracts is Script {
         string memory rootRpcUrl = vm.envString("ROOT_RPC_URL");
         string memory deployEnvironment = vm.envString("ENVIRONMENT");
         address rootGateway = vm.envAddress("ROOT_GATEWAY_ADDRESS");
+
+        IRootAxelarBridgeAdaptor.InitializationRoles memory roles = IRootAxelarBridgeAdaptor.InitializationRoles({
+            defaultAdmin: address(this),
+            bridgeManager: address(this),
+            gasServiceManager: address(this),
+            targetManager: address(this)
+        });
 
         /**
          * DEPLOY ROOT CHAIN CONTRACTS
@@ -49,7 +58,7 @@ contract DeployRootContracts is Script {
         );
 
         RootAxelarBridgeAdaptor rootBridgeAdaptorImplementation = new RootAxelarBridgeAdaptor(rootGateway);
-        rootBridgeAdaptorImplementation.initialize(address(rootERC20BridgeImplementation), "Filler", address(1));
+        rootBridgeAdaptorImplementation.initialize(roles, address(rootERC20BridgeImplementation), "Filler", address(1));
 
         TransparentUpgradeableProxy rootBridgeAdaptorProxy = new TransparentUpgradeableProxy(
             address(rootBridgeAdaptorImplementation),

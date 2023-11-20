@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
+interface IRootAxelarBridgeAdaptor {
+    struct InitializationRoles {
+        address defaultAdmin; // The address which will inherit `DEFAULT_ADMIN_ROLE`.
+        address bridgeManager; // The address which will inherit `BRIDGE_MANAGER_ROLE`.
+        address gasServiceManager; // The address which will inherit `GAS_SERVICE_MANAGER_ROLE`.
+        address targetManager; // The address which will inherit `TARGET_MANAGER_ROLE`.
+    }
+}
+
 interface IRootAxelarBridgeAdaptorErrors {
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddresses();

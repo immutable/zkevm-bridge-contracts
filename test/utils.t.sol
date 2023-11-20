@@ -17,6 +17,7 @@ import {WIMX} from "../src/child/WIMX.sol";
 import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
 import {IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
+import {IRootAxelarBridgeAdaptor} from "../src/interfaces/root/IRootAxelarBridgeAdaptor.sol";
 
 interface IPausable {
     function pause() external;
@@ -140,8 +141,18 @@ contract Utils is Test {
             address(this)
         );
 
+        IRootAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IRootAxelarBridgeAdaptor.InitializationRoles({
+            defaultAdmin: address(this),
+            bridgeManager: address(this),
+            gasServiceManager: address(this),
+            targetManager: address(this)
+        });
+
         integrationTest.axelarAdaptor.initialize(
-            address(integrationTest.rootBridgeFlowRate), childBridgeName, address(integrationTest.axelarGasService)
+            adaptorRoles,
+            address(integrationTest.rootBridgeFlowRate),
+            childBridgeName,
+            address(integrationTest.axelarGasService)
         );
     }
 

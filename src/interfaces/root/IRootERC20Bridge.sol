@@ -22,7 +22,7 @@ interface IRootERC20Bridge {
      */
     function grantVariableManagerRole(address account) external;
 
-        /**
+    /**
      * @notice Updates the root bridge adaptor.
      * @param newRootBridgeAdaptor Address of new root bridge adaptor.
      * @dev Can only be called by ADAPTOR_MANAGER_ROLE.

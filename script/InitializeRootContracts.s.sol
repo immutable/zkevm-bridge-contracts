@@ -5,6 +5,7 @@ import {Script, console2} from "forge-std/Script.sol";
 
 import {ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootERC20Bridge, IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
+import {IRootAxelarBridgeAdaptor} from "../src/interfaces/root/IRootAxelarBridgeAdaptor.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
@@ -17,6 +18,9 @@ struct InitializeRootContractsParams {
     address rootAdminAddress;
     address rootPauserAddress;
     address rootUnpauserAddress;
+    address bridgeManagerAddress;
+    address gasManagerAddress;
+    address targetManagerAddress;
     RootERC20Bridge rootERC20Bridge;
     RootAxelarBridgeAdaptor rootBridgeAdaptor;
     address rootChainChildTokenTemplate;
@@ -37,6 +41,9 @@ contract InitializeRootContracts is Script {
             rootAdminAddress: vm.envAddress("ROOT_ADMIN_ADDRESS"),
             rootPauserAddress: vm.envAddress("ROOT_PAUSER_ADDRESS"),
             rootUnpauserAddress: vm.envAddress("ROOT_UNPAUSER_ADDRESS"),
+            bridgeManagerAddress: vm.envAddress("BRIDGE_MANAGER_ADDRESS"),
+            gasManagerAddress: vm.envAddress("GAS_MANAGER_ADDRESS"),
+            targetManagerAddress: vm.envAddress("TARGET_MANAGER_ADDRESS"),
             rootERC20Bridge: RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE"))),
             rootBridgeAdaptor: RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR")),
             rootChainChildTokenTemplate: vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE"),
@@ -82,7 +89,15 @@ contract InitializeRootContracts is Script {
             params.initialIMXCumulativeDepositLimit
         );
 
+        IRootAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IRootAxelarBridgeAdaptor.InitializationRoles({
+            defaultAdmin: params.rootAdminAddress,
+            bridgeManager: params.bridgeManagerAddress,
+            gasServiceManager: params.gasManagerAddress,
+            targetManager: params.targetManagerAddress
+        });
+
         params.rootBridgeAdaptor.initialize(
+            adaptorRoles,
             address(params.rootERC20Bridge), // root bridge
             params.childChainName, // child chain name
             params.rootGasService // axelar gas service
