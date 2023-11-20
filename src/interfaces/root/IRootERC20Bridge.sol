@@ -6,7 +6,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 
 /**
  * @title Root ERC20 Bridge Interface
- * @notice Defines the key functions of an ERC20 bridge on the root chain, which enables transfers of ERC20 tokens and native ETH from the root chain to the child chain.
+ * @notice Defines the key functions of an ERC20 bridge on the root chain, which enables bridging of standard ERC20 tokens, ETH, wETH, IMX and wIMX from the root chain to the child chain and back.
  * @dev Features:
  *     - Maps tokens from the root chain to the child chain.
  *     - Deposits tokens from the root chain to the child chain.

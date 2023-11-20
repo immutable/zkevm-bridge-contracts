@@ -21,7 +21,7 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
 
 /**
  * @title Root ERC20 Bridge
- * @notice An ERC20 bridge contract for the root chain, which enables bridging of standard ERC20 tokens, ETH and IMX from the root chain to the child chain and back.
+ * @notice An ERC20 bridge contract for the root chain, which enables bridging of standard ERC20 tokens, ETH, wETH, IMX and wIMX from the root chain to the child chain and back.
  * @dev Features:
  *      - Map ERC20 tokens from the root chain to the child chain, so as to enable subsequent bridging of the token.
  *      - Deposit ERC20 tokens, native ETH, wrapped ETH and IMX from the root chain to the child chain.

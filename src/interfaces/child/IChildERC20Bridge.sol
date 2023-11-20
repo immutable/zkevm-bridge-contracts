@@ -6,7 +6,7 @@ import {IChildERC20} from "./IChildERC20.sol";
 
 /**
  * @title Child ERC20 Bridge Interface
- * @notice Defines the key functions of an ERC20 bridge on the child chain, which enables transfers of bridged ERC20 tokens and native IMX from the child chain to the child chain.
+ * @notice Defines the key functions of an ERC20 bridge on the child chain, which enables bridging of standard ERC20 tokens, ETH, wETH, IMX and wIMX from the root chain to the child chain and back.
  * @dev Features:
  *  - Withdraw already bridged tokens from the child chain to the root chain.
  *  - Withdraw native IMX from the child chain to the root chain.
