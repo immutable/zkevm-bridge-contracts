@@ -13,12 +13,12 @@ import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAda
 import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 
 contract ChildAxelarBridgeAdaptor is
+    AdaptorRoles,
     AxelarExecutable,
     IChildERC20BridgeAdaptor,
     IChildAxelarBridgeAdaptorErrors,
     IChildAxelarBridgeAdaptorEvents,
-    IChildAxelarBridgeAdaptor,
-    AdaptorRoles
+    IChildAxelarBridgeAdaptor
 {
     /// @notice Address of bridge to relay messages to.
     IChildERC20Bridge public childBridge;

@@ -23,7 +23,7 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in ChildERC20Bridge.
  * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
  */
-contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildERC20BridgeEvents, BridgeRoles {
+contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Bridge, IChildERC20BridgeEvents {
     /// @dev leave this as the first param for the integration tests
     mapping(address => address) public rootTokenToChildToken;
 
