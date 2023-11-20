@@ -112,10 +112,11 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
     /**
      * @inheritdoc IChildERC20Bridge
      */
-    function updateBridgeAdaptor(address newBridgeAdaptor) external override onlyRole(ADAPTOR_MANAGER_ROLE) {
+    function updateChildBridgeAdaptor(address newBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
         if (newBridgeAdaptor == address(0)) {
             revert ZeroAddress();
         }
+
         emit ChildBridgeAdaptorUpdated(address(bridgeAdaptor), newBridgeAdaptor);
         bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
     }
@@ -125,12 +126,12 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
      */
     function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor)
         external
-        override
         onlyRole(ADAPTOR_MANAGER_ROLE)
     {
         if (bytes(newRootBridgeAdaptor).length == 0) {
             revert InvalidRootERC20BridgeAdaptor();
         }
+
         emit RootBridgeAdaptorUpdated(rootERC20BridgeAdaptor, newRootBridgeAdaptor);
         rootERC20BridgeAdaptor = newRootBridgeAdaptor;
     }

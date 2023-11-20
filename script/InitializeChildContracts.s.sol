@@ -76,7 +76,8 @@ contract InitializeChildContracts is Script {
             params.wIMXToken
         );
 
-        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor.InitializationRoles({
+        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor
+            .InitializationRoles({
             defaultAdmin: params.childAdminAddress,
             bridgeManager: params.childBridgeManager,
             gasServiceManager: params.childGasServiceManager,

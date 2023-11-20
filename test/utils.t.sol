@@ -79,7 +79,8 @@ contract Utils is Test {
             roles, address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX, childWIMX
         );
 
-        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor.InitializationRoles({
+        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor
+            .InitializationRoles({
             defaultAdmin: address(this),
             bridgeManager: address(this),
             gasServiceManager: address(this),

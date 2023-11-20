@@ -25,7 +25,7 @@ interface IChildERC20Bridge {
      * @notice Sets a new bridge adaptor address to receive and send function calls for L1 messages
      * @param newBridgeAdaptor The new child chain bridge adaptor address.
      */
-    function updateBridgeAdaptor(address newBridgeAdaptor) external;
+    function updateChildBridgeAdaptor(address newBridgeAdaptor) external;
 
     /**
      * @notice Sets a new root chain bridge adaptor address to receive and send function calls for L2 messages

@@ -99,7 +99,6 @@ contract ChildAxelarBridgeAdaptor is
         gasService = IAxelarGasService(newGasService);
     }
 
-
     /**
      * @inheritdoc IChildERC20BridgeAdaptor
      */
