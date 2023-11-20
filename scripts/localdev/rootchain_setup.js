@@ -35,7 +35,7 @@ async function main() {
     console.log("Deploy IMX contract on root chain...");
 
     let IMXFactory = new ContractFactory(IMXObj.abi, IMXObj.bytecode, admin);
-    let IMX = await IMXFactory.deploy("Immutable X", "IMX");
+    let IMX = await IMXFactory.deploy("IMX Token", "IMX");
     let txn = IMX.deployTransaction;
     await helper.waitForReceipt(txn.hash, rootProvider);
     console.log("IMX deployed at: " + IMX.address);
