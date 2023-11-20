@@ -487,6 +487,13 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.updateImxCumulativeDepositLimit(imxCumulativeDepositLimit);
     }
 
+    function test_RevertIf_updateImxCumulativeDepositLimitCalledByNonOwner() public {
+        uint256 imxCumulativeDepositLimit = 700;
+        vm.prank(address(0xf00f00));
+        vm.expectRevert();
+        rootBridge.updateImxCumulativeDepositLimit(imxCumulativeDepositLimit);
+    }
+
     /**
      * MAP TOKEN
      */

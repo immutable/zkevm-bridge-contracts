@@ -5,6 +5,9 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {
     IRootERC20Bridge,
     IERC20Metadata,
@@ -83,7 +86,43 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         address newRootWETHToken,
         string memory newChildChain,
         uint256 newImxCumulativeDepositLimit
-    ) public initializer {
+    ) external virtual initializer {
+        __RootERC20Bridge_init(
+            newRoles,
+            newRootBridgeAdaptor,
+            newChildERC20Bridge,
+            newChildBridgeAdaptor,
+            newChildTokenTemplate,
+            newRootIMXToken,
+            newRootWETHToken,
+            newChildChain,
+            newImxCumulativeDepositLimit
+        );
+    }
+
+    /**
+     * @notice Initialization function for RootERC20Bridge.
+     * @param newRoles Struct containing addresses of roles.
+     * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
+     * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
+     * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with (As a checksummed string).
+     * @param newChildTokenTemplate Address of child token template to clone.
+     * @param newRootIMXToken Address of ERC20 IMX on the root chain.
+     * @param newRootWETHToken Address of ERC20 WETH on the root chain.
+     * @param newChildChain Name of child chain.
+     * @param newImxCumulativeDepositLimit The cumulative IMX deposit limit.
+     */
+    function __RootERC20Bridge_init(
+        InitializationRoles memory newRoles,
+        address newRootBridgeAdaptor,
+        address newChildERC20Bridge,
+        string memory newChildBridgeAdaptor,
+        address newChildTokenTemplate,
+        address newRootIMXToken,
+        address newRootWETHToken,
+        string memory newChildChain,
+        uint256 newImxCumulativeDepositLimit
+    ) internal {
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
                 || newChildTokenTemplate == address(0) || newRootIMXToken == address(0) || newRootWETHToken == address(0)
@@ -397,10 +436,23 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
         }
     }
 
-    function _withdraw(bytes memory data) private {
-        (address rootToken, address withdrawer, address receiver, uint256 amount) =
-            abi.decode(data, (address, address, address, uint256));
-        address childToken;
+    function _withdraw(bytes memory data) internal virtual {
+        (address rootToken, address childToken, address withdrawer, address receiver, uint256 amount) =
+            _decodeAndValidateWithdrawal(data);
+        _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
+    }
+
+    function _decodeAndValidateWithdrawal(bytes memory data)
+        internal
+        view
+        returns (address rootToken, address childToken, address withdrawer, address receiver, uint256 amount)
+    {
+        (rootToken, withdrawer, receiver, amount) = abi.decode(data, (address, address, address, uint256));
+
+        if (address(rootToken) == address(0)) {
+            revert ZeroAddress();
+        }
+
         if (rootToken == rootIMXToken) {
             childToken = NATIVE_IMX;
         } else if (rootToken == NATIVE_ETH) {
@@ -411,7 +463,6 @@ contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20
                 revert NotMapped();
             }
         }
-        _executeTransfer(rootToken, childToken, withdrawer, receiver, amount);
     }
 
     function _executeTransfer(
