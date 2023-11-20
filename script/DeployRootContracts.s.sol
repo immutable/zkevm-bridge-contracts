@@ -8,7 +8,7 @@ import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.s
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {ChildERC20} from "../src/child/ChildERC20.sol";
-import {RootERC20Bridge, IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
+import {RootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
@@ -36,13 +36,8 @@ contract DeployRootContracts is Script {
         ChildERC20 rootChainChildTokenTemplate = new ChildERC20();
         rootChainChildTokenTemplate.initialize(address(123), "TEMPLATE", "TPT", 18);
 
-        IRootERC20Bridge.InitializationRoles memory fillerRoles =
-            IRootERC20Bridge.InitializationRoles(address(1), address(1), address(1), address(1), address(1));
-
         RootERC20Bridge rootERC20BridgeImplementation = new RootERC20Bridge();
-        rootERC20BridgeImplementation.initialize(
-            fillerRoles, address(1), address(1), "filler", address(1), address(1), address(1), "filler_child_name", 1
-        );
+
         TransparentUpgradeableProxy rootERC20BridgeProxy = new TransparentUpgradeableProxy(
             address(rootERC20BridgeImplementation),
             address(proxyAdmin),
@@ -50,7 +45,6 @@ contract DeployRootContracts is Script {
         );
 
         RootAxelarBridgeAdaptor rootBridgeAdaptorImplementation = new RootAxelarBridgeAdaptor(rootGateway);
-        rootBridgeAdaptorImplementation.initialize(address(rootERC20BridgeImplementation), "Filler", address(1));
 
         TransparentUpgradeableProxy rootBridgeAdaptorProxy = new TransparentUpgradeableProxy(
             address(rootBridgeAdaptorImplementation),

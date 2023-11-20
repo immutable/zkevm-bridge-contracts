@@ -35,6 +35,20 @@ interface IRootERC20Bridge {
     function grantVariableManagerRole(address account) external;
 
     /**
+     * @notice Updates the root bridge adaptor.
+     * @param newRootBridgeAdaptor Address of new root bridge adaptor.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     */
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external;
+
+    /**
+     * @notice Updates the child bridge adaptor.
+     * @param newChildBridgeAdaptor String checksum address of new root bridge adaptor.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     */
+    function updateChildBridgeAdaptor(string memory newChildBridgeAdaptor) external;
+
+    /**
      * @notice Get the address of the bridge adaptor on the child chain.
      * @return address of the bridge adaptor on the child chain.
      */
@@ -103,8 +117,10 @@ interface IRootERC20Bridge {
  * @notice Defines event types emitted by a Root ERC20 Bridge implementation.
  */
 interface IRootERC20BridgeEvents {
+    /// @notice Emitted when the root chain bridge adaptor is updated.
+    event RootBridgeAdaptorUpdated(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
     /// @notice Emitted when the child chain bridge adaptor is updated.
-    event NewRootBridgeAdaptor(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
+    event ChildBridgeAdaptorUpdated(string oldChildBridgeAdaptor, string newChildBridgeAdaptor);
     /// @notice Emitted when the IMX deposit limit is updated.
     event NewImxDepositLimit(uint256 oldImxDepositLimit, uint256 newImxDepositLimit);
     /// @notice Emitted when a map token message is sent to the child chain.

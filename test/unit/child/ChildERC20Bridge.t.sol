@@ -101,6 +101,10 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertEq(childBridge.childTokenTemplate(), address(childTokenTemplate), "childTokenTemplate not set");
         assertEq(childBridge.rootChain(), ROOT_CHAIN_NAME, "rootChain not set");
         assertEq(childBridge.rootIMXToken(), ROOT_IMX_TOKEN, "rootIMXToken not set");
+        assertTrue(childBridge.hasRole(childBridge.ADAPTOR_MANAGER_ROLE(), address(this)), "adaptorManager not set");
+        assertTrue(childBridge.hasRole(childBridge.PAUSER_ROLE(), pauser), "pauser not set");
+        assertTrue(childBridge.hasRole(childBridge.UNPAUSER_ROLE(), unpauser), "unpauser not set");
+        assertTrue(childBridge.hasRole(childBridge.ADAPTOR_MANAGER_ROLE(), address(this)), "adaptorManager not set");
         assertFalse(address(childBridge.childETHToken()) == address(0), "childETHToken not set");
         assertFalse(address(childBridge.childETHToken()).code.length == 0, "childETHToken contract empty");
     }
@@ -260,6 +264,92 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
     }
 
+    /**
+     * UPDATE CHILD BRIDGE ADAPTOR
+     */
+
+    function test_updateChildBridgeAdaptor_UpdatesChildBridgeAdaptor() public {
+        address newAdaptorAddress = address(0x11111);
+
+        assertEq(address(childBridge.bridgeAdaptor()), address(this), "bridgeAdaptor not set");
+        childBridge.updateChildBridgeAdaptor(newAdaptorAddress);
+        assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
+    }
+
+    function test_updateChildBridgeAdpator_EmitsEvent() public {
+        address newAdaptorAddress = address(0x11111);
+
+        vm.expectEmit(true, true, false, false, address(childBridge));
+        emit ChildBridgeAdaptorUpdated(address(childBridge.bridgeAdaptor()), newAdaptorAddress);
+
+        childBridge.updateChildBridgeAdaptor(newAdaptorAddress);
+    }
+
+    function test_RevertIf_updateChildBridgeAdaptorCalledByNotAdaptorManager() public {
+        address caller = address(0xf00f00);
+        bytes32 role = childBridge.ADAPTOR_MANAGER_ROLE();
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(caller),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(role), 32)
+            )
+        );
+        childBridge.updateChildBridgeAdaptor(address(0x11111));
+    }
+
+    function test_RevertIf_updateChildBridgeAdaptorCalledWithZeroAddress() public {
+        vm.expectRevert(ZeroAddress.selector);
+        childBridge.updateChildBridgeAdaptor(address(0));
+    }
+
+    /**
+     * UPDATE ROOT BRIDGE ADAPTOR
+     */
+
+    function test_updateRootBridgeAdaptor_UpdatesRootBridgeAdaptor() public {
+        string memory newAdaptor = "newAdaptor";
+
+        assertEq(childBridge.rootERC20BridgeAdaptor(), ROOT_BRIDGE_ADAPTOR, "rootERC20BridgeAdaptor not set");
+        childBridge.updateRootBridgeAdaptor(newAdaptor);
+        assertEq(childBridge.rootERC20BridgeAdaptor(), newAdaptor, "rootERC20BridgeAdaptor not updated");
+    }
+
+    function test_updateRootBridgeAdaptor_EmitsEvent() public {
+        string memory newAdaptor = "newAdaptor";
+
+        vm.expectEmit(true, true, false, false, address(childBridge));
+        emit RootBridgeAdaptorUpdated(childBridge.rootERC20BridgeAdaptor(), newAdaptor);
+
+        childBridge.updateRootBridgeAdaptor(newAdaptor);
+    }
+
+    function test_RevertIf_updateRootBridgeAdaptorCalledByNotAdaptorManager() public {
+        address caller = address(0xf00f00);
+        bytes32 role = childBridge.ADAPTOR_MANAGER_ROLE();
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(caller),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(role), 32)
+            )
+        );
+        childBridge.updateRootBridgeAdaptor("newAdaptor");
+    }
+
+    function test_RevertIf_updateRootBridgeAdaptorCalledWithEmptyString() public {
+        vm.expectRevert(InvalidRootERC20BridgeAdaptor.selector);
+        childBridge.updateRootBridgeAdaptor("");
+    }
+
+    /**
+     * ON MESSAGE RECIEVE
+     */
+
     function test_onMessageReceive_SetsTokenMapping() public {
         address predictedChildToken = Clones.predictDeterministicAddress(
             address(childTokenTemplate), keccak256(abi.encodePacked(rootToken)), address(childBridge)
@@ -361,36 +451,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
         vm.expectRevert(AlreadyMapped.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, data);
-    }
-
-    function test_updateBridgeAdaptor() public {
-        address newAdaptorAddress = address(0x11111);
-
-        assertEq(address(childBridge.bridgeAdaptor()), address(this), "bridgeAdaptor not set");
-        vm.expectEmit(true, true, true, true);
-        emit BridgeAdaptorUpdated(address(childBridge.bridgeAdaptor()), newAdaptorAddress);
-        childBridge.updateBridgeAdaptor(newAdaptorAddress);
-        assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
-    }
-
-    function test_RevertIf_updateBridgeAdaptorCalledByNotAdaptorManager() public {
-        address caller = address(0xf00f00);
-        bytes32 role = childBridge.ADAPTOR_MANAGER_ROLE();
-        vm.prank(caller);
-        vm.expectRevert(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(caller),
-                " is missing role ",
-                StringsUpgradeable.toHexString(uint256(role), 32)
-            )
-        );
-        childBridge.updateBridgeAdaptor(address(0x11111));
-    }
-
-    function test_RevertIf_updateBridgeAdaptorCalledWithZeroAddress() public {
-        vm.expectRevert(ZeroAddress.selector);
-        childBridge.updateBridgeAdaptor(address(0));
     }
 
     /**

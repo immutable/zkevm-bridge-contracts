@@ -597,11 +597,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(address(rootBridge.rootBridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
     }
 
-    function test_updateRootBridgeAdaptor_EmitsNewRootBridgeAdaptorEvent() public {
+    function test_updateRootBridgeAdaptor_EmitsRootBridgeAdaptorUpdatedEvent() public {
         address newAdaptorAddress = address(0x11111);
 
         vm.expectEmit();
-        emit NewRootBridgeAdaptor(address(rootBridge.rootBridgeAdaptor()), newAdaptorAddress);
+        emit RootBridgeAdaptorUpdated(address(rootBridge.rootBridgeAdaptor()), newAdaptorAddress);
 
         rootBridge.updateRootBridgeAdaptor(newAdaptorAddress);
     }
@@ -624,6 +624,43 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_RevertIf_updateRootBridgeAdaptorCalledWithZeroAddress() public {
         vm.expectRevert(ZeroAddress.selector);
         rootBridge.updateRootBridgeAdaptor(address(0));
+    }
+
+    function test_updateChildBridgeAdaptor_UpdatesChildBridgeAdaptor() public {
+        string memory newAdaptorAddress = Strings.toHexString(address(0x11111));
+
+        assertEq(rootBridge.childBridgeAdaptor(), CHILD_BRIDGE_ADAPTOR_STRING, "bridgeAdaptor not set");
+        rootBridge.updateChildBridgeAdaptor(newAdaptorAddress);
+        assertEq(rootBridge.childBridgeAdaptor(), newAdaptorAddress, "bridgeAdaptor not updated");
+    }
+
+    function test_updateChildBridgeAdaptor_EmitsEvent() public {
+        string memory newAdaptorAddress = Strings.toHexString(address(0x11111));
+
+        vm.expectEmit(true, true, false, false, address(rootBridge));
+        emit ChildBridgeAdaptorUpdated(rootBridge.childBridgeAdaptor(), newAdaptorAddress);
+
+        rootBridge.updateChildBridgeAdaptor(newAdaptorAddress);
+    }
+
+    function test_RevertsIf_updateChildBridgeAdaptorCalledByNonAdaptorManager() public {
+        address caller = address(0xf00f00);
+        bytes32 role = rootBridge.ADAPTOR_MANAGER_ROLE();
+        vm.prank(caller);
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(caller),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(role), 32)
+            )
+        );
+        rootBridge.updateChildBridgeAdaptor(Strings.toHexString(address(0x11111)));
+    }
+
+    function test_RevertsIf_updatreChildBridgeAdaptorCalledWithEmptyString() public {
+        vm.expectRevert(InvalidChildERC20BridgeAdaptor.selector);
+        rootBridge.updateChildBridgeAdaptor("");
     }
 
     /**

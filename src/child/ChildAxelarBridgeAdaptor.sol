@@ -4,21 +4,22 @@ pragma solidity 0.8.19;
 
 import {AxelarExecutable} from "@axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
 import {IAxelarGasService} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGasService.sol";
-import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IChildERC20Bridge} from "../interfaces/child/IChildERC20Bridge.sol";
 import {
     IChildAxelarBridgeAdaptorErrors,
-    IChildAxelarBridgeAdaptorEvents
+    IChildAxelarBridgeAdaptorEvents,
+    IChildAxelarBridgeAdaptor
 } from "../interfaces/child/IChildAxelarBridgeAdaptor.sol";
 import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
+import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 
 contract ChildAxelarBridgeAdaptor is
     AxelarExecutable,
     IChildERC20BridgeAdaptor,
-    Initializable,
     IChildAxelarBridgeAdaptorErrors,
-    IChildAxelarBridgeAdaptorEvents
+    IChildAxelarBridgeAdaptorEvents,
+    IChildAxelarBridgeAdaptor,
+    AdaptorRoles
 {
     /// @notice Address of bridge to relay messages to.
     IChildERC20Bridge public childBridge;
@@ -31,10 +32,30 @@ contract ChildAxelarBridgeAdaptor is
      * @notice Initializes the contract.
      * @param _childBridge Address of the child bridge contract.
      */
-    function initialize(string memory _rootChain, address _childBridge, address _gasService) external initializer {
-        if (_childBridge == address(0)) {
+    function initialize(
+        InitializationRoles memory newRoles,
+        string memory _rootChain,
+        address _childBridge,
+        address _gasService
+    ) external initializer {
+        if (
+            _childBridge == address(0) || _gasService == address(0) || newRoles.defaultAdmin == address(0)
+                || newRoles.bridgeManager == address(0) || newRoles.gasServiceManager == address(0)
+                || newRoles.targetManager == address(0)
+        ) {
             revert ZeroAddress();
         }
+
+        if (bytes(_rootChain).length == 0) {
+            revert InvalidRootChain();
+        }
+
+        __AccessControl_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
+        _grantRole(BRIDGE_MANAGER_ROLE, newRoles.bridgeManager);
+        _grantRole(GAS_SERVICE_MANAGER_ROLE, newRoles.gasServiceManager);
+        _grantRole(TARGET_MANAGER_ROLE, newRoles.targetManager);
 
         childBridge = IChildERC20Bridge(_childBridge);
         rootChain = _rootChain;
@@ -42,7 +63,43 @@ contract ChildAxelarBridgeAdaptor is
     }
 
     /**
-     * TODO
+     * @inheritdoc IChildAxelarBridgeAdaptor
+     */
+    function updateChildBridge(address newChildBridge) external onlyRole(BRIDGE_MANAGER_ROLE) {
+        if (newChildBridge == address(0)) {
+            revert ZeroAddress();
+        }
+
+        emit ChildBridgeUpdated(address(childBridge), newChildBridge);
+        childBridge = IChildERC20Bridge(newChildBridge);
+    }
+
+    /**
+     * @inheritdoc IChildAxelarBridgeAdaptor
+     */
+    function updateRootChain(string memory newRootChain) external onlyRole(TARGET_MANAGER_ROLE) {
+        if (bytes(newRootChain).length == 0) {
+            revert InvalidRootChain();
+        }
+
+        emit RootChainUpdated(rootChain, newRootChain);
+        rootChain = newRootChain;
+    }
+
+    /**
+     * @inheritdoc IChildAxelarBridgeAdaptor
+     */
+    function updateGasService(address newGasService) external onlyRole(GAS_SERVICE_MANAGER_ROLE) {
+        if (newGasService == address(0)) {
+            revert ZeroAddress();
+        }
+
+        emit GasServiceUpdated(address(gasService), newGasService);
+        gasService = IAxelarGasService(newGasService);
+    }
+
+    /**
+     * @inheritdoc IChildERC20BridgeAdaptor
      */
     function sendMessage(bytes calldata payload, address refundRecipient) external payable override {
         if (msg.value == 0) {
