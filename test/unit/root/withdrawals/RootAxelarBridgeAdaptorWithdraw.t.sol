@@ -9,7 +9,8 @@ import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasServi
 import {
     RootAxelarBridgeAdaptor,
     IRootAxelarBridgeAdaptorEvents,
-    IRootAxelarBridgeAdaptorErrors
+    IRootAxelarBridgeAdaptorErrors,
+    IRootAxelarBridgeAdaptor
 } from "../../../../src/root/RootAxelarBridgeAdaptor.sol";
 import {StubRootBridge} from "../../../../src/test/root/StubRootBridge.sol";
 
@@ -25,6 +26,13 @@ contract RootAxelarBridgeWithdrawAdaptorTest is Test, IRootAxelarBridgeAdaptorEv
     MockAxelarGasService public axelarGasService;
     StubRootBridge public stubRootBridge;
 
+    IRootAxelarBridgeAdaptor.InitializationRoles public roles = IRootAxelarBridgeAdaptor.InitializationRoles({
+        defaultAdmin: address(this),
+        bridgeManager: address(this),
+        gasServiceManager: address(this),
+        targetManager: address(this)
+    });
+
     function setUp() public {
         token = new ERC20PresetMinterPauser("Test", "TST");
         mockAxelarGateway = new MockAxelarGateway();
@@ -33,7 +41,7 @@ contract RootAxelarBridgeWithdrawAdaptorTest is Test, IRootAxelarBridgeAdaptorEv
         childBridgeAdaptor = stubRootBridge.childBridgeAdaptor();
 
         axelarAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
-        axelarAdaptor.initialize(address(stubRootBridge), CHILD_CHAIN_NAME, address(axelarGasService));
+        axelarAdaptor.initialize(roles, address(stubRootBridge), CHILD_CHAIN_NAME, address(axelarGasService));
         vm.deal(address(stubRootBridge), 99999999999);
     }
 

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {Script, console2} from "forge-std/Script.sol";
-
+import {Script} from "forge-std/Script.sol";
 import {ChildERC20} from "../src/child/ChildERC20.sol";
 import {RootERC20Bridge, IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
+import {IRootAxelarBridgeAdaptor} from "../src/interfaces/root/IRootAxelarBridgeAdaptor.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
-import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {AddressToString} from "@axelar-gmp-sdk-solidity/contracts/libs/AddressString.sol";
 import {Utils} from "./Utils.sol";
 
@@ -17,6 +16,9 @@ struct InitializeRootContractsParams {
     address rootAdminAddress;
     address rootPauserAddress;
     address rootUnpauserAddress;
+    address rootBridgeManagerAddress;
+    address rootGasManagerAddress;
+    address rootTargetManagerAddress;
     RootERC20Bridge rootERC20Bridge;
     RootAxelarBridgeAdaptor rootBridgeAdaptor;
     address rootChainChildTokenTemplate;
@@ -37,6 +39,9 @@ contract InitializeRootContracts is Script {
             rootAdminAddress: vm.envAddress("ROOT_ADMIN_ADDRESS"),
             rootPauserAddress: vm.envAddress("ROOT_PAUSER_ADDRESS"),
             rootUnpauserAddress: vm.envAddress("ROOT_UNPAUSER_ADDRESS"),
+            rootBridgeManagerAddress: vm.envAddress("ROOT_BRIDGE_MANAGER_ADDRESS"),
+            rootGasManagerAddress: vm.envAddress("ROOT_GAS_MANAGER_ADDRESS"),
+            rootTargetManagerAddress: vm.envAddress("ROOT_TARGET_MANAGER_ADDRESS"),
             rootERC20Bridge: RootERC20Bridge(payable(vm.envAddress("ROOT_ERC20_BRIDGE"))),
             rootBridgeAdaptor: RootAxelarBridgeAdaptor(vm.envAddress("ROOT_BRIDGE_ADAPTOR")),
             rootChainChildTokenTemplate: vm.envAddress("ROOTCHAIN_CHILD_TOKEN_TEMPLATE"),
@@ -82,7 +87,15 @@ contract InitializeRootContracts is Script {
             params.initialIMXCumulativeDepositLimit
         );
 
+        IRootAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IRootAxelarBridgeAdaptor.InitializationRoles({
+            defaultAdmin: params.rootAdminAddress,
+            bridgeManager: params.rootBridgeManagerAddress,
+            gasServiceManager: params.rootGasManagerAddress,
+            targetManager: params.rootTargetManagerAddress
+        });
+
         params.rootBridgeAdaptor.initialize(
+            adaptorRoles,
             address(params.rootERC20Bridge), // root bridge
             params.childChainName, // child chain name
             params.rootGasService // axelar gas service

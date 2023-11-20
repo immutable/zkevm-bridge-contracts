@@ -25,7 +25,13 @@ interface IChildERC20Bridge {
      * @notice Sets a new bridge adaptor address to receive and send function calls for L1 messages
      * @param newBridgeAdaptor The new child chain bridge adaptor address.
      */
-    function updateBridgeAdaptor(address newBridgeAdaptor) external;
+    function updateChildBridgeAdaptor(address newBridgeAdaptor) external;
+
+    /**
+     * @notice Sets a new root chain bridge adaptor address to receive and send function calls for L2 messages
+     * @param newRootBridgeAdaptor The new root chain bridge adaptor address.
+     */
+    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external;
 
     /**
      * @notice Withdraws `amount` of `childToken` to `msg.sender` on the rootchain.
@@ -121,8 +127,10 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
-    /// @notice Emitted when a new bridge adaptor is set.
-    event BridgeAdaptorUpdated(address oldBridgeAdaptor, address newBridgeAdaptor);
+    /// @notice Emitted when the child chain bridge adaptor is updated.
+    event ChildBridgeAdaptorUpdated(address oldChildBridgeAdaptor, address newChildBridgeAdaptor);
+    /// @notice Emitted when the root chain bridge adaptor is updated.
+    event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
 }
 
 // TODO add parameters to errors if it makes sense

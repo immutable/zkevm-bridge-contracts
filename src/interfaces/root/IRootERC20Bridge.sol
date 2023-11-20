@@ -22,6 +22,20 @@ interface IRootERC20Bridge {
      */
     function grantVariableManagerRole(address account) external;
 
+    /**
+     * @notice Updates the root bridge adaptor.
+     * @param newRootBridgeAdaptor Address of new root bridge adaptor.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     */
+    function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external;
+
+    /**
+     * @notice Updates the child bridge adaptor.
+     * @param newChildBridgeAdaptor String checksum address of new root bridge adaptor.
+     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
+     */
+    function updateChildBridgeAdaptor(string memory newChildBridgeAdaptor) external;
+
     function childBridgeAdaptor() external view returns (string memory);
     /**
      * @notice Receives a bridge message from child chain, parsing the message type then executing.
@@ -44,6 +58,19 @@ interface IRootERC20Bridge {
     function mapToken(IERC20Metadata rootToken) external payable returns (address);
 
     /**
+     * @notice Deposits `amount` of ETH to `msg.sender` on the child chain.
+     * @param amount The amount of ETH to deposit.
+     */
+    function depositETH(uint256 amount) external payable;
+
+    /**
+     * @notice Deposits `amount` of ETH to `receiver` on the child chain.
+     * @param receiver The address to deposit the ETH to.
+     * @param amount The amount of ETH to deposit.
+     */
+    function depositToETH(address receiver, uint256 amount) external payable;
+
+    /**
      * @notice Initiate sending a deposit message to the child chain.
      * @custom:requires `rootToken` to already be mapped with `mapToken`.
      * @param rootToken The address of the token on the root chain.
@@ -58,23 +85,13 @@ interface IRootERC20Bridge {
      * @param amount The amount of tokens to deposit.
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable;
-
-    /**
-     * @notice Initiate sending an ETH deposit message to the child chain.
-     * @param amount The amount of tokens to deposit.
-     */
-    function depositETH(uint256 amount) external payable;
-    /**
-     * @notice Initiate sending an ETH deposit message to the child chain, with a specified receiver.
-     * @param receiver The address of the receiver on the child chain.
-     * @param amount The amount of tokens to deposit.
-     */
-    function depositToETH(address receiver, uint256 amount) external payable;
 }
 
 interface IRootERC20BridgeEvents {
+    /// @notice Emitted when the root chain bridge adaptor is updated.
+    event RootBridgeAdaptorUpdated(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
     /// @notice Emitted when the child chain bridge adaptor is updated.
-    event NewRootBridgeAdaptor(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
+    event ChildBridgeAdaptorUpdated(string oldChildBridgeAdaptor, string newChildBridgeAdaptor);
     /// @notice Emitted when the IMX deposit limit is updated.
     event NewImxDepositLimit(uint256 oldImxDepositLimit, uint256 newImxDepositLimit);
     /// @notice Emitted when a map token message is sent to the child chain.
