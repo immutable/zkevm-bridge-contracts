@@ -11,6 +11,7 @@ async function main() {
     let rootAdminKey = helper.requireEnv("ROOT_EOA_SECRET");
     let rootDeployerKey = helper.requireEnv("ROOT_DEPLOYER_SECRET");
     let axelarDeployerKey = helper.requireEnv("AXELAR_ROOT_EOA_SECRET");
+    let rootTestKey = helper.requireEnv("TEST_ACCOUNT_SECRET");
 
     // Get root provider.
     let rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -20,6 +21,9 @@ async function main() {
 
     // Get axelar wallet on the root chain.
     let axelarDeployer = new ethers.Wallet(axelarDeployerKey, rootProvider);
+
+    // Get test wwallet on the root chain.
+    let testWallet = new ethers.Wallet(rootTestKey, rootProvider);
     
     // Get root admin eoa wallet.
     let admin = new ethers.Wallet(rootAdminKey, rootProvider);
@@ -53,6 +57,10 @@ async function main() {
     let resp = await IMX.connect(admin).mint(rootDeployer.address, ethers.utils.parseEther("1100.0"));
     await helper.waitForReceipt(resp.hash, rootProvider);
 
+    // Transfer 1000 IMX to test wallet
+    resp = await IMX.connect(admin).mint(testWallet.address, ethers.utils.parseEther("1000.0"))
+    await helper.waitForReceipt(resp.hash, rootProvider);
+
     // Transfer 0.1 ETH to root deployer
     resp = await admin.sendTransaction({
         to: rootDeployer.address,
@@ -65,6 +73,13 @@ async function main() {
         to: axelarDeployer.address,
         value: ethers.utils.parseEther("500.0"),
     })
+
+    // Transfer 10 ETH to test wallet
+    resp = await admin.sendTransaction({
+        to: testWallet.address,
+        value: ethers.utils.parseEther("10.0"),
+    })
+    await helper.waitForReceipt(resp.hash, rootProvider);
 
     console.log("Root deployer now has " + ethers.utils.formatEther(await IMX.balanceOf(rootDeployer.address)) + " IMX.");
     console.log("Root deployer now has " + ethers.utils.formatEther(await rootProvider.getBalance(rootDeployer.address)) + " ETH.");
