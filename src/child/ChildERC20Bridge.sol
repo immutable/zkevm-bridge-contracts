@@ -47,6 +47,10 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
     address public childETHToken;
     /// @dev The address of the wrapped IMX token on L2.
     address public wIMXToken;
+    /// @dev The address of the multisig contract on L2.
+    address public multisigContract;
+    /// @dev The address that will perform the initial depositing of IMX on L2.
+    address public initialDepositor;
 
     /**
      * @notice Initialization function for ChildERC20Bridge.
@@ -66,12 +70,15 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
         address newChildTokenTemplate,
         string memory newRootChain,
         address newRootIMXToken,
-        address newWIMXToken
+        address newWIMXToken,
+        address newMultisigContract,
+        address newInitialDepositor
     ) public initializer {
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
-                || newRoles.adaptorManager == address(0) || newWIMXToken == address(0)
+                || newRoles.adaptorManager == address(0) || newWIMXToken == address(0) || newMultisigContract == address(0)
+                || newInitialDepositor == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -98,6 +105,8 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
         rootChain = newRootChain;
         rootIMXToken = newRootIMXToken;
         wIMXToken = newWIMXToken;
+        multisigContract = newMultisigContract;
+        initialDepositor = newInitialDepositor;
 
         // NOTE: how will this behave in an updgrade scenario?
         // e.g. this clone may already be deployed and we could deploy to the same address if the salt is the same.
@@ -125,8 +134,8 @@ contract ChildERC20Bridge is IChildERC20BridgeErrors, IChildERC20Bridge, IChildE
      */
     receive() external payable whenNotPaused {
         // Revert if sender is not the WIMX token address
-        if (msg.sender != wIMXToken) {
-            revert NonWrappedNativeTransfer();
+        if (_msgSender() != wIMXToken && _msgSender() != multisigContract && _msgSender() != initialDepositor) {
+            revert NonPermittedNativeTransfer();
         }
     }
 

@@ -171,6 +171,6 @@ interface IChildERC20BridgeErrors {
     error TransferWIMXFailed();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
-    /// @notice Error when native transfer is sent to contract from non wrapped-token address.
-    error NonWrappedNativeTransfer();
+    /// @notice Error when native transfer is sent to contract from not permitted address.
+    error NonPermittedNativeTransfer();
 }

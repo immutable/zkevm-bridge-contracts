@@ -21,6 +21,8 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
     string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
     address constant WIMX_TOKEN_ADDRESS = address(0xabc);
+    address constant MULTISIG_ADDRESS = address(0xbbbb);
+    address constant INITIAL_DEPOSITOR = address(0xcccc);
     ChildERC20 public childTokenTemplate;
     ChildERC20Bridge public childBridge;
     MockAdaptor public mockAdaptor;
@@ -49,7 +51,9 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
             address(childTokenTemplate),
             ROOT_CHAIN_NAME,
             ROOT_IMX_TOKEN,
-            address(wIMXToken)
+            address(wIMXToken),
+            MULTISIG_ADDRESS,
+            INITIAL_DEPOSITOR
         );
     }
 

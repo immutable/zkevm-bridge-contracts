@@ -10,12 +10,14 @@ async function run() {
     let rootChainName = helper.requireEnv("ROOT_CHAIN_NAME");
     let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
     let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
+    let adminEOAAddr = helper.requireEnv("CHILD_ADMIN_ADDR");
     let childBridgeDefaultAdmin = helper.requireEnv("CHILD_BRIDGE_DEFAULT_ADMIN");
     let childBridgePauser = helper.requireEnv("CHILD_BRIDGE_PAUSER");
     let childBridgeUnpauser = helper.requireEnv("CHILD_BRIDGE_UNPAUSER");
     let childBridgeAdaptorManager = helper.requireEnv("CHILD_BRIDGE_ADAPTOR_MANAGER");
     let childDeployerSecret = helper.requireEnv("CHILD_DEPLOYER_SECRET");
     let childGasServiceAddr = helper.requireEnv("CHILD_GAS_SERVICE_ADDRESS");
+    let multisigAddr = helper.requireEnv("MULTISIG_CONTRACT_ADDRESS");
     let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
 
     // Read from contract file.
@@ -61,7 +63,9 @@ async function run() {
         childTemplateAddr, 
         rootChainName, 
         rootIMXAddr, 
-        childWIMXAddr, 
+        childWIMXAddr,
+        multisigAddr,
+        adminEOAAddr,
     {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
