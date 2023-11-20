@@ -21,7 +21,7 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
 
 /**
  * @title Root ERC20 Bridge
- * @notice The root chain contract allows standard ERC20 tokens and native ETH to be bridged from the root chain to the child chain. It also facilitates the withdrawal of these bridged tokens back from the child chain to the root chain.
+ * @notice An ERC20 bridge contract for the root chain, which enables bridging of standard ERC20 tokens, ETH and IMX from the root chain to the child chain and back.
  * @dev Features:
  *      - Map ERC20 tokens from the root chain to the child chain, so as to enable subsequent bridging of the token.
  *      - Deposit ERC20 tokens, native ETH, wrapped ETH and IMX from the root chain to the child chain.
@@ -43,8 +43,8 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
  * @dev Note:
  *      - There is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
- *      - This is an upgradeable contract that should be operated behind Open Zeppelin's TransparentUpgradeableProxy.
- *      - The initialize function is susceptible to front running, and so care should be taken to ensure this scenario is mitigated.
+ *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
+ *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
  */
 contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors, BridgeRoles {
     using SafeERC20 for IERC20Metadata;

@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
 /**
- *
  * @title BridgeRoles.sol
  * @notice BridgeRoles.sol is an abstract contract that defines the roles and permissions and pausable functionality across the root and child chain bridge contracts.
  * @dev This contract uses OpenZeppelin's AccessControl and Pausable contracts. This contract is abstract and is intended to be inherited by the root and child chain bridge contracts.

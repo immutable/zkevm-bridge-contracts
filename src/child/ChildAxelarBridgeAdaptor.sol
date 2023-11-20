@@ -13,6 +13,21 @@ import {
 import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
 import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 
+/**
+ * @notice Facilitates communication between the ChildERC20Bridge and the Axelar Gateway. It enables sending and receiving messages to and from the root chain.
+ * @dev Features:
+ *      - Send messages to the root chain via the Axelar Gateway.
+ *      - Receive messages from the root chain via the Axelar Gateway.
+ *      - Manage Role Based Access Control
+ * @dev Roles:
+ *      - An account with a BRIDGE_MANAGER_ROLE can update the root bridge address.
+ *      - An account with a TARGET_MANAGER_ROLE can update the child chain name.
+ *      - An account with a GAS_SERVICE_MANAGER_ROLE can update the gas service address.
+ *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
+ * @dev Note:
+ *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
+ *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
+ */
 contract ChildAxelarBridgeAdaptor is
     AxelarExecutable,
     IChildERC20BridgeAdaptor,
@@ -123,6 +138,9 @@ contract ChildAxelarBridgeAdaptor is
 
     /**
      * @dev This function is called by the parent `AxelarExecutable` contract to execute the payload.
+     * @param sourceChain_ The chain id that the message originated from.
+     * @param sourceAddress_ The contract address that sent the message on the source chain.
+     * @param payload_ The message payload.
      * @custom:assumes `sourceAddress_` is a 20 byte address.
      */
     function _execute(string calldata sourceChain_, string calldata sourceAddress_, bytes calldata payload_)
