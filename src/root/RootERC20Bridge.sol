@@ -20,14 +20,31 @@ import {IWETH} from "../interfaces/root/IWETH.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
 
 /**
- * @notice RootERC20Bridge is a bridge that allows ERC20 and native tokens to be bridged from the root chain to the child chain
- * and facilitates the withdrawals of ERC20 and native tokens from the child chain to the root chain.
- * @dev This contract is designed to be upgradeable.
- * @dev Follows a pattern of using a bridge adaptor to communicate with the child chain. This is because the underlying communication protocol may change,
+ * @title Root ERC20 Bridge
+ * @notice The root chain contract allows standard ERC20 tokens and native ETH to be bridged from the root chain to the child chain. It also facilitates the withdrawal of these bridged tokens back from the child chain to the root chain.
+ * @dev Features:
+ *      - Map ERC20 tokens from the root chain to the child chain, so as to enable subsequent bridging of the token.
+ *      - Deposit ERC20 tokens, native ETH, wrapped ETH and IMX from the root chain to the child chain.
+ *      - Withdraw ERC20 tokens, ETH, and IMX from the child chain to the root chain.
+ *      - Set and manage a limit to the amount of IMX that can be deposited into the bridge.
+ *      - Manage Role Based Access Control
+ *
+ * @dev Design:
+ *      This contract follows a pattern of using a bridge adaptor to communicate with the child chain. This is because the underlying communication protocol may change,
  *      and also allows us to decouple vendor-specific messaging logic from the bridge logic.
- * @dev Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in RootERC20Bridge.
- * @dev Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
- * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
+ *      Because of this pattern, any checks or logic that is agnostic to the messaging protocol should be done in this contract.
+ *      Any checks or logic that is specific to the underlying messaging protocol should be done in the bridge adaptor.
+ *
+ * @dev Roles:
+ *      - An account with a PAUSER_ROLE can pause the contract.
+ *      - An account with an UNPAUSER_ROLE can unpause the contract.
+ *      - An account with a VARIABLE_MANAGER_ROLE can update the cumulative IMX deposit limit.
+ *      - An account with an ADAPTOR_MANAGER_ROLE can update the root bridge adaptor address.
+ *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
+ * @dev Note:
+ *      - There is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
+ *      - This is an upgradeable contract that should be operated behind Open Zeppelin's TransparentUpgradeableProxy.
+ *      - The initialize function is susceptible to front running, and so care should be taken to ensure this scenario is mitigated.
  */
 contract RootERC20Bridge is IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors, BridgeRoles {
     using SafeERC20 for IERC20Metadata;
