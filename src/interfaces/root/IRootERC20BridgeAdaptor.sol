@@ -9,6 +9,5 @@ interface IRootERC20BridgeAdaptor {
      * @param refundRecipient Used if the message passing protocol requires fees & pays back excess to a refund recipient.
      * @dev `payable` because the message passing protocol may require a fee to be paid.
      */
-
     function sendMessage(bytes calldata payload, address refundRecipient) external payable;
 }

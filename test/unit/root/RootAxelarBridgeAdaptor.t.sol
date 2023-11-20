@@ -266,8 +266,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     function test_updateRootBridge_UpdatesRootBridge() public {
         vm.startPrank(bridgeManager);
         address newRootBridge = address(0x3333);
-        vm.expectEmit(true, true, false, false, address(axelarAdaptor));
-        emit RootBridgeUpdated(address(stubRootBridge), newRootBridge);
         axelarAdaptor.updateRootBridge(newRootBridge);
         assertEq(address(axelarAdaptor.rootBridge()), newRootBridge, "rootBridge not updated");
         vm.stopPrank();

@@ -3,8 +3,6 @@ pragma solidity 0.8.19;
 
 import {AxelarExecutable} from "@axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
 import {IAxelarGasService} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGasService.sol";
-import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IChildERC20Bridge} from "../interfaces/child/IChildERC20Bridge.sol";
 import {
     IChildAxelarBridgeAdaptorErrors,
