@@ -16,12 +16,12 @@ import {AdaptorRoles} from "../common/AdaptorRoles.sol";
  * @notice RootAxelarBridgeAdaptor is a bridge adaptor that allows the RootERC20Bridge to communicate with the Axelar Gateway.
  */
 contract RootAxelarBridgeAdaptor is
+    AdaptorRoles,
     AxelarExecutable,
     IRootERC20BridgeAdaptor,
     IRootAxelarBridgeAdaptorEvents,
     IRootAxelarBridgeAdaptorErrors,
-    IRootAxelarBridgeAdaptor,
-    AdaptorRoles
+    IRootAxelarBridgeAdaptor
 {
     IRootERC20Bridge public rootBridge;
     string public childChain;
@@ -137,4 +137,7 @@ contract RootAxelarBridgeAdaptor is
         emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
         rootBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapRootAxelarBridgeAdaptor;
 }

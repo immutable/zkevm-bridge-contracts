@@ -255,5 +255,5 @@ contract RootERC20BridgeFlowRate is
     }
 
     // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gapRootERC20PredicateFlowRate;
+    uint256[50] private __gapRootERC20BridgeFlowRate;
 }

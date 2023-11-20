@@ -13,12 +13,12 @@ import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAda
 import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 
 contract ChildAxelarBridgeAdaptor is
+    AdaptorRoles,
     AxelarExecutable,
     IChildERC20BridgeAdaptor,
     IChildAxelarBridgeAdaptorErrors,
     IChildAxelarBridgeAdaptorEvents,
-    IChildAxelarBridgeAdaptor,
-    AdaptorRoles
+    IChildAxelarBridgeAdaptor
 {
     /// @notice Address of bridge to relay messages to.
     IChildERC20Bridge public childBridge;
@@ -131,4 +131,7 @@ contract ChildAxelarBridgeAdaptor is
         emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
         childBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapChildAxelarBridgeAdaptor;
 }
