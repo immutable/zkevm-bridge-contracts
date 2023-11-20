@@ -5,6 +5,7 @@ pragma solidity 0.8.19;
  * @title Child Bridge Adaptor Errors
  * @notice Contains the different error types that can be thrown by a bridge adaptor
  */
+
 interface IChildAxelarBridgeAdaptorErrors {
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
