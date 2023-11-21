@@ -17,4 +17,3 @@ done
 
 ./deploy.sh
 npx mocha --require mocha-suppress-logs ../e2e/
-./stop.sh

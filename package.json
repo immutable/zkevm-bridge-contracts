@@ -12,7 +12,7 @@
         "local:start": "cd scripts/localdev; ./start.sh",
         "local:setup": "cd scripts/localdev; ./deploy.sh",
         "local:test": "cd scripts/localdev; npx mocha --require mocha-suppress-logs ../e2e/",
-        "local:ci": "cd scripts/localdev; (./start.sh &); ./ci.sh",
+        "local:ci": "cd scripts/localdev; (./start.sh &); ./ci.sh; ./stop.sh",
         "local:chainonly": "cd scripts/localdev; LOCAL_CHAIN_ONLY=true ./start.sh",
         "local:axelaronly": "cd scripts/localdev; node axelar_setup.js",
         "stop": "cd scripts/localdev; ./stop.sh"
