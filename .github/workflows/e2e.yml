@@ -2,6 +2,9 @@ name: End to End Test
 
 on: [push]
 
+env:
+  FOUNDRY_PROFILE: ci
+
 jobs:
   build:
     name: End to End Test
@@ -13,6 +16,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
 
       - name: Run install
         uses: borales/actions-yarn@v4
