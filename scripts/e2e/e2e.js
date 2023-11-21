@@ -1,7 +1,7 @@
 // End to end tests
 'use strict';
 require('dotenv').config();
-const { ethers } = require("ethers");
+const { ethers, ContractFactory } = require("ethers");
 const helper = require("../helpers/helpers.js");
 const fs = require('fs');
 const { expect } = require("chai");
@@ -23,8 +23,11 @@ describe("Bridge e2e test", () => {
     let childBridge;
     let childETH;
     let childWIMX;
+    let rootCustomToken;
+    let childCustomToken;
     
-    before(async() => {
+    before(async function () {
+        this.timeout(30000);
         let rootRPCURL = helper.requireEnv("ROOT_RPC_URL");
         let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
         let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
@@ -68,6 +71,12 @@ describe("Bridge e2e test", () => {
 
         let wrappedIMXObj = JSON.parse(fs.readFileSync('../../out/WIMX.sol/WIMX.json', 'utf8'));
         childWIMX = new ethers.Contract(childWIMXAddr, wrappedIMXObj.abi, childProvider);
+
+        // Deploy a custom token
+        let customTokenObj = JSON.parse(fs.readFileSync('../../out/ERC20PresetMinterPauser.sol/ERC20PresetMinterPauser.json', 'utf8'));
+        let factory = new ContractFactory(customTokenObj.abi, customTokenObj.bytecode, rootTestWallet);
+        rootCustomToken = await factory.deploy("Custom Token", "CTK");
+        await helper.waitForReceipt(rootCustomToken.deployTransaction.hash, rootProvider);
     })
 
     it("should successfully deposit IMX to self from L1 to L2", async() => {
@@ -287,6 +296,29 @@ describe("Bridge e2e test", () => {
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(120000)
+
+    it("should successfully map a ERC20 Token", async() => {
+        // Map token
+        let bridgeFee = ethers.utils.parseEther("0.001");
+        let expectedChildTokenAddr = await rootBridge.callStatic.mapToken(rootCustomToken.address, {
+            value: bridgeFee,
+        });
+        let resp = await rootBridge.connect(rootTestWallet).mapToken(rootCustomToken.address, {
+            value: bridgeFee,
+        })
+        await helper.waitForReceipt(resp.hash, rootProvider);
+        
+        let childTokenAddr = await childBridge.rootTokenToChildToken(rootCustomToken.address);
+        while (childTokenAddr == ethers.constants.AddressZero) {
+            childTokenAddr = await childBridge.rootTokenToChildToken(rootCustomToken.address);
+            await helper.delay(1000);
+        }
+        let childTokenTemplateObj = JSON.parse(fs.readFileSync('../../out/ChildERC20.sol/ChildERC20.json', 'utf8'));
+        childCustomToken = new ethers.Contract(childTokenAddr, childTokenTemplateObj.abi, childProvider);
+
+        // Verify
+        expect(childTokenAddr).to.equal(expectedChildTokenAddr);
+    }).timeout(60000)
 
     it("should successfully deposit mapped ERC20 Token to self from L1 to L2", async() => {
         // TODO.
