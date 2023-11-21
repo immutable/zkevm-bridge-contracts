@@ -7,6 +7,7 @@
 4. Coordinate with security to obtain the addresses for different roles.
 5. Fund deployer with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 1100 IMX_ (TBD)).
 6. Fund a test account with `ETH` and `IMX` on root chain. (As a rule of thumb, _0.1 ETH and 50 IMX_ (TBD)).
+7. Fund a rate admin account with `ETH` on root chain. (As a rule of thumb, _0.1 ETH_ (TBD)).
 
 
 ## Bootstrapping
@@ -43,6 +44,8 @@ CHILD_DEPLOYER_FUND=
 ROOT_DEPLOYER_ADDR=
 ## The private key for the deployer on root chain or "ledger" if using hardware wallet.
 ROOT_DEPLOYER_SECRET=
+## The private key for rate admin or "ledger" if using hardware wallet.
+ROOT_BRIDGE_RATE_ADMIN_SECRET=
 ## The IMX token address on root chain.
 ROOT_IMX_ADDR=
 ## The Wrapped ETH token address on the root chain.
@@ -93,6 +96,12 @@ ROOT_ADAPTOR_BRIDGE_MANAGER=
 ROOT_ADAPTOR_GAS_SERVICE_MANAGER=
 ## The address to be assigned with TARGET_MANAGER_ROLE in root adaptor.
 ROOT_ADAPTOR_TARGET_MANAGER=
+## The capacity of the rate limit policy of IMX token, unit is in 10^18.
+RATE_LIMIT_IMX_CAPACITY=
+## The refill rate of the rate limit policy of IMX token, unit is in 10^18.
+RATE_LIMIT_IMX_REFILL_RATE=
+## The large threshold of the rate limit policy of IMX token, unit is in 10^18.
+RATE_LIMIT_IMX_LARGE_THRESHOLD=
 ```
 3. Fund deployer
 ```

@@ -50,7 +50,7 @@ async function run() {
     console.log("Deployed to ROOT_PROXY_ADMIN: ", proxyAdmin.address);
     
     // Deploy root bridge impl
-    let rootBridgeImplObj = JSON.parse(fs.readFileSync('../../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
+    let rootBridgeImplObj = JSON.parse(fs.readFileSync('../../out/RootERC20BridgeFlowRate.sol/RootERC20BridgeFlowRate.json', 'utf8'));
     console.log("Deploy root bridge impl...");
     let rootBridgeImpl = await helper.deployRootContract(rootBridgeImplObj, adminWallet);
     await helper.waitForReceipt(rootBridgeImpl.deployTransaction.hash, rootProvider);

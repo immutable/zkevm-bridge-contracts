@@ -12,6 +12,7 @@ async function main() {
     let rootDeployerKey = helper.requireEnv("ROOT_DEPLOYER_SECRET");
     let axelarDeployerKey = helper.requireEnv("AXELAR_ROOT_EOA_SECRET");
     let rootTestKey = helper.requireEnv("TEST_ACCOUNT_SECRET");
+    let rootRateAdminKey = helper.requireEnv("ROOT_BRIDGE_RATE_ADMIN_SECRET");
 
     // Get root provider.
     let rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -24,6 +25,9 @@ async function main() {
 
     // Get test wwallet on the root chain.
     let testWallet = new ethers.Wallet(rootTestKey, rootProvider);
+
+    // Get rate admin wallet on the root chain.
+    let rateAdminWallet = new ethers.Wallet(rootRateAdminKey, rootProvider);
     
     // Get root admin eoa wallet.
     let admin = new ethers.Wallet(rootAdminKey, rootProvider);
@@ -77,6 +81,13 @@ async function main() {
     // Transfer 10 ETH to test wallet
     resp = await admin.sendTransaction({
         to: testWallet.address,
+        value: ethers.utils.parseEther("10.0"),
+    })
+    await helper.waitForReceipt(resp.hash, rootProvider);
+
+    // Transfer 0.1 ETH to rate admin
+    resp = await admin.sendTransaction({
+        to: rateAdminWallet.address,
         value: ethers.utils.parseEther("10.0"),
     })
     await helper.waitForReceipt(resp.hash, rootProvider);

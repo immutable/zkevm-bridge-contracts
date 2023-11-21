@@ -12,6 +12,7 @@ async function run() {
     let rootRPCURL = helper.requireEnv("ROOT_RPC_URL");
     let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
     let rootDeployerSecret = helper.requireEnv("ROOT_DEPLOYER_SECRET");
+    let rootRateAdminSecret = helper.requireEnv("ROOT_BRIDGE_RATE_ADMIN_SECRET");
     let rootBridgeDefaultAdmin = helper.requireEnv("ROOT_BRIDGE_DEFAULT_ADMIN");
     let rootBridgePauser = helper.requireEnv("ROOT_BRIDGE_PAUSER");
     let rootBridgeUnpauser = helper.requireEnv("ROOT_BRIDGE_UNPAUSER");
@@ -25,6 +26,9 @@ async function run() {
     let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
     let rootWETHAddr = helper.requireEnv("ROOT_WETH_ADDR");
     let imxDepositLimit = helper.requireEnv("IMX_DEPOSIT_LIMIT");
+    let rateLimitIMXCap = helper.requireEnv("RATE_LIMIT_IMX_CAPACITY");
+    let rateLimitIMXRefill = helper.requireEnv("RATE_LIMIT_IMX_REFILL_RATE");
+    let rateLimitIMXLargeThreshold = helper.requireEnv("RATE_LIMIT_IMX_LARGE_THRESHOLD");
 
     // Read from contract file.
     let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
@@ -48,15 +52,26 @@ async function run() {
     let adminAddr = await adminWallet.getAddress();
     console.log("Deployer address is: ", adminAddr);
 
+    // Get rate admin address
+    let rateAdminWallet;
+    if (rootRateAdminSecret == "ledger") {
+        rateAdminWallet = new LedgerSigner(rateAdminWallet);
+    } else {
+        rateAdminWallet = new ethers.Wallet(rootRateAdminSecret, rootProvider);
+    }
+    let rateAdminAddr = await rateAdminWallet.getAddress();
+    console.log("Rate admin address is: ", rateAdminAddr);
+
+
     // Execute
     console.log("Initialise root contracts in...");
     await helper.waitForConfirmation();
 
     // Initialise root bridge
-    let rootBridgeObj = JSON.parse(fs.readFileSync('../../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
+    let rootBridgeObj = JSON.parse(fs.readFileSync('../../out/RootERC20BridgeFlowRate.sol/RootERC20BridgeFlowRate.json', 'utf8'));
     console.log("Initialise root bridge...");
     let rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeObj.abi, rootProvider);
-    let resp = await rootBridge.connect(adminWallet).initialize(
+    let resp = await rootBridge.connect(adminWallet)["initialize((address,address,address,address,address),address,address,string,address,address,address,string,uint256,address)"](
         {
             defaultAdmin: rootBridgeDefaultAdmin,
             pauser: rootBridgePauser,
@@ -71,7 +86,18 @@ async function run() {
         rootIMXAddr,
         rootWETHAddr,
         childChainName,
-        ethers.utils.parseEther(imxDepositLimit));
+        ethers.utils.parseEther(imxDepositLimit),
+        rateAdminAddr);
+    await helper.waitForReceipt(resp.hash, rootProvider);
+
+    // Configure rate
+    // IMX
+    resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
+        rootIMXAddr,
+        ethers.utils.parseEther(rateLimitIMXCap),
+        ethers.utils.parseEther(rateLimitIMXRefill),
+        ethers.utils.parseEther(rateLimitIMXLargeThreshold)
+    );
     await helper.waitForReceipt(resp.hash, rootProvider);
 
     // Initialise root adaptor

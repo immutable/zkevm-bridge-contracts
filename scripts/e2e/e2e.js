@@ -47,7 +47,7 @@ describe("Bridge e2e test", () => {
         rootTestWallet = new ethers.Wallet(testAccountKey, rootProvider);
         childTestWallet = new ethers.Wallet(testAccountKey, childProvider);
 
-        let rootBridgeObj = JSON.parse(fs.readFileSync('../../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
+        let rootBridgeObj = JSON.parse(fs.readFileSync('../../out/RootERC20BridgeFlowRate.sol/RootERC20BridgeFlowRate.json', 'utf8'));
         rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeObj.abi, rootProvider);
 
         let WETHObj = JSON.parse(fs.readFileSync('../../out/WETH.sol/WETH.json', 'utf8'))
