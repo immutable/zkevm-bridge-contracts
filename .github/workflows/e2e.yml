@@ -1,0 +1,30 @@
+name: End to End Test
+
+on: [push]
+
+jobs:
+  build:
+    name: End to End Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+
+      - name: Run build
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: build
+
+      - name: Run Test
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: local:ci
