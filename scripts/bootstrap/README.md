@@ -102,6 +102,12 @@ RATE_LIMIT_IMX_CAPACITY=
 RATE_LIMIT_IMX_REFILL_RATE=
 ## The large threshold of the rate limit policy of IMX token, unit is in 10^18.
 RATE_LIMIT_IMX_LARGE_THRESHOLD=
+## The capacity of the rate limit policy of ETH token, unit is in 10^18.
+RATE_LIMIT_ETH_CAPACITY=
+## The refill rate of the rate limit policy of ETH token, unit is in 10^18.
+RATE_LIMIT_ETH_REFILL_RATE=
+## The large threshold of the rate limit policy of ETH token, unit is in 10^18.
+RATE_LIMIT_ETH_LARGE_THRESHOLD=
 ```
 3. Fund deployer
 ```

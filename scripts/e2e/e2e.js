@@ -29,6 +29,7 @@ describe("Bridge e2e test", () => {
         let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
         let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
         let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
+        let rootRateAdminSecret = helper.requireEnv("ROOT_BRIDGE_RATE_ADMIN_SECRET");
         let testAccountKey = helper.requireEnv("TEST_ACCOUNT_SECRET");
         let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
         let rootWETHAddr = helper.requireEnv("ROOT_WETH_ADDR");
@@ -46,6 +47,7 @@ describe("Bridge e2e test", () => {
         childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
         rootTestWallet = new ethers.Wallet(testAccountKey, rootProvider);
         childTestWallet = new ethers.Wallet(testAccountKey, childProvider);
+        let rootRateAdminWallet = new ethers.Wallet(rootRateAdminSecret, rootProvider);
 
         let rootBridgeObj = JSON.parse(fs.readFileSync('../../out/RootERC20BridgeFlowRate.sol/RootERC20BridgeFlowRate.json', 'utf8'));
         rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeObj.abi, rootProvider);
@@ -72,6 +74,14 @@ describe("Bridge e2e test", () => {
         await helper.waitForReceipt(rootCustomToken.deployTransaction.hash, rootProvider);
         // Mint tokens
         let resp = await rootCustomToken.connect(rootTestWallet).mint(rootTestWallet.address, ethers.utils.parseEther("1000.0").toBigInt());
+        await helper.waitForReceipt(resp.hash, rootProvider);
+        // Set rate control
+        resp = await rootBridge.connect(rootRateAdminWallet).setRateControlThreshold(
+            rootCustomToken.address,
+            ethers.utils.parseEther("20016.0"),
+            ethers.utils.parseEther("5.56"),
+            ethers.utils.parseEther("10008.0")
+        );
         await helper.waitForReceipt(resp.hash, rootProvider);
     })
 

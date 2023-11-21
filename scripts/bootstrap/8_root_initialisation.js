@@ -29,6 +29,9 @@ async function run() {
     let rateLimitIMXCap = helper.requireEnv("RATE_LIMIT_IMX_CAPACITY");
     let rateLimitIMXRefill = helper.requireEnv("RATE_LIMIT_IMX_REFILL_RATE");
     let rateLimitIMXLargeThreshold = helper.requireEnv("RATE_LIMIT_IMX_LARGE_THRESHOLD");
+    let rateLimitETHCap = helper.requireEnv("RATE_LIMIT_ETH_CAPACITY");
+    let rateLimitETHRefill = helper.requireEnv("RATE_LIMIT_ETH_REFILL_RATE");
+    let rateLimitETHLargeThreshold = helper.requireEnv("RATE_LIMIT_ETH_LARGE_THRESHOLD");
 
     // Read from contract file.
     let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
@@ -97,6 +100,15 @@ async function run() {
         ethers.utils.parseEther(rateLimitIMXCap),
         ethers.utils.parseEther(rateLimitIMXRefill),
         ethers.utils.parseEther(rateLimitIMXLargeThreshold)
+    );
+    await helper.waitForReceipt(resp.hash, rootProvider);
+
+    // ETH
+    resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
+        await rootBridge.NATIVE_ETH(),
+        ethers.utils.parseEther(rateLimitETHCap),
+        ethers.utils.parseEther(rateLimitETHRefill),
+        ethers.utils.parseEther(rateLimitETHLargeThreshold)
     );
     await helper.waitForReceipt(resp.hash, rootProvider);
 
