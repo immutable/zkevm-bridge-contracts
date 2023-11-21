@@ -66,8 +66,6 @@ contract InitializeRootContracts is Script {
         vm.createSelectFork(params.rootRpcUrl);
         vm.startBroadcast(params.rootPrivateKey);
 
-        // TODO add pauser, unpauser roles. variable manager and Adaptor manager will be privileged transaction multisg
-
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: params.rootAdminAddress,
             pauser: params.rootPauserAddress,

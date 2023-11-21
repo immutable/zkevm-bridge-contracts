@@ -270,8 +270,6 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         );
     }
 
-    // TODO add mapToken calls to these to isolate the specific error we are testing for vvvv
-
     function test_RevertIf_depositWithRootTokenZeroAddress() public {
         address rootTokenAddress = address(0);
         address sender = address(0xff);
@@ -279,6 +277,15 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         uint256 amount = 100;
         bytes32 commandId = bytes32("testCommandId");
         bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
+
+        {
+            // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
+            uint256 rootTokenToChildTokenMappingSlot = 201;
+            address childAddress = address(444444);
+            bytes32 slot = getMappingStorageSlotFor(rootTokenAddress, rootTokenToChildTokenMappingSlot);
+            bytes32 data = bytes32(uint256(uint160(childAddress)));
+            vm.store(address(childERC20Bridge), slot, data);
+        }
 
         vm.expectRevert(ZeroAddress.selector);
         childAxelarBridgeAdaptor.execute(
@@ -296,6 +303,15 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         uint256 amount = 100;
         bytes32 commandId = bytes32("testCommandId");
         bytes32 depositSig = childERC20Bridge.DEPOSIT_SIG();
+
+        {
+            // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
+            uint256 rootTokenToChildTokenMappingSlot = 201;
+            address childAddress = address(444444);
+            bytes32 slot = getMappingStorageSlotFor(rootTokenAddress, rootTokenToChildTokenMappingSlot);
+            bytes32 data = bytes32(uint256(uint160(childAddress)));
+            vm.store(address(childERC20Bridge), slot, data);
+        }
 
         vm.expectRevert(ZeroAddress.selector);
         childAxelarBridgeAdaptor.execute(

@@ -398,7 +398,6 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
 
         bytes memory payload =
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
-        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
         emit L1TokenMapped(address(rootToken), childToken);
@@ -451,7 +450,6 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, payloadToken, msg.sender, receiver, amount);
 
-        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         if (address(rootToken) == NATIVE_ETH) {
