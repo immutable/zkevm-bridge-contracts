@@ -132,7 +132,11 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     }
 
     /**
-     * @notice Fallback function on receiving native IMX from WIMX contract.
+     * @notice Method to receive IMX back from the WIMX contract when it is unwrapped
+     * @dev When a user deposits wIMX, it must first be unwrapped.
+     *      This allows the bridge to store the underlying native IMX, rather than the wrapped version.
+     *      The unwrapping is done through the WIMX contract's `withdraw()` function, which sends the native IMX to this bridge contract.
+     *      The only reason this `receive()` function is needed is for this process, hence the validation ensures that the sender is the WIMX contract.
      */
     receive() external payable whenNotPaused {
         // Revert if sender is not the WIMX token address
