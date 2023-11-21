@@ -349,6 +349,34 @@ describe("Bridge e2e test", () => {
     }).timeout(60000)
 
     it("should successfully withdraw mapped ERC20 Token to self from L2 to L1", async() => {
-        // TODO.
+        // Get token balance on root & child chains before deposit
+        let preBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("0.5");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // Token withdraw L2 to L1
+        let [priorityFee, maxFee] = await helper.getFee(childTestWallet);
+        let resp = await childBridge.connect(childTestWallet).withdraw(childCustomToken.address, amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })
+        await helper.waitForReceipt(resp.hash, childProvider);
+
+        let postBalL1 = preBalL1;
+        let postBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+
+        while (postBalL1.eq(preBalL1)) {
+            postBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+            await helper.delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.add(amt);
+        let expectedPostL2 = preBalL2.sub(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(120000)
 })
