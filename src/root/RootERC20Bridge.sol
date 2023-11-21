@@ -394,7 +394,6 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
 
         bytes memory payload =
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
-        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
         emit L1TokenMapped(address(rootToken), childToken);
@@ -422,7 +421,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         // ETH also cannot be transferred since it was received in the payable function call
         // WETH is also not transferred here since it was earlier unwrapped to ETH
 
-        // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
+        // We can call _mapToken here, but ordering in the GMP is not guaranteed.
         // Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         // Discuss this, and add this decision to the design doc.
 
@@ -447,7 +446,6 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, payloadToken, msg.sender, receiver, amount);
 
-        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         if (address(rootToken) == NATIVE_ETH) {

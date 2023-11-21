@@ -62,8 +62,25 @@ contract RootERC20BridgeFlowRateIntegrationTest is
      *      This test uses the same code as the mapToken function does to calculate this address, so we can
      *      not consider it sufficient.
      */
-    function test_mapToken() public {
-        // TODO split this up into multiple tests.
+
+    function test_mapTokenTransfersValue() public {
+        address childToken =
+            Clones.predictDeterministicAddress(address(token), keccak256(abi.encodePacked(token)), CHILD_BRIDGE);
+
+        // Check that we pay mapTokenFee to the axelarGasService.
+        uint256 thisPreBal = address(this).balance;
+        uint256 axelarGasServicePreBal = address(axelarGasService).balance;
+
+        rootBridgeFlowRate.mapToken{value: mapTokenFee}(token);
+
+        // Should update ETH balances as gas payment for message.
+        assertEq(address(this).balance, thisPreBal - mapTokenFee, "ETH balance not decreased");
+        assertEq(address(axelarGasService).balance, axelarGasServicePreBal + mapTokenFee, "ETH not paid to gas service");
+
+        assertEq(rootBridgeFlowRate.rootTokenToChildToken(address(token)), childToken, "childToken not set");
+    }
+
+    function test_mapTokenEmitsEvents() public {
         address childToken =
             Clones.predictDeterministicAddress(address(token), keccak256(abi.encodePacked(token)), CHILD_BRIDGE);
 
@@ -73,6 +90,12 @@ contract RootERC20BridgeFlowRateIntegrationTest is
 
         vm.expectEmit(true, true, false, false, address(rootBridgeFlowRate));
         emit L1TokenMapped(address(token), childToken);
+
+        rootBridgeFlowRate.mapToken{value: mapTokenFee}(token);
+    }
+
+    function test_mapTokenCallsAxelarServices() public {
+        bytes memory payload = abi.encode(MAP_TOKEN_SIG, address(token), token.name(), token.symbol(), token.decimals());
 
         // Instead of using expectCalls, we could use expectEmit in combination with mock contracts emitting events.
         // expectCalls requires less boilerplate and is less dependant on mock code.
@@ -107,62 +130,16 @@ contract RootERC20BridgeFlowRateIntegrationTest is
             )
         );
 
-        // Check that we pay mapTokenFee to the axelarGasService.
-        uint256 thisPreBal = address(this).balance;
-        uint256 axelarGasServicePreBal = address(axelarGasService).balance;
-
         rootBridgeFlowRate.mapToken{value: mapTokenFee}(token);
-
-        // Should update ETH balances as gas payment for message.
-        assertEq(address(this).balance, thisPreBal - mapTokenFee, "ETH balance not decreased");
-        assertEq(address(axelarGasService).balance, axelarGasServicePreBal + mapTokenFee, "ETH not paid to gas service");
-
-        assertEq(rootBridgeFlowRate.rootTokenToChildToken(address(token)), childToken, "childToken not set");
     }
 
-    // TODO split into multiple tests
-    function test_depositETH() public {
+    /**
+     * DEPOSIT ETH
+     */
+
+    function test_depositETHTransfersValue() public {
         uint256 tokenAmount = 300;
-        string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
-
-        (, bytes memory predictedPayload) =
-            setupDeposit(NATIVE_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
-
-        console2.logBytes(predictedPayload);
-
-        vm.expectEmit(address(axelarAdaptor));
-        emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
-        vm.expectEmit(address(rootBridgeFlowRate));
-        emit NativeEthDeposit(
-            address(NATIVE_ETH), rootBridgeFlowRate.childETHToken(), address(this), address(this), tokenAmount
-        );
-
-        vm.expectCall(
-            address(axelarAdaptor),
-            depositFee,
-            abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
-        );
-
-        vm.expectCall(
-            address(axelarGasService),
-            depositFee,
-            abi.encodeWithSelector(
-                axelarGasService.payNativeGasForContractCall.selector,
-                address(axelarAdaptor),
-                CHILD_CHAIN_NAME,
-                childBridgeAdaptorString,
-                predictedPayload,
-                address(this)
-            )
-        );
-
-        vm.expectCall(
-            address(mockAxelarGateway),
-            0,
-            abi.encodeWithSelector(
-                mockAxelarGateway.callContract.selector, CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload
-            )
-        );
+        setupDeposit(NATIVE_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
 
         uint256 bridgePreBal = address(rootBridgeFlowRate).balance;
 
@@ -178,18 +155,29 @@ contract RootERC20BridgeFlowRateIntegrationTest is
         assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");
     }
 
-    // TODO split into multiple tests
-    function test_depositIMXToken() public {
+    function test_depositETHEmitsEvents() public {
         uint256 tokenAmount = 300;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
 
         (, bytes memory predictedPayload) =
-            setupDeposit(IMX_TOKEN_ADDRESS, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
+            setupDeposit(NATIVE_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
 
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridgeFlowRate));
-        emit IMXDeposit(address(IMX_TOKEN_ADDRESS), address(this), address(this), tokenAmount);
+        emit NativeEthDeposit(
+            address(NATIVE_ETH), rootBridgeFlowRate.childETHToken(), address(this), address(this), tokenAmount
+        );
+
+        rootBridgeFlowRate.depositETH{value: tokenAmount + depositFee}(tokenAmount);
+    }
+
+    function test_depositETHCallsAxelarServices() public {
+        uint256 tokenAmount = 300;
+        string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
+
+        (, bytes memory predictedPayload) =
+            setupDeposit(NATIVE_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
 
         vm.expectCall(
             address(axelarAdaptor),
@@ -217,6 +205,18 @@ contract RootERC20BridgeFlowRateIntegrationTest is
                 mockAxelarGateway.callContract.selector, CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload
             )
         );
+
+        rootBridgeFlowRate.depositETH{value: tokenAmount + depositFee}(tokenAmount);
+    }
+
+    /**
+     * DEPOSIT IMX
+     */
+
+    function test_depositIMXTokenTransfersValue() public {
+        uint256 tokenAmount = 300;
+
+        setupDeposit(IMX_TOKEN_ADDRESS, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
 
         uint256 thisPreBal = imxToken.balanceOf(address(this));
         uint256 bridgePreBal = imxToken.balanceOf(address(rootBridgeFlowRate));
@@ -238,19 +238,28 @@ contract RootERC20BridgeFlowRateIntegrationTest is
         assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");
     }
 
-    // TODO split into multiple tests
-    function test_depositWETH() public {
+    function test_depositIMXTokenEmitsEvents() public {
         uint256 tokenAmount = 300;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
+
         (, bytes memory predictedPayload) =
-            setupDeposit(WRAPPED_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
+            setupDeposit(IMX_TOKEN_ADDRESS, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
 
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridgeFlowRate));
-        emit WETHDeposit(
-            address(WRAPPED_ETH), rootBridgeFlowRate.childETHToken(), address(this), address(this), tokenAmount
-        );
+        emit IMXDeposit(address(IMX_TOKEN_ADDRESS), address(this), address(this), tokenAmount);
+
+        rootBridgeFlowRate.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN_ADDRESS), tokenAmount);
+    }
+
+    function test_depositIMXTokenCallsAxelarServices() public {
+        uint256 tokenAmount = 300;
+        string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
+
+        (, bytes memory predictedPayload) =
+            setupDeposit(IMX_TOKEN_ADDRESS, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
+
         vm.expectCall(
             address(axelarAdaptor),
             depositFee,
@@ -277,6 +286,17 @@ contract RootERC20BridgeFlowRateIntegrationTest is
                 mockAxelarGateway.callContract.selector, CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload
             )
         );
+
+        rootBridgeFlowRate.deposit{value: depositFee}(IERC20Metadata(IMX_TOKEN_ADDRESS), tokenAmount);
+    }
+
+    /**
+     * DEPOSIT WETH
+     */
+
+    function test_depositWETHTransfersValue() public {
+        uint256 tokenAmount = 300;
+        setupDeposit(WRAPPED_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
 
         uint256 thisPreBal = IERC20Metadata(WRAPPED_ETH).balanceOf(address(this));
         uint256 bridgePreBal = address(rootBridgeFlowRate).balance;
@@ -298,17 +318,26 @@ contract RootERC20BridgeFlowRateIntegrationTest is
         assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");
     }
 
-    // TODO split into multiple tests
-    function test_depositToken() public {
+    function test_depositWETHEmitsEvents() public {
         uint256 tokenAmount = 300;
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
-        (address childToken, bytes memory predictedPayload) =
-            setupDeposit(address(token), rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, true);
+        (, bytes memory predictedPayload) =
+            setupDeposit(WRAPPED_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
 
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridgeFlowRate));
-        emit ChildChainERC20Deposit(address(token), childToken, address(this), address(this), tokenAmount);
+        emit WETHDeposit(
+            address(WRAPPED_ETH), rootBridgeFlowRate.childETHToken(), address(this), address(this), tokenAmount
+        );
+        rootBridgeFlowRate.deposit{value: depositFee}(IERC20Metadata(WRAPPED_ETH), tokenAmount);
+    }
+
+    function test_depositWETHCallsAxelarServices() public {
+        uint256 tokenAmount = 300;
+        string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
+        (, bytes memory predictedPayload) =
+            setupDeposit(WRAPPED_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
 
         vm.expectCall(
             address(axelarAdaptor),
@@ -336,6 +365,16 @@ contract RootERC20BridgeFlowRateIntegrationTest is
                 mockAxelarGateway.callContract.selector, CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload
             )
         );
+
+        rootBridgeFlowRate.deposit{value: depositFee}(IERC20Metadata(WRAPPED_ETH), tokenAmount);
+    }
+
+    /**
+     * DEPOSIT TOKEN
+     */
+    function test_depositTokenTransfersValue() public {
+        uint256 tokenAmount = 300;
+        setupDeposit(address(token), rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, true);
 
         uint256 thisPreBal = token.balanceOf(address(this));
         uint256 bridgePreBal = token.balanceOf(address(rootBridgeFlowRate));
@@ -355,18 +394,25 @@ contract RootERC20BridgeFlowRateIntegrationTest is
         assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");
     }
 
-    // TODO split into multiple tests
-    function test_depositTo() public {
+    function test_depositTokenEmitsEvents() public {
         uint256 tokenAmount = 300;
-        address recipient = address(9876);
         string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
         (address childToken, bytes memory predictedPayload) =
-            setupDepositTo(address(token), rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, recipient, true);
+            setupDeposit(address(token), rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, true);
 
         vm.expectEmit(address(axelarAdaptor));
         emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
         vm.expectEmit(address(rootBridgeFlowRate));
-        emit ChildChainERC20Deposit(address(token), childToken, address(this), recipient, tokenAmount);
+        emit ChildChainERC20Deposit(address(token), childToken, address(this), address(this), tokenAmount);
+
+        rootBridgeFlowRate.deposit{value: depositFee}(token, tokenAmount);
+    }
+
+    function test_depositTokenCallsAxelarServices() public {
+        uint256 tokenAmount = 300;
+        string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
+        (, bytes memory predictedPayload) =
+            setupDeposit(address(token), rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, true);
 
         vm.expectCall(
             address(axelarAdaptor),
@@ -395,6 +441,18 @@ contract RootERC20BridgeFlowRateIntegrationTest is
             )
         );
 
+        rootBridgeFlowRate.deposit{value: depositFee}(token, tokenAmount);
+    }
+
+    /**
+     * DEPOSIT TO
+     */
+
+    function test_depositToTransfersValue() public {
+        uint256 tokenAmount = 300;
+        address recipient = address(9876);
+        setupDepositTo(address(token), rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, recipient, true);
+
         uint256 thisPreBal = token.balanceOf(address(this));
         uint256 bridgePreBal = token.balanceOf(address(rootBridgeFlowRate));
 
@@ -411,5 +469,57 @@ contract RootERC20BridgeFlowRateIntegrationTest is
         // Check that native asset transferred to gas service
         assertEq(thisNativePreBal - depositFee, address(this).balance, "ETH not paid from user");
         assertEq(gasServiceNativePreBal + depositFee, address(axelarGasService).balance, "ETH not paid to adaptor");
+    }
+
+    function test_depositToEmitsEvents() public {
+        uint256 tokenAmount = 300;
+        address recipient = address(9876);
+        string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
+        (address childToken, bytes memory predictedPayload) =
+            setupDepositTo(address(token), rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, recipient, true);
+
+        vm.expectEmit(address(axelarAdaptor));
+        emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload);
+        vm.expectEmit(address(rootBridgeFlowRate));
+        emit ChildChainERC20Deposit(address(token), childToken, address(this), recipient, tokenAmount);
+
+        rootBridgeFlowRate.depositTo{value: depositFee}(token, recipient, tokenAmount);
+    }
+
+    function test_depositToCallsAxelarServices() public {
+        uint256 tokenAmount = 300;
+        address recipient = address(9876);
+        string memory childBridgeAdaptorString = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
+        (, bytes memory predictedPayload) =
+            setupDepositTo(address(token), rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, recipient, true);
+
+        vm.expectCall(
+            address(axelarAdaptor),
+            depositFee,
+            abi.encodeWithSelector(axelarAdaptor.sendMessage.selector, predictedPayload, address(this))
+        );
+
+        vm.expectCall(
+            address(axelarGasService),
+            depositFee,
+            abi.encodeWithSelector(
+                axelarGasService.payNativeGasForContractCall.selector,
+                address(axelarAdaptor),
+                CHILD_CHAIN_NAME,
+                childBridgeAdaptorString,
+                predictedPayload,
+                address(this)
+            )
+        );
+
+        vm.expectCall(
+            address(mockAxelarGateway),
+            0,
+            abi.encodeWithSelector(
+                mockAxelarGateway.callContract.selector, CHILD_CHAIN_NAME, childBridgeAdaptorString, predictedPayload
+            )
+        );
+
+        rootBridgeFlowRate.depositTo{value: depositFee}(token, recipient, tokenAmount);
     }
 }

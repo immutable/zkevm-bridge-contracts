@@ -62,7 +62,6 @@ contract InitializeChildContracts is Script {
         vm.createSelectFork(params.childRpcUrl);
         vm.startBroadcast(params.deployerPrivateKey);
 
-        // TODO update
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: params.childAdminAddress,
             pauser: params.childPauserAddress,
