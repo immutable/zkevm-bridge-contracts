@@ -1,9 +1,6 @@
 #!/bin/bash
 set -x
 
-./start.sh &
-sleep 10
-
 # Try at most 300 seconds
 counter=1
 while [ $counter -le 300 ]
