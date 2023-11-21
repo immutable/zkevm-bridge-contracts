@@ -35,5 +35,5 @@ jobs:
 
       - name: Run Test
         run: |
-          yarn start &
+          yarn local:start &
           yarn local:ci
