@@ -248,7 +248,17 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         ChildERC20Bridge bridge = new ChildERC20Bridge();
         roles.treasuryManager = address(0);
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(roles, address(1), ROOT_BRIDGE_ADAPTOR, address(1), ROOT_CHAIN_NAME, address(1), address(1));
+        bridge.initialize(
+            roles,
+            address(1),
+            ROOT_BRIDGE_ADAPTOR,
+            address(1),
+            ROOT_CHAIN_NAME,
+            address(1),
+            address(1),
+            address(1),
+            address(1)
+        );
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildTemplate() public {
