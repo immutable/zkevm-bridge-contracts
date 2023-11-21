@@ -14,9 +14,6 @@ describe("Bridge e2e test", () => {
     let childProvider;
     let rootTestWallet;
     let childTestWallet;
-    //  TODO. Add e2e tests with different recipient on the other chain.
-    let rootTestRecipientWallet;
-    let childTestRecipientWallet;
     let rootBridge;
     let rootWETH;
     let rootIMX;
@@ -50,10 +47,6 @@ describe("Bridge e2e test", () => {
         rootTestWallet = new ethers.Wallet(testAccountKey, rootProvider);
         childTestWallet = new ethers.Wallet(testAccountKey, childProvider);
 
-        // Randomly generate a recipient account on root and child chain.
-        rootTestRecipientWallet = ethers.Wallet.createRandom().connect(rootProvider);
-        childTestRecipientWallet = rootTestRecipientWallet.connect(childProvider);
-
         let rootBridgeObj = JSON.parse(fs.readFileSync('../../out/RootERC20Bridge.sol/RootERC20Bridge.json', 'utf8'));
         rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeObj.abi, rootProvider);
 
@@ -77,6 +70,9 @@ describe("Bridge e2e test", () => {
         let factory = new ContractFactory(customTokenObj.abi, customTokenObj.bytecode, rootTestWallet);
         rootCustomToken = await factory.deploy("Custom Token", "CTK");
         await helper.waitForReceipt(rootCustomToken.deployTransaction.hash, rootProvider);
+        // Mint tokens
+        let resp = await rootCustomToken.connect(rootTestWallet).mint(rootTestWallet.address, ethers.utils.parseEther("1000.0").toBigInt());
+        await helper.waitForReceipt(resp.hash, rootProvider);
     })
 
     it("should successfully deposit IMX to self from L1 to L2", async() => {
@@ -321,7 +317,35 @@ describe("Bridge e2e test", () => {
     }).timeout(60000)
 
     it("should successfully deposit mapped ERC20 Token to self from L1 to L2", async() => {
-        // TODO.
+        // Get token balance on root & child chains before deposit
+        let preBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootCustomToken.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await helper.waitForReceipt(resp.hash, rootProvider);
+
+        // Token deposit L1 to L2
+        resp = await rootBridge.connect(rootTestWallet).deposit(rootCustomToken.address, amt, {
+            value: bridgeFee,
+        })
+        await helper.waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let postBalL2 = preBalL2;
+        while (postBalL2.eq(preBalL2)) {
+            postBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+            await helper.delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.sub(amt);
+        let expectedPostL2 = preBalL2.add(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(60000)
 
     it("should successfully withdraw mapped ERC20 Token to self from L2 to L1", async() => {
