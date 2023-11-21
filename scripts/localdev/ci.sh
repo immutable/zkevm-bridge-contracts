@@ -19,5 +19,4 @@ done
 
 ./deploy.sh
 npx mocha --require mocha-suppress-logs ../e2e/
-
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+./stop.sh
