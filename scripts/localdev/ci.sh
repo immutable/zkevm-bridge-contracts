@@ -2,7 +2,7 @@
 set -ex
 
 ./start.sh &
-sleep 5
+sleep 10
 
 # Try at most 300 seconds
 counter=1
