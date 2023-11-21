@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ./start.sh &
+sleep 5
 
 # Try at most 300 seconds
 counter=1
@@ -18,3 +19,5 @@ done
 
 ./deploy.sh
 npx mocha --require mocha-suppress-logs ../e2e/
+
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
