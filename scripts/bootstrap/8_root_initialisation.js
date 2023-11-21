@@ -17,6 +17,10 @@ async function run() {
     let rootBridgeUnpauser = helper.requireEnv("ROOT_BRIDGE_UNPAUSER");
     let rootBridgeVariableManager = helper.requireEnv("ROOT_BRIDGE_VARIABLE_MANAGER");
     let rootBridgeAdaptorManager = helper.requireEnv("ROOT_BRIDGE_ADAPTOR_MANAGER");
+    let rootAdaptorDefaultAdmin = helper.requireEnv("ROOT_ADAPTOR_DEFAULT_ADMIN");
+    let rootAdaptorBridgeManager = helper.requireEnv("ROOT_ADAPTOR_BRIDGE_MANAGER");
+    let rootAdaptorGasServiceManager = helper.requireEnv("ROOT_ADAPTOR_GAS_SERVICE_MANAGER");
+    let rootAdaptorTargetManager = helper.requireEnv("ROOT_ADAPTOR_TARGET_MANAGER");
     let rootGasServiceAddr = helper.requireEnv("ROOT_GAS_SERVICE_ADDRESS");
     let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
     let rootWETHAddr = helper.requireEnv("ROOT_WETH_ADDR");
@@ -74,7 +78,16 @@ async function run() {
     let rootAdaptorObj = JSON.parse(fs.readFileSync('../../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Initialise root adaptor...");
     let rootAdaptor = new ethers.Contract(rootAdaptorAddr, rootAdaptorObj.abi, rootProvider);
-    resp = await rootAdaptor.connect(adminWallet).initialize(rootBridgeAddr, childChainName, rootGasServiceAddr);
+    resp = await rootAdaptor.connect(adminWallet).initialize(
+        {
+            defaultAdmin: rootAdaptorDefaultAdmin,
+            bridgeManager: rootAdaptorBridgeManager,
+            gasServiceManager: rootAdaptorGasServiceManager,
+            targetManager: rootAdaptorTargetManager,
+        },
+        rootBridgeAddr, 
+        childChainName, 
+        rootGasServiceAddr);
     await helper.waitForReceipt(resp.hash, rootProvider);
 }
 run();

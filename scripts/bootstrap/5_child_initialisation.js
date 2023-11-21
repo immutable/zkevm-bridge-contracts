@@ -15,6 +15,11 @@ async function run() {
     let childBridgePauser = helper.requireEnv("CHILD_BRIDGE_PAUSER");
     let childBridgeUnpauser = helper.requireEnv("CHILD_BRIDGE_UNPAUSER");
     let childBridgeAdaptorManager = helper.requireEnv("CHILD_BRIDGE_ADAPTOR_MANAGER");
+    let childBridgeTreasuryManager = helper.requireEnv("CHILD_BRIDGE_TREASURY_MANAGER");
+    let childAdaptorDefaultAdmin = helper.requireEnv("CHILD_ADAPTOR_DEFAULT_ADMIN");
+    let childAdaptorBridgeManager = helper.requireEnv("CHILD_ADAPTOR_BRIDGE_MANAGER");
+    let childAdaptorGasServiceManager = helper.requireEnv("CHILD_ADAPTOR_GAS_SERVICE_MANAGER");
+    let childAdaptorTargetManager = helper.requireEnv("CHILD_ADAPTOR_TARGET_MANAGER");
     let childDeployerSecret = helper.requireEnv("CHILD_DEPLOYER_SECRET");
     let childGasServiceAddr = helper.requireEnv("CHILD_GAS_SERVICE_ADDRESS");
     let multisigAddr = helper.requireEnv("MULTISIG_CONTRACT_ADDRESS");
@@ -57,6 +62,7 @@ async function run() {
             pauser: childBridgePauser,
             unpauser: childBridgeUnpauser,
             adaptorManager: childBridgeAdaptorManager,
+            treasuryManager: childBridgeTreasuryManager,
         },
         childAdaptorAddr, 
         ethers.utils.getAddress(rootAdaptorAddr), 
@@ -77,7 +83,17 @@ async function run() {
     console.log("Initialise child adaptor...");
     let childAdaptor = new ethers.Contract(childAdaptorAddr, childAdaptorObj.abi, childProvider);
     [priorityFee, maxFee] = await helper.getFee(adminWallet);
-    resp = await childAdaptor.connect(adminWallet).initialize(rootChainName, childBridgeAddr, childGasServiceAddr, {
+    resp = await childAdaptor.connect(adminWallet).initialize(
+        {
+            defaultAdmin: childAdaptorDefaultAdmin,
+            bridgeManager: childAdaptorBridgeManager,
+            gasServiceManager: childAdaptorGasServiceManager,
+            targetManager: childAdaptorTargetManager,
+        },
+        rootChainName, 
+        childBridgeAddr, 
+        childGasServiceAddr,
+    {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });

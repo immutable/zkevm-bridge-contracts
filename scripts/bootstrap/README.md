@@ -22,6 +22,7 @@ cp .env.example .env
 ```
 2. Set the following environment variables
 ```
+# Set prior to 1_deployer_funding.js
 CHILD_CHAIN_NAME=
 CHILD_RPC_URL=
 CHILD_CHAIN_ID=
@@ -62,6 +63,16 @@ CHILD_BRIDGE_PAUSER=
 CHILD_BRIDGE_UNPAUSER=
 ## The address to be assigned with ADAPTOR_MANAGER_ROLE in child bridge.
 CHILD_BRIDGE_ADAPTOR_MANAGER=
+## The address to be assigned with TREASURY_MANAGER_ROLE in child bridge.
+CHILD_BRIDGE_TREASURY_MANAGER=
+## The address to be assigned with DEFAULT_ADMIN_ROLE in child adaptor.
+CHILD_ADAPTOR_DEFAULT_ADMIN=
+## The address to be assigned with BRIDGE_MANAGER_ROLE in child adaptor.
+CHILD_ADAPTOR_BRIDGE_MANAGER=
+## The address to be assigned with GAS_SERVICE_MANAGER_ROLE in child adaptor.
+CHILD_ADAPTOR_GAS_SERVICE_MANAGER=
+## The address to be assigned with TARGET_MANAGER_ROLE in child adaptor.
+CHILD_ADAPTOR_TARGET_MANAGER=
 ## The address to perform root adaptor upgrade.
 ROOT_PROXY_ADMIN=
 ## The address to be assigned with DEFAULT_ADMIN_ROLE in root bridge.
@@ -74,6 +85,14 @@ ROOT_BRIDGE_UNPAUSER=
 ROOT_BRIDGE_VARIABLE_MANAGER=
 ## The address to be assigned with ADAPTOR_MANAGER_ROLE in root bridge.
 ROOT_BRIDGE_ADAPTOR_MANAGER=
+## The address to be assigned with DEFAULT_ADMIN_ROLE in root adaptor.
+ROOT_ADAPTOR_DEFAULT_ADMIN=
+## The address to be assigned with BRIDGE_MANAGER_ROLE in root adaptor.
+ROOT_ADAPTOR_BRIDGE_MANAGER=
+## The address to be assigned with GAS_SERVICE_MANAGER_ROLE in root adaptor.
+ROOT_ADAPTOR_GAS_SERVICE_MANAGER=
+## The address to be assigned with TARGET_MANAGER_ROLE in root adaptor.
+ROOT_ADAPTOR_TARGET_MANAGER=
 ```
 3. Fund deployer
 ```
