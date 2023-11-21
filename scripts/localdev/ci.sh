@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 ./start.sh &
 sleep 5
