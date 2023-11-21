@@ -32,6 +32,22 @@ async function run() {
     let rateLimitETHCap = helper.requireEnv("RATE_LIMIT_ETH_CAPACITY");
     let rateLimitETHRefill = helper.requireEnv("RATE_LIMIT_ETH_REFILL_RATE");
     let rateLimitETHLargeThreshold = helper.requireEnv("RATE_LIMIT_ETH_LARGE_THRESHOLD");
+    let rateLimitUSDCAddr = helper.requireEnv("RATE_LIMIT_USDC_ADDR");
+    let rateLimitUSDCCap = helper.requireEnv("RATE_LIMIT_USDC_CAPACITY");
+    let rateLimitUSDCRefill = helper.requireEnv("RATE_LIMIT_USDC_REFILL_RATE");
+    let rateLimitUSDCLargeThreshold = helper.requireEnv("RATE_LIMIT_USDC_LARGE_THRESHOLD");
+    let rateLimitGUAddr = helper.requireEnv("RATE_LIMIT_GU_ADDR");
+    let rateLimitGUCap = helper.requireEnv("RATE_LIMIT_GU_CAPACITY");
+    let rateLimitGURefill = helper.requireEnv("RATE_LIMIT_GU_REFILL_RATE");
+    let rateLimitGULargeThreshold = helper.requireEnv("RATE_LIMIT_GU_LARGE_THRESHOLD");
+    let rateLimitCheckMateAddr = helper.requireEnv("RATE_LIMIT_CHECKMATE_ADDR");
+    let rateLimitCheckMateCap = helper.requireEnv("RATE_LIMIT_CHECKMATE_CAPACITY");
+    let rateLimitCheckMateRefill = helper.requireEnv("RATE_LIMIT_CHECKMATE_REFILL_RATE");
+    let rateLimitCheckMateLargeThreshold = helper.requireEnv("RATE_LIMIT_CHECKMATE_LARGE_THRESHOLD");
+    let rateLimitGOGAddr = helper.requireEnv("RATE_LIMIT_GOG_ADDR");
+    let rateLimitGOGCap = helper.requireEnv("RATE_LIMIT_GOG_CAPACITY");
+    let rateLimitGOGRefill = helper.requireEnv("RATE_LIMIT_GOG_REFILL_RATE");
+    let rateLimitGOGLargeThreshold = helper.requireEnv("RATE_LIMIT_GOG_LARGE_THRESHOLD");
 
     // Read from contract file.
     let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
@@ -109,6 +125,42 @@ async function run() {
         ethers.utils.parseEther(rateLimitETHCap),
         ethers.utils.parseEther(rateLimitETHRefill),
         ethers.utils.parseEther(rateLimitETHLargeThreshold)
+    );
+    await helper.waitForReceipt(resp.hash, rootProvider);
+
+    // USDC
+    resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
+        rateLimitUSDCAddr,
+        ethers.utils.parseEther(rateLimitUSDCCap),
+        ethers.utils.parseEther(rateLimitUSDCRefill),
+        ethers.utils.parseEther(rateLimitUSDCLargeThreshold)
+    );
+    await helper.waitForReceipt(resp.hash, rootProvider);
+
+    // GU
+    resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
+        rateLimitGUAddr,
+        ethers.utils.parseEther(rateLimitGUCap),
+        ethers.utils.parseEther(rateLimitGURefill),
+        ethers.utils.parseEther(rateLimitGULargeThreshold)
+    );
+    await helper.waitForReceipt(resp.hash, rootProvider);
+
+    // Checkmate
+    resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
+        rateLimitCheckMateAddr,
+        ethers.utils.parseEther(rateLimitCheckMateCap),
+        ethers.utils.parseEther(rateLimitCheckMateRefill),
+        ethers.utils.parseEther(rateLimitCheckMateLargeThreshold)
+    );
+    await helper.waitForReceipt(resp.hash, rootProvider);
+
+    // GOG
+    resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
+        rateLimitGOGAddr,
+        ethers.utils.parseEther(rateLimitGOGCap),
+        ethers.utils.parseEther(rateLimitGOGRefill),
+        ethers.utils.parseEther(rateLimitGOGLargeThreshold)
     );
     await helper.waitForReceipt(resp.hash, rootProvider);
 
