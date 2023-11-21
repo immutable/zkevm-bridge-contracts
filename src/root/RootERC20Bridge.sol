@@ -421,7 +421,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         // ETH also cannot be transferred since it was received in the payable function call
         // WETH is also not transferred here since it was earlier unwrapped to ETH
 
-        // We can call _mapToken here, but ordering in the GMP is not guaranteed.
+        // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
         // Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         // Discuss this, and add this decision to the design doc.
 

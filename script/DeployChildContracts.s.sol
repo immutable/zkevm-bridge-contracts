@@ -12,6 +12,8 @@ import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.so
 import {ChildERC20} from "../src/child/ChildERC20.sol";
 import {WIMX} from "../src/child/WIMX.sol";
 
+// TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
+
 contract DeployChildContracts is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("CHILD_PRIVATE_KEY");
