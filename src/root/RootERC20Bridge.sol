@@ -504,7 +504,6 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
             emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
-        // slither-disable-next-line reentrancy-events
     }
 
     // slither-disable-next-line unused-state,naming-convention
