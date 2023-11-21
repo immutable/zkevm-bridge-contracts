@@ -1,22 +1,48 @@
+// Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
 import {IChildERC20} from "./IChildERC20.sol";
 
+/**
+ * @title Child ERC20 Bridge Interface
+ * @notice Defines the key functions of an ERC20 bridge on the child chain, which enables bridging of standard ERC20 tokens, ETH, wETH, IMX and wIMX from the root chain to the child chain and back.
+ * @dev Features:
+ *  - Withdraw already bridged tokens from the child chain to the root chain.
+ *  - Withdraw native IMX from the child chain to the root chain.
+ *  - Withdraw wrapped IMX from the child chain to the root chain.
+ *  - Withdraw wrapped ETH from the child chain to the root chain.
+ */
 interface IChildERC20Bridge {
+    /**
+     * @notice Holds the addresses of accounts that should be assigned different roles in the bridge, during initialization.
+     */
     struct InitializationRoles {
         address defaultAdmin; // The address which will inherit `DEFAULT_ADMIN_ROLE`.
         address pauser; // The address which will inherit `PAUSER_ROLE`.
         address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
+        address treasuryManager; // The address which will inherit `TREASURY_MANAGER_ROLE`.
     }
 
-    function rootERC20BridgeAdaptor() external view returns (string memory);
     /**
-     * @notice Receives a bridge message from root chain, parsing the message type then executing.
-     * @param sourceChain The chain the message originated from.
-     * @param sourceAddress The address the message originated from.
+     * @notice Deposit native IMX to the child chain bridge contract.
+     * @dev This function can only be called by callers who have the TREASURY_MANAGER_ROLE.
+     */
+    function treasuryDeposit() external payable;
+
+    /**
+     * @notice Get the address of the bridge adaptor on the root chain.
+     * @return address of the bridge adaptor on the root chain.
+     */
+    function rootERC20BridgeAdaptor() external view returns (string memory);
+
+    /**
+     * @notice Receives a bridge message from the root chain.
+     * @param sourceChain The id of the chain the message originated from.
+     * @param sourceAddress The address of the contract on the root chain that sent the message.
      * @param data The data payload of the message.
+     * @dev This function is called by the underlying bridge adaptor on the child chain, when it receives a validated message from the GMP.
      */
     function onMessageReceive(string calldata sourceChain, string calldata sourceAddress, bytes calldata data)
         external;
@@ -25,7 +51,13 @@ interface IChildERC20Bridge {
      * @notice Sets a new bridge adaptor address to receive and send function calls for L1 messages
      * @param newBridgeAdaptor The new child chain bridge adaptor address.
      */
-    function updateBridgeAdaptor(address newBridgeAdaptor) external;
+    function updateChildBridgeAdaptor(address newBridgeAdaptor) external;
+
+    /**
+     * @notice Sets a new root chain bridge adaptor address to receive and send function calls for L2 messages
+     * @param newRootBridgeAdaptor The new root chain bridge adaptor address.
+     */
+    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external;
 
     /**
      * @notice Withdraws `amount` of `childToken` to `msg.sender` on the rootchain.
@@ -82,6 +114,10 @@ interface IChildERC20Bridge {
     function withdrawETHTo(address receiver, uint256 amount) external payable;
 }
 
+/**
+ * @title Child ERC20 Bridge Events
+ * @notice Defines event types emitted by a Child ERC20 Bridge implementation.
+ */
 interface IChildERC20BridgeEvents {
     /// @notice Emitted when a map token message is received from the root chain and executed successfully.
     event L2TokenMapped(address rootToken, address childToken);
@@ -121,16 +157,25 @@ interface IChildERC20BridgeEvents {
         address indexed receiver,
         uint256 amount
     );
-    /// @notice Emitted when a new bridge adaptor is set.
-    event BridgeAdaptorUpdated(address oldBridgeAdaptor, address newBridgeAdaptor);
+    /// @notice Emitted when the child chain bridge adaptor is updated.
+    event ChildBridgeAdaptorUpdated(address oldChildBridgeAdaptor, address newChildBridgeAdaptor);
+    /// @notice Emitted when the root chain bridge adaptor is updated.
+    event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
+    /// @notice Emitted when a treasury deposit is made.
+    event TreasuryDeposit(address indexed depositor, uint256 amount);
 }
 
-// TODO add parameters to errors if it makes sense
+/**
+ * @notice Child ERC20 Bridge Errors
+ * @notice Defines error types emitted by a Child ERC20 Bridge implementation.
+ */
 interface IChildERC20BridgeErrors {
     /// @notice Error when the amount requested is less than the value sent.
     error InsufficientValue();
     /// @notice Error when the withdrawal amount is zero
     error ZeroAmount();
+    /// @notice Error when a zero msg.value is supplied.
+    error ZeroValue();
     /// @notice Error when a message is sent with no gas payment.
     error NoGas();
     /// @notice Error when the contract to mint had no bytecode.

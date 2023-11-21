@@ -42,7 +42,8 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
             defaultAdmin: address(this),
             pauser: pauser,
             unpauser: unpauser,
-            adaptorManager: address(this)
+            adaptorManager: address(this),
+            treasuryManager: address(this)
         });
         childBridge.initialize(
             roles,

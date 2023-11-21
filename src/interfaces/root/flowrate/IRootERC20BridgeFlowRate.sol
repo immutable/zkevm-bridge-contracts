@@ -1,6 +1,11 @@
+// Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
+/**
+ * @title Root ERC20 Bridge Flow Rate Events
+ * @notice Defines event types emitted by a Root ERC20 Bridge implementation with flow rate control capabilities.
+ */
 interface IRootERC20BridgeFlowRateEvents {
     /**
      * @notice Indicates rate control thresholds have been set for a certain token.
@@ -23,7 +28,7 @@ interface IRootERC20BridgeFlowRateEvents {
     /**
      * @notice Indicates a withdrawal was queued.
      * @param token Address of token that is being withdrawn.
-     * @param withdrawer Child chain sender of tokens.
+     * @param withdrawer child chain sender of tokens.
      * @param receiver Recipient of tokens.
      * @param amount The number of tokens.
      * @param delayWithdrawalLargeAmount is true if the reason for queuing was a large transfer.
@@ -42,6 +47,10 @@ interface IRootERC20BridgeFlowRateEvents {
     );
 }
 
+/**
+ * @title Root ERC20 Bridge Flow Rate Errors
+ * @notice Defines error types emitted by a Root ERC20 Bridge implementation with flow rate control capabilities.
+ */
 interface IRootERC20BridgeFlowRateErrors {
     // Error if the RootERC20Bridge initializer is called, and not the one for this contract.
     error WrongInitializer();

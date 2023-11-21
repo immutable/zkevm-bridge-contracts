@@ -126,5 +126,5 @@ abstract contract FlowRateDetection {
     }
 
     // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gapFlowRateDetecton;
+    uint256[50] private __gapFlowRateDetection;
 }

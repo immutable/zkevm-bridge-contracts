@@ -42,7 +42,8 @@ contract ChildERC20BridgeWithdrawUnitTest is Test, IChildERC20BridgeEvents, IChi
             defaultAdmin: address(this),
             pauser: pauser,
             unpauser: unpauser,
-            adaptorManager: address(this)
+            adaptorManager: address(this),
+            treasuryManager: address(this)
         });
         childBridge = new ChildERC20Bridge();
         childBridge.initialize(
