@@ -22,7 +22,7 @@ interface IChildERC20Bridge {
         address pauser; // The address which will inherit `PAUSER_ROLE`.
         address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
-        address treasuryManager; // The address which will inherit `TREASUREY_MANAGER_ROLE`.
+        address treasuryManager; // The address which will inherit `TREASURY_MANAGER_ROLE`.
     }
 
     /**
@@ -161,7 +161,7 @@ interface IChildERC20BridgeEvents {
     event ChildBridgeAdaptorUpdated(address oldChildBridgeAdaptor, address newChildBridgeAdaptor);
     /// @notice Emitted when the root chain bridge adaptor is updated.
     event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
-    /// @notice Emittted when a treasury deposit is made.
+    /// @notice Emitted when a treasury deposit is made.
     event TreasuryDeposit(address indexed depositor, uint256 amount);
 }
 
