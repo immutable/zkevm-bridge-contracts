@@ -13,7 +13,7 @@ import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
 import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {WETH} from "../src/test/root/WETH.sol";
+import {WETH} from "../src/lib/WETH.sol";
 
 // TODO update private key usage to be more secure: https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
 

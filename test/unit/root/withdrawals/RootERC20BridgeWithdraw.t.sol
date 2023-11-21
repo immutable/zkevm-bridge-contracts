@@ -10,9 +10,9 @@ import {
     IRootERC20BridgeErrors,
     IRootERC20Bridge
 } from "../../../../src/root/RootERC20Bridge.sol";
-import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
-import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
+import {MockAxelarGateway} from "../../../mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "../../../mocks/root/MockAxelarGasService.sol";
+import {MockAdaptor} from "../../../mocks/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 

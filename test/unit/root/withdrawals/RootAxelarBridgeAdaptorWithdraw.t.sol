@@ -4,15 +4,15 @@ pragma solidity 0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
+import {MockAxelarGateway} from "../../../mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "../../../mocks/root/MockAxelarGasService.sol";
 import {
     RootAxelarBridgeAdaptor,
     IRootAxelarBridgeAdaptorEvents,
     IRootAxelarBridgeAdaptorErrors,
     IRootAxelarBridgeAdaptor
 } from "../../../../src/root/RootAxelarBridgeAdaptor.sol";
-import {StubRootBridge} from "../../../../src/test/root/StubRootBridge.sol";
+import {StubRootBridge} from "../../../mocks/root/StubRootBridge.sol";
 
 contract RootAxelarBridgeWithdrawAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IRootAxelarBridgeAdaptorErrors {
     address constant CHILD_BRIDGE = address(3);

@@ -12,8 +12,8 @@ import {
     IChildERC20BridgeErrors
 } from "../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20, ChildERC20} from "../../../src/child/ChildERC20.sol";
-import {MockChildAxelarGateway} from "../../../src/test/child/MockChildAxelarGateway.sol";
-import {MockChildAxelarGasService} from "../../../src/test/child/MockChildAxelarGasService.sol";
+import {MockChildAxelarGateway} from "../../mocks/child/MockChildAxelarGateway.sol";
+import {MockChildAxelarGasService} from "../../mocks/child/MockChildAxelarGasService.sol";
 import {Utils} from "../../utils.t.sol";
 
 contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
