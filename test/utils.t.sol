@@ -73,7 +73,8 @@ contract Utils is Test {
             defaultAdmin: address(this),
             pauser: address(this),
             unpauser: address(this),
-            adaptorManager: address(this)
+            adaptorManager: address(this),
+            treasuryManager: address(this)
         });
         childBridge.initialize(
             roles, address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX, childWIMX

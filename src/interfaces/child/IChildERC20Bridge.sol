@@ -22,7 +22,14 @@ interface IChildERC20Bridge {
         address pauser; // The address which will inherit `PAUSER_ROLE`.
         address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
+        address treasuryManager; // The address which will inherit `TREASURY_MANAGER_ROLE`.
     }
+
+    /**
+     * @notice Deposit native IMX to the child chain bridge contract.
+     * @dev This function can only be called by callers who have the TREASURY_MANAGER_ROLE.
+     */
+    function treasuryDeposit() external payable;
 
     /**
      * @notice Get the address of the bridge adaptor on the root chain.
@@ -154,6 +161,8 @@ interface IChildERC20BridgeEvents {
     event ChildBridgeAdaptorUpdated(address oldChildBridgeAdaptor, address newChildBridgeAdaptor);
     /// @notice Emitted when the root chain bridge adaptor is updated.
     event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
+    /// @notice Emitted when a treasury deposit is made.
+    event TreasuryDeposit(address indexed depositor, uint256 amount);
 }
 
 /**
@@ -165,6 +174,8 @@ interface IChildERC20BridgeErrors {
     error InsufficientValue();
     /// @notice Error when the withdrawal amount is zero
     error ZeroAmount();
+    /// @notice Error when a zero msg.value is supplied.
+    error ZeroValue();
     /// @notice Error when a message is sent with no gas payment.
     error NoGas();
     /// @notice Error when the contract to mint had no bytecode.

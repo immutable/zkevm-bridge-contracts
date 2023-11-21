@@ -34,7 +34,8 @@ contract ChildERC20BridgeWithdrawIMXUnitTest is Test, IChildERC20BridgeEvents, I
             defaultAdmin: address(this),
             pauser: pauser,
             unpauser: unpauser,
-            adaptorManager: address(this)
+            adaptorManager: address(this),
+            treasuryManager: address(this)
         });
         childBridge.initialize(
             roles,
