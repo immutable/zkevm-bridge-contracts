@@ -5,9 +5,9 @@ import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
-import {MockChildERC20Bridge} from "../../../src/test/child/MockChildERC20Bridge.sol";
-import {MockChildAxelarGateway} from "../../../src/test/child/MockChildAxelarGateway.sol";
-import {MockChildAxelarGasService} from "../../../src/test/child/MockChildAxelarGasService.sol";
+import {MockChildERC20Bridge} from "../../mocks/child/MockChildERC20Bridge.sol";
+import {MockChildAxelarGateway} from "../../mocks/child/MockChildAxelarGateway.sol";
+import {MockChildAxelarGasService} from "../../mocks/child/MockChildAxelarGasService.sol";
 import {
     IChildAxelarBridgeAdaptorErrors,
     IChildAxelarBridgeAdaptorEvents,

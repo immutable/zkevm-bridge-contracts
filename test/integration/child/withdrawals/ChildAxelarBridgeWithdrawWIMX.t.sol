@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
-import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
+import {MockAxelarGateway} from "../../../mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "../../../mocks/root/MockAxelarGasService.sol";
 import {ChildERC20Bridge, IChildERC20BridgeEvents} from "../../../../src/child/ChildERC20Bridge.sol";
 import {
     ChildAxelarBridgeAdaptor,

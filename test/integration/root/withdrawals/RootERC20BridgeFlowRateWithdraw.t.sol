@@ -5,8 +5,8 @@ import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
+import {MockAxelarGateway} from "../../../mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "../../../mocks/root/MockAxelarGasService.sol";
 import {
     RootERC20Bridge,
     IRootERC20BridgeEvents,
@@ -19,7 +19,6 @@ import {
     RootAxelarBridgeAdaptor, IRootAxelarBridgeAdaptorEvents
 } from "../../../../src/root/RootAxelarBridgeAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
-import {WETH} from "../../../../src/test/root/WETH.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
@@ -51,8 +50,6 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
 
     function setUp() public {
         console2.log("root withdraw setUp");
-
-        deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
         RootIntegration memory integration = rootIntegrationSetup(
             CHILD_BRIDGE,

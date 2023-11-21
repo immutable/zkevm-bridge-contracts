@@ -10,7 +10,7 @@ import {
     IChildERC20BridgeErrors
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
-import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
+import {MockAdaptor} from "../../../mocks/root/MockAdaptor.sol";
 import {Utils, IPausable} from "../../../utils.t.sol";
 import {WIMX} from "../../../../src/child/WIMX.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";

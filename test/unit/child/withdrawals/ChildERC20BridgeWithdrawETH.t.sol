@@ -11,7 +11,7 @@ import {
 } from "../../../../src/child/ChildERC20Bridge.sol";
 import {IChildERC20} from "../../../../src/interfaces/child/IChildERC20.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
-import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
+import {MockAdaptor} from "../../../mocks/root/MockAdaptor.sol";
 import {Utils, IPausable} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
