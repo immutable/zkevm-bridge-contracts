@@ -8,7 +8,7 @@ cp .env.local .env
 # Start root & child chain.
 npx hardhat node --config ./rootchain.config.js --port 8500 > /dev/null 2>&1 &
 npx hardhat node --config ./childchain.config.js --port 8501 > /dev/null 2>&1 &
-sleep 3
+sleep 10
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
