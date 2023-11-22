@@ -303,7 +303,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
                 revert InsufficientValue();
             }
 
-            feeAmount = msg.value - amount;
+            feeAmount = msg.value - amount - 1;
             rootToken = rootIMXToken;
         } else if (childTokenAddr == wIMXToken) {
             // Wrapped IMX.
