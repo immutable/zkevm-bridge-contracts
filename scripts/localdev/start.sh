@@ -21,27 +21,13 @@ function ctrl_c() {
 
 # Setup root & child chain.
 npx hardhat run ./rootchain_setup.js --config ./rootchain.config.js --network localhost
-if [ $? -ne 0 ]; then
-    ./stop.sh
-    echo "Fail to setup rootchain..."
-    exit 1
-fi
 npx hardhat run ./childchain_setup.js --config ./childchain.config.js --network localhost
-if [ $? -ne 0 ]; then
-    ./stop.sh
-    echo "Fail to setup childchain..."
-    exit 1
-fi
+
 echo "Successfully setup root chain and child chain..."
 
 if [ -z ${LOCAL_CHAIN_ONLY+x} ]; then
     # Fund accounts
     SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap/1_deployer_funding.js 2>&1 | tee bootstrap.out
-    if [ $? -ne 0 ]; then
-        ./stop.sh
-        echo "Fail to run 1_deployer_funding.js"
-        exit 1
-    fi
     echo "Successfully run 1_deployer_funding.js..."
 
     # Setup axelar

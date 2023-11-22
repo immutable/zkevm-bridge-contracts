@@ -1,6 +1,4 @@
 #!/bin/bash
-set -x
-set -o pipefail
 
 # Try at most 300 seconds
 counter=1
@@ -16,12 +14,9 @@ do
     break
 done
 
+set -ex
+set -o pipefail
+
 ./deploy.sh
-if [ $? -ne 0 ]; then
-    exit 1;
-fi
 
 npx mocha --require mocha-suppress-logs ../e2e/ 2>&1 | tee -a bootstrap.out
-if [ $? -ne 0 ]; then
-    exit 1;
-fi
