@@ -16,4 +16,4 @@ do
 done
 
 ./deploy.sh
-npx mocha --require mocha-suppress-logs ../e2e/
+npx mocha --require mocha-suppress-logs ../e2e/ 2>&1 | tee -a bootstrap.out
