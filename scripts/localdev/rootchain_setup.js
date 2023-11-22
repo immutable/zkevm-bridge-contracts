@@ -35,7 +35,7 @@ async function main() {
     // Give admin account 10000 ETH.
     await hardhat.provider.send("hardhat_setBalance", [
         admin.address,
-        "0x21E19E0C9BAB2400000",
+        "0x9BAB2400000",
     ]);
 
     // Deploy IMX contract
