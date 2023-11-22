@@ -22,6 +22,7 @@ interface IChildERC20Bridge {
         address pauser; // The address which will inherit `PAUSER_ROLE`.
         address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
+        address initialDepositor; // The address which will inherit `TREASURY_MANAGER_ROLE`.
         address treasuryManager; // The address which will inherit `TREASURY_MANAGER_ROLE`.
     }
 

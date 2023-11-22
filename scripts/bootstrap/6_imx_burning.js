@@ -51,14 +51,16 @@ async function run() {
     console.log("Burn IMX in...");
     await helper.waitForConfirmation();
 
+    let childBridgeObj = JSON.parse(fs.readFileSync('../../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
+    let childBridge = new ethers.Contract(childBridgeAddr, childBridgeObj.abi, childProvider);
+
     console.log("Transfer " + imxDepositLimit +  " IMX to child bridge...");
     let [priorityFee, maxFee] = await helper.getFee(adminWallet);
-    let resp = await adminWallet.sendTransaction({
-        to: childBridgeAddr,
+    let resp = await childBridge.connect(adminWallet).treasuryDeposit({
         value: ethers.utils.parseEther(imxDepositLimit),
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
-    });
+    })
     await helper.waitForReceipt(resp.hash, childProvider);
     adminBal = await childProvider.getBalance(adminAddr);
     bridgeBal = await childProvider.getBalance(childBridgeAddr);

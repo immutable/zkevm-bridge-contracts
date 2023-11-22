@@ -58,8 +58,6 @@ contract Utils is Test {
         string memory rootAdaptor = Strings.toHexString(address(99999));
         rootIMX = address(555555);
         rootToken = address(44444);
-        address multisigContract = address(0xbbbb);
-        address initialDepositor = address(0xcccc);
         address childWIMX = address(0xabc);
 
         deployCodeTo("WIMX.sol", childWIMX);
@@ -75,18 +73,11 @@ contract Utils is Test {
             pauser: address(this),
             unpauser: address(this),
             adaptorManager: address(this),
+            initialDepositor: address(this),
             treasuryManager: address(this)
         });
         childBridge.initialize(
-            roles,
-            address(childBridgeAdaptor),
-            rootAdaptor,
-            address(childTokenTemplate),
-            "ROOT",
-            rootIMX,
-            childWIMX,
-            multisigContract,
-            initialDepositor
+            roles, address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX, childWIMX
         );
 
         IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor

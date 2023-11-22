@@ -23,8 +23,6 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
     address constant IMX_TOKEN_ADDRESS = address(0xccc);
     address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     address constant NATIVE_ETH = address(0xeee);
-    address constant MULTISIG_ADDRESS = address(0xbbbb);
-    address constant INITIAL_DEPOSITOR = address(0xcccc);
 
     ChildERC20Bridge public childERC20Bridge;
     ChildERC20 public childERC20;
@@ -46,6 +44,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             pauser: address(this),
             unpauser: address(this),
             adaptorManager: address(this),
+            initialDepositor: address(this),
             treasuryManager: address(this)
         });
         childERC20Bridge.initialize(
@@ -55,9 +54,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             address(childERC20),
             ROOT_CHAIN_NAME,
             IMX_TOKEN_ADDRESS,
-            WIMX_TOKEN_ADDRESS,
-            MULTISIG_ADDRESS,
-            INITIAL_DEPOSITOR
+            WIMX_TOKEN_ADDRESS
         );
 
         IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor

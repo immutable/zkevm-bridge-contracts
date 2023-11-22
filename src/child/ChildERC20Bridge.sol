@@ -67,10 +67,6 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     address public childETHToken;
     /// @dev The address of the wrapped IMX token on L2.
     address public wIMXToken;
-    /// @dev The address of the multisig contract on L2.
-    address public multisigContract;
-    /// @dev The address that will perform the initial depositing of IMX on L2.
-    address public initialDepositor;
 
     /**
      * @notice Initialization function for ChildERC20Bridge.
@@ -90,15 +86,13 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         address newChildTokenTemplate,
         string memory newRootChain,
         address newRootIMXToken,
-        address newWIMXToken,
-        address newMultisigContract,
-        address newInitialDepositor
+        address newWIMXToken
     ) public initializer {
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
                 || newRoles.adaptorManager == address(0) || newRoles.treasuryManager == address(0)
-                || newWIMXToken == address(0) || newMultisigContract == address(0) || newInitialDepositor == address(0)
+                || newWIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -118,6 +112,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         _grantRole(PAUSER_ROLE, newRoles.pauser);
         _grantRole(UNPAUSER_ROLE, newRoles.unpauser);
         _grantRole(ADAPTOR_MANAGER_ROLE, newRoles.adaptorManager);
+        _grantRole(TREASURY_MANAGER_ROLE, newRoles.initialDepositor);
         _grantRole(TREASURY_MANAGER_ROLE, newRoles.treasuryManager);
 
         rootERC20BridgeAdaptor = newRootERC20BridgeAdaptor;
@@ -126,8 +121,6 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         rootChain = newRootChain;
         rootIMXToken = newRootIMXToken;
         wIMXToken = newWIMXToken;
-        multisigContract = newMultisigContract;
-        initialDepositor = newInitialDepositor;
 
         // NOTE: how will this behave in an updgrade scenario?
         // e.g. this clone may already be deployed and we could deploy to the same address if the salt is the same.
@@ -148,7 +141,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
      */
     receive() external payable whenNotPaused {
         // Revert if sender is not the WIMX token address
-        if (_msgSender() != wIMXToken && _msgSender() != multisigContract && _msgSender() != initialDepositor) {
+        if (msg.sender != wIMXToken) {
             revert NonPermittedNativeTransfer();
         }
     }

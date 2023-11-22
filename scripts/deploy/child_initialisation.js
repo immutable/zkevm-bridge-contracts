@@ -15,7 +15,6 @@ exports.initialiseChildContracts = async () => {
     let childBridgePauser = helper.requireEnv("CHILD_BRIDGE_PAUSER");
     let childBridgeUnpauser = helper.requireEnv("CHILD_BRIDGE_UNPAUSER");
     let childBridgeAdaptorManager = helper.requireEnv("CHILD_BRIDGE_ADAPTOR_MANAGER");
-    let childBridgeTreasuryManager = helper.requireEnv("CHILD_BRIDGE_TREASURY_MANAGER");
     let childAdaptorDefaultAdmin = helper.requireEnv("CHILD_ADAPTOR_DEFAULT_ADMIN");
     let childAdaptorBridgeManager = helper.requireEnv("CHILD_ADAPTOR_BRIDGE_MANAGER");
     let childAdaptorGasServiceManager = helper.requireEnv("CHILD_ADAPTOR_GAS_SERVICE_MANAGER");
@@ -62,7 +61,8 @@ exports.initialiseChildContracts = async () => {
             pauser: childBridgePauser,
             unpauser: childBridgeUnpauser,
             adaptorManager: childBridgeAdaptorManager,
-            treasuryManager: childBridgeTreasuryManager,
+            initialDepositor: adminEOAAddr,
+            treasuryManager: multisigAddr,
         },
         childAdaptorAddr, 
         ethers.utils.getAddress(rootAdaptorAddr), 
@@ -70,8 +70,6 @@ exports.initialiseChildContracts = async () => {
         rootChainName, 
         rootIMXAddr, 
         childWIMXAddr,
-        multisigAddr,
-        adminEOAAddr,
     {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,

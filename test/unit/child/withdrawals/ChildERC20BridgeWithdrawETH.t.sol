@@ -20,8 +20,6 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
     address constant ROOT_IMX_TOKEN = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
     address constant WIMX_TOKEN_ADDRESS = address(0xabc);
-    address constant MULTISIG_ADDRESS = address(0xbbbb);
-    address constant INITIAL_DEPOSITOR = address(0xcccc);
     ChildERC20 public childTokenTemplate;
     ChildERC20 public childETHToken;
     ChildERC20Bridge public childBridge;
@@ -38,6 +36,7 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
             pauser: pauser,
             unpauser: unpauser,
             adaptorManager: address(this),
+            initialDepositor: address(this),
             treasuryManager: address(this)
         });
         childBridge.initialize(
@@ -47,9 +46,7 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
             address(childTokenTemplate),
             ROOT_CHAIN_NAME,
             ROOT_IMX_TOKEN,
-            WIMX_TOKEN_ADDRESS,
-            MULTISIG_ADDRESS,
-            INITIAL_DEPOSITOR
+            WIMX_TOKEN_ADDRESS
         );
 
         childETHToken = ChildERC20(childBridge.childETHToken());
