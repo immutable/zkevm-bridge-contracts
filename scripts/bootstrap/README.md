@@ -141,7 +141,7 @@ RATE_LIMIT_GOG_LARGE_THRESHOLD=
 ```
 3. Fund deployer
 ```
-node 1_deployer_funding.js
+node 1_deployer_funding.js 2>&1 | tee bootstrap.out
 ```
 4. Wait for Axelar to deploy & setup their system and Security team to deploy & setup multisig wallet.
 5. Set the following environment variables
@@ -156,32 +156,32 @@ ROOT_GAS_SERVICE_ADDRESS=
 
 If multisig is deployed:
 ```
-node 2_deployment_validation.js
+node 2_deployment_validation.js 2>&1 | tee -a bootstrap.out
 ```
 If multisig isn't deployed:
 ```
-SKIP_MULTISIG_CHECK=true node 2_deployment_validation.js
+SKIP_MULTISIG_CHECK=true node 2_deployment_validation.js 2>&1 | tee -a bootstrap.out
 ```
 7. Deploy bridge contracts on child and root chain.
 ```
-node 3_child_deployment.js
-node 4_root_deployment.js
+node 3_child_deployment.js 2>&1 | tee -a bootstrap.out
+node 4_root_deployment.js 2>&1 | tee -a bootstrap.out
 ```
 8. Initialise bridge contracts on child chain.
 ```
-node 5_child_initialisation.js
+node 5_child_initialisation.js 2>&1 | tee -a bootstrap.out
 ```
 9. IMX Burning
 ```
-node 6_imx_burning.js
+node 6_imx_burning.js 2>&1 | tee -a bootstrap.out
 ```
 10. IMX Rebalancing
 ```
-node 7_imx_rebalancing.js
+node 7_imx_rebalancing.js 2>&1 | tee -a bootstrap.out
 ```
 11. Initialise bridge contracts on root chain.
 ```
-node 8_root_initialisation.js
+node 8_root_initialisation.js 2>&1 | tee -a bootstrap.out
 ```
 12. Set the following environment variable
 ```
@@ -189,5 +189,5 @@ TEST_ACCOUNT_SECRET=
 ```
 13. Test bridge functions
 ```
-npx mocha --require mocha-suppress-logs ../e2e/
+npx mocha --require mocha-suppress-logs ../e2e/ 2>&1 | tee -a bootstrap.out
 ```

@@ -34,7 +34,7 @@ echo "Successfully setup root chain and child chain..."
 
 if [ -z ${LOCAL_CHAIN_ONLY+x} ]; then
     # Fund accounts
-    SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap/1_deployer_funding.js
+    SKIP_WAIT_FOR_CONFIRMATION=true node ../bootstrap/1_deployer_funding.js 2>&1 | tee bootstrap.out
     if [ $? -ne 0 ]; then
         ./stop.sh
         echo "Fail to run 1_deployer_funding.js"
