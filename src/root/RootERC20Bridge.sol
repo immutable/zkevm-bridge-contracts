@@ -447,7 +447,9 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         _emitDepositEventAndTransfer(address(rootToken), receiver, amount);
     }
 
-    // Helper function to emit the appropriate deposit event and execute transfer if rootIMX or rootERC20
+    /**
+     * @notice Private helper function to emit the appropriate deposit event and execute transfer if rootIMX or rootERC20
+     */
     function _emitDepositEventAndTransfer(address rootToken, address receiver, uint256 amount) private {
         // ETH also cannot be transferred since it was received in the payable function call
         if (rootToken == NATIVE_ETH) {

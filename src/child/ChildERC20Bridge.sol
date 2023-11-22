@@ -320,6 +320,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         _emitWithdrawEvent(rootToken, childTokenAddr, msg.sender, receiver, amount);
     }
 
+    /**
+     * @notice Private function to handle withdrawal of L2 native IMX.
+     */
     function _withdrawIMX(uint256 amount) private returns (address) {
         if (msg.value < amount) {
             revert InsufficientValue();
@@ -327,6 +330,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         return rootIMXToken;
     }
 
+    /**
+     * @notice Private function to handle withdrawal of L1 native ETH.
+     */
     function _withdrawETH(uint256 amount) private returns (address) {
         if (!IChildERC20(childETHToken).burn(msg.sender, amount)) {
             revert BurnFailed();
@@ -334,6 +340,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         return NATIVE_ETH;
     }
 
+    /**
+     * @notice Private function to handle withdrawal of native IMX.
+     */
     function _withdrawWIMX(uint256 amount) private returns (address) {
         // Calculate expected balance
         uint256 expectedBalance = address(this).balance + amount;
@@ -356,6 +365,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         return rootIMXToken;
     }
 
+    /**
+     * @notice Private function to handle withdrawal of ERC20 tokens.
+     */
     function _withdrawERC20(address rootToken, address childToken, uint256 amount) private returns (address) {
         // Validate code existance
         if (address(childToken).code.length == 0) {
@@ -387,6 +399,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         return rootToken;
     }
 
+    /**
+     * @notice Private function to emit withdraw events.
+     */
     function _emitWithdrawEvent(address rootToken, address childToken, address sender, address receiver, uint256 amount)
         private
     {
