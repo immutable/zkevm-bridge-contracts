@@ -11,6 +11,7 @@ import {
 } from "../interfaces/child/IChildERC20Bridge.sol";
 import {IChildBridgeAdaptor} from "../interfaces/child/IChildBridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {IWIMX} from "../interfaces/child/IWIMX.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
 
@@ -39,7 +40,13 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
  */
-contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Bridge, IChildERC20BridgeEvents {
+contract ChildERC20Bridge is
+    BridgeRoles,
+    ReentrancyGuardUpgradeable,
+    IChildERC20BridgeErrors,
+    IChildERC20Bridge,
+    IChildERC20BridgeEvents
+{
     /// @dev leave this as the first param for the integration tests.
     mapping(address => address) public rootTokenToChildToken;
 
@@ -101,6 +108,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
 
         __AccessControl_init();
         __Pausable_init();
+        __ReentrancyGuard_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
@@ -168,7 +176,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
      *      This method assumes that the adaptor will have performed all
      *      validations relating to the source of the message, prior to calling this method.
      */
-    function onMessageReceive(bytes calldata data) external override whenNotPaused onlyBridgeAdaptor {
+    function onMessageReceive(bytes calldata data) external whenNotPaused onlyBridgeAdaptor {
         if (data.length <= 32) {
             // Data must always be greater than 32.
             // 32 bytes for the signature, and at least some information for the payload
@@ -257,7 +265,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
      * - `childToken` must be mapped.
      * - `childToken` must have a the bridge set.
      */
-    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private whenNotPaused {
+    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private nonReentrant whenNotPaused {
         if (childTokenAddr == address(0) || receiver == address(0)) {
             revert ZeroAddress();
         }

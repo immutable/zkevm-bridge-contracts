@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./FlowRateDetection.sol";
 import "./FlowRateWithdrawalQueue.sol";
 import "../RootERC20Bridge.sol";
@@ -69,7 +68,6 @@ import {
  */
 contract RootERC20BridgeFlowRate is
     RootERC20Bridge,
-    ReentrancyGuardUpgradeable,
     FlowRateDetection,
     FlowRateWithdrawalQueue,
     IRootERC20BridgeFlowRateEvents,
@@ -107,7 +105,6 @@ contract RootERC20BridgeFlowRate is
         );
 
         __FlowRateWithdrawalQueue_init();
-        __ReentrancyGuard_init();
         _grantRole(RATE_CONTROL_ROLE, rateAdmin);
     }
 

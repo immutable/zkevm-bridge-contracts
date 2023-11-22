@@ -18,6 +18,22 @@ import {MockAxelarGasService} from "../../mocks/root/MockAxelarGasService.sol";
 import {MockAdaptor} from "../../mocks/root/MockAdaptor.sol";
 import {Utils, IPausable} from "../../utils.t.sol";
 
+contract ReentrancyAttackDeposit is ERC20PresetMinterPauser {
+    IRootERC20Bridge bridge;
+
+    constructor(address _bridge) ERC20PresetMinterPauser("Test", "TST") {
+        bridge = IRootERC20Bridge(_bridge);
+    }
+
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
+        if (msg.sender == address(bridge)) {
+            bridge.deposit(IERC20Metadata(address(this)), amount);
+        }
+
+        return super.transferFrom(from, to, amount);
+    }
+}
+
 contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
     address constant CHILD_BRIDGE = address(3);
     address constant IMX_TOKEN = address(0xccc);
@@ -85,7 +101,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         address caller = address(0x123a);
         payable(caller).transfer(2 ether);
         // forge inspect src/root/RootERC20Bridge.sol:RootERC20Bridge storageLayout | grep -B3 -A5 -i "rootWETHToken"
-        uint256 wETHStorageSlot = 257;
+        uint256 wETHStorageSlot = 307;
         vm.store(address(rootBridge), bytes32(wETHStorageSlot), bytes32(uint256(uint160(caller))));
 
         vm.startPrank(caller);
@@ -676,6 +692,31 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TOKEN
      */
+
+    function test_RevertsIf_DepositReentered() public {
+        // Create attack token
+        ReentrancyAttackDeposit attackToken = new ReentrancyAttackDeposit(address(rootBridge));
+
+        // Map
+        {
+            // Found by running `forge inspect src/root/RootERC20Bridge.sol:RootERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
+            uint256 rootTokenToChildTokenMappingSlot = 301;
+            bytes32 slot = getMappingStorageSlotFor(address(attackToken), rootTokenToChildTokenMappingSlot);
+            bytes32 data = bytes32(uint256(uint160(address(attackToken))));
+            vm.store(address(rootBridge), slot, data);
+        }
+
+        // Approve and mint
+        address attacker = makeAddr("attacker");
+        ERC20PresetMinterPauser(address(attackToken)).mint(attacker, 10000);
+        vm.startPrank(attacker);
+        vm.deal(attacker, 10 ether);
+        ERC20PresetMinterPauser(address(attackToken)).approve(address(rootBridge), type(uint256).max);
+
+        // Deposit
+        vm.expectRevert("ReentrancyGuard: reentrant call");
+        rootBridge.deposit{value: depositFee}(IERC20Metadata(address(attackToken)), 100);
+    }
 
     function test_RevertsIf_DepositTokenWhenPaused() public {
         uint256 amount = 100;
