@@ -16,4 +16,11 @@ do
 done
 
 ./deploy.sh
+if [ $? -ne 0 ]; then
+    exit 1;
+fi
+
 npx mocha --require mocha-suppress-logs ../e2e/ 2>&1 | tee -a bootstrap.out
+if [ $? -ne 0 ]; then
+    exit 1;
+fi
