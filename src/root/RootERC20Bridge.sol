@@ -176,6 +176,11 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         childBridgeAdaptor = newChildBridgeAdaptor;
         childChain = newChildChain;
         imxCumulativeDepositLimit = newImxCumulativeDepositLimit;
+
+        // Map the supported tokens by default
+        rootTokenToChildToken[rootIMXToken] = rootIMXToken;
+        rootTokenToChildToken[NATIVE_ETH] = NATIVE_ETH;
+        rootTokenToChildToken[rootWETHToken] = NATIVE_ETH;
     }
 
     /**
@@ -404,7 +409,11 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         return childToken;
     }
 
-    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private whenNotPaused {
+    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount)
+        private
+        whenNotPaused
+        wontIMXOverflow(address(rootToken), amount)
+    {
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -414,52 +423,46 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         if (msg.value == 0) {
             revert NoGas();
         }
-        if (
-            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT
-                && IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit
-        ) {
-            revert ImxDepositLimitExceeded();
+        // ETH, WETH and IMX do not need to be mapped since it should have been mapped on initialization
+        if (rootTokenToChildToken[address(rootToken)] == address(0)) {
+            revert NotMapped();
         }
 
-        // ETH, WETH and IMX do not need to be mapped since it should have been mapped on initialization
-        // ETH also cannot be transferred since it was received in the payable function call
-        // WETH is also not transferred here since it was earlier unwrapped to ETH
-
-        // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
+        // We can call _mapToken here, but ordering in the GMP is not guaranteed.
         // Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         // Discuss this, and add this decision to the design doc.
 
-        address childToken;
-        uint256 feeAmount = msg.value;
-        address payloadToken = address(rootToken);
-
-        if (address(rootToken) == NATIVE_ETH) {
-            feeAmount = msg.value - amount;
-        } else if (address(rootToken) == rootWETHToken) {
-            payloadToken = NATIVE_ETH;
-        } else {
-            if (address(rootToken) != rootIMXToken) {
-                childToken = rootTokenToChildToken[address(rootToken)];
-                if (childToken == address(0)) {
-                    revert NotMapped();
-                }
-            }
-            rootToken.safeTransferFrom(msg.sender, address(this), amount);
-        }
+        address payloadToken = (address(rootToken) == rootWETHToken) ? NATIVE_ETH : address(rootToken);
 
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, payloadToken, msg.sender, receiver, amount);
 
+        // Adjust for fee amount on native transfers
+        uint256 feeAmount = (address(rootToken) == NATIVE_ETH) ? msg.value - amount : msg.value;
+
+        // Send message to child chain
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
-        if (address(rootToken) == NATIVE_ETH) {
-            emit NativeEthDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
-        } else if (address(rootToken) == rootWETHToken) {
-            emit WETHDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
-        } else if (address(rootToken) == rootIMXToken) {
-            emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
+        // Emit the appropriate deposit event
+        transferTokensAndEmitEvent(address(rootToken), receiver, amount);
+    }
+
+    /**
+     * @notice Private helper function to emit the appropriate deposit event and execute transfer if rootIMX or rootERC20
+     */
+    function transferTokensAndEmitEvent(address rootToken, address receiver, uint256 amount) private {
+        // ETH also cannot be transferred since it was received in the payable function call
+        if (rootToken == NATIVE_ETH) {
+            emit NativeEthDeposit(rootToken, childETHToken, msg.sender, receiver, amount);
+            // WETH is also not transferred here since it was earlier unwrapped to ETH
+        } else if (rootToken == rootWETHToken) {
+            emit WETHDeposit(rootToken, childETHToken, msg.sender, receiver, amount);
+        } else if (rootToken == rootIMXToken) {
+            emit IMXDeposit(rootToken, msg.sender, receiver, amount);
+            IERC20Metadata(rootToken).safeTransferFrom(msg.sender, address(this), amount);
         } else {
-            emit ChildChainERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
+            emit ChildChainERC20Deposit(rootToken, rootTokenToChildToken[rootToken], msg.sender, receiver, amount);
+            IERC20Metadata(rootToken).safeTransferFrom(msg.sender, address(this), amount);
         }
     }
 
@@ -506,6 +509,17 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
             emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
+    }
+
+    modifier wontIMXOverflow(address rootToken, uint256 amount) {
+        // Assert whether the deposit is root IMX
+        if (address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT) {
+            // Based on the balance of this contract, check if the deposit will exceed the cumulative limit
+            if (IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit) {
+                revert ImxDepositLimitExceeded();
+            }
+        }
+        _;
     }
 
     // slither-disable-next-line unused-state,naming-convention
