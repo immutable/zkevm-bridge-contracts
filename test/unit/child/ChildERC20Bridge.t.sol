@@ -143,6 +143,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assertTrue(childBridge.hasRole(childBridge.ADAPTOR_MANAGER_ROLE(), address(this)), "adaptorManager not set");
         assertFalse(address(childBridge.childETHToken()) == address(0), "childETHToken not set");
         assertFalse(address(childBridge.childETHToken()).code.length == 0, "childETHToken contract empty");
+        assert(childBridge.rootTokenToChildToken(NATIVE_ETH) != address(0));
     }
 
     function test_RevertIfInitializeTwice() public {
@@ -472,7 +473,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), ROOT_IMX_TOKEN, sender, receiver, amount);
 
-        vm.expectRevert("Address: insufficient balance");
+        vm.expectRevert(InsufficientIMX.selector);
         childBridge.onMessageReceive(depositData);
     }
 

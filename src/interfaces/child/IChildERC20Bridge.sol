@@ -193,4 +193,6 @@ interface IChildERC20BridgeErrors {
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
     /// @notice Error when native transfer is sent to contract from non wrapped-token address.
     error NonWrappedNativeTransfer();
+    /// @notice Error when the bridge doesn't have enough native IMX to support the deposit.
+    error InsufficientIMX();
 }
