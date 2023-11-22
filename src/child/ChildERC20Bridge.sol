@@ -347,7 +347,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
 
         // Withdraw
         wIMX.withdraw(amount);
-        
+
         // Assert balance
         if (address(this).balance != expectedBalance) {
             revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
@@ -363,7 +363,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         }
 
         rootToken = IChildERC20(childToken).rootToken();
-        
+
         // Assert mapping
         if (rootTokenToChildToken[rootToken] != address(childToken)) {
             revert NotMapped();
