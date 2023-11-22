@@ -54,23 +54,23 @@ contract RootAxelarBridgeAdaptor is
 
     /**
      * @notice Initialization function for RootAxelarBridgeAdaptor.
-     * @param _newRoles Struct containing addresses of roles.
+     * @param _roles Struct containing addresses of roles.
      * @param _rootBridge Address of root bridge contract.
      * @param _childChainId Axelar's ID for the child chain.
      * @param _childBridgeAdaptor Address of the bridge adaptor on the child chain.
      * @param _gasService Address of Axelar Gas Service contract.
      */
     function initialize(
-        InitializationRoles memory _newRoles,
+        InitializationRoles memory _roles,
         address _rootBridge,
         string memory _childChainId,
         string memory _childBridgeAdaptor,
         address _gasService
     ) public initializer {
         if (
-            _rootBridge == address(0) || _gasService == address(0) || _newRoles.defaultAdmin == address(0)
-                || _newRoles.bridgeManager == address(0) || _newRoles.gasServiceManager == address(0)
-                || _newRoles.targetManager == address(0)
+            _rootBridge == address(0) || _gasService == address(0) || _roles.defaultAdmin == address(0)
+                || _roles.bridgeManager == address(0) || _roles.gasServiceManager == address(0)
+                || _roles.targetManager == address(0)
         ) {
             revert ZeroAddresses();
         }
@@ -85,10 +85,10 @@ contract RootAxelarBridgeAdaptor is
 
         __AccessControl_init();
 
-        _grantRole(DEFAULT_ADMIN_ROLE, _newRoles.defaultAdmin);
-        _grantRole(BRIDGE_MANAGER_ROLE, _newRoles.bridgeManager);
-        _grantRole(GAS_SERVICE_MANAGER_ROLE, _newRoles.gasServiceManager);
-        _grantRole(TARGET_MANAGER_ROLE, _newRoles.targetManager);
+        _grantRole(DEFAULT_ADMIN_ROLE, _roles.defaultAdmin);
+        _grantRole(BRIDGE_MANAGER_ROLE, _roles.bridgeManager);
+        _grantRole(GAS_SERVICE_MANAGER_ROLE, _roles.gasServiceManager);
+        _grantRole(TARGET_MANAGER_ROLE, _roles.targetManager);
 
         rootBridge = IRootERC20Bridge(_rootBridge);
         childChainId = _childChainId;

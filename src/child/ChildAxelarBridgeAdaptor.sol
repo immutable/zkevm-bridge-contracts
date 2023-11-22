@@ -53,22 +53,23 @@ contract ChildAxelarBridgeAdaptor is
 
     /**
      * @notice Initialization function for ChildAxelarBridgeAdaptor.
-     * @param newRoles Struct containing addresses of roles.
-     * @param _rootChainId Axelar's ID for the root chain.
+     * @param _roles Struct containing addresses of roles.
      * @param _childBridge Address of child bridge contract.
+     * @param _rootChainId Axelar's string ID for the root chain.
+     * @param _rootBridgeAdaptor Address of the bridge adaptor on the root chain.
      * @param _gasService Address of Axelar Gas Service contract.
      */
     function initialize(
-        InitializationRoles memory newRoles,
+        InitializationRoles memory _roles,
+        address _childBridge,
         string memory _rootChainId,
         string memory _rootBridgeAdaptor,
-        address _childBridge,
         address _gasService
     ) external initializer {
         if (
-            _childBridge == address(0) || _gasService == address(0) || newRoles.defaultAdmin == address(0)
-                || newRoles.bridgeManager == address(0) || newRoles.gasServiceManager == address(0)
-                || newRoles.targetManager == address(0)
+            _childBridge == address(0) || _gasService == address(0) || _roles.defaultAdmin == address(0)
+                || _roles.bridgeManager == address(0) || _roles.gasServiceManager == address(0)
+                || _roles.targetManager == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -82,10 +83,10 @@ contract ChildAxelarBridgeAdaptor is
         }
         __AccessControl_init();
 
-        _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
-        _grantRole(BRIDGE_MANAGER_ROLE, newRoles.bridgeManager);
-        _grantRole(GAS_SERVICE_MANAGER_ROLE, newRoles.gasServiceManager);
-        _grantRole(TARGET_MANAGER_ROLE, newRoles.targetManager);
+        _grantRole(DEFAULT_ADMIN_ROLE, _roles.defaultAdmin);
+        _grantRole(BRIDGE_MANAGER_ROLE, _roles.bridgeManager);
+        _grantRole(GAS_SERVICE_MANAGER_ROLE, _roles.gasServiceManager);
+        _grantRole(TARGET_MANAGER_ROLE, _roles.targetManager);
 
         childBridge = IChildERC20Bridge(_childBridge);
         rootChainId = _rootChainId;

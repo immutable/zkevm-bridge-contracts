@@ -18,7 +18,6 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
     address constant CHILD_BRIDGE = address(3);
-    string constant CHILD_CHAIN_NAME = "test";
     address constant UnmappedToken = address(0xbbb);
     address constant IMX_TOKEN = address(0xccc);
     address constant WRAPPED_ETH = address(0xddd);

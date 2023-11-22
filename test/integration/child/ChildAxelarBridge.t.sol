@@ -64,9 +64,9 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
 
         childAxelarBridgeAdaptor.initialize(
             adaptorRoles,
+            address(childERC20Bridge),
             ROOT_CHAIN_NAME,
             ROOT_ADAPTOR_ADDRESS,
-            address(childERC20Bridge),
             address(mockChildAxelarGasService)
         );
     }

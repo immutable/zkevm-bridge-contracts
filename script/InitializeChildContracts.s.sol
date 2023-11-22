@@ -87,9 +87,9 @@ contract InitializeChildContracts is Script {
 
         params.childAxelarBridgeAdaptor.initialize(
             adaptorRoles,
+            address(params.childERC20Bridge),
             params.rootChainName,
             rootBridgeAdaptorString,
-            address(params.childERC20Bridge),
             params.childGasService
         );
 

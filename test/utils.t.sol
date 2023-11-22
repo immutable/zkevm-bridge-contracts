@@ -86,7 +86,7 @@ contract Utils is Test {
         });
 
         childBridgeAdaptor.initialize(
-            adaptorRoles, "ROOT", rootAdaptor, address(childBridge), address(axelarGasService)
+            adaptorRoles, address(childBridge), "ROOT", rootAdaptor, address(axelarGasService)
         );
 
         bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, "TEST NAME", "TNM", 18);

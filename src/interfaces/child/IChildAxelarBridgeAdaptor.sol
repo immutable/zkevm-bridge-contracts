@@ -42,6 +42,18 @@ interface IChildAxelarBridgeAdaptor {
      * @dev Can only be called by GAS_SERVICE_MANAGER_ROLE.
      */
     function updateGasService(address newGasService) external;
+
+    /**
+     * @notice Get the root chain id
+     * @return Axelar's string id of the root chain.
+     */
+    function rootChainId() external view returns (string memory);
+
+    /**
+     * @notice Get the root bridge adaptor address.
+     * @return String representation of the check sum address of the bridge adaptor on the root chain
+     */
+    function rootBridgeAdaptor() external view returns (string memory);
 }
 
 interface IChildAxelarBridgeAdaptorErrors {

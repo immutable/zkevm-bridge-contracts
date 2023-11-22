@@ -46,9 +46,9 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         axelarAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
         axelarAdaptor.initialize(
             roles,
+            address(mockChildERC20Bridge),
             ROOT_CHAIN_NAME,
             ROOT_BRIDGE_ADAPTOR,
-            address(mockChildERC20Bridge),
             address(mockChildAxelarGasService)
         );
     }
@@ -82,9 +82,9 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         roles.defaultAdmin = address(0);
         newAdaptor.initialize(
             roles,
+            address(mockChildERC20Bridge),
             ROOT_CHAIN_NAME,
             ROOT_BRIDGE_ADAPTOR,
-            address(mockChildERC20Bridge),
             address(mockChildAxelarGasService)
         );
     }
@@ -95,9 +95,9 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         roles.bridgeManager = address(0);
         newAdaptor.initialize(
             roles,
+            address(mockChildERC20Bridge),
             ROOT_CHAIN_NAME,
             ROOT_BRIDGE_ADAPTOR,
-            address(mockChildERC20Bridge),
             address(mockChildAxelarGasService)
         );
     }
@@ -108,9 +108,9 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         roles.gasServiceManager = address(0);
         newAdaptor.initialize(
             roles,
+            address(mockChildERC20Bridge),
             ROOT_CHAIN_NAME,
             ROOT_BRIDGE_ADAPTOR,
-            address(mockChildERC20Bridge),
             address(mockChildAxelarGasService)
         );
     }
@@ -121,9 +121,9 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         roles.targetManager = address(0);
         newAdaptor.initialize(
             roles,
+            address(mockChildERC20Bridge),
             ROOT_CHAIN_NAME,
             ROOT_BRIDGE_ADAPTOR,
-            address(mockChildERC20Bridge),
             address(mockChildAxelarGasService)
         );
     }
@@ -132,7 +132,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
         vm.expectRevert(ZeroAddress.selector);
         newAdaptor.initialize(
-            roles, ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, address(0), address(mockChildAxelarGasService)
+            roles, address(0), ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, address(mockChildAxelarGasService)
         );
     }
 
@@ -140,7 +140,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
         vm.expectRevert(InvalidRootChain.selector);
         newAdaptor.initialize(
-            roles, "", ROOT_BRIDGE_ADAPTOR, address(mockChildERC20Bridge), address(mockChildAxelarGasService)
+            roles, address(mockChildERC20Bridge), "", ROOT_BRIDGE_ADAPTOR, address(mockChildAxelarGasService)
         );
     }
 
@@ -148,14 +148,14 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
         vm.expectRevert(InvalidRootBridgeAdaptor.selector);
         newAdaptor.initialize(
-            roles, ROOT_CHAIN_NAME, "", address(mockChildERC20Bridge), address(mockChildAxelarGasService)
+            roles, address(mockChildERC20Bridge), ROOT_CHAIN_NAME, "", address(mockChildAxelarGasService)
         );
     }
 
     function test_RevertIf_InitializeGivenZeroGasService() public {
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
         vm.expectRevert(ZeroAddress.selector);
-        newAdaptor.initialize(roles, ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, address(mockChildERC20Bridge), address(0));
+        newAdaptor.initialize(roles, address(mockChildERC20Bridge), ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, address(0));
     }
 
     /**

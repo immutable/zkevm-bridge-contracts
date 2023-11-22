@@ -42,6 +42,18 @@ interface IRootAxelarBridgeAdaptor {
      * @dev Can only be called by GAS_SERVICE_MANAGER_ROLE.
      */
     function updateGasService(address newGasService) external;
+
+    /**
+     * @notice Get the child chain id
+     * @return Axelar's string id of the child chain.
+     */
+    function childChainId() external view returns (string memory);
+
+    /**
+     * @notice Get the child bridge adaptor address.
+     * @return String representation of the check sum address of the bridge adaptor on the child chain
+     */
+    function childBridgeAdaptor() external view returns (string memory);
 }
 
 /**
