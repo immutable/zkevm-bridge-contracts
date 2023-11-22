@@ -305,7 +305,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         } else if (childTokenAddr == childETHToken) {
             rootToken = _withdrawETH(amount);
         } else {
-            rootToken = _withdrawERC20(rootToken, childTokenAddr, amount);
+            rootToken = _withdrawERC20(childTokenAddr, amount);
         }
 
         // Encode the message payload
@@ -368,22 +368,22 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     /**
      * @notice Private function to handle withdrawal of ERC20 tokens.
      */
-    function _withdrawERC20(address rootToken, address childToken, uint256 amount) private returns (address) {
-        // Validate code existance
+    function _withdrawERC20(address childToken, uint256 amount) private returns (address) {
+        // Validate code existence
         if (address(childToken).code.length == 0) {
             revert EmptyTokenContract();
         }
 
-        rootToken = IChildERC20(childToken).rootToken();
-
-        // Assert mapping
-        if (rootTokenToChildToken[rootToken] != address(childToken)) {
-            revert NotMapped();
-        }
+        address rootToken = IChildERC20(childToken).rootToken();
 
         // A mapped token should never have root token unset
         if (rootToken == address(0)) {
             revert ZeroAddressRootToken();
+        }
+
+        // Assert mapping
+        if (rootTokenToChildToken[rootToken] != address(childToken)) {
+            revert NotMapped();
         }
 
         // A mapped token should never have the bridge unset
@@ -479,10 +479,10 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert ZeroAddress();
         }
 
-        _emitDepositEventAndHandleTransfer(rootToken, rootTokenToChildToken[rootToken], sender, receiver, amount);
+        transferTokensAndEmitEvent(rootToken, rootTokenToChildToken[rootToken], sender, receiver, amount);
     }
 
-    function _emitDepositEventAndHandleTransfer(
+    function transferTokensAndEmitEvent(
         address rootToken,
         address childToken,
         address sender,
@@ -490,6 +490,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         uint256 amount
     ) private {
         if (rootToken == rootIMXToken) {
+            if (address(this).balance < amount) {
+                revert InsufficientIMX();
+            }
             Address.sendValue(payable(receiver), amount);
             emit IMXDeposit(rootToken, sender, receiver, amount);
             return;

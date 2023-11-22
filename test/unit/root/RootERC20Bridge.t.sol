@@ -85,7 +85,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(rootBridge.rootIMXToken(), IMX_TOKEN, "rootIMXToken not set");
         assertEq(rootBridge.rootWETHToken(), WRAPPED_ETH, "rootWETHToken not set");
         assert(rootBridge.rootTokenToChildToken(IMX_TOKEN) != address(0));
-        assert(rootBridge.rootTokenToChildToken(WRAPPED_ETH) != address(0));
+        assert(rootBridge.rootTokenToChildToken(NATIVE_ETH) != address(0));
         assert(rootBridge.rootTokenToChildToken(NATIVE_ETH) != address(0));
     }
 

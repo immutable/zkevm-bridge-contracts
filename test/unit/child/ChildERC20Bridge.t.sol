@@ -568,7 +568,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         bytes memory depositData = abi.encode(childBridge.DEPOSIT_SIG(), ROOT_IMX_TOKEN, sender, receiver, amount);
 
-        vm.expectRevert("Address: insufficient balance");
+        vm.expectRevert(InsufficientIMX.selector);
         childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, depositData);
     }
 

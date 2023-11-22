@@ -180,7 +180,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         // Map the supported tokens by default
         rootTokenToChildToken[rootIMXToken] = rootIMXToken;
         rootTokenToChildToken[NATIVE_ETH] = NATIVE_ETH;
-        rootTokenToChildToken[rootWETHToken] = rootWETHToken;
+        rootTokenToChildToken[rootWETHToken] = NATIVE_ETH;
     }
 
     /**
@@ -444,13 +444,13 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         // Emit the appropriate deposit event
-        _emitDepositEventAndTransfer(address(rootToken), receiver, amount);
+        transferTokensAndEmitEvent(address(rootToken), receiver, amount);
     }
 
     /**
      * @notice Private helper function to emit the appropriate deposit event and execute transfer if rootIMX or rootERC20
      */
-    function _emitDepositEventAndTransfer(address rootToken, address receiver, uint256 amount) private {
+    function transferTokensAndEmitEvent(address rootToken, address receiver, uint256 amount) private {
         // ETH also cannot be transferred since it was received in the payable function call
         if (rootToken == NATIVE_ETH) {
             emit NativeEthDeposit(rootToken, childETHToken, msg.sender, receiver, amount);
