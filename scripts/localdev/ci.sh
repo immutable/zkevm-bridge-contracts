@@ -1,5 +1,6 @@
 #!/bin/bash
 set -x
+set -o pipefail
 
 # Try at most 300 seconds
 counter=1

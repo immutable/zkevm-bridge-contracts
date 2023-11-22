@@ -1,4 +1,6 @@
 #!/bin/bash
+set -ex
+set -o pipefail
 
 # Stop previous deployment.
 ./stop.sh
