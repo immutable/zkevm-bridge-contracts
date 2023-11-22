@@ -61,7 +61,7 @@ exports.deployChildContracts = async () => {
     console.log("Transaction submitted: ", JSON.stringify(proxyAdmin.deployTransaction, null, 2));
     await helper.waitForReceipt(proxyAdmin.deployTransaction.hash, childProvider);
     // Change owner
-    console.log("Change ownership...")
+    console.log("Change ownership...");
     [priorityFee, maxFee] = await helper.getFee(adminWallet);
     resp = await proxyAdmin.connect(adminWallet).transferOwnership(childProxyAdmin, {
         maxPriorityFeePerGas: priorityFee,
