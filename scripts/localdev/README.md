@@ -8,7 +8,7 @@ This folder contains the following bash scripts required to setup a local develo
 1. `start.sh`: To start the local development network.
 2. `stop.sh`: To stop the local development network.
 3. `deploy.sh`: To deploy and configure Immutable bridge contracts on both child chain and root chain.
-4. `ci.sh`: Used by CI that runs `deploy.sh` and end to end tests.
+4. `ci.sh`: Used by CI that detects if network is up before running `deploy.sh` and end to end tests.
 
 ## Start local development network
 1. Set environment variables

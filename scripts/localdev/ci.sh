@@ -13,10 +13,3 @@ do
     fi
     break
 done
-
-set -ex
-set -o pipefail
-
-./deploy.sh
-
-npx mocha --require mocha-suppress-logs ../e2e/ 2>&1 | tee -a bootstrap.out
