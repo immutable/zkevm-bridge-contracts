@@ -46,7 +46,7 @@ interface IChildAxelarBridgeAdaptor {
 
 interface IChildAxelarBridgeAdaptorErrors {
     /// @notice Error when the given bridge adaptor is invalid.
-    error InvalidRootERC20BridgeAdaptor();
+    error InvalidRootBridgeAdaptor();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
     /// @notice Error when a message is sent with no gas payment.

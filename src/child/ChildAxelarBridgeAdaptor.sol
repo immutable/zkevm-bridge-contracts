@@ -15,7 +15,8 @@ import {IChildBridgeAdaptor} from "../interfaces/child/IChildBridgeAdaptor.sol";
 import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 
 /**
- * @notice Facilitates communication between the ChildERC20Bridge and the Axelar Gateway. It enables sending and receiving messages to and from the root chain.
+ * @notice Facilitates communication between the ChildERC20Bridge and the Axelar core contracts,to send and receive messages to and from the root chain.
+ * @dev The contract ensures that any delivered message originated from the registered root chain and bridge adapter contract on the root chain. It will reject all other messages.
  * @dev Features:
  *      - Send messages to the root chain via the Axelar Gateway.
  *      - Receive messages from the root chain via the Axelar Gateway.
@@ -77,7 +78,7 @@ contract ChildAxelarBridgeAdaptor is
         }
 
         if (bytes(_rootBridgeAdaptor).length == 0) {
-            revert InvalidRootERC20BridgeAdaptor();
+            revert InvalidRootBridgeAdaptor();
         }
         __AccessControl_init();
 
@@ -121,7 +122,7 @@ contract ChildAxelarBridgeAdaptor is
      */
     function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external onlyRole(TARGET_MANAGER_ROLE) {
         if (bytes(newRootBridgeAdaptor).length == 0) {
-            revert InvalidRootERC20BridgeAdaptor();
+            revert InvalidRootBridgeAdaptor();
         }
 
         emit RootBridgeAdaptorUpdated(rootBridgeAdaptor, newRootBridgeAdaptor);
@@ -165,9 +166,15 @@ contract ChildAxelarBridgeAdaptor is
 
     /**
      * @dev This function is called by the parent `AxelarExecutable` contract to execute a message payload sent from the root chain.
-     *      The function first validates the message by checking that it originated from the registered
+     *      It is only called after the message has been validated by the Axelar core contracts.
+     *      Validations include, ensuring that the Axelar validator set has signed the message and that the message has not been executed before.
+     *      For more details see:
+     *        - [AxelarExecutable.sol](https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/main/contracts/executable/AxelarExecutable.sol#L17),
+     *        - [AxelarGateway.sol](https://github.com/axelarnetwork/axelar-cgp-solidity/blob/d4536599321774927bf9716178a9e360f8e0efac/contracts/AxelarGateway.sol#L233)
+     *
+     * @dev The function first validates the message by checking that it originated from the registered
      *      root chain and bridge adaptor contract on the root chain. If not, the message is rejected.
-     *      If a message is valid, it calls the root bridge contract's `onMessageReceive` function.
+     *      If a message is valid, it calls the child bridge contract's `onMessageReceive` function.
      * @param _sourceChain The chain id that the message originated from.
      * @param _sourceAddress The contract address that sent the message on the source chain.
      * @param _payload The message payload.

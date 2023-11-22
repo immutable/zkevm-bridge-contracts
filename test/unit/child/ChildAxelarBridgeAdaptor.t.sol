@@ -146,7 +146,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
 
     function test_RevertIf_InitializeGivenAnEmptyBridgeAdaptorString() public {
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
-        vm.expectRevert(InvalidRootERC20BridgeAdaptor.selector);
+        vm.expectRevert(InvalidRootBridgeAdaptor.selector);
         newAdaptor.initialize(
             roles, ROOT_CHAIN_NAME, "", address(mockChildERC20Bridge), address(mockChildAxelarGasService)
         );
@@ -445,7 +445,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
 
     function test_RevertIf_updateRootBridgeAdaptorCalledWithEmptyString() public {
         vm.startPrank(targetManager);
-        vm.expectRevert(InvalidRootERC20BridgeAdaptor.selector);
+        vm.expectRevert(InvalidRootBridgeAdaptor.selector);
         axelarAdaptor.updateRootBridgeAdaptor("");
     }
 

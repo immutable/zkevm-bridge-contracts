@@ -58,7 +58,7 @@ interface IRootAxelarBridgeAdaptorErrors {
     /// @notice Error when the contract calling the adaptor is not the bridge.
     error CallerNotBridge();
     /// @notice Error when the given child chain bridge adaptor is invalid.
-    error InvalidChildERC20BridgeAdaptor();
+    error InvalidChildBridgeAdaptor();
     /// @notice Error when a message received has invalid source address.
     error InvalidSourceAddress();
     /// @notice Error when a message received has invalid source chain.
