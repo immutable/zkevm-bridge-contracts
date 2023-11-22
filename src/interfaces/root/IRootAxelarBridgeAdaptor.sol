@@ -30,6 +30,13 @@ interface IRootAxelarBridgeAdaptor {
     function updateChildChain(string memory newChildChain) external;
 
     /**
+     * @notice Update the child chain bridge address
+     * @param newChildBridgeAdaptor address of the new child bridge adaptor.
+     * @dev Can only be called by TARGET_MANAGER_ROLE.
+     */
+    function updateChildBridgeAdaptor(string memory newChildBridgeAdaptor) external;
+
+    /**
      * @notice Update the gas service.
      * @param newGasService Address of new gas service.
      * @dev Can only be called by GAS_SERVICE_MANAGER_ROLE.
@@ -57,7 +64,17 @@ interface IRootAxelarBridgeAdaptorErrors {
  * @notice Contains the event types that can be emitted by a bridge adaptor
  */
 interface IRootAxelarBridgeAdaptorEvents {
+    /// @notice Emitted when the child chain bridge adaptor is updated.
+    event ChildBridgeAdaptorUpdated(string oldChildBridgeAdaptor, string newChildBridgeAdaptor);
+    /// @notice Error when the given child chain bridge adaptor is invalid.
+
+    error InvalidChildERC20BridgeAdaptor();
+    /// @notice Error when a message received has invalid source address.
+    error InvalidSourceAddress();
+    /// @notice Error when a message received has invalid source chain.
+    error InvalidSourceChain();
     /// @notice Emitted when an Axelar message is sent to the child chain.
+
     event AxelarMessageSent(string indexed childChain, string indexed childBridgeAdaptor, bytes indexed payload);
     /// @notice Emitted when an Axelar message is received from the child chain.
     event AdaptorExecute(string sourceChain, string sourceAddress_, bytes payload_);

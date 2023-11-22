@@ -44,12 +44,15 @@ contract ChildAxelarBridgeAdaptor is
     constructor(address _gateway) AxelarExecutable(_gateway) {}
 
     /**
-     * @notice Initializes the contract.
-     * @param _childBridge Address of the child bridge contract.
+     * @notice Initialization function for ChildAxelarBridgeAdaptor.
+     * @param newRoles Struct containing addresses of roles.
+     * @param _rootChainId Axelar's ID for the root chain.
+     * @param _childBridge Address of child bridge contract.
+     * @param _gasService Address of Axelar Gas Service contract.
      */
     function initialize(
         InitializationRoles memory newRoles,
-        string memory _rootChain,
+        string memory _rootChainId,
         address _childBridge,
         address _gasService
     ) external initializer {
@@ -61,7 +64,7 @@ contract ChildAxelarBridgeAdaptor is
             revert ZeroAddress();
         }
 
-        if (bytes(_rootChain).length == 0) {
+        if (bytes(_rootChainId).length == 0) {
             revert InvalidRootChain();
         }
 
@@ -73,7 +76,7 @@ contract ChildAxelarBridgeAdaptor is
         _grantRole(TARGET_MANAGER_ROLE, newRoles.targetManager);
 
         childBridge = IChildERC20Bridge(_childBridge);
-        rootChain = _rootChain;
+        rootChain = _rootChainId;
         gasService = IAxelarGasService(_gasService);
     }
 

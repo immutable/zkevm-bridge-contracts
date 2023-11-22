@@ -141,11 +141,9 @@ contract Utils is Test {
             roles,
             address(integrationTest.axelarAdaptor),
             childBridge,
-            Strings.toHexString(childBridgeAdaptor),
             address(integrationTest.token),
             imxTokenAddress,
             wethTokenAddress,
-            childBridgeName,
             imxCumulativeDepositLimit,
             address(this)
         );
@@ -161,6 +159,7 @@ contract Utils is Test {
             adaptorRoles,
             address(integrationTest.rootBridgeFlowRate),
             childBridgeName,
+            Strings.toHexString(childBridgeAdaptor),
             address(integrationTest.axelarGasService)
         );
     }

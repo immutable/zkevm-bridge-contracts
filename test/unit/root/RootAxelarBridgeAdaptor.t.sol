@@ -18,8 +18,9 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IRootAxelarBridgeAdaptorErrors {
     address constant CHILD_BRIDGE = address(3);
-    string public childBridgeAdaptor;
     string constant CHILD_CHAIN_NAME = "test";
+    address constant CHILD_BRIDGE_ADAPTOR = address(4);
+    string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
 
     ERC20PresetMinterPauser public token;
@@ -43,11 +44,11 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         token = new ERC20PresetMinterPauser("Test", "TST");
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
-        stubRootBridge = new StubRootBridge();
-        childBridgeAdaptor = stubRootBridge.childBridgeAdaptor();
-
         axelarAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
-        axelarAdaptor.initialize(roles, address(stubRootBridge), CHILD_CHAIN_NAME, address(axelarGasService));
+        stubRootBridge = new StubRootBridge();
+        axelarAdaptor.initialize(
+            roles, address(stubRootBridge), CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, address(axelarGasService)
+        );
         vm.deal(address(stubRootBridge), 99999999999);
     }
 
@@ -57,7 +58,8 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
 
     function test_Initialize() public {
         assertEq(address(axelarAdaptor.rootBridge()), address(stubRootBridge), "rootBridge not set");
-        assertEq(axelarAdaptor.childChain(), CHILD_CHAIN_NAME, "childChain not set");
+        assertEq(axelarAdaptor.childChainId(), CHILD_CHAIN_NAME, "childChain not set");
+        assertEq(axelarAdaptor.childBridgeAdaptor(), CHILD_BRIDGE_ADAPTOR_STRING, "childBridgeAdaptor not set");
         assertEq(address(axelarAdaptor.gateway()), address(mockAxelarGateway), "axelarGateway not set");
         assertEq(address(axelarAdaptor.gasService()), address(axelarGasService), "axelarGasService not set");
         assertEq(axelarAdaptor.hasRole(axelarAdaptor.DEFAULT_ADMIN_ROLE(), address(this)), true, "defaultAdmin not set");
@@ -78,70 +80,96 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);
         roles.defaultAdmin = address(0);
-        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, address(axelarGasService));
+        newAdaptor.initialize(
+            roles, address(this), CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, address(axelarGasService)
+        );
     }
 
     function test_RevertIf_InitializeWithZeroBridgeManager() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);
         roles.bridgeManager = address(0);
-        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, address(axelarGasService));
+        newAdaptor.initialize(
+            roles, address(this), CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, address(axelarGasService)
+        );
     }
 
     function test_RevertIf_InitializeWithZeroGasServiceManager() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);
         roles.gasServiceManager = address(0);
-        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, address(axelarGasService));
+        newAdaptor.initialize(
+            roles, address(this), CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, address(axelarGasService)
+        );
     }
 
     function test_RevertIf_InitializeWithZeroTargetManager() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);
         roles.targetManager = address(0);
-        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, address(axelarGasService));
+        newAdaptor.initialize(
+            roles, address(this), CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, address(axelarGasService)
+        );
     }
 
     function test_RevertIf_InitializeGivenZeroAddress() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);
-        newAdaptor.initialize(roles, address(0), CHILD_CHAIN_NAME, address(axelarGasService));
+        newAdaptor.initialize(
+            roles, address(0), CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, address(axelarGasService)
+        );
     }
 
     function test_RevertIf_InitializeGivenEmptyChildChainName() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(InvalidChildChain.selector);
-        newAdaptor.initialize(roles, address(this), "", address(axelarGasService));
+        newAdaptor.initialize(roles, address(this), "", CHILD_BRIDGE_ADAPTOR_STRING, address(axelarGasService));
     }
 
+    function test_RevertIf_InitializeGivenEmptyChildAdapter() public {
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        vm.expectRevert(InvalidChildERC20BridgeAdaptor.selector);
+        newAdaptor.initialize(roles, address(this), CHILD_CHAIN_NAME, "", address(axelarGasService));
+    }
     /**
      * EXECUTE
      */
 
+    function test_RevertIf_executeCalledWithInvalidSourceChain() public {
+        bytes32 commandId = bytes32("testCommandId");
+        bytes memory payload = abi.encodePacked("payload");
+
+        vm.expectRevert(InvalidSourceChain.selector);
+        axelarAdaptor.execute(commandId, "Invalid-Source-Chain", CHILD_BRIDGE_ADAPTOR_STRING, payload);
+    }
+
+    function test_RevertIf_executeCalledWithInvalidSourceAddress() public {
+        bytes32 commandId = bytes32("testCommandId");
+        bytes memory payload = abi.encodePacked("payload");
+
+        vm.expectRevert(InvalidSourceAddress.selector);
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, "invalid-source-address", payload);
+    }
+
     function test_Execute_CallsBridge() public {
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceChain = "test";
-        string memory sourceAddress = Strings.toHexString(address(123));
         bytes memory payload = abi.encodePacked("payload");
 
         // We expect to call the bridge's onMessageReceive function.
         vm.expectCall(
-            address(stubRootBridge),
-            abi.encodeWithSelector(stubRootBridge.onMessageReceive.selector, sourceChain, sourceAddress, payload)
+            address(stubRootBridge), abi.encodeWithSelector(stubRootBridge.onMessageReceive.selector, payload)
         );
-        axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, payload);
     }
 
     function test_Execute_EmitsAdaptorExecuteEvent() public {
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceChain = "test";
-        string memory sourceAddress = Strings.toHexString(address(123));
         bytes memory payload = abi.encodePacked("payload");
 
         // We expect to call the bridge's onMessageReceive function.
         vm.expectEmit();
-        emit AdaptorExecute(sourceChain, sourceAddress, payload);
-        axelarAdaptor.execute(commandId, sourceChain, sourceAddress, payload);
+        emit AdaptorExecute(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, payload);
+        axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, payload);
     }
 
     /**
@@ -161,7 +189,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
                 CHILD_CHAIN_NAME,
-                childBridgeAdaptor,
+                CHILD_BRIDGE_ADAPTOR_STRING,
                 payload,
                 refundRecipient
             )
@@ -178,7 +206,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         vm.expectCall(
             address(mockAxelarGateway),
             abi.encodeWithSelector(
-                mockAxelarGateway.callContract.selector, CHILD_CHAIN_NAME, childBridgeAdaptor, payload
+                mockAxelarGateway.callContract.selector, CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, payload
             )
         );
 
@@ -191,7 +219,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         uint256 callValue = 300;
 
         vm.expectEmit(true, true, true, false, address(axelarAdaptor));
-        emit AxelarMessageSent(CHILD_CHAIN_NAME, childBridgeAdaptor, payload);
+        emit AxelarMessageSent(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, payload);
         vm.prank(address(stubRootBridge));
         axelarAdaptor.sendMessage{value: callValue}(payload, address(123));
     }
@@ -226,7 +254,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
                 CHILD_CHAIN_NAME,
-                childBridgeAdaptor,
+                CHILD_BRIDGE_ADAPTOR_STRING,
                 payload,
                 refundRecipient
             )
@@ -307,7 +335,7 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         vm.startPrank(targetManager);
         string memory newChildChain = "newChildChain";
         axelarAdaptor.updateChildChain(newChildChain);
-        assertEq(axelarAdaptor.childChain(), newChildChain, "childChain not updated");
+        assertEq(axelarAdaptor.childChainId(), newChildChain, "childChain not updated");
         vm.stopPrank();
     }
 
@@ -337,6 +365,50 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         vm.startPrank(targetManager);
         vm.expectRevert(InvalidChildChain.selector);
         axelarAdaptor.updateChildChain("");
+    }
+
+    /**
+     * UPDATE CHILD BRIDGE ADAPTOR
+     */
+
+    function test_updateChildBridgeAdaptor_UpdatesChildBridgeAdaptor() public {
+        vm.startPrank(targetManager);
+
+        string memory newAdaptorAddress = Strings.toHexString(address(0x11111));
+        assertEq(axelarAdaptor.childBridgeAdaptor(), CHILD_BRIDGE_ADAPTOR_STRING, "bridgeAdaptor not set");
+        axelarAdaptor.updateChildBridgeAdaptor(newAdaptorAddress);
+        assertEq(axelarAdaptor.childBridgeAdaptor(), newAdaptorAddress, "bridgeAdaptor not updated");
+    }
+
+    function test_updateChildBridgeAdaptor_EmitsEvent() public {
+        vm.startPrank(targetManager);
+
+        string memory newAdaptorAddress = Strings.toHexString(address(0x11111));
+        vm.expectEmit(true, true, false, false, address(axelarAdaptor));
+        emit ChildBridgeAdaptorUpdated(axelarAdaptor.childBridgeAdaptor(), newAdaptorAddress);
+
+        axelarAdaptor.updateChildBridgeAdaptor(newAdaptorAddress);
+    }
+
+    function test_RevertsIf_updateChildBridgeAdaptorCalledByNonTargetManager() public {
+        address caller = address(0xf00f00);
+        vm.startPrank(caller);
+        bytes32 role = axelarAdaptor.TARGET_MANAGER_ROLE();
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(caller),
+                " is missing role ",
+                StringsUpgradeable.toHexString(uint256(role), 32)
+            )
+        );
+        axelarAdaptor.updateChildBridgeAdaptor(Strings.toHexString(address(0x11111)));
+    }
+
+    function test_RevertsIf_updateChildBridgeAdaptorCalledWithEmptyString() public {
+        vm.startPrank(targetManager);
+        vm.expectRevert(InvalidChildERC20BridgeAdaptor.selector);
+        axelarAdaptor.updateChildBridgeAdaptor("");
     }
 
     /**

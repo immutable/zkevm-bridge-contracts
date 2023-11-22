@@ -78,11 +78,9 @@ contract InitializeRootContracts is Script {
             roles,
             address(params.rootBridgeAdaptor),
             params.childERC20Bridge,
-            childBridgeAdaptorChecksum,
             params.rootChainChildTokenTemplate,
             params.rootIMXToken,
             params.rootWETHToken,
-            params.childChainName,
             params.initialIMXCumulativeDepositLimit
         );
 
@@ -97,6 +95,7 @@ contract InitializeRootContracts is Script {
             adaptorRoles,
             address(params.rootERC20Bridge), // root bridge
             params.childChainName, // child chain name
+            childBridgeAdaptorChecksum,
             params.rootGasService // axelar gas service
         );
 

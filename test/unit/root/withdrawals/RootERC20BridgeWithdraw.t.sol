@@ -18,8 +18,6 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
     address constant CHILD_BRIDGE = address(3);
-    address constant CHILD_BRIDGE_ADAPTOR = address(4);
-    string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
     string constant CHILD_CHAIN_NAME = "test";
     address constant UnmappedToken = address(0xbbb);
     address constant IMX_TOKEN = address(0xccc);
@@ -67,11 +65,9 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
-            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSIT_LIMIT
         );
     }
@@ -80,25 +76,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), withdrawAmount);
 
         vm.expectRevert(NotBridgeAdaptor.selector);
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
-    }
-
-    function test_RevertsIf_OnMessageReceiveWithInvalidSourceChain() public {
-        bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), withdrawAmount);
-
-        vm.prank(address(mockAxelarAdaptor));
-        vm.expectRevert(InvalidSourceChain.selector);
-        rootBridge.onMessageReceive("ding_dong", CHILD_BRIDGE_ADAPTOR_STRING, data);
-    }
-
-    function test_RevertsIf_OnMessageReceiveWithInvalidSourceAddress() public {
-        bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), withdrawAmount);
-
-        console2.log(CHILD_CHAIN_NAME);
-        console2.log(rootBridge.childChain());
-        vm.prank(address(mockAxelarAdaptor));
-        vm.expectRevert(InvalidSourceAddress.selector);
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, "DING_DONG", data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_RevertsIf_OnMessageReceiveWithZeroDataLength() public {
@@ -107,21 +85,21 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         vm.prank(address(mockAxelarAdaptor));
         vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Data too short"));
 
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_RevertsIf_OnMessageReceiveWithInvalidSignature() public {
         bytes memory data = abi.encode(keccak256("RANDOM"), token, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
         vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_RevertsIf_OnMessageReceiveWithUnmappedToken() public {
         bytes memory data = abi.encode(WITHDRAW_SIG, UnmappedToken, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
         vm.expectRevert(NotMapped.selector);
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_onMessageReceive_TransfersTokens() public {
@@ -135,7 +113,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
 
         assertEq(token.balanceOf(address(this)), thisPreBal + withdrawAmount, "Tokens not transferred to receiver");
         assertEq(
@@ -152,7 +130,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
 
         assertEq(imxToken.balanceOf(address(this)), thisPreBal + withdrawAmount, "IMX not transferred to receiver");
         assertEq(
@@ -169,7 +147,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
 
         assertEq(address(this).balance, thisPreBal + withdrawAmount, "ETH not transferred to receiver");
         assertEq(address(rootBridge).balance, bridgePreBal - withdrawAmount, "ETH not transferred from bridge");
@@ -187,7 +165,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), receiver, withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
 
         assertEq(token.balanceOf(receiver), receiverPreBal + withdrawAmount, "Tokens not transferred to receiver");
         assertEq(
@@ -205,7 +183,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, imxToken, address(this), receiver, withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
 
         assertEq(
             imxToken.balanceOf(address(receiver)), receiverPreBal + withdrawAmount, "IMX not transferred to receiver"
@@ -225,7 +203,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
 
         assertEq(address(receiver).balance, receiverPreBal + withdrawAmount, "ETH not transferred to receiver");
         assertEq(address(rootBridge).balance, bridgePreBal - withdrawAmount, "ETH not transferred from bridge");
@@ -247,7 +225,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
             withdrawAmount
         );
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX() public {
@@ -258,7 +236,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         vm.expectEmit();
         emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), address(this), withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_onMessageReceive_EmitsRootChainETHWithdrawEventForETH() public {
@@ -271,7 +249,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
             NATIVE_ETH, address(rootBridge.childETHToken()), address(this), address(this), withdrawAmount
         );
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEvent_DifferentReceiver() public {
@@ -287,7 +265,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
             address(token), rootBridge.rootTokenToChildToken(address(token)), address(this), receiver, withdrawAmount
         );
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX_DifferentReceiver() public {
@@ -299,7 +277,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
         vm.expectEmit();
         emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), receiver, withdrawAmount);
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_onMessageReceive_EmitsRootChainETHWithdrawEventForETH_DifferentReceiver() public {
@@ -313,6 +291,6 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
             NATIVE_ETH, address(rootBridge.childETHToken()), address(this), receiver, withdrawAmount
         );
         vm.prank(address(mockAxelarAdaptor));
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 }

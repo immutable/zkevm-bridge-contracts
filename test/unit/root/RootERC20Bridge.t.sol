@@ -19,11 +19,7 @@ import {MockAdaptor} from "../../mocks/root/MockAdaptor.sol";
 import {Utils, IPausable} from "../../utils.t.sol";
 
 contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
-    bytes32 constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
     address constant CHILD_BRIDGE = address(3);
-    address constant CHILD_BRIDGE_ADAPTOR = address(4);
-    string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
-    string constant CHILD_CHAIN_NAME = "test";
     address constant IMX_TOKEN = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
     address constant WRAPPED_ETH = address(0xddd);
@@ -62,11 +58,9 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
-            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -79,8 +73,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assertEq(address(rootBridge.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
         assertEq(rootBridge.childERC20Bridge(), CHILD_BRIDGE, "childERC20Bridge not set");
         assertEq(rootBridge.childTokenTemplate(), address(token), "childTokenTemplate not set");
-        assert(Strings.equal(rootBridge.childChain(), CHILD_CHAIN_NAME));
-        assert(Strings.equal(CHILD_BRIDGE_ADAPTOR_STRING, rootBridge.childBridgeAdaptor()));
         assertEq(address(token), rootBridge.childTokenTemplate(), "childTokenTemplate not set");
         assertEq(rootBridge.rootIMXToken(), IMX_TOKEN, "rootIMXToken not set");
         assertEq(rootBridge.rootWETHToken(), WRAPPED_ETH, "rootWETHToken not set");
@@ -90,7 +82,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         address caller = address(0x123a);
         payable(caller).transfer(2 ether);
         // forge inspect src/root/RootERC20Bridge.sol:RootERC20Bridge storageLayout | grep -B3 -A5 -i "rootWETHToken"
-        uint256 wETHStorageSlot = 258;
+        uint256 wETHStorageSlot = 257;
         vm.store(address(rootBridge), bytes32(wETHStorageSlot), bytes32(uint256(uint160(caller))));
 
         vm.startPrank(caller);
@@ -136,11 +128,9 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
-            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -156,17 +146,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         });
 
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(1), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressPauser() public {
@@ -180,17 +160,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         });
 
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(1), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressUnpauser() public {
@@ -203,17 +173,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             adaptorManager: address(this)
         });
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(1), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressVariableManager() public {
@@ -226,17 +186,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             adaptorManager: address(this)
         });
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(1), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdaptorManager() public {
@@ -249,17 +199,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             adaptorManager: address(0)
         });
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(1), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressRootAdapter() public {
@@ -272,17 +212,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             adaptorManager: address(this)
         });
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(0),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(0), address(1), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildBridge() public {
@@ -295,40 +225,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             adaptorManager: address(this)
         });
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(0),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
-    }
-
-    function test_RevertIf_InitializeWithEmptyChildAdapter() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
-        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            variableManager: address(this),
-            adaptorManager: address(this)
-        });
-        vm.expectRevert(InvalidChildERC20BridgeAdaptor.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            "",
-            address(1),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(0), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressTokenTemplate() public {
@@ -341,17 +238,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             adaptorManager: address(this)
         });
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(0),
-            address(1),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(1), address(0), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
@@ -364,17 +251,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             adaptorManager: address(this)
         });
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(0),
-            address(1),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(1), address(1), address(0), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressWETHToken() public {
@@ -387,17 +264,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         });
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(0),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(1), address(1), address(1), address(1), address(0), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAll() public {
@@ -410,40 +277,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         });
         RootERC20Bridge bridge = new RootERC20Bridge();
         vm.expectRevert(ZeroAddress.selector);
-        bridge.initialize(
-            roles,
-            address(0),
-            address(0),
-            "",
-            address(0),
-            address(0),
-            address(0),
-            CHILD_CHAIN_NAME,
-            UNLIMITED_IMX_DEPOSITS
-        );
-    }
-
-    function test_RevertIf_InitializeWithEmptyChildName() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
-        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
-            defaultAdmin: address(this),
-            pauser: address(this),
-            unpauser: address(this),
-            variableManager: address(this),
-            adaptorManager: address(this)
-        });
-        vm.expectRevert(InvalidChildChain.selector);
-        bridge.initialize(
-            roles,
-            address(1),
-            address(1),
-            CHILD_BRIDGE_ADAPTOR_STRING,
-            address(1),
-            address(1),
-            address(1),
-            "",
-            UNLIMITED_IMX_DEPOSITS
-        );
+        bridge.initialize(roles, address(0), address(0), address(0), address(0), address(0), UNLIMITED_IMX_DEPOSITS);
     }
 
     /**
@@ -453,7 +287,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         pause(IPausable(address(rootBridge)));
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), 1000);
         vm.expectRevert("Pausable: paused");
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     function test_OnMessageReceiveResumesFunctionalityAfterUnpausing() public {
@@ -462,7 +296,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         // Expect revert on standard flow, not on pause
         vm.expectRevert(NotBridgeAdaptor.selector);
         bytes memory data = abi.encode(WITHDRAW_SIG, token, address(this), address(this), 1000);
-        rootBridge.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridge.onMessageReceive(data);
     }
 
     /**
@@ -623,43 +457,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     function test_RevertIf_updateRootBridgeAdaptorCalledWithZeroAddress() public {
         vm.expectRevert(ZeroAddress.selector);
         rootBridge.updateRootBridgeAdaptor(address(0));
-    }
-
-    function test_updateChildBridgeAdaptor_UpdatesChildBridgeAdaptor() public {
-        string memory newAdaptorAddress = Strings.toHexString(address(0x11111));
-
-        assertEq(rootBridge.childBridgeAdaptor(), CHILD_BRIDGE_ADAPTOR_STRING, "bridgeAdaptor not set");
-        rootBridge.updateChildBridgeAdaptor(newAdaptorAddress);
-        assertEq(rootBridge.childBridgeAdaptor(), newAdaptorAddress, "bridgeAdaptor not updated");
-    }
-
-    function test_updateChildBridgeAdaptor_EmitsEvent() public {
-        string memory newAdaptorAddress = Strings.toHexString(address(0x11111));
-
-        vm.expectEmit(true, true, false, false, address(rootBridge));
-        emit ChildBridgeAdaptorUpdated(rootBridge.childBridgeAdaptor(), newAdaptorAddress);
-
-        rootBridge.updateChildBridgeAdaptor(newAdaptorAddress);
-    }
-
-    function test_RevertsIf_updateChildBridgeAdaptorCalledByNonAdaptorManager() public {
-        address caller = address(0xf00f00);
-        bytes32 role = rootBridge.ADAPTOR_MANAGER_ROLE();
-        vm.prank(caller);
-        vm.expectRevert(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(caller),
-                " is missing role ",
-                StringsUpgradeable.toHexString(uint256(role), 32)
-            )
-        );
-        rootBridge.updateChildBridgeAdaptor(Strings.toHexString(address(0x11111)));
-    }
-
-    function test_RevertsIf_updatreChildBridgeAdaptorCalledWithEmptyString() public {
-        vm.expectRevert(InvalidChildERC20BridgeAdaptor.selector);
-        rootBridge.updateChildBridgeAdaptor("");
     }
 
     /**

@@ -42,27 +42,12 @@ interface IRootERC20Bridge {
     function updateRootBridgeAdaptor(address newRootBridgeAdaptor) external;
 
     /**
-     * @notice Updates the child bridge adaptor.
-     * @param newChildBridgeAdaptor String checksum address of new root bridge adaptor.
-     * @dev Can only be called by ADAPTOR_MANAGER_ROLE.
-     */
-    function updateChildBridgeAdaptor(string memory newChildBridgeAdaptor) external;
-
-    /**
-     * @notice Get the address of the bridge adaptor on the child chain.
-     * @return address of the bridge adaptor on the child chain.
-     */
-    function childBridgeAdaptor() external view returns (string memory);
-
-    /**
      * @notice Receives a bridge message from the child chain.
-     * @param sourceChain The id of the chain the message originated from.
-     * @param sourceAddress The address of the contract on the child chain that sent the message.
      * @param data The data payload of the message.
      * @dev This function is called by the underlying bridge adaptor on the root chain, when it receives a validated message from the GMP.
+     *         It assumes that the underlying adaptor has already validated the sender chain and sender address.
      */
-    function onMessageReceive(string calldata sourceChain, string calldata sourceAddress, bytes calldata data)
-        external;
+    function onMessageReceive(bytes calldata data) external;
 
     /**
      * @notice Initiate sending a mapToken message to the child chain.
@@ -119,8 +104,6 @@ interface IRootERC20Bridge {
 interface IRootERC20BridgeEvents {
     /// @notice Emitted when the root chain bridge adaptor is updated.
     event RootBridgeAdaptorUpdated(address oldRootBridgeAdaptor, address newRootBridgeAdaptor);
-    /// @notice Emitted when the child chain bridge adaptor is updated.
-    event ChildBridgeAdaptorUpdated(string oldChildBridgeAdaptor, string newChildBridgeAdaptor);
     /// @notice Emitted when the IMX deposit limit is updated.
     event NewImxDepositLimit(uint256 oldImxDepositLimit, uint256 newImxDepositLimit);
     /// @notice Emitted when a map token message is sent to the child chain.
@@ -196,14 +179,8 @@ interface IRootERC20BridgeErrors {
     error CantMapWETH();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
-    /// @notice Error when the given child chain bridge adaptor is invalid.
-    error InvalidChildERC20BridgeAdaptor();
     /// @notice Error when a message received has invalid data.
     error InvalidData(string reason);
-    /// @notice Error when a message received has invalid source address.
-    error InvalidSourceAddress();
-    /// @notice Error when a message received has invalid source chain.
-    error InvalidSourceChain();
     /// @notice Error when caller is not the root bridge adaptor but should be.
     error NotBridgeAdaptor();
     /// @notice Error when the total IMX deposit limit is exceeded
