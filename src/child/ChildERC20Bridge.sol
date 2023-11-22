@@ -129,6 +129,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         // Initialize
         clonedETHToken.initialize(NATIVE_ETH, "Ethereum", "ETH", 18);
         childETHToken = address(clonedETHToken);
+
+        // Map the supported tokens by default
+        rootTokenToChildToken[NATIVE_ETH] = childETHToken;
     }
 
     /**
@@ -436,33 +439,38 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert ZeroAddress();
         }
 
-        IChildERC20 childToken;
-        if (rootToken != rootIMXToken) {
-            if (rootToken == NATIVE_ETH) {
-                childToken = IChildERC20(childETHToken);
-            } else {
-                childToken = IChildERC20(rootTokenToChildToken[rootToken]);
-                if (address(childToken) == address(0)) {
-                    revert NotMapped();
-                }
-            }
+        _emitDepositEventAndHandleTransfer(rootToken, rootTokenToChildToken[rootToken], sender, receiver, amount);
+    }
 
-            if (address(childToken).code.length == 0) {
-                revert EmptyTokenContract();
-            }
-
-            if (!childToken.mint(receiver, amount)) {
-                revert MintFailed();
-            }
-
-            if (rootToken == NATIVE_ETH) {
-                emit NativeEthDeposit(rootToken, address(childToken), sender, receiver, amount);
-            } else {
-                emit ChildChainERC20Deposit(rootToken, address(childToken), sender, receiver, amount);
-            }
-        } else {
+    function _emitDepositEventAndHandleTransfer(
+        address rootToken,
+        address childToken,
+        address sender,
+        address receiver,
+        uint256 amount
+    ) private {
+        if (rootToken == rootIMXToken) {
             Address.sendValue(payable(receiver), amount);
             emit IMXDeposit(rootToken, sender, receiver, amount);
+            return;
+        }
+
+        if (childToken == address(0)) {
+            revert NotMapped();
+        }
+
+        if (childToken.code.length == 0) {
+            revert EmptyTokenContract();
+        }
+
+        if (!IChildERC20(childToken).mint(receiver, amount)) {
+            revert MintFailed();
+        }
+
+        if (rootToken == NATIVE_ETH) {
+            emit NativeEthDeposit(rootToken, address(childToken), sender, receiver, amount);
+        } else {
+            emit ChildChainERC20Deposit(rootToken, address(childToken), sender, receiver, amount);
         }
     }
 
