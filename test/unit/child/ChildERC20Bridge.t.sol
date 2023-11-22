@@ -134,7 +134,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
      */
 
     function test_Initialize() public {
-        assertEq(address(childBridge.bridgeAdaptor()), address(address(this)), "bridgeAdaptor not set");
+        assertEq(address(childBridge.childBridgeAdaptor()), address(address(this)), "bridgeAdaptor not set");
         assertEq(childBridge.childTokenTemplate(), address(childTokenTemplate), "childTokenTemplate not set");
         assertEq(childBridge.rootIMXToken(), ROOT_IMX_TOKEN, "rootIMXToken not set");
         assertTrue(childBridge.hasRole(childBridge.ADAPTOR_MANAGER_ROLE(), address(this)), "adaptorManager not set");
@@ -230,16 +230,16 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     function test_updateChildBridgeAdaptor_UpdatesChildBridgeAdaptor() public {
         address newAdaptorAddress = address(0x11111);
 
-        assertEq(address(childBridge.bridgeAdaptor()), address(this), "bridgeAdaptor not set");
+        assertEq(address(childBridge.childBridgeAdaptor()), address(this), "bridgeAdaptor not set");
         childBridge.updateChildBridgeAdaptor(newAdaptorAddress);
-        assertEq(address(childBridge.bridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
+        assertEq(address(childBridge.childBridgeAdaptor()), newAdaptorAddress, "bridgeAdaptor not updated");
     }
 
     function test_updateChildBridgeAdpator_EmitsEvent() public {
         address newAdaptorAddress = address(0x11111);
 
         vm.expectEmit(true, true, false, false, address(childBridge));
-        emit ChildBridgeAdaptorUpdated(address(childBridge.bridgeAdaptor()), newAdaptorAddress);
+        emit ChildBridgeAdaptorUpdated(address(childBridge.childBridgeAdaptor()), newAdaptorAddress);
 
         childBridge.updateChildBridgeAdaptor(newAdaptorAddress);
     }

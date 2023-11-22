@@ -52,7 +52,8 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     address public constant NATIVE_ETH = address(0xeee);
     address public constant NATIVE_IMX = address(0xfff);
 
-    IChildBridgeAdaptor public bridgeAdaptor;
+    /// @dev The address of the bridge adapter used to send and receive messages to and from the root chain.
+    IChildBridgeAdaptor public childBridgeAdaptor;
 
     /// @dev The address of the token template that will be cloned to create tokens.
     address public childTokenTemplate;
@@ -62,6 +63,16 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     address public childETHToken;
     /// @dev The address of the wrapped IMX token on L2.
     address public wIMXToken;
+
+    /**
+     * @notice Modifier to ensure that the caller is the registered child bridge adaptor.
+     */
+    modifier onlyBridgeAdaptor() {
+        if (msg.sender != address(childBridgeAdaptor)) {
+            revert NotBridgeAdaptor();
+        }
+        _;
+    }
 
     /**
      * @notice Initialization function for ChildERC20Bridge.
@@ -98,7 +109,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         _grantRole(TREASURY_MANAGER_ROLE, newRoles.treasuryManager);
 
         childTokenTemplate = newChildTokenTemplate;
-        bridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
+        childBridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
         rootIMXToken = newRootIMXToken;
         wIMXToken = newWIMXToken;
 
@@ -144,8 +155,8 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert ZeroAddress();
         }
 
-        emit ChildBridgeAdaptorUpdated(address(bridgeAdaptor), newBridgeAdaptor);
-        bridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
+        emit ChildBridgeAdaptorUpdated(address(childBridgeAdaptor), newBridgeAdaptor);
+        childBridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
     }
 
     /**
@@ -154,11 +165,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
      *      This method assumes that the adaptor will have performed all
      *      validations relating to the source of the message, prior to calling this method.
      */
-    function onMessageReceive(bytes calldata data) external override whenNotPaused {
-        if (msg.sender != address(bridgeAdaptor)) {
-            revert NotBridgeAdaptor();
-        }
-
+    function onMessageReceive(bytes calldata data) external override whenNotPaused onlyBridgeAdaptor {
         if (data.length <= 32) {
             // Data must always be greater than 32.
             // 32 bytes for the signature, and at least some information for the payload
@@ -323,7 +330,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
 
         // Send the message to the bridge adaptor and up to root chain
-        bridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
+        childBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         if (childTokenAddr == NATIVE_IMX) {
             emit ChildChainNativeIMXWithdraw(rootToken, msg.sender, receiver, amount);

@@ -60,7 +60,9 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
     address public constant NATIVE_ETH = address(0xeee);
     address public constant NATIVE_IMX = address(0xfff);
 
+    /// @dev The address of the bridge adapter used to send and receive messages to and from the child chain.
     IRootBridgeAdaptor public rootBridgeAdaptor;
+
     /// @dev The address that will be minting tokens on the child chain.
     address public childERC20Bridge;
     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
@@ -74,6 +76,16 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
     /// @dev The maximum cumulative amount of IMX that can be deposited into the bridge.
     /// @dev A limit of zero indicates unlimited.
     uint256 public imxCumulativeDepositLimit;
+
+    /**
+     * @notice Modifier to ensure that the caller is the registered root bridge adaptor.
+     */
+    modifier onlyBridgeAdaptor() {
+        if (msg.sender != address(rootBridgeAdaptor)) {
+            revert NotBridgeAdaptor();
+        }
+        _;
+    }
 
     /**
      * @notice Initialization function for RootERC20Bridge.
@@ -219,11 +231,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
      *      This method assumes that the adaptor will have performed all
      *     validations relating to the source of the message, prior to calling this method.
      */
-    function onMessageReceive(bytes calldata data) external override whenNotPaused {
-        if (msg.sender != address(rootBridgeAdaptor)) {
-            revert NotBridgeAdaptor();
-        }
-
+    function onMessageReceive(bytes calldata data) external override whenNotPaused onlyBridgeAdaptor {
         if (data.length <= 32) {
             // Data must always be greater than 32.
             // 32 bytes for the signature, and at least some information for the payload
