@@ -8,6 +8,6 @@ async function run() {
 
     await deploy.deployRootContracts();
 
-    console.log("=======Start Root Deployment=======");
+    console.log("=======End Root Deployment=======");
 }
 run();
