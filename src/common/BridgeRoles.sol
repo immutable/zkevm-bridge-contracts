@@ -81,4 +81,7 @@ abstract contract BridgeRoles is AccessControlUpgradeable, PausableUpgradeable {
     function unpause() external onlyRole(UNPAUSER_ROLE) {
         _unpause();
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapBridgeRoles;
 }

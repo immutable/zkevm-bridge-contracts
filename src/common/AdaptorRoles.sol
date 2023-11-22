@@ -63,4 +63,7 @@ abstract contract AdaptorRoles is AccessControlUpgradeable {
     function revokeTargetMangaerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         revokeRole(TARGET_MANAGER_ROLE, account);
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gapAdaptorRoles;
 }

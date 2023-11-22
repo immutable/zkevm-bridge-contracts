@@ -235,7 +235,11 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
     }
 
     /**
-     * @notice method to receive the ETH back from the WETH contract when it is unwrapped
+     * @notice Method to receive ETH back from the WETH contract when it is unwrapped
+     * @dev When a user deposits wETH, it must first be unwrapped.
+     *      This allows the bridge to store the underlying native ETH, rather than the wrapped version.
+     *      The unwrapping is done through the WETH contract's `withdraw()` function, which sends the native ETH to this bridge contract.
+     *      The only reason this `receive()` function is needed is for this process, hence the validation ensures that the sender is the WETH contract.
      */
     receive() external payable whenNotPaused {
         // Revert if sender is not the WETH token address
@@ -394,7 +398,6 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
 
         bytes memory payload =
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
-        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
         emit L1TokenMapped(address(rootToken), childToken);
@@ -447,7 +450,6 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, payloadToken, msg.sender, receiver, amount);
 
-        // TODO investigate using delegatecall to keep the axelar message sender as the bridge contract, since adaptor can change.
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         if (address(rootToken) == NATIVE_ETH) {
@@ -504,7 +506,6 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
             emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
-        // slither-disable-next-line reentrancy-events
     }
 
     // slither-disable-next-line unused-state,naming-convention

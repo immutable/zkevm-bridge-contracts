@@ -18,12 +18,11 @@ import {
 } from "../../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
 import {IRootERC20BridgeEvents, IRootERC20BridgeErrors} from "../../../../src/root/RootERC20Bridge.sol";
 import {FlowRateWithdrawalQueue} from "../../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
-import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
-import {MockAdaptor} from "../../../../src/test/root/MockAdaptor.sol";
+import {MockAxelarGateway} from "../../../mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "../../../mocks/root/MockAxelarGasService.sol";
+import {MockAdaptor} from "../../../mocks/root/MockAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
-import {WETH} from "../../../../src/test/root/WETH.sol";
-import {MockERC20} from "../../../../src/test/root/MockERC20.sol";
+import {MockERC20} from "../../../mocks/root/MockERC20.sol";
 
 contract ReentrancyAttackERC20 is MockERC20 {
     RootERC20BridgeFlowRate bridge;

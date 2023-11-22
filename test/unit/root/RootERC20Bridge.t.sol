@@ -13,11 +13,10 @@ import {
     IRootERC20BridgeErrors,
     IRootERC20Bridge
 } from "../../../src/root/RootERC20Bridge.sol";
-import {MockAxelarGateway} from "../../../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../../../src/test/root/MockAxelarGasService.sol";
-import {MockAdaptor} from "../../../src/test/root/MockAdaptor.sol";
+import {MockAxelarGateway} from "../../mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "../../mocks/root/MockAxelarGasService.sol";
+import {MockAdaptor} from "../../mocks/root/MockAdaptor.sol";
 import {Utils, IPausable} from "../../utils.t.sol";
-import {WETH} from "../../../src/test/root/WETH.sol";
 
 contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20BridgeErrors, Utils {
     bytes32 constant ADAPTOR_MANAGER_ROLE = keccak256("ADAPTOR_MANAGER_ROLE");
@@ -91,7 +90,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         address caller = address(0x123a);
         payable(caller).transfer(2 ether);
         // forge inspect src/root/RootERC20Bridge.sol:RootERC20Bridge storageLayout | grep -B3 -A5 -i "rootWETHToken"
-        uint256 wETHStorageSlot = 208;
+        uint256 wETHStorageSlot = 258;
         vm.store(address(rootBridge), bytes32(wETHStorageSlot), bytes32(uint256(uint160(caller))));
 
         vm.startPrank(caller);

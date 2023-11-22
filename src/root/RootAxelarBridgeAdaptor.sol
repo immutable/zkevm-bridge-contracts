@@ -130,7 +130,6 @@ contract RootAxelarBridgeAdaptor is
         string memory _childBridgeAdaptor = IRootERC20Bridge(rootBridge).childBridgeAdaptor();
         string memory _childChain = childChain;
 
-        // TODO For `sender` (first param), should likely be refundRecipient (and in which case refundRecipient should be renamed to sender and used as refund recipient)
         gasService.payNativeGasForContractCall{value: msg.value}(
             address(this), _childChain, _childBridgeAdaptor, payload, refundRecipient
         );

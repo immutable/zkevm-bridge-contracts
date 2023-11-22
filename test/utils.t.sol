@@ -4,13 +4,12 @@ pragma solidity 0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
+import {MockAxelarGateway} from "./mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "./mocks/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
 import {RootERC20BridgeFlowRate} from "../src/root//flowrate/RootERC20BridgeFlowRate.sol";
 import {ChildERC20Bridge, IChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
 import {ChildAxelarBridgeAdaptor, IChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
-import {WETH} from "../src/test/root/WETH.sol";
 import {IWETH} from "../src/interfaces/root/IWETH.sol";
 import {WIMX} from "../src/child/WIMX.sol";
 
