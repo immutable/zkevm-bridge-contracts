@@ -13,7 +13,7 @@ import {
     IRootERC20BridgeEvents,
     IRootERC20BridgeErrors
 } from "../interfaces/root/IRootERC20Bridge.sol";
-import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
+import {IRootBridgeAdaptor} from "../interfaces/root/IRootBridgeAdaptor.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
 
@@ -60,7 +60,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
     address public constant NATIVE_ETH = address(0xeee);
     address public constant NATIVE_IMX = address(0xfff);
 
-    IRootERC20BridgeAdaptor public rootBridgeAdaptor;
+    IRootBridgeAdaptor public rootBridgeAdaptor;
     /// @dev The address that will be minting tokens on the child chain.
     address public childERC20Bridge;
     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
@@ -150,7 +150,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         childETHToken = Clones.predictDeterministicAddress(
             childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH)), childERC20Bridge
         );
-        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
+        rootBridgeAdaptor = IRootBridgeAdaptor(newRootBridgeAdaptor);
         imxCumulativeDepositLimit = newImxCumulativeDepositLimit;
     }
 
@@ -176,7 +176,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
             revert ZeroAddress();
         }
         emit RootBridgeAdaptorUpdated(address(rootBridgeAdaptor), newRootBridgeAdaptor);
-        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
+        rootBridgeAdaptor = IRootBridgeAdaptor(newRootBridgeAdaptor);
     }
 
     /**

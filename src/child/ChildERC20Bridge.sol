@@ -9,7 +9,7 @@ import {
     IChildERC20BridgeErrors,
     IChildERC20Bridge
 } from "../interfaces/child/IChildERC20Bridge.sol";
-import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
+import {IChildBridgeAdaptor} from "../interfaces/child/IChildBridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWIMX} from "../interfaces/child/IWIMX.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
@@ -52,7 +52,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     address public constant NATIVE_ETH = address(0xeee);
     address public constant NATIVE_IMX = address(0xfff);
 
-    IChildERC20BridgeAdaptor public bridgeAdaptor;
+    IChildBridgeAdaptor public bridgeAdaptor;
 
     /// @dev The address of the token template that will be cloned to create tokens.
     address public childTokenTemplate;
@@ -98,7 +98,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         _grantRole(TREASURY_MANAGER_ROLE, newRoles.treasuryManager);
 
         childTokenTemplate = newChildTokenTemplate;
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
+        bridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
         rootIMXToken = newRootIMXToken;
         wIMXToken = newWIMXToken;
 
@@ -145,7 +145,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         }
 
         emit ChildBridgeAdaptorUpdated(address(bridgeAdaptor), newBridgeAdaptor);
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
+        bridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
     }
 
     /**

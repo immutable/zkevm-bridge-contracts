@@ -11,7 +11,7 @@ import {
     IChildAxelarBridgeAdaptorEvents,
     IChildAxelarBridgeAdaptor
 } from "../interfaces/child/IChildAxelarBridgeAdaptor.sol";
-import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
+import {IChildBridgeAdaptor} from "../interfaces/child/IChildBridgeAdaptor.sol";
 import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 
 /**
@@ -32,7 +32,7 @@ import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 contract ChildAxelarBridgeAdaptor is
     AdaptorRoles,
     AxelarExecutable,
-    IChildERC20BridgeAdaptor,
+    IChildBridgeAdaptor,
     IChildAxelarBridgeAdaptorErrors,
     IChildAxelarBridgeAdaptorEvents,
     IChildAxelarBridgeAdaptor
@@ -141,7 +141,7 @@ contract ChildAxelarBridgeAdaptor is
     }
 
     /**
-     * @inheritdoc IChildERC20BridgeAdaptor
+     * @inheritdoc IChildBridgeAdaptor
      */
     function sendMessage(bytes calldata payload, address refundRecipient) external payable override {
         if (msg.value == 0) {

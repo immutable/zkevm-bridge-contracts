@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {AxelarExecutable} from "@axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
 import {IAxelarGasService} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGasService.sol";
-import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
+import {IRootBridgeAdaptor} from "../interfaces/root/IRootBridgeAdaptor.sol";
 import {
     IRootAxelarBridgeAdaptorEvents,
     IRootAxelarBridgeAdaptorErrors,
@@ -33,7 +33,7 @@ import {AdaptorRoles} from "../common/AdaptorRoles.sol";
 contract RootAxelarBridgeAdaptor is
     AdaptorRoles,
     AxelarExecutable,
-    IRootERC20BridgeAdaptor,
+    IRootBridgeAdaptor,
     IRootAxelarBridgeAdaptorEvents,
     IRootAxelarBridgeAdaptorErrors,
     IRootAxelarBridgeAdaptor
@@ -144,7 +144,7 @@ contract RootAxelarBridgeAdaptor is
     }
 
     /**
-     * @inheritdoc IRootERC20BridgeAdaptor
+     * @inheritdoc IRootBridgeAdaptor
      */
     function sendMessage(bytes calldata payload, address refundRecipient) external payable override {
         if (msg.value == 0) {
