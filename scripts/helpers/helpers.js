@@ -21,10 +21,11 @@ exports.waitForReceipt = async (txHash, provider) => {
         receipt = await provider.getTransactionReceipt(txHash)
         await exports.delay(1000);
     }
+    console.log("Receipt: " + JSON.stringify(receipt, null, 2));
     if (receipt.status != 1) {
         throw("Fail to execute: " + txHash);
     }
-    console.log(txHash + " succeed.");
+    console.log("Tx " + txHash + " succeed.");
 }
 exports.waitForConfirmation = async () => {
     if (process.env["SKIP_WAIT_FOR_CONFIRMATION"] == null) {

@@ -5,6 +5,8 @@ const { ethers } = require("ethers");
 const helper = require("../helpers/helpers.js");
 
 async function run() {
+    console.log("=======Start Deployment Validation=======");
+
     // Check environment variables
     let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
     let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
@@ -51,6 +53,8 @@ async function run() {
     console.log("Check gas service contract...");
     await helper.requireNonEmptyCode(rootProvider, rootGasService);
     console.log("Succeed.");
+
+    console.log("=======End Deployment Validation=======");
 }
 
 run();

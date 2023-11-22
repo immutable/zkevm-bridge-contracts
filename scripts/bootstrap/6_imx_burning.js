@@ -7,6 +7,8 @@ const { LedgerSigner } = require('@ethersproject/hardware-wallets')
 const fs = require('fs');
 
 async function run() {
+    console.log("=======Start IMX Burning=======");
+
     // Check environment variables
     let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
     let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
@@ -61,7 +63,9 @@ async function run() {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     })
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
     await helper.waitForReceipt(resp.hash, childProvider);
+
     adminBal = await childProvider.getBalance(adminAddr);
     bridgeBal = await childProvider.getBalance(childBridgeAddr);
     multisigBal = await childProvider.getBalance(multisigAddr);
@@ -78,12 +82,16 @@ async function run() {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
     await helper.waitForReceipt(resp.hash, childProvider);
+
     adminBal = await childProvider.getBalance(adminAddr);
     bridgeBal = await childProvider.getBalance(childBridgeAddr);
     multisigBal = await childProvider.getBalance(multisigAddr);
     console.log("Admin balance: ", ethers.utils.formatEther(adminBal));
     console.log("Bridge balance: ", ethers.utils.formatEther(bridgeBal));
     console.log("Multisig balance: ", ethers.utils.formatEther(multisigBal));
+
+    console.log("=======End IMX Burning=======");
 }
 run();

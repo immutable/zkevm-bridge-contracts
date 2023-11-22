@@ -6,6 +6,8 @@ const helper = require("../helpers/helpers.js");
 const { LedgerSigner } = require('@ethersproject/hardware-wallets')
 
 async function run() {
+    console.log("=======Start Deployer Funding=======");
+
     // Check environment variables
     let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
     let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
@@ -38,25 +40,31 @@ async function run() {
     await helper.waitForConfirmation();
 
     let [priorityFee, maxFee] = await helper.getFee(adminWallet);
+    console.log("Transfer value to axelar...");
     let resp = await adminWallet.sendTransaction({
         to: axelarEOA,
         value: ethers.utils.parseEther(axelarFund),
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     })
+    console.log("Transaction submitted: " + JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, childProvider);
 
     [priorityFee, maxFee] = await helper.getFee(adminWallet);
+    console.log("Transfer value to deployer...");
     resp = await adminWallet.sendTransaction({
         to: deployerEOA,
         value: ethers.utils.parseEther(deployerFund),
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     })
+    console.log("Transaction submitted: " + JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, childProvider);
 
     // Print target balance
     console.log("Axelar EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(axelarEOA)));
     console.log("Deployer EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(deployerEOA)));
+
+    console.log("=======End Deployer Funding=======");
 }
 run();

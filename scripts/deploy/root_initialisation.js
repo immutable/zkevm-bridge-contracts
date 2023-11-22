@@ -107,61 +107,74 @@ exports.initialiseRootContracts = async() => {
         childChainName,
         ethers.utils.parseEther(imxDepositLimit),
         rateAdminAddr);
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
 
     // Configure rate
     // IMX
+    console.log("Configure rate limiting for IMX...")
     resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
         rootIMXAddr,
         ethers.utils.parseEther(rateLimitIMXCap),
         ethers.utils.parseEther(rateLimitIMXRefill),
         ethers.utils.parseEther(rateLimitIMXLargeThreshold)
     );
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
 
     // ETH
+    console.log("Configure rate limiting for ETH...")
     resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
         await rootBridge.NATIVE_ETH(),
         ethers.utils.parseEther(rateLimitETHCap),
         ethers.utils.parseEther(rateLimitETHRefill),
         ethers.utils.parseEther(rateLimitETHLargeThreshold)
     );
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
 
     // USDC
+    console.log("Configure rate limiting for USDC...")
     resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
         rateLimitUSDCAddr,
         ethers.utils.parseEther(rateLimitUSDCCap),
         ethers.utils.parseEther(rateLimitUSDCRefill),
         ethers.utils.parseEther(rateLimitUSDCLargeThreshold)
     );
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
 
     // GU
+    console.log("Configure rate limiting for GU...")
     resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
         rateLimitGUAddr,
         ethers.utils.parseEther(rateLimitGUCap),
         ethers.utils.parseEther(rateLimitGURefill),
         ethers.utils.parseEther(rateLimitGULargeThreshold)
     );
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
 
     // Checkmate
+    console.log("Configure rate limiting for CheckMate...")
     resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
         rateLimitCheckMateAddr,
         ethers.utils.parseEther(rateLimitCheckMateCap),
         ethers.utils.parseEther(rateLimitCheckMateRefill),
         ethers.utils.parseEther(rateLimitCheckMateLargeThreshold)
     );
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
 
     // GOG
+    console.log("Configure rate limiting for GOG...")
     resp = await rootBridge.connect(rateAdminWallet).setRateControlThreshold(
         rateLimitGOGAddr,
         ethers.utils.parseEther(rateLimitGOGCap),
         ethers.utils.parseEther(rateLimitGOGRefill),
         ethers.utils.parseEther(rateLimitGOGLargeThreshold)
     );
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
 
     // Initialise root adaptor
@@ -178,5 +191,6 @@ exports.initialiseRootContracts = async() => {
         rootBridgeAddr, 
         childChainName, 
         rootGasServiceAddr);
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
 }

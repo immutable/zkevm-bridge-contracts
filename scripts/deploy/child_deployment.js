@@ -33,13 +33,16 @@ exports.deployChildContracts = async () => {
     let childTokenTemplateObj = JSON.parse(fs.readFileSync('../../out/ChildERC20.sol/ChildERC20.json', 'utf8'));
     console.log("Deploy child token template...");
     let childTokenTemplate = await helper.deployChildContract(childTokenTemplateObj, adminWallet);
+    console.log("Transaction submitted: ", JSON.stringify(childTokenTemplate.deployTransaction, null, 2));
     await helper.waitForReceipt(childTokenTemplate.deployTransaction.hash, childProvider);
     // Initialise template
+    console.log("Initialise child token template...");
     let [priorityFee, maxFee] = await helper.getFee(adminWallet);
     let resp = await childTokenTemplate.connect(adminWallet).initialize("000000000000000000000000000000000000007B", "TEMPLATE", "TPT", 18, {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, childProvider);
     console.log("Deployed to CHILD_TOKEN_TEMPLATE: ", childTokenTemplate.address);
 
@@ -47,6 +50,7 @@ exports.deployChildContracts = async () => {
     let wrappedIMXObj = JSON.parse(fs.readFileSync('../../out/WIMX.sol/WIMX.json', 'utf8'));
     console.log("Deploy wrapped IMX...");
     let wrappedIMX = await helper.deployChildContract(wrappedIMXObj, adminWallet);
+    console.log("Transaction submitted: ", JSON.stringify(wrappedIMX.deployTransaction, null, 2));
     await helper.waitForReceipt(wrappedIMX.deployTransaction.hash, childProvider);
     console.log("Deployed to WRAPPED_IMX_ADDRESS: ", wrappedIMX.address);
 
@@ -54,13 +58,16 @@ exports.deployChildContracts = async () => {
     let proxyAdminObj = JSON.parse(fs.readFileSync('../../out/ProxyAdmin.sol/ProxyAdmin.json', 'utf8'));
     console.log("Deploy proxy admin...");
     let proxyAdmin = await helper.deployChildContract(proxyAdminObj, adminWallet);
+    console.log("Transaction submitted: ", JSON.stringify(proxyAdmin.deployTransaction, null, 2));
     await helper.waitForReceipt(proxyAdmin.deployTransaction.hash, childProvider);
     // Change owner
+    console.log("Change ownership...")
     [priorityFee, maxFee] = await helper.getFee(adminWallet);
     resp = await proxyAdmin.connect(adminWallet).transferOwnership(childProxyAdmin, {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, childProvider);
     console.log("Deployed to CHILD_PROXY_ADMIN: ", proxyAdmin.address);
 
@@ -68,6 +75,7 @@ exports.deployChildContracts = async () => {
     let childBridgeImplObj = JSON.parse(fs.readFileSync('../../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
     console.log("Deploy child bridge impl...");
     let childBridgeImpl = await helper.deployChildContract(childBridgeImplObj, adminWallet);
+    console.log("Transaction submitted: ", JSON.stringify(childBridgeImpl.deployTransaction, null, 2));
     await helper.waitForReceipt(childBridgeImpl.deployTransaction.hash, childProvider);
     console.log("Deployed to CHILD_BRIDGE_IMPL_ADDRESS: ", childBridgeImpl.address);
     
@@ -75,6 +83,7 @@ exports.deployChildContracts = async () => {
     let childBridgeProxyObj = JSON.parse(fs.readFileSync('../../out/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json', 'utf8'));
     console.log("Deploy child bridge proxy...");
     let childBridgeProxy = await helper.deployChildContract(childBridgeProxyObj, adminWallet, childBridgeImpl.address, proxyAdmin.address, []);
+    console.log("Transaction submitted: ", JSON.stringify(childBridgeProxy.deployTransaction, null, 2));
     await helper.waitForReceipt(childBridgeProxy.deployTransaction.hash, childProvider);
     console.log("Deployed to CHILD_BRIDGE_PROXY_ADDRESS: ", childBridgeProxy.address);
     
@@ -82,6 +91,7 @@ exports.deployChildContracts = async () => {
     let childAdaptorImplObj = JSON.parse(fs.readFileSync('../../out/ChildAxelarBridgeAdaptor.sol/ChildAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Deploy child adaptor impl...");
     let childAdaptorImpl = await helper.deployChildContract(childAdaptorImplObj, adminWallet, childGatewayAddr);
+    console.log("Transaction submitted: ", JSON.stringify(childAdaptorImpl.deployTransaction, null, 2));
     await helper.waitForReceipt(childAdaptorImpl.deployTransaction.hash, childProvider);
     console.log("Deployed to CHILD_ADAPTOR_IMPL_ADDRESS: ", childAdaptorImpl.address);
     
@@ -89,6 +99,7 @@ exports.deployChildContracts = async () => {
     let childAdaptorProxyObj = JSON.parse(fs.readFileSync('../../out/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json', 'utf8'));
     console.log("Deploy child adaptor proxy...");
     let childAdaptorProxy = await helper.deployChildContract(childAdaptorProxyObj, adminWallet, childAdaptorImpl.address, proxyAdmin.address, []);
+    console.log("Transaction submitted: ", JSON.stringify(childAdaptorProxy.deployTransaction, null, 2));
     await helper.waitForReceipt(childAdaptorProxy.deployTransaction.hash, childProvider);
     console.log("Deployed to CHILD_ADAPTOR_PROXY_ADDRESS: ", childAdaptorProxy.address);
 

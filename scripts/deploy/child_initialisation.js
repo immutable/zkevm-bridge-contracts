@@ -74,6 +74,7 @@ exports.initialiseChildContracts = async () => {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, childProvider);
 
     // Initialise child adaptor
@@ -95,5 +96,6 @@ exports.initialiseChildContracts = async () => {
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     });
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, childProvider);
 }
