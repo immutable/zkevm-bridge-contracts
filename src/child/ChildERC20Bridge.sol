@@ -175,9 +175,10 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert InvalidData("Data too short");
         }
 
-        if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
+        bytes32 sig = bytes32(data[:32]);
+        if (sig == MAP_TOKEN_SIG) {
             _mapToken(data);
-        } else if (bytes32(data[:32]) == DEPOSIT_SIG) {
+        } else if (sig == DEPOSIT_SIG) {
             _deposit(data[32:]);
         } else {
             revert InvalidData("Unsupported action signature");
