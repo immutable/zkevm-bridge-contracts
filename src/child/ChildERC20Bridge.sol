@@ -298,81 +298,106 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         }
 
         address rootToken;
-        uint256 feeAmount = msg.value;
         if (childTokenAddr == NATIVE_IMX) {
-            // Native IMX.
-            if (msg.value < amount) {
-                revert InsufficientValue();
-            }
-
-            feeAmount = msg.value - amount;
-            rootToken = rootIMXToken;
+            rootToken = _withdrawIMX(amount);
         } else if (childTokenAddr == wIMXToken) {
-            // Wrapped IMX.
-            // Transfer and unwrap IMX.
-            uint256 expectedBalance = address(this).balance + amount;
-
-            IWIMX wIMX = IWIMX(wIMXToken);
-            if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
-                revert TransferWIMXFailed();
-            }
-            wIMX.withdraw(amount);
-
-            if (address(this).balance != expectedBalance) {
-                revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
-            }
-
-            rootToken = rootIMXToken;
+            rootToken = _withdrawWIMX(amount);
         } else if (childTokenAddr == childETHToken) {
-            // Wrapped ETH.
-            IChildERC20 childToken = IChildERC20(childTokenAddr);
-            rootToken = NATIVE_ETH;
-
-            if (!childToken.burn(msg.sender, amount)) {
-                revert BurnFailed();
-            }
+            rootToken = _withdrawETH(amount);
         } else {
-            // Other ERC20 Tokens
-            IChildERC20 childToken = IChildERC20(childTokenAddr);
-
-            if (address(childToken).code.length == 0) {
-                revert EmptyTokenContract();
-            }
-            rootToken = childToken.rootToken();
-
-            if (rootTokenToChildToken[rootToken] != address(childToken)) {
-                revert NotMapped();
-            }
-
-            // A mapped token should never have root token unset
-            if (rootToken == address(0)) {
-                revert ZeroAddressRootToken();
-            }
-
-            // A mapped token should never have the bridge unset
-            if (childToken.bridge() != address(this)) {
-                revert IncorrectBridgeAddress();
-            }
-
-            if (!childToken.burn(msg.sender, amount)) {
-                revert BurnFailed();
-            }
+            rootToken = _withdrawERC20(rootToken, childTokenAddr, amount);
         }
 
         // Encode the message payload
         bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
 
+        // Account for fee amount
+        uint256 feeAmount = (childTokenAddr == NATIVE_IMX) ? msg.value - amount : msg.value;
+
         // Send the message to the bridge adaptor and up to root chain
         bridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
-        if (childTokenAddr == NATIVE_IMX) {
-            emit ChildChainNativeIMXWithdraw(rootToken, msg.sender, receiver, amount);
-        } else if (childTokenAddr == wIMXToken) {
-            emit ChildChainWrappedIMXWithdraw(rootToken, msg.sender, receiver, amount);
-        } else if (childTokenAddr == childETHToken) {
-            emit ChildChainEthWithdraw(msg.sender, receiver, amount);
+        _emitWithdrawEvent(rootToken, childTokenAddr, msg.sender, receiver, amount);
+    }
+
+    function _withdrawIMX(uint256 amount) private returns (address) {
+        if (msg.value < amount) {
+            revert InsufficientValue();
+        }
+        return rootIMXToken;
+    }
+
+    function _withdrawETH(uint256 amount) private returns (address) {
+        if (!IChildERC20(childETHToken).burn(msg.sender, amount)) {
+            revert BurnFailed();
+        }
+        return NATIVE_ETH;
+    }
+
+    function _withdrawWIMX(uint256 amount) private returns (address) {
+        // Calculate expected balance
+        uint256 expectedBalance = address(this).balance + amount;
+
+        IWIMX wIMX = IWIMX(wIMXToken);
+
+        // Transfer to contract
+        if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
+            revert TransferWIMXFailed();
+        }
+
+        // Withdraw
+        wIMX.withdraw(amount);
+        
+        // Assert balance
+        if (address(this).balance != expectedBalance) {
+            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        }
+
+        return rootIMXToken;
+    }
+
+    function _withdrawERC20(address rootToken, address childToken, uint256 amount) private returns (address) {
+        // Validate code existance
+        if (address(childToken).code.length == 0) {
+            revert EmptyTokenContract();
+        }
+
+        rootToken = IChildERC20(childToken).rootToken();
+        
+        // Assert mapping
+        if (rootTokenToChildToken[rootToken] != address(childToken)) {
+            revert NotMapped();
+        }
+
+        // A mapped token should never have root token unset
+        if (rootToken == address(0)) {
+            revert ZeroAddressRootToken();
+        }
+
+        // A mapped token should never have the bridge unset
+        if (IChildERC20(childToken).bridge() != address(this)) {
+            revert IncorrectBridgeAddress();
+        }
+
+        // Burn tokens
+        if (!IChildERC20(childToken).burn(msg.sender, amount)) {
+            revert BurnFailed();
+        }
+
+        return rootToken;
+    }
+
+    function _emitWithdrawEvent(address rootToken, address childToken, address sender, address receiver, uint256 amount)
+        private
+    {
+        if (childToken == NATIVE_IMX) {
+            emit ChildChainNativeIMXWithdraw(rootToken, sender, receiver, amount);
+        } else if (childToken == wIMXToken) {
+            emit ChildChainWrappedIMXWithdraw(rootToken, sender, receiver, amount);
+        } else if (childToken == childETHToken) {
+            emit ChildChainEthWithdraw(sender, receiver, amount);
         } else {
-            emit ChildChainERC20Withdraw(rootToken, childTokenAddr, msg.sender, receiver, amount);
+            emit ChildChainERC20Withdraw(rootToken, childToken, sender, receiver, amount);
         }
     }
 
