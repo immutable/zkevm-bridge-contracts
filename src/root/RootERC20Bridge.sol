@@ -7,7 +7,6 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {
     IRootERC20Bridge,
     IERC20Metadata,
@@ -217,6 +216,8 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
     /**
      * @inheritdoc IRootERC20Bridge
      * @dev This is only callable by the root chain bridge adaptor.
+     *      This method assumes that the adaptor will have performed all
+     *     validations relating to the source of the message, prior to calling this method.
      */
     function onMessageReceive(bytes calldata data) external override whenNotPaused {
         if (msg.sender != address(rootBridgeAdaptor)) {

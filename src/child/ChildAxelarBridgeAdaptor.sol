@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {AxelarExecutable} from "@axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
 import {IAxelarGasService} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGasService.sol";
 import {IChildERC20Bridge} from "../interfaces/child/IChildERC20Bridge.sol";
@@ -38,8 +39,14 @@ contract ChildAxelarBridgeAdaptor is
 {
     /// @notice Address of bridge to relay messages to.
     IChildERC20Bridge public childBridge;
+
+    /// @notice Axelar's ID for the child chain. Axelar uses the chain name as the chain ID.
+    string public rootChainId;
+
+    /// @notice Address of the bridge adaptor on the root chain, which this contract will communicate with.
+    string public rootBridgeAdaptor;
+
     IAxelarGasService public gasService;
-    string public rootChain;
 
     constructor(address _gateway) AxelarExecutable(_gateway) {}
 
@@ -53,6 +60,7 @@ contract ChildAxelarBridgeAdaptor is
     function initialize(
         InitializationRoles memory newRoles,
         string memory _rootChainId,
+        string memory _rootBridgeAdaptor,
         address _childBridge,
         address _gasService
     ) external initializer {
@@ -68,6 +76,9 @@ contract ChildAxelarBridgeAdaptor is
             revert InvalidRootChain();
         }
 
+        if (bytes(_rootBridgeAdaptor).length == 0) {
+            revert InvalidRootERC20BridgeAdaptor();
+        }
         __AccessControl_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
@@ -76,7 +87,8 @@ contract ChildAxelarBridgeAdaptor is
         _grantRole(TARGET_MANAGER_ROLE, newRoles.targetManager);
 
         childBridge = IChildERC20Bridge(_childBridge);
-        rootChain = _rootChainId;
+        rootChainId = _rootChainId;
+        rootBridgeAdaptor = _rootBridgeAdaptor;
         gasService = IAxelarGasService(_gasService);
     }
 
@@ -100,8 +112,20 @@ contract ChildAxelarBridgeAdaptor is
             revert InvalidRootChain();
         }
 
-        emit RootChainUpdated(rootChain, newRootChain);
-        rootChain = newRootChain;
+        emit RootChainUpdated(rootChainId, newRootChain);
+        rootChainId = newRootChain;
+    }
+
+    /**
+     * @inheritdoc IChildAxelarBridgeAdaptor
+     */
+    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external onlyRole(TARGET_MANAGER_ROLE) {
+        if (bytes(newRootBridgeAdaptor).length == 0) {
+            revert InvalidRootERC20BridgeAdaptor();
+        }
+
+        emit RootBridgeAdaptorUpdated(rootBridgeAdaptor, newRootBridgeAdaptor);
+        rootBridgeAdaptor = newRootBridgeAdaptor;
     }
 
     /**
@@ -128,8 +152,8 @@ contract ChildAxelarBridgeAdaptor is
         }
 
         // Load from storage.
-        string memory _rootBridgeAdaptor = childBridge.rootERC20BridgeAdaptor();
-        string memory _rootChain = rootChain;
+        string memory _rootBridgeAdaptor = rootBridgeAdaptor;
+        string memory _rootChain = rootChainId;
 
         gasService.payNativeGasForContractCall{value: msg.value}(
             address(this), _rootChain, _rootBridgeAdaptor, payload, refundRecipient
@@ -140,18 +164,29 @@ contract ChildAxelarBridgeAdaptor is
     }
 
     /**
-     * @dev This function is called by the parent `AxelarExecutable` contract to execute the payload.
-     * @param sourceChain_ The chain id that the message originated from.
-     * @param sourceAddress_ The contract address that sent the message on the source chain.
-     * @param payload_ The message payload.
-     * @custom:assumes `sourceAddress_` is a 20 byte address.
+     * @dev This function is called by the parent `AxelarExecutable` contract to execute a message payload sent from the root chain.
+     *      The function first validates the message by checking that it originated from the registered
+     *      root chain and bridge adaptor contract on the root chain. If not, the message is rejected.
+     *      If a message is valid, it calls the root bridge contract's `onMessageReceive` function.
+     * @param _sourceChain The chain id that the message originated from.
+     * @param _sourceAddress The contract address that sent the message on the source chain.
+     * @param _payload The message payload.
+     * @custom:assumes `_sourceAddress` is a 20 byte address.
      */
-    function _execute(string calldata sourceChain_, string calldata sourceAddress_, bytes calldata payload_)
+    function _execute(string calldata _sourceChain, string calldata _sourceAddress, bytes calldata _payload)
         internal
         override
     {
-        emit AdaptorExecute(sourceChain_, sourceAddress_, payload_);
-        childBridge.onMessageReceive(sourceChain_, sourceAddress_, payload_);
+        if (!Strings.equal(_sourceChain, rootChainId)) {
+            revert InvalidSourceChain();
+        }
+
+        if (!Strings.equal(_sourceAddress, rootBridgeAdaptor)) {
+            revert InvalidSourceAddress();
+        }
+
+        emit AdaptorExecute(_sourceChain, _sourceAddress, _payload);
+        childBridge.onMessageReceive(_payload);
     }
 
     // slither-disable-next-line unused-state,naming-convention

@@ -15,8 +15,6 @@ import {Utils, IPausable} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
-    string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
-    string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
     address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     address constant NATIVE_ETH = address(0xeee);
@@ -45,20 +43,14 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
         });
         childBridge = new ChildERC20Bridge();
         childBridge.initialize(
-            roles,
-            address(mockAdaptor),
-            ROOT_BRIDGE_ADAPTOR,
-            address(childTokenTemplate),
-            ROOT_CHAIN_NAME,
-            ROOT_IMX_TOKEN,
-            WIMX_TOKEN_ADDRESS
+            roles, address(mockAdaptor), address(childTokenTemplate), ROOT_IMX_TOKEN, WIMX_TOKEN_ADDRESS
         );
 
         bytes memory mapTokenData =
             abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
 
         vm.prank(address(mockAdaptor));
-        childBridge.onMessageReceive(ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, mapTokenData);
+        childBridge.onMessageReceive(mapTokenData);
 
         childToken = ChildERC20(childBridge.rootTokenToChildToken(address(rootToken)));
         vm.prank(address(childBridge));

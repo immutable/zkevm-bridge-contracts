@@ -42,11 +42,9 @@ contract RootAxelarBridgeAdaptor is
     IRootERC20Bridge public rootBridge;
 
     /// @notice Axelar's ID for the child chain. Axelar uses the chain name as the chain ID.
-    /// @dev Messages that are sent to the chain that does not match this chain id, will be rejected.
     string public childChainId;
 
     /// @notice Address of the bridge adaptor on the child chain, which this contract will communicate with.
-    /// @dev Messages that are sent to the child chain that did not originate from this address will be rejected.
     string public childBridgeAdaptor;
 
     /// @notice Address of the Axelar Gas Service contract.
@@ -169,7 +167,10 @@ contract RootAxelarBridgeAdaptor is
     }
 
     /**
-     * @dev This function is called by the parent `AxelarExecutable` contract to execute the payload.
+     * @dev This function is called by the parent `AxelarExecutable` contract to execute a message payload sent from the child chain.
+     *      The function first validates the message by checking that it originated from the registered
+     *      child chain and bridge adaptor contract on the child chain. If not, the message is rejected.
+     *      If a message is valid, it calls the root bridge contract's `onMessageReceive` function.
      * @param _sourceChain The chain id that the message originated from.
      * @param _sourceAddress The contract address that sent the message on the source chain.
      * @param _payload The message payload.

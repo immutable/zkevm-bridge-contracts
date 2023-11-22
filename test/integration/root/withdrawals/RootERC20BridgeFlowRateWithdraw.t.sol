@@ -16,7 +16,9 @@ import {
 import {RootERC20BridgeFlowRate} from "../../../../src/root/flowrate/RootERC20BridgeFlowRate.sol";
 
 import {
-    RootAxelarBridgeAdaptor, IRootAxelarBridgeAdaptorEvents
+    RootAxelarBridgeAdaptor,
+    IRootAxelarBridgeAdaptorEvents,
+    IRootAxelarBridgeAdaptorErrors
 } from "../../../../src/root/RootAxelarBridgeAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
@@ -87,7 +89,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
-        vm.expectRevert(InvalidSourceChain.selector);
+        vm.expectRevert(IRootAxelarBridgeAdaptorErrors.InvalidSourceChain.selector);
         axelarAdaptor.execute(commandId, "INVALID", sourceAddress, data);
     }
 
@@ -97,7 +99,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = Strings.toHexString(address(123));
 
-        vm.expectRevert(InvalidSourceAddress.selector);
+        vm.expectRevert(IRootAxelarBridgeAdaptorErrors.InvalidSourceAddress.selector);
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 

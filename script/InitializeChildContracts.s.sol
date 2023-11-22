@@ -21,7 +21,7 @@ struct InitializeChildContractsParams {
     ChildERC20Bridge childERC20Bridge;
     ChildAxelarBridgeAdaptor childAxelarBridgeAdaptor;
     address childTokenTemplate;
-    address rootERC20BridgeAdaptor;
+    address rootBridgeAdaptor;
     string rootChainName;
     address rootIMXToken;
     address wIMXToken;
@@ -43,7 +43,7 @@ contract InitializeChildContracts is Script {
             childERC20Bridge: ChildERC20Bridge(payable(vm.envAddress("CHILD_ERC20_BRIDGE"))),
             childAxelarBridgeAdaptor: ChildAxelarBridgeAdaptor(vm.envAddress("CHILD_BRIDGE_ADAPTOR")),
             childTokenTemplate: vm.envAddress("CHILDCHAIN_CHILD_TOKEN_TEMPLATE"),
-            rootERC20BridgeAdaptor: vm.envAddress("ROOT_BRIDGE_ADAPTOR"),
+            rootBridgeAdaptor: vm.envAddress("ROOT_BRIDGE_ADAPTOR"),
             rootChainName: vm.envString("ROOT_CHAIN_NAME"),
             rootIMXToken: vm.envAddress("ROOT_IMX_ADDRESS"),
             wIMXToken: vm.envAddress("CHILD_WIMX_ADDRESS"),
@@ -55,7 +55,7 @@ contract InitializeChildContracts is Script {
         /**
          * INITIALIZE CHILD CONTRACTS
          */
-        string[] memory checksumInputs = Utils.getChecksumInputs(params.rootERC20BridgeAdaptor);
+        string[] memory checksumInputs = Utils.getChecksumInputs(params.rootBridgeAdaptor);
         bytes memory checksumOutput = vm.ffi(checksumInputs);
         string memory rootBridgeAdaptorString = string(Utils.removeZeroByteValues(checksumOutput));
 
@@ -72,9 +72,7 @@ contract InitializeChildContracts is Script {
         params.childERC20Bridge.initialize(
             roles,
             address(params.childAxelarBridgeAdaptor),
-            rootBridgeAdaptorString,
             params.childTokenTemplate,
-            params.rootChainName,
             params.rootIMXToken,
             params.wIMXToken
         );
@@ -88,7 +86,11 @@ contract InitializeChildContracts is Script {
         });
 
         params.childAxelarBridgeAdaptor.initialize(
-            adaptorRoles, params.rootChainName, address(params.childERC20Bridge), params.childGasService
+            adaptorRoles,
+            params.rootChainName,
+            rootBridgeAdaptorString,
+            address(params.childERC20Bridge),
+            params.childGasService
         );
 
         vm.stopBroadcast();
