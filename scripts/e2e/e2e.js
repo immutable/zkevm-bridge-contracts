@@ -384,7 +384,7 @@ describe("Bridge e2e test", () => {
         }
 
         // Verify
-        let expectedPostL1 = preBalL1.add(amt).add(1);
+        let expectedPostL1 = preBalL1.add(amt);
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
