@@ -51,7 +51,7 @@ contract ChildERC20Bridge is
     mapping(address => address) public rootTokenToChildToken;
 
     /// @dev Role identifier for those who can directly deposit native IMX to the bridge.
-    bytes32 public constant TREASURY_MANAGER_ROLE = keccak256("TREASURY_MANAGER");
+    bytes32 public constant PREVILEGED_DEPOSITOR_ROLE = keccak256("PREVILEGED_DEPOSITOR");
 
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
@@ -114,8 +114,8 @@ contract ChildERC20Bridge is
         _grantRole(PAUSER_ROLE, newRoles.pauser);
         _grantRole(UNPAUSER_ROLE, newRoles.unpauser);
         _grantRole(ADAPTOR_MANAGER_ROLE, newRoles.adaptorManager);
-        _grantRole(TREASURY_MANAGER_ROLE, newRoles.initialDepositor);
-        _grantRole(TREASURY_MANAGER_ROLE, newRoles.treasuryManager);
+        _grantRole(PREVILEGED_DEPOSITOR_ROLE, newRoles.initialDepositor);
+        _grantRole(PREVILEGED_DEPOSITOR_ROLE, newRoles.treasuryManager);
 
         childTokenTemplate = newChildTokenTemplate;
         childBridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
@@ -152,11 +152,11 @@ contract ChildERC20Bridge is
     /**
      * @inheritdoc IChildERC20Bridge
      */
-    function treasuryDeposit() external payable onlyRole(TREASURY_MANAGER_ROLE) {
+    function privilegedDeposit() external payable onlyRole(PREVILEGED_DEPOSITOR_ROLE) {
         if (msg.value == 0) {
             revert ZeroValue();
         }
-        emit TreasuryDeposit(msg.sender, msg.value);
+        emit PrivilegedDeposit(msg.sender, msg.value);
     }
 
     /**

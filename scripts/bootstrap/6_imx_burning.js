@@ -58,7 +58,7 @@ async function run() {
 
     console.log("Transfer " + imxDepositLimit +  " IMX to child bridge...");
     let [priorityFee, maxFee] = await helper.getFee(adminWallet);
-    let resp = await childBridge.connect(adminWallet).treasuryDeposit({
+    let resp = await childBridge.connect(adminWallet).privilegedDeposit({
         value: ethers.utils.parseEther(imxDepositLimit),
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,

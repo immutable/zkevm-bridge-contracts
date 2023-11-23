@@ -112,23 +112,23 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         vm.deal(treasuryManager, 100 ether);
         vm.startPrank(treasuryManager);
         uint256 preBal = address(childBridge).balance;
-        childBridge.treasuryDeposit{value: 100 ether}();
+        childBridge.privilegedDeposit{value: 100 ether}();
         uint256 postBal = address(childBridge).balance;
         assertEq(preBal + 100 ether, postBal, "balance not increased");
         vm.stopPrank();
     }
 
-    function test_treasuryDepositEmitsEvent() public {
+    function test_privilegedDepositEmitsEvent() public {
         vm.deal(treasuryManager, 100 ether);
         vm.startPrank(treasuryManager);
         vm.expectEmit(true, true, false, false, address(childBridge));
-        emit TreasuryDeposit(treasuryManager, 100 ether);
-        childBridge.treasuryDeposit{value: 100 ether}();
+        emit PrivilegedDeposit(treasuryManager, 100 ether);
+        childBridge.privilegedDeposit{value: 100 ether}();
         vm.stopPrank();
     }
 
-    function test_RevertsIf_treasuryDepositCalledFromNonTreasuryManager() public {
-        bytes32 role = childBridge.TREASURY_MANAGER_ROLE();
+    function test_RevertsIf_privilegedDepositCalledFromNonTreasuryManager() public {
+        bytes32 role = childBridge.PREVILEGED_DEPOSITOR_ROLE();
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
@@ -137,13 +137,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
                 StringsUpgradeable.toHexString(uint256(role), 32)
             )
         );
-        childBridge.treasuryDeposit{value: 100 ether}();
+        childBridge.privilegedDeposit{value: 100 ether}();
     }
 
-    function test_RevertsIf_treasuryDepositWithZeroValue() public {
+    function test_RevertsIf_privilegedDepositWithZeroValue() public {
         vm.startPrank(treasuryManager);
         vm.expectRevert(ZeroValue.selector);
-        childBridge.treasuryDeposit{value: 0}();
+        childBridge.privilegedDeposit{value: 0}();
         vm.stopPrank();
     }
 
