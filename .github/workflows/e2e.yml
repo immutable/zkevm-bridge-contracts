@@ -33,7 +33,8 @@ jobs:
         with:
           cmd: build
 
+      - name: Start local dev
+        run: yarn local:start &
+
       - name: Run Test
-        run: |
-          yarn local:start &
-          yarn local:ci
+        run: yarn local:ci
