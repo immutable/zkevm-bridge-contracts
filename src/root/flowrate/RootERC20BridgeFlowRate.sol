@@ -86,11 +86,9 @@ contract RootERC20BridgeFlowRate is
         InitializationRoles memory newRoles,
         address newRootBridgeAdaptor,
         address newChildERC20Bridge,
-        string memory newChildBridgeAdaptor,
         address newChildTokenTemplate,
         address newRootIMXToken,
         address newRootWETHToken,
-        string memory newChildChain,
         uint256 newImxCumulativeDepositLimit,
         address rateAdmin
     ) external initializer {
@@ -102,11 +100,9 @@ contract RootERC20BridgeFlowRate is
             newRoles,
             newRootBridgeAdaptor,
             newChildERC20Bridge,
-            newChildBridgeAdaptor,
             newChildTokenTemplate,
             newRootIMXToken,
             newRootWETHToken,
-            newChildChain,
             newImxCumulativeDepositLimit
         );
 
@@ -116,17 +112,11 @@ contract RootERC20BridgeFlowRate is
     }
 
     // Ensure initialize from RootERC20Bridge can not be called.
-    function initialize(
-        InitializationRoles memory,
-        address,
-        address,
-        string memory,
-        address,
-        address,
-        address,
-        string memory,
-        uint256
-    ) external pure override {
+    function initialize(InitializationRoles memory, address, address, address, address, address, uint256)
+        external
+        pure
+        override
+    {
         revert WrongInitializer();
     }
 

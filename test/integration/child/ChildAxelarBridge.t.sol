@@ -4,13 +4,18 @@ pragma solidity 0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {ChildAxelarBridgeAdaptor, IChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
+import {ChildAxelarBridgeAdaptor} from "../../../src/child/ChildAxelarBridgeAdaptor.sol";
 import {
     ChildERC20Bridge,
     IChildERC20Bridge,
-    IChildERC20BridgeEvents,
-    IChildERC20BridgeErrors
+    IChildERC20BridgeErrors,
+    IChildERC20BridgeEvents
 } from "../../../src/child/ChildERC20Bridge.sol";
+import {
+    IChildAxelarBridgeAdaptorErrors,
+    IChildAxelarBridgeAdaptorEvents,
+    IChildAxelarBridgeAdaptor
+} from "../../../src/interfaces/child/IChildAxelarBridgeAdaptor.sol";
 import {IChildERC20, ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {MockChildAxelarGateway} from "../../mocks/child/MockChildAxelarGateway.sol";
 import {MockChildAxelarGasService} from "../../mocks/child/MockChildAxelarGasService.sol";
@@ -46,13 +51,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             treasuryManager: address(this)
         });
         childERC20Bridge.initialize(
-            roles,
-            address(childAxelarBridgeAdaptor),
-            ROOT_ADAPTOR_ADDRESS,
-            address(childERC20),
-            ROOT_CHAIN_NAME,
-            IMX_TOKEN_ADDRESS,
-            WIMX_TOKEN_ADDRESS
+            roles, address(childAxelarBridgeAdaptor), address(childERC20), IMX_TOKEN_ADDRESS, WIMX_TOKEN_ADDRESS
         );
 
         IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor
@@ -64,7 +63,11 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         });
 
         childAxelarBridgeAdaptor.initialize(
-            adaptorRoles, ROOT_CHAIN_NAME, address(childERC20Bridge), address(mockChildAxelarGasService)
+            adaptorRoles,
+            address(childERC20Bridge),
+            ROOT_CHAIN_NAME,
+            ROOT_ADAPTOR_ADDRESS,
+            address(mockChildAxelarGasService)
         );
     }
 
@@ -135,16 +138,14 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encode(childERC20Bridge.MAP_TOKEN_SIG(), address(456), "test name", "TSTNME", 17);
 
-        vm.expectRevert(InvalidSourceChain.selector);
+        vm.expectRevert(IChildAxelarBridgeAdaptorErrors.InvalidSourceChain.selector);
         childAxelarBridgeAdaptor.execute(commandId, "FAKE_CHAIN", ROOT_ADAPTOR_ADDRESS, payload);
     }
 
     function mapToken(address root) public returns (address childToken) {
         bytes32 mapTokenSig = childERC20Bridge.MAP_TOKEN_SIG();
         vm.prank(address(childAxelarBridgeAdaptor));
-        childERC20Bridge.onMessageReceive(
-            ROOT_CHAIN_NAME, ROOT_ADAPTOR_ADDRESS, abi.encode(mapTokenSig, root, "test name", "TSTNME", 17)
-        );
+        childERC20Bridge.onMessageReceive(abi.encode(mapTokenSig, root, "test name", "TSTNME", 17));
         return Clones.predictDeterministicAddress(
             address(childERC20), keccak256(abi.encodePacked(root)), address(childERC20Bridge)
         );

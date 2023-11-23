@@ -75,9 +75,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     Utils
 {
     address constant CHILD_BRIDGE = address(3);
-    address constant CHILD_BRIDGE_ADAPTOR = address(4);
-    string CHILD_BRIDGE_ADAPTOR_STRING = Strings.toHexString(CHILD_BRIDGE_ADAPTOR);
-    string constant CHILD_CHAIN_NAME = "test";
     address constant IMX_TOKEN = address(0xccc);
     address constant NATIVE_ETH = address(0xeee);
     address constant WRAPPED_ETH = address(0xddd);
@@ -158,11 +155,9 @@ contract RootERC20BridgeFlowRateUnitTest is
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
-            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS,
             rateAdmin
         );
@@ -213,8 +208,6 @@ contract RootERC20BridgeFlowRateUnitTest is
         assertEq(address(rootBridgeFlowRate.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
         assertEq(rootBridgeFlowRate.childERC20Bridge(), CHILD_BRIDGE, "childERC20Bridge not set");
         assertEq(rootBridgeFlowRate.childTokenTemplate(), address(token), "childTokenTemplate not set");
-        assert(Strings.equal(rootBridgeFlowRate.childChain(), CHILD_CHAIN_NAME));
-        assert(Strings.equal(CHILD_BRIDGE_ADAPTOR_STRING, rootBridgeFlowRate.childBridgeAdaptor()));
         assertEq(address(token), rootBridgeFlowRate.childTokenTemplate(), "childTokenTemplate not set");
         assertEq(rootBridgeFlowRate.rootIMXToken(), IMX_TOKEN, "rootIMXToken not set");
         assertEq(rootBridgeFlowRate.rootWETHToken(), WRAPPED_ETH, "rootWETHToken not set");
@@ -234,11 +227,9 @@ contract RootERC20BridgeFlowRateUnitTest is
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
-            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS,
             address(this)
         );
@@ -258,11 +249,9 @@ contract RootERC20BridgeFlowRateUnitTest is
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
-            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS
         );
     }
@@ -281,11 +270,9 @@ contract RootERC20BridgeFlowRateUnitTest is
             roles,
             address(mockAxelarAdaptor),
             CHILD_BRIDGE,
-            CHILD_BRIDGE_ADAPTOR_STRING,
             address(token),
             IMX_TOKEN,
             WRAPPED_ETH,
-            CHILD_CHAIN_NAME,
             UNLIMITED_IMX_DEPOSITS,
             address(0)
         );
@@ -458,7 +445,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         vm.prank(address(mockAxelarAdaptor));
         vm.expectRevert("Pausable: paused");
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
     }
 
     function testFinaliseQueuedWithdrawalWhenPaused() public {
@@ -476,7 +463,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true);
         emit EnQueuedWithdrawal(address(token), alice, bob, amount, now1, 0);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         pause();
 
@@ -501,7 +488,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true);
         emit EnQueuedWithdrawal(address(token), alice, bob, amount, now1, 0);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         pause();
 
@@ -532,7 +519,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit QueuedWithdrawal(address(token), alice, bob, amount, false, true, false);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         //assertEq(token.balanceOf(address(charlie)), CHARLIE_REMAINDER, "charlie");
         assertEq(token.balanceOf(address(alice)), 0, "alice");
@@ -565,7 +552,7 @@ contract RootERC20BridgeFlowRateUnitTest is
 
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit QueuedWithdrawal(address(token), alice, bob, amount, true, false, false);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         assertEq(token.balanceOf(address(alice)), 0, "alice");
         assertEq(token.balanceOf(address(bob)), 0, "bob");
@@ -598,7 +585,7 @@ contract RootERC20BridgeFlowRateUnitTest is
             vm.prank(address(mockAxelarAdaptor));
             vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
             emit RootChainERC20Withdraw(address(token), childERC20Token, alice, bob, amount);
-            rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+            rootBridgeFlowRate.onMessageReceive(data);
             assertFalse(rootBridgeFlowRate.withdrawalQueueActivated(), "queue activated!");
             total += amount;
             assertEq(token.balanceOf(address(bob)), total, "bob");
@@ -608,7 +595,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit QueuedWithdrawal(address(token), alice, bob, amount, false, false, true);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
         assertTrue(rootBridgeFlowRate.withdrawalQueueActivated(), "queue not activated!");
         assertEq(token.balanceOf(address(bob)), total, "bob");
     }
@@ -632,7 +619,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit EnQueuedWithdrawal(address(token), alice, bob, amount, now1, 0);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
         assertEq(queueLen, 1, "bob's queue length");
@@ -672,7 +659,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit EnQueuedWithdrawal(NATIVE_ETH, alice, bob, amount, now1, 0);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
         assertEq(queueLen, 1, "bob's queue length");
@@ -708,7 +695,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit EnQueuedWithdrawal(address(token), alice, bob, amount, now1, 0);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
         assertEq(queueLen, 1, "bob's queue length");
@@ -749,7 +736,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit EnQueuedWithdrawal(address(token), alice, bob, amount, now1, 0);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
         assertEq(queueLen, 1, "bob's queue length");
@@ -786,7 +773,7 @@ contract RootERC20BridgeFlowRateUnitTest is
             vm.prank(address(mockAxelarAdaptor));
             vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
             emit EnQueuedWithdrawal(address(token), alice, bob, amount, now1, i);
-            rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+            rootBridgeFlowRate.onMessageReceive(data);
         }
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
@@ -817,7 +804,7 @@ contract RootERC20BridgeFlowRateUnitTest is
             vm.prank(address(mockAxelarAdaptor));
             vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
             emit EnQueuedWithdrawal(address(NATIVE_ETH), alice, bob, amount, now1, i);
-            rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+            rootBridgeFlowRate.onMessageReceive(data);
         }
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
@@ -972,7 +959,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit EnQueuedWithdrawal(address(NATIVE_ETH), alice, bob, amount, block.timestamp, 10);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         // Indices for a withdrawal for the ERC 20 token and one for Ether
         uint256[] memory indices = new uint256[](2);
@@ -1020,7 +1007,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit EnQueuedWithdrawal(address(attackToken), alice, bob, amount, now1, 0);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
         assertEq(queueLen, 1, "bob's queue length");
@@ -1058,7 +1045,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         vm.prank(address(mockAxelarAdaptor));
         vm.expectEmit(true, true, true, true, address(rootBridgeFlowRate));
         emit EnQueuedWithdrawal(address(attackToken), alice, bob, amount, now1, 0);
-        rootBridgeFlowRate.onMessageReceive(CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, data);
+        rootBridgeFlowRate.onMessageReceive(data);
 
         uint256 queueLen = rootBridgeFlowRate.getPendingWithdrawalsLength(bob);
         assertEq(queueLen, 1, "bob's queue length");

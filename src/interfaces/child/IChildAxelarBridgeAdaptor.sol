@@ -30,14 +30,35 @@ interface IChildAxelarBridgeAdaptor {
     function updateRootChain(string memory newRootChain) external;
 
     /**
+     * @notice Update the root chain bridge adaptor address
+     * @param newRootBridgeAdaptor address of the new child bridge adaptor.
+     * @dev Can only be called by TARGET_MANAGER_ROLE.
+     */
+    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external;
+
+    /**
      * @notice Update the gas service.
      * @param newGasService Address of new gas service.
      * @dev Can only be called by GAS_SERVICE_MANAGER_ROLE.
      */
     function updateGasService(address newGasService) external;
+
+    /**
+     * @notice Get the root chain id
+     * @return Axelar's string id of the root chain.
+     */
+    function rootChainId() external view returns (string memory);
+
+    /**
+     * @notice Get the root bridge adaptor address.
+     * @return String representation of the check sum address of the bridge adaptor on the root chain
+     */
+    function rootBridgeAdaptor() external view returns (string memory);
 }
 
 interface IChildAxelarBridgeAdaptorErrors {
+    /// @notice Error when the given bridge adaptor is invalid.
+    error InvalidRootBridgeAdaptor();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
     /// @notice Error when a message is sent with no gas payment.
@@ -46,6 +67,10 @@ interface IChildAxelarBridgeAdaptorErrors {
     error CallerNotBridge();
     /// @notice Error when the root chain name is invalid.
     error InvalidRootChain();
+    /// @notice Error when the message's source chain is not valid.
+    error InvalidSourceChain();
+    /// @notice Error when the source chain's message sender is not a recognised address.
+    error InvalidSourceAddress();
 }
 
 /**
@@ -53,6 +78,8 @@ interface IChildAxelarBridgeAdaptorErrors {
  * @notice Contains the event types that can be emitted by a bridge adaptor
  */
 interface IChildAxelarBridgeAdaptorEvents {
+    /// @notice Emitted when the root chain bridge adaptor is updated.
+    event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
     /// @notice Emitted when an Axelar message is sent to the root chain.
     event AxelarMessageSent(string indexed rootChain, string indexed rootBridgeAdaptor, bytes indexed payload);
     /// @notice Emitted when an Axelar message is received from the root chain.

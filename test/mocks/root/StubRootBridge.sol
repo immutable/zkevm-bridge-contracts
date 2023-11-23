@@ -8,5 +8,5 @@ contract StubRootBridge {
         return Strings.toHexString(address(9999));
     }
 
-    function onMessageReceive(string calldata, string calldata, bytes calldata) external {}
+    function onMessageReceive(bytes calldata) external {}
 }

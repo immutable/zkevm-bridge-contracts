@@ -3,14 +3,13 @@
 pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {
     IChildERC20BridgeEvents,
     IChildERC20BridgeErrors,
     IChildERC20Bridge
 } from "../interfaces/child/IChildERC20Bridge.sol";
-import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
+import {IChildBridgeAdaptor} from "../interfaces/child/IChildBridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
 import {IWIMX} from "../interfaces/child/IWIMX.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
@@ -53,14 +52,11 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     address public constant NATIVE_ETH = address(0xeee);
     address public constant NATIVE_IMX = address(0xfff);
 
-    IChildERC20BridgeAdaptor public bridgeAdaptor;
+    /// @dev The address of the bridge adapter used to send and receive messages to and from the root chain.
+    IChildBridgeAdaptor public childBridgeAdaptor;
 
-    /// @dev The address that will be sending messages to, and receiving messages from, the child chain.
-    string public rootERC20BridgeAdaptor;
     /// @dev The address of the token template that will be cloned to create tokens.
     address public childTokenTemplate;
-    /// @dev The name of the chain that this bridge is connected to.
-    string public rootChain;
     /// @dev The address of the IMX ERC20 token on L1.
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
@@ -69,12 +65,20 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     address public wIMXToken;
 
     /**
+     * @notice Modifier to ensure that the caller is the registered child bridge adaptor.
+     */
+    modifier onlyBridgeAdaptor() {
+        if (msg.sender != address(childBridgeAdaptor)) {
+            revert NotBridgeAdaptor();
+        }
+        _;
+    }
+
+    /**
      * @notice Initialization function for ChildERC20Bridge.
      * @param newRoles Struct containing addresses of roles.
      * @param newBridgeAdaptor Address of StateSender to send deposit information to.
-     * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
-     * @param newRootChain A stringified representation of the chain that this bridge is connected to. Used for validation.
      * @param newRootIMXToken Address of ECR20 IMX on the root chain.
      * @param newWIMXToken Address of wrapped IMX on the child chain.
      * @dev Can only be called once.
@@ -82,9 +86,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     function initialize(
         InitializationRoles memory newRoles,
         address newBridgeAdaptor,
-        string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
-        string memory newRootChain,
         address newRootIMXToken,
         address newWIMXToken
     ) public initializer {
@@ -97,14 +99,6 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert ZeroAddress();
         }
 
-        if (bytes(newRootERC20BridgeAdaptor).length == 0) {
-            revert InvalidRootERC20BridgeAdaptor();
-        }
-
-        if (bytes(newRootChain).length == 0) {
-            revert InvalidRootChain();
-        }
-
         __AccessControl_init();
         __Pausable_init();
 
@@ -114,10 +108,8 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         _grantRole(ADAPTOR_MANAGER_ROLE, newRoles.adaptorManager);
         _grantRole(TREASURY_MANAGER_ROLE, newRoles.treasuryManager);
 
-        rootERC20BridgeAdaptor = newRootERC20BridgeAdaptor;
         childTokenTemplate = newChildTokenTemplate;
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
-        rootChain = newRootChain;
+        childBridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
         rootIMXToken = newRootIMXToken;
         wIMXToken = newWIMXToken;
 
@@ -166,48 +158,27 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert ZeroAddress();
         }
 
-        emit ChildBridgeAdaptorUpdated(address(bridgeAdaptor), newBridgeAdaptor);
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
+        emit ChildBridgeAdaptorUpdated(address(childBridgeAdaptor), newBridgeAdaptor);
+        childBridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
     }
 
     /**
      * @inheritdoc IChildERC20Bridge
+     * @dev This is only callable by the child chain bridge adaptor.
+     *      This method assumes that the adaptor will have performed all
+     *      validations relating to the source of the message, prior to calling this method.
      */
-    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
-        if (bytes(newRootBridgeAdaptor).length == 0) {
-            revert InvalidRootERC20BridgeAdaptor();
-        }
-
-        emit RootBridgeAdaptorUpdated(rootERC20BridgeAdaptor, newRootBridgeAdaptor);
-        rootERC20BridgeAdaptor = newRootBridgeAdaptor;
-    }
-
-    /**
-     * @inheritdoc IChildERC20Bridge
-     */
-    function onMessageReceive(string calldata messageSourceChain, string calldata sourceAddress, bytes calldata data)
-        external
-        override
-        whenNotPaused
-    {
-        if (msg.sender != address(bridgeAdaptor)) {
-            revert NotBridgeAdaptor();
-        }
-        if (!Strings.equal(messageSourceChain, rootChain)) {
-            revert InvalidSourceChain();
-        }
-        if (!Strings.equal(sourceAddress, rootERC20BridgeAdaptor)) {
-            revert InvalidSourceAddress();
-        }
+    function onMessageReceive(bytes calldata data) external override whenNotPaused onlyBridgeAdaptor {
         if (data.length <= 32) {
             // Data must always be greater than 32.
             // 32 bytes for the signature, and at least some information for the payload
             revert InvalidData("Data too short");
         }
 
-        if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
+        bytes32 sig = bytes32(data[:32]);
+        if (sig == MAP_TOKEN_SIG) {
             _mapToken(data);
-        } else if (bytes32(data[:32]) == DEPOSIT_SIG) {
+        } else if (sig == DEPOSIT_SIG) {
             _deposit(data[32:]);
         } else {
             revert InvalidData("Unsupported action signature");
@@ -315,7 +286,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         uint256 feeAmount = (childTokenAddr == NATIVE_IMX) ? msg.value - amount : msg.value;
 
         // Send the message to the bridge adaptor and up to root chain
-        bridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
+        childBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         _emitWithdrawEvent(rootToken, childTokenAddr, msg.sender, receiver, amount);
     }

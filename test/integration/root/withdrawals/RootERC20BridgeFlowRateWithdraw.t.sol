@@ -16,7 +16,9 @@ import {
 import {RootERC20BridgeFlowRate} from "../../../../src/root/flowrate/RootERC20BridgeFlowRate.sol";
 
 import {
-    RootAxelarBridgeAdaptor, IRootAxelarBridgeAdaptorEvents
+    RootAxelarBridgeAdaptor,
+    IRootAxelarBridgeAdaptorEvents,
+    IRootAxelarBridgeAdaptorErrors
 } from "../../../../src/root/RootAxelarBridgeAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
@@ -85,9 +87,9 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
-        vm.expectRevert(InvalidSourceChain.selector);
+        vm.expectRevert(IRootAxelarBridgeAdaptorErrors.InvalidSourceChain.selector);
         axelarAdaptor.execute(commandId, "INVALID", sourceAddress, data);
     }
 
@@ -97,7 +99,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes32 commandId = bytes32("testCommandId");
         string memory sourceAddress = Strings.toHexString(address(123));
 
-        vm.expectRevert(InvalidSourceAddress.selector);
+        vm.expectRevert(IRootAxelarBridgeAdaptorErrors.InvalidSourceAddress.selector);
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
     }
 
@@ -105,7 +107,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data;
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Data too short"));
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
@@ -115,7 +117,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode("INVALID_SIG", address(token), address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         vm.expectRevert(abi.encodeWithSelector(InvalidData.selector, "Unsupported action signature"));
         axelarAdaptor.execute(commandId, CHILD_CHAIN_NAME, sourceAddress, data);
@@ -125,7 +127,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         uint256 thisPreBal = token.balanceOf(address(this));
         uint256 bridgePreBal = token.balanceOf(address(rootBridgeFlowRate));
@@ -143,7 +145,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         uint256 thisPreBal = imxToken.balanceOf(address(this));
         uint256 bridgePreBal = imxToken.balanceOf(address(rootBridgeFlowRate));
@@ -161,7 +163,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         uint256 thisPreBal = address(this).balance;
         uint256 bridgePreBal = address(rootBridgeFlowRate).balance;
@@ -180,7 +182,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), receiver, withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         uint256 receiverPreBal = token.balanceOf(receiver);
         uint256 bridgePreBal = token.balanceOf(address(rootBridgeFlowRate));
@@ -199,7 +201,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), receiver, withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         uint256 receiverPreBal = imxToken.balanceOf(receiver);
         uint256 bridgePreBal = imxToken.balanceOf(address(rootBridgeFlowRate));
@@ -218,7 +220,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         uint256 receiverPreBal = address(receiver).balance;
         uint256 bridgePreBal = address(rootBridgeFlowRate).balance;
@@ -236,7 +238,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         vm.expectEmit();
         emit RootChainERC20Withdraw(
@@ -253,7 +255,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         vm.expectEmit();
         emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), address(this), withdrawAmount);
@@ -264,7 +266,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         vm.expectEmit();
         emit RootChainETHWithdraw(
@@ -278,7 +280,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, address(token), address(this), receiver, withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         vm.expectEmit();
         emit RootChainERC20Withdraw(
@@ -296,7 +298,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, IMX_TOKEN_ADDRESS, address(this), receiver, withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         vm.expectEmit();
         emit RootChainERC20Withdraw(address(imxToken), NATIVE_IMX, address(this), receiver, withdrawAmount);
@@ -308,7 +310,7 @@ contract RootERC20BridgeFlowRateWithdrawIntegrationTest is
         bytes memory data = abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), receiver, withdrawAmount);
 
         bytes32 commandId = bytes32("testCommandId");
-        string memory sourceAddress = rootBridgeFlowRate.childBridgeAdaptor();
+        string memory sourceAddress = axelarAdaptor.childBridgeAdaptor();
 
         vm.expectEmit();
         emit RootChainETHWithdraw(
