@@ -145,7 +145,7 @@ contract ChildERC20Bridge is
     receive() external payable whenNotPaused {
         // Revert if sender is not the WIMX token address
         if (msg.sender != wIMXToken) {
-            revert NonPermittedNativeTransfer();
+            revert NonWrappedNativeTransfer();
         }
     }
 

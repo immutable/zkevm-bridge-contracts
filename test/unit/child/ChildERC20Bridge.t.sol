@@ -85,7 +85,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_RevertIf_NativeTransferIsFromNonWIMX() public {
-        vm.expectRevert(NonPermittedNativeTransfer.selector);
+        vm.expectRevert(NonWrappedNativeTransfer.selector);
         (bool ok,) = address(childBridge).call{value: 1 ether}("");
         assert(ok);
     }

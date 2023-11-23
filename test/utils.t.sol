@@ -86,9 +86,9 @@ contract Utils is Test {
             targetManager: address(this)
         });
 
-        childBridgeAdaptor.initialize(
-            adaptorRoles, address(childBridge), "ROOT", rootAdaptor, address(axelarGasService)
-        );
+        address childBridgeAddr = address(childBridge);
+
+        childBridgeAdaptor.initialize(adaptorRoles, childBridgeAddr, "ROOT", rootAdaptor, address(axelarGasService));
 
         bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, "TEST NAME", "TNM", 18);
         vm.prank(address(childBridgeAdaptor));

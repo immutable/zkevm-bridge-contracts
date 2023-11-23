@@ -90,7 +90,7 @@ exports.initialiseRootContracts = async() => {
     let rootBridgeObj = JSON.parse(fs.readFileSync('../../out/RootERC20BridgeFlowRate.sol/RootERC20BridgeFlowRate.json', 'utf8'));
     console.log("Initialise root bridge...");
     let rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeObj.abi, rootProvider);
-    let resp = await rootBridge.connect(adminWallet)["initialize((address,address,address,address,address),address,address,string,address,address,address,string,uint256,address)"](
+    let resp = await rootBridge.connect(adminWallet)["initialize((address,address,address,address,address),address,address,address,address,address,uint256,address)"](
         {
             defaultAdmin: rootBridgeDefaultAdmin,
             pauser: rootBridgePauser,
@@ -100,11 +100,9 @@ exports.initialiseRootContracts = async() => {
         },
         rootAdaptorAddr,
         childBridgeAddr,
-        ethers.utils.getAddress(childAdaptorAddr),
         rootTemplateAddr,
         rootIMXAddr,
         rootWETHAddr,
-        childChainName,
         ethers.utils.parseEther(imxDepositLimit),
         rateAdminAddr);
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
@@ -189,7 +187,8 @@ exports.initialiseRootContracts = async() => {
             targetManager: rootAdaptorTargetManager,
         },
         rootBridgeAddr, 
-        childChainName, 
+        childChainName,
+        childAdaptorAddr,
         rootGasServiceAddr);
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await helper.waitForReceipt(resp.hash, rootProvider);
