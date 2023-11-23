@@ -22,14 +22,15 @@ interface IChildERC20Bridge {
         address pauser; // The address which will inherit `PAUSER_ROLE`.
         address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
-        address treasuryManager; // The address which will inherit `TREASURY_MANAGER_ROLE`.
+        address initialDepositor; // The address which will inherit `PREVILEGED_DEPOSITOR_ROLE`.
+        address treasuryManager; // The address which will inherit `PREVILEGED_DEPOSITOR_ROLE`.
     }
 
     /**
      * @notice Deposit native IMX to the child chain bridge contract.
-     * @dev This function can only be called by callers who have the TREASURY_MANAGER_ROLE.
+     * @dev This function can only be called by callers who have the PREVILEGED_DEPOSITOR_ROLE.
      */
-    function treasuryDeposit() external payable;
+    function privilegedDeposit() external payable;
 
     /**
      * @notice Receives a bridge message from the root chain.
@@ -144,8 +145,8 @@ interface IChildERC20BridgeEvents {
     );
     /// @notice Emitted when the child chain bridge adaptor is updated.
     event ChildBridgeAdaptorUpdated(address oldChildBridgeAdaptor, address newChildBridgeAdaptor);
-    /// @notice Emitted when a treasury deposit is made.
-    event TreasuryDeposit(address indexed depositor, uint256 amount);
+    /// @notice Emitted when a privileged deposit is made.
+    event PrivilegedDeposit(address indexed depositor, uint256 amount);
 }
 
 /**

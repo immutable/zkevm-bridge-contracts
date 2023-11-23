@@ -43,6 +43,7 @@ contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents,
             pauser: pauser,
             unpauser: unpauser,
             adaptorManager: address(this),
+            initialDepositor: address(this),
             treasuryManager: address(this)
         });
         childBridge.initialize(

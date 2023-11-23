@@ -73,6 +73,7 @@ contract Utils is Test {
             pauser: address(this),
             unpauser: address(this),
             adaptorManager: address(this),
+            initialDepositor: address(this),
             treasuryManager: address(this)
         });
         childBridge.initialize(roles, address(childBridgeAdaptor), address(childTokenTemplate), rootIMX, childWIMX);
@@ -85,18 +86,18 @@ contract Utils is Test {
             targetManager: address(this)
         });
 
-        childBridgeAdaptor.initialize(
-            adaptorRoles, address(childBridge), "ROOT", rootAdaptor, address(axelarGasService)
-        );
+        address childBridgeAddr = address(childBridge);
+
+        childBridgeAdaptor.initialize(adaptorRoles, childBridgeAddr, "ROOT", rootAdaptor, address(axelarGasService));
 
         bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, "TEST NAME", "TNM", 18);
         vm.prank(address(childBridgeAdaptor));
         childBridge.onMessageReceive(mapTokenData);
 
         ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(address(rootToken)));
-        vm.prank(address(childBridge));
+        vm.prank(childBridgeAddr);
         childToken.mint(address(this), 1000000 ether);
-        childToken.approve(address(childBridge), 1000000 ether);
+        childToken.approve(childBridgeAddr, 1000000 ether);
     }
 
     struct RootIntegration {

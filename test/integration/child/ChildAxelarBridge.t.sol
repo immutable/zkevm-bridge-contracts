@@ -20,6 +20,7 @@ import {IChildERC20, ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {MockChildAxelarGateway} from "../../mocks/child/MockChildAxelarGateway.sol";
 import {MockChildAxelarGasService} from "../../mocks/child/MockChildAxelarGasService.sol";
 import {Utils} from "../../utils.t.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     string public ROOT_ADAPTOR_ADDRESS = Strings.toHexString(address(1));
@@ -48,6 +49,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             pauser: address(this),
             unpauser: address(this),
             adaptorManager: address(this),
+            initialDepositor: address(this),
             treasuryManager: address(this)
         });
         childERC20Bridge.initialize(
