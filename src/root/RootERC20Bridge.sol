@@ -488,7 +488,7 @@ contract RootERC20Bridge is
         // Assert whether the deposit is root IMX
         address imxToken = rootIMXToken;
         uint256 depositLimit = imxCumulativeDepositLimit;
-        if (address(rootToken) == imxToken && depositLimit != UNLIMITED_DEPOSIT) {
+        if (rootToken == imxToken && depositLimit != UNLIMITED_DEPOSIT) {
             // Based on the balance of this contract, check if the deposit will exceed the cumulative limit
             if (IERC20Metadata(imxToken).balanceOf(address(this)) + amount > depositLimit) {
                 revert ImxDepositLimitExceeded();
