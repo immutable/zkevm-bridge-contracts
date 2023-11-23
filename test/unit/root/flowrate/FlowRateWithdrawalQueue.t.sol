@@ -9,62 +9,83 @@ import {
     IFlowRateWithdrawalQueueErrors
 } from "../../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
 
-contract FlowRateWithdrawalQueueT is FlowRateWithdrawalQueue {  
+contract FlowRateWithdrawalQueueT is FlowRateWithdrawalQueue {
     uint256 public constant DEFAULT_WITHDRAW_DELAY = 60 * 60 * 24;
-
-
 
     function init() external {
         __FlowRateWithdrawalQueue_init();
     }
+
     function setWithdrawalDelay(uint256 delay) external {
         _setWithdrawalDelay(delay);
     }
+
     function enqueueWithdrawal(address receiver, address withdrawer, address token, uint256 amount) external {
         _enqueueWithdrawal(receiver, withdrawer, token, amount);
     }
-    function processWithdrawal(
-        address receiver, uint256 index
-    ) external returns (address withdrawer, address token, uint256 amount) {
+
+    function processWithdrawal(address receiver, uint256 index)
+        external
+        returns (address withdrawer, address token, uint256 amount)
+    {
         return _processWithdrawal(receiver, index);
     }
-
 }
-
 
 abstract contract FlowRateWithdrawalQueueTests is Test, IFlowRateWithdrawalQueueErrors {
     // Indicates a withdrawal has been queued.
-    event EnQueuedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 timestamp, uint256 index);
+    event EnQueuedWithdrawal(
+        address indexed token,
+        address indexed withdrawer,
+        address indexed receiver,
+        uint256 amount,
+        uint256 timestamp,
+        uint256 index
+    );
     // Indicates a withdrawal has been processed.
-    event ProcessedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 timestamp, uint256 index);
+    event ProcessedWithdrawal(
+        address indexed token,
+        address indexed withdrawer,
+        address indexed receiver,
+        uint256 amount,
+        uint256 timestamp,
+        uint256 index
+    );
 
     FlowRateWithdrawalQueueT flowRateWithdrawalQueue;
 
-    function setUp() public virtual  {
+    function setUp() public virtual {
         flowRateWithdrawalQueue = new FlowRateWithdrawalQueueT();
     }
 
-    function checkValuesZero(FlowRateWithdrawalQueue.PendingWithdrawal memory pending) internal { 
+    function checkValuesZero(FlowRateWithdrawalQueue.PendingWithdrawal memory pending) internal {
         checkValues(pending, address(0), address(0), 0, 0);
     }
 
-    function checkValues(FlowRateWithdrawalQueue.PendingWithdrawal memory pending, 
-            address withdrawer, address token, uint256 amount, uint256 time) internal {
+    function checkValues(
+        FlowRateWithdrawalQueue.PendingWithdrawal memory pending,
+        address withdrawer,
+        address token,
+        uint256 amount,
+        uint256 time
+    ) internal {
         assertEq(pending.withdrawer, withdrawer, "Withdrawer");
         assertEq(pending.token, token, "Token");
         assertEq(pending.amount, amount, "Amount");
         assertEq(pending.timestamp, time, "Time stamp");
     }
 
-    function checkFindValues(FlowRateWithdrawalQueue.FindPendingWithdrawal memory pending, 
-            uint256 index, uint256 amount, uint256 time) internal {
+    function checkFindValues(
+        FlowRateWithdrawalQueue.FindPendingWithdrawal memory pending,
+        uint256 index,
+        uint256 amount,
+        uint256 time
+    ) internal {
         assertEq(pending.index, index, "Index");
         assertEq(pending.amount, amount, "Amount");
         assertEq(pending.timestamp, time, "Time stamp");
     }
-
 }
-
 
 contract UninitializedFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests {
     address constant USER = address(125);
@@ -76,7 +97,9 @@ contract UninitializedFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTes
     }
 
     function testEmptyProcessWithdrawal() public {
-        vm.expectRevert(abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 0, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 0, 0)
+        );
         flowRateWithdrawalQueue.processWithdrawal(USER, 0);
     }
 
@@ -178,7 +201,8 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         uint256[] memory indices = new uint256[](2);
         indices[0] = 0;
         indices[1] = 1;
-        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending = flowRateWithdrawalQueue.getPendingWithdrawals(RUSER1, indices);
+        FlowRateWithdrawalQueue.PendingWithdrawal[] memory pending =
+            flowRateWithdrawalQueue.getPendingWithdrawals(RUSER1, indices);
         assertEq(pending.length, 2, "Pending withdrawal length");
         assertEq(pending[0].withdrawer, WUSER1, "Withdrawer");
         assertEq(pending[0].token, TOKEN1, "Token");
@@ -235,7 +259,7 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         assertEq(withdrawer, WUSER1, "Withdrawer");
         assertEq(token, TOKEN1, "Token");
         assertEq(amount, amount1, "Amount");
-        
+
         vm.expectEmit(true, true, true, true);
         emit ProcessedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now3, 1);
         (withdrawer, token, amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 1);
@@ -243,7 +267,7 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         assertEq(token, TOKEN2, "Token");
         assertEq(amount, amount2, "Amount");
     }
-    
+
     function testProcessOutOfOrder() public {
         uint256 now1 = 100;
         vm.warp(now1);
@@ -271,7 +295,7 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
 
         vm.expectEmit(true, true, true, true);
         emit ProcessedWithdrawal(TOKEN3, WUSER1, RUSER1, amount3, now4, 2);
-       (withdrawer, token, amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 2);
+        (withdrawer, token, amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 2);
         assertEq(withdrawer, WUSER1, "Withdrawer");
         assertEq(token, TOKEN3, "Token");
         assertEq(amount, amount3, "Amount");
@@ -283,7 +307,6 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         assertEq(token, TOKEN1, "Token");
         assertEq(amount, amount1, "Amount");
     }
-    
 
     function testProcessOutside() public {
         uint256 now1 = 100;
@@ -296,7 +319,9 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
 
         uint256 outOfBoundsIndex = 1;
 
-        vm.expectRevert(abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 1, 1));
+        vm.expectRevert(
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.IndexOutsideWithdrawalQueue.selector, 1, 1)
+        );
         flowRateWithdrawalQueue.processWithdrawal(RUSER1, outOfBoundsIndex);
     }
 
@@ -310,7 +335,9 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         vm.warp(tooEarly);
         uint256 okTime = now1 + withdrawalDelay;
 
-        vm.expectRevert(abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalRequestTooEarly.selector, tooEarly, okTime));
+        vm.expectRevert(
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalRequestTooEarly.selector, tooEarly, okTime)
+        );
         flowRateWithdrawalQueue.processWithdrawal(RUSER1, 0);
     }
 
@@ -324,7 +351,9 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         vm.warp(okTime);
         flowRateWithdrawalQueue.processWithdrawal(RUSER1, 0);
 
-        vm.expectRevert(abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, RUSER1, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalAlreadyProcessed.selector, RUSER1, 0)
+        );
         flowRateWithdrawalQueue.processWithdrawal(RUSER1, 0);
     }
 
@@ -362,7 +391,6 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         checkValuesZero(pending[2]);
         checkValues(pending[3], WUSER2, TOKEN2, amount2, now2);
     }
-
 
     function testFindPendingWithdrawals() public {
         uint256 amount1 = 123;
@@ -407,7 +435,7 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
 
     function testEnqueueProcessMultiple() public {
         uint256 timeNow = 100;
-        // Loop around some times enqueuing and then dequeuing. 
+        // Loop around some times enqueuing and then dequeuing.
         for (uint256 i = 0; i < 5; i++) {
             timeNow += 100;
             vm.warp(timeNow);
@@ -426,14 +454,11 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
 
             vm.expectEmit(true, true, true, true);
             emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount, timeNow, i);
-            (address withdrawer, address token, uint256 amountOut) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, i);
+            (address withdrawer, address token, uint256 amountOut) =
+                flowRateWithdrawalQueue.processWithdrawal(RUSER1, i);
             assertEq(withdrawer, WUSER1, "Withdrawer");
             assertEq(token, TOKEN1, "Token");
             assertEq(amountOut, amount, "Amount");
         }
     }
 }
-
-
-
-

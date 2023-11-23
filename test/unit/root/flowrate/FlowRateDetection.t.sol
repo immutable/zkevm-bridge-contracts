@@ -5,19 +5,21 @@ import "forge-std/Test.sol";
 
 import {FlowRateDetection} from "../../../../src/root/flowrate/FlowRateDetection.sol";
 
-contract FlowRateDetectionT is FlowRateDetection {   
+contract FlowRateDetectionT is FlowRateDetection {
     function activateWithdrawalQueue() external {
         _activateWithdrawalQueue();
     }
+
     function deactivateWithdrawalQueue() external {
         _deactivateWithdrawalQueue();
     }
+
     function setFlowRateThreshold(address token, uint256 capacity, uint256 refillRate) external {
         _setFlowRateThreshold(token, capacity, refillRate);
     }
+
     function updateFlowRateBucket(address token, uint256 amount) external returns (bool delayWithdrawal) {
         return _updateFlowRateBucket(token, amount);
-    
     }
 }
 
@@ -28,15 +30,15 @@ abstract contract FlowRateDetectionTests is Test {
     uint256 public CAPACITY = 10000;
     uint256 public REFILL_RATE = 50;
 
-    function setUp() public virtual  {
+    function setUp() public virtual {
         flowRateDetection = new FlowRateDetectionT();
     }
 }
 
 contract UninitializedFlowRateDetectionTest is FlowRateDetectionTests {
     function testUninitFlowRateBuckets() public {
-        ( uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) 
-             = flowRateDetection.flowRateBuckets(TOKEN);
+        (uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) =
+            flowRateDetection.flowRateBuckets(TOKEN);
         assertEq(capacity, 0, "Capacity");
         assertEq(depth, 0, "Depth");
         assertEq(refillTime, 0, "Refill time");
@@ -48,7 +50,6 @@ contract UninitializedFlowRateDetectionTest is FlowRateDetectionTests {
         assertEq(withdrawalQueueActivated, false);
     }
 }
-
 
 contract ControlFlowRateDetectionTest is FlowRateDetectionTests {
     function testActivateWithdrawalQueue() public {
@@ -68,8 +69,8 @@ contract ControlFlowRateDetectionTest is FlowRateDetectionTests {
 
     function testSetFlowRateThreshold() public {
         flowRateDetection.setFlowRateThreshold(TOKEN, CAPACITY, REFILL_RATE);
-        ( uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) 
-             = flowRateDetection.flowRateBuckets(TOKEN);
+        (uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) =
+            flowRateDetection.flowRateBuckets(TOKEN);
         assertEq(capacity, CAPACITY, "Capacity");
         assertEq(depth, CAPACITY, "Depth");
         assertEq(refillTime, 0, "Refill time");
@@ -85,6 +86,7 @@ contract ControlFlowRateDetectionTest is FlowRateDetectionTests {
         vm.expectRevert(abi.encodeWithSelector(FlowRateDetection.InvalidCapacity.selector));
         flowRateDetection.setFlowRateThreshold(TOKEN, 0, REFILL_RATE);
     }
+
     function testSetFlowRateThresholdBadFillRate() public {
         vm.expectRevert(abi.encodeWithSelector(FlowRateDetection.InvalidRefillRate.selector));
         flowRateDetection.setFlowRateThreshold(TOKEN, CAPACITY, 0);
@@ -94,7 +96,7 @@ contract ControlFlowRateDetectionTest is FlowRateDetectionTests {
 contract OperationalFlowRateDetectionTest is FlowRateDetectionTests {
     event WithdrawalForNonFlowRatedToken(address indexed token, uint256 amount);
 
-    function setUp() public override  {
+    function setUp() public override {
         super.setUp();
         flowRateDetection.setFlowRateThreshold(TOKEN, CAPACITY, REFILL_RATE);
     }
@@ -104,8 +106,8 @@ contract OperationalFlowRateDetectionTest is FlowRateDetectionTests {
         uint256 now1 = 150000;
         vm.warp(now1);
         bool notConfigured = flowRateDetection.updateFlowRateBucket(TOKEN, numTokens);
-        ( uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) 
-             = flowRateDetection.flowRateBuckets(TOKEN);
+        (uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) =
+            flowRateDetection.flowRateBuckets(TOKEN);
         assertEq(capacity, CAPACITY, "Capacity");
         assertEq(depth, CAPACITY - numTokens, "Depth");
         assertEq(refillTime, now1, "Refill time");
@@ -128,11 +130,11 @@ contract OperationalFlowRateDetectionTest is FlowRateDetectionTests {
         vm.warp(now2);
         notConfigured = flowRateDetection.updateFlowRateBucket(TOKEN, numTokens2);
         assertEq(notConfigured, false, "Not configured");
-        ( uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) 
-             = flowRateDetection.flowRateBuckets(TOKEN);
+        (uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) =
+            flowRateDetection.flowRateBuckets(TOKEN);
 
         uint256 calcDepth = CAPACITY - numTokens1 + REFILL_RATE * (now2 - now1);
-        if (calcDepth > CAPACITY) { calcDepth = CAPACITY; }
+        if (calcDepth > CAPACITY) calcDepth = CAPACITY;
         calcDepth -= numTokens2;
         assertEq(capacity, CAPACITY, "Capacity");
         assertEq(depth, calcDepth, "Depth");
@@ -146,7 +148,7 @@ contract OperationalFlowRateDetectionTest is FlowRateDetectionTests {
         assertEq(notConfigured, false, "Not configured");
         (capacity, depth, refillTime, refillRate) = flowRateDetection.flowRateBuckets(TOKEN);
         calcDepth = calcDepth + REFILL_RATE * (now3 - now2);
-        if (calcDepth > CAPACITY) { calcDepth = CAPACITY; }
+        if (calcDepth > CAPACITY) calcDepth = CAPACITY;
         calcDepth -= numTokens3;
         assertEq(capacity, CAPACITY, "Capacity");
         assertEq(depth, calcDepth, "Depth");
@@ -167,8 +169,8 @@ contract OperationalFlowRateDetectionTest is FlowRateDetectionTests {
         vm.warp(now2);
         notConfigured = flowRateDetection.updateFlowRateBucket(TOKEN, numTokens2);
         assertEq(notConfigured, false, "Not configured");
-        ( uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) 
-             = flowRateDetection.flowRateBuckets(TOKEN);
+        (uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) =
+            flowRateDetection.flowRateBuckets(TOKEN);
 
         uint256 calcDepth = CAPACITY - numTokens2;
         assertEq(capacity, CAPACITY, "Capacity");
@@ -191,8 +193,8 @@ contract OperationalFlowRateDetectionTest is FlowRateDetectionTests {
         vm.warp(now1);
         bool notConfigured = flowRateDetection.updateFlowRateBucket(TOKEN, numTokens1);
         assertEq(notConfigured, false, "Not configured");
-        ( uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) 
-             = flowRateDetection.flowRateBuckets(TOKEN);
+        (uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) =
+            flowRateDetection.flowRateBuckets(TOKEN);
         assertEq(capacity, CAPACITY, "Capacity");
         assertEq(depth, 0, "Depth");
         assertEq(refillTime, now1, "Refill time");
@@ -215,8 +217,8 @@ contract OperationalFlowRateDetectionTest is FlowRateDetectionTests {
         vm.warp(now2);
         notConfigured = flowRateDetection.updateFlowRateBucket(TOKEN, numTokens2);
         assertEq(notConfigured, false, "Not configured");
-        ( uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) 
-             = flowRateDetection.flowRateBuckets(TOKEN);
+        (uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) =
+            flowRateDetection.flowRateBuckets(TOKEN);
 
         uint256 calcDepth = REFILL_RATE * (now2 - now1) - numTokens2;
         assertEq(capacity, CAPACITY, "Capacity");
@@ -239,6 +241,3 @@ contract OperationalFlowRateDetectionTest is FlowRateDetectionTests {
         assertEq(notConfigured, true, "Not configured");
     }
 }
-
-
-
