@@ -76,9 +76,7 @@ contract Utils is Test {
             initialDepositor: address(this),
             treasuryManager: address(this)
         });
-        childBridge.initialize(
-            roles, address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX, childWIMX
-        );
+        childBridge.initialize(roles, address(childBridgeAdaptor), address(childTokenTemplate), rootIMX, childWIMX);
 
         IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor
             .InitializationRoles({
@@ -88,13 +86,13 @@ contract Utils is Test {
             targetManager: address(this)
         });
 
-        address childBridgeAddr = address(childBridge);
-
-        childBridgeAdaptor.initialize(adaptorRoles, "ROOT", childBridgeAddr, address(axelarGasService));
+        childBridgeAdaptor.initialize(
+            adaptorRoles, address(childBridge), "ROOT", rootAdaptor, address(axelarGasService)
+        );
 
         bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, "TEST NAME", "TNM", 18);
         vm.prank(address(childBridgeAdaptor));
-        childBridge.onMessageReceive("ROOT", rootAdaptor, mapTokenData);
+        childBridge.onMessageReceive(mapTokenData);
 
         ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(address(rootToken)));
         vm.prank(childBridgeAddr);
@@ -144,11 +142,9 @@ contract Utils is Test {
             roles,
             address(integrationTest.axelarAdaptor),
             childBridge,
-            Strings.toHexString(childBridgeAdaptor),
             address(integrationTest.token),
             imxTokenAddress,
             wethTokenAddress,
-            childBridgeName,
             imxCumulativeDepositLimit,
             address(this)
         );
@@ -164,6 +160,7 @@ contract Utils is Test {
             adaptorRoles,
             address(integrationTest.rootBridgeFlowRate),
             childBridgeName,
+            Strings.toHexString(childBridgeAdaptor),
             address(integrationTest.axelarGasService)
         );
     }
@@ -222,19 +219,14 @@ contract Utils is Test {
         return (childToken, predictedPayload);
     }
 
-    function setupChildDeposit(
-        ChildERC20 token,
-        ChildERC20Bridge childBridge,
-        string memory sourceChain,
-        string memory sourceAddress
-    ) public {
+    function setupChildDeposit(ChildERC20 token, ChildERC20Bridge childBridge) public {
         string memory name = token.name();
         string memory symbol = token.symbol();
         uint8 decimals = token.decimals();
 
         bytes memory payload = abi.encode(childBridge.MAP_TOKEN_SIG(), address(token), name, symbol, decimals);
 
-        childBridge.onMessageReceive(sourceChain, sourceAddress, payload);
+        childBridge.onMessageReceive(payload);
     }
 
     function getMappingStorageSlotFor(address key, uint256 position) public pure returns (bytes32 slot) {

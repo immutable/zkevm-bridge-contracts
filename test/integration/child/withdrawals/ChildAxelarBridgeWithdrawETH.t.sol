@@ -67,8 +67,8 @@ contract ChildERC20BridgeWithdrawETHIntegrationTest is
             0,
             abi.encodeWithSelector(
                 mockAxelarGateway.callContract.selector,
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload
             )
         );
@@ -89,8 +89,8 @@ contract ChildERC20BridgeWithdrawETHIntegrationTest is
             abi.encodeWithSelector(
                 mockAxelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload,
                 address(this)
             )
@@ -107,7 +107,7 @@ contract ChildERC20BridgeWithdrawETHIntegrationTest is
             abi.encode(WITHDRAW_SIG, NATIVE_ETH, address(this), address(this), withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
+        emit AxelarMessageSent(axelarAdaptor.rootChainId(), axelarAdaptor.rootBridgeAdaptor(), predictedPayload);
 
         childBridge.withdrawETH{value: withdrawFee}(withdrawAmount);
     }

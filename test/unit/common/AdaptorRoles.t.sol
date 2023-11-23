@@ -31,7 +31,7 @@ contract AdaptorRoles is Setup {
         vm.startPrank(admin);
         mockAdaptorRoles.revokeBridgeManagerRole(bridgeManager);
         mockAdaptorRoles.revokeGasServiceManagerRole(gasServiceManager);
-        mockAdaptorRoles.revokeTargetMangaerRole(targetManager);
+        mockAdaptorRoles.revokeTargetManagerRole(targetManager);
         vm.stopPrank();
     }
 

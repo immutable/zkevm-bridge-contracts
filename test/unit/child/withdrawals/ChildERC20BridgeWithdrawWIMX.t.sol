@@ -16,8 +16,6 @@ import {WIMX} from "../../../../src/child/WIMX.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
-    string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
-    string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
     ChildERC20 public childTokenTemplate;
     ChildERC20Bridge public childBridge;
@@ -43,13 +41,7 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
             treasuryManager: address(this)
         });
         childBridge.initialize(
-            roles,
-            address(mockAdaptor),
-            ROOT_BRIDGE_ADAPTOR,
-            address(childTokenTemplate),
-            ROOT_CHAIN_NAME,
-            ROOT_IMX_TOKEN,
-            address(wIMXToken)
+            roles, address(mockAdaptor), address(childTokenTemplate), ROOT_IMX_TOKEN, address(wIMXToken)
         );
     }
 

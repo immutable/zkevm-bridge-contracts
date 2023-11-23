@@ -33,32 +33,17 @@ interface IChildERC20Bridge {
     function treasuryDeposit() external payable;
 
     /**
-     * @notice Get the address of the bridge adaptor on the root chain.
-     * @return address of the bridge adaptor on the root chain.
-     */
-    function rootERC20BridgeAdaptor() external view returns (string memory);
-
-    /**
      * @notice Receives a bridge message from the root chain.
-     * @param sourceChain The id of the chain the message originated from.
-     * @param sourceAddress The address of the contract on the root chain that sent the message.
      * @param data The data payload of the message.
      * @dev This function is called by the underlying bridge adaptor on the child chain, when it receives a validated message from the GMP.
      */
-    function onMessageReceive(string calldata sourceChain, string calldata sourceAddress, bytes calldata data)
-        external;
+    function onMessageReceive(bytes calldata data) external;
 
     /**
      * @notice Sets a new bridge adaptor address to receive and send function calls for L1 messages
      * @param newBridgeAdaptor The new child chain bridge adaptor address.
      */
     function updateChildBridgeAdaptor(address newBridgeAdaptor) external;
-
-    /**
-     * @notice Sets a new root chain bridge adaptor address to receive and send function calls for L2 messages
-     * @param newRootBridgeAdaptor The new root chain bridge adaptor address.
-     */
-    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external;
 
     /**
      * @notice Withdraws `amount` of `childToken` to `msg.sender` on the rootchain.
@@ -160,8 +145,6 @@ interface IChildERC20BridgeEvents {
     );
     /// @notice Emitted when the child chain bridge adaptor is updated.
     event ChildBridgeAdaptorUpdated(address oldChildBridgeAdaptor, address newChildBridgeAdaptor);
-    /// @notice Emitted when the root chain bridge adaptor is updated.
-    event RootBridgeAdaptorUpdated(string oldRootBridgeAdaptor, string newRootBridgeAdaptor);
     /// @notice Emitted when a treasury deposit is made.
     event TreasuryDeposit(address indexed depositor, uint256 amount);
 }
@@ -183,10 +166,6 @@ interface IChildERC20BridgeErrors {
     error EmptyTokenContract();
     /// @notice Error when the mint operation failed.
     error MintFailed();
-    /// @notice Error when the given root chain name is invalid.
-    error InvalidRootChain();
-    /// @notice Error when the given bridge adaptor is invalid.
-    error InvalidRootERC20BridgeAdaptor();
     /// @notice Error when a zero address is given when not valid.
     error ZeroAddress();
     /// @notice Error when a token is not mapped.
@@ -201,10 +180,6 @@ interface IChildERC20BridgeErrors {
     error NotBridgeAdaptor();
     /// @notice Error when the message's payload is not valid.
     error InvalidData(string reason);
-    /// @notice Error when the message's source chain is not valid.
-    error InvalidSourceChain();
-    /// @notice Error when the source chain's message sender is not a recognised address.
-    error InvalidSourceAddress();
     /// @notice Error when a given child token's root token is the zero address.
     error ZeroAddressRootToken();
     /// @notice Error when a given child token's bridge address is not set.
@@ -217,6 +192,8 @@ interface IChildERC20BridgeErrors {
     error TransferWIMXFailed();
     /// @notice Error when token balance invariant check fails.
     error BalanceInvariantCheckFailed(uint256 actualBalance, uint256 expectedBalance);
-    /// @notice Error when native transfer is sent to contract from not permitted address.
-    error NonPermittedNativeTransfer();
+    /// @notice Error when native transfer is sent to contract from non wrapped-token address.
+    error NonWrappedNativeTransfer();
+    /// @notice Error when the bridge doesn't have enough native IMX to support the deposit.
+    error InsufficientIMX();
 }

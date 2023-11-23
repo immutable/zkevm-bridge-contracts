@@ -15,8 +15,6 @@ import {Utils, IPausable} from "../../../utils.t.sol";
 
 contract ChildERC20BridgeWithdrawIMXUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
-    string public ROOT_BRIDGE_ADAPTOR = Strings.toHexString(address(4));
-    string constant ROOT_CHAIN_NAME = "test";
     address constant ROOT_IMX_TOKEN = address(0xccc);
     address constant WIMX_TOKEN_ADDRESS = address(0xabc);
     ChildERC20 public childTokenTemplate;
@@ -39,13 +37,7 @@ contract ChildERC20BridgeWithdrawIMXUnitTest is Test, IChildERC20BridgeEvents, I
             treasuryManager: address(this)
         });
         childBridge.initialize(
-            roles,
-            address(mockAdaptor),
-            ROOT_BRIDGE_ADAPTOR,
-            address(childTokenTemplate),
-            ROOT_CHAIN_NAME,
-            ROOT_IMX_TOKEN,
-            WIMX_TOKEN_ADDRESS
+            roles, address(mockAdaptor), address(childTokenTemplate), ROOT_IMX_TOKEN, WIMX_TOKEN_ADDRESS
         );
     }
 

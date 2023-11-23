@@ -17,7 +17,7 @@ abstract contract AdaptorRoles is AccessControlUpgradeable {
     /// @notice Role identifier for those who can update the gas service used by the adaptor.
     bytes32 public constant GAS_SERVICE_MANAGER_ROLE = keccak256("GAS_SERVICE_MANAGER");
 
-    /// @notice Role identifier for those who can update targeted bridge used by the adpator (e.g. target is child chain on root adaptors).
+    /// @notice Role identifier for those who can update targeted bridge used by the adaptor (e.g. target is child chain on root adaptors).
     bytes32 public constant TARGET_MANAGER_ROLE = keccak256("TARGET_MANAGER");
 
     // Role granting functions
@@ -60,7 +60,7 @@ abstract contract AdaptorRoles is AccessControlUpgradeable {
     /**
      * @notice Function to target manager role from an address
      */
-    function revokeTargetMangaerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function revokeTargetManagerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         revokeRole(TARGET_MANAGER_ROLE, account);
     }
 

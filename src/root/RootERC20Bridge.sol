@@ -5,17 +5,15 @@ pragma solidity 0.8.19;
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {IAxelarGateway} from "@axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol";
 import {
     IRootERC20Bridge,
     IERC20Metadata,
     IRootERC20BridgeEvents,
     IRootERC20BridgeErrors
 } from "../interfaces/root/IRootERC20Bridge.sol";
-import {IRootERC20BridgeAdaptor} from "../interfaces/root/IRootERC20BridgeAdaptor.sol";
+import {IRootBridgeAdaptor} from "../interfaces/root/IRootBridgeAdaptor.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
 
@@ -46,7 +44,13 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
  */
-contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors {
+contract RootERC20Bridge is
+    BridgeRoles,
+    ReentrancyGuardUpgradeable,
+    IRootERC20Bridge,
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors
+{
     using SafeERC20 for IERC20Metadata;
 
     /// @dev leave this as the first param for the integration tests.
@@ -62,9 +66,9 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
     address public constant NATIVE_ETH = address(0xeee);
     address public constant NATIVE_IMX = address(0xfff);
 
-    IRootERC20BridgeAdaptor public rootBridgeAdaptor;
-    /// @dev Used to verify source address in messages sent from child chain.
-    string public childBridgeAdaptor;
+    /// @dev The address of the bridge adapter used to send and receive messages to and from the child chain.
+    IRootBridgeAdaptor public rootBridgeAdaptor;
+
     /// @dev The address that will be minting tokens on the child chain.
     address public childERC20Bridge;
     /// @dev The address of the token template that will be cloned to create tokens on the child chain.
@@ -75,22 +79,28 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
     address public childETHToken;
     /// @dev The address of the wETH ERC20 token on L1.
     address public rootWETHToken;
-    /// @dev The name of the chain that this bridge is connected to.
-    string public childChain;
     /// @dev The maximum cumulative amount of IMX that can be deposited into the bridge.
     /// @dev A limit of zero indicates unlimited.
     uint256 public imxCumulativeDepositLimit;
 
     /**
+     * @notice Modifier to ensure that the caller is the registered root bridge adaptor.
+     */
+    modifier onlyBridgeAdaptor() {
+        if (msg.sender != address(rootBridgeAdaptor)) {
+            revert NotBridgeAdaptor();
+        }
+        _;
+    }
+
+    /**
      * @notice Initialization function for RootERC20Bridge.
      * @param newRoles Struct containing addresses of roles.
-     * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
+     * @param newRootBridgeAdaptor Address of adaptor to send bridge messages to, and receive messages from.
      * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
-     * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with (As a checksummed string).
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootIMXToken Address of ERC20 IMX on the root chain.
      * @param newRootWETHToken Address of ERC20 WETH on the root chain.
-     * @param newChildChain Name of child chain.
      * @param newImxCumulativeDepositLimit The cumulative IMX deposit limit.
      * @dev Can only be called once.
      */
@@ -98,22 +108,18 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         InitializationRoles memory newRoles,
         address newRootBridgeAdaptor,
         address newChildERC20Bridge,
-        string memory newChildBridgeAdaptor,
         address newChildTokenTemplate,
         address newRootIMXToken,
         address newRootWETHToken,
-        string memory newChildChain,
         uint256 newImxCumulativeDepositLimit
     ) external virtual initializer {
         __RootERC20Bridge_init(
             newRoles,
             newRootBridgeAdaptor,
             newChildERC20Bridge,
-            newChildBridgeAdaptor,
             newChildTokenTemplate,
             newRootIMXToken,
             newRootWETHToken,
-            newChildChain,
             newImxCumulativeDepositLimit
         );
     }
@@ -123,22 +129,18 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
      * @param newRoles Struct containing addresses of roles.
      * @param newRootBridgeAdaptor Address of StateSender to send bridge messages to, and receive messages from.
      * @param newChildERC20Bridge Address of child ERC20 bridge to communicate with.
-     * @param newChildBridgeAdaptor Address of child bridge adaptor to communicate with (As a checksummed string).
      * @param newChildTokenTemplate Address of child token template to clone.
      * @param newRootIMXToken Address of ERC20 IMX on the root chain.
      * @param newRootWETHToken Address of ERC20 WETH on the root chain.
-     * @param newChildChain Name of child chain.
      * @param newImxCumulativeDepositLimit The cumulative IMX deposit limit.
      */
     function __RootERC20Bridge_init(
         InitializationRoles memory newRoles,
         address newRootBridgeAdaptor,
         address newChildERC20Bridge,
-        string memory newChildBridgeAdaptor,
         address newChildTokenTemplate,
         address newRootIMXToken,
         address newRootWETHToken,
-        string memory newChildChain,
         uint256 newImxCumulativeDepositLimit
     ) internal {
         if (
@@ -149,15 +151,10 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         ) {
             revert ZeroAddress();
         }
-        if (bytes(newChildBridgeAdaptor).length == 0) {
-            revert InvalidChildERC20BridgeAdaptor();
-        }
-        if (bytes(newChildChain).length == 0) {
-            revert InvalidChildChain();
-        }
 
         __AccessControl_init();
         __Pausable_init();
+        __ReentrancyGuard_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
@@ -172,10 +169,13 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         childETHToken = Clones.predictDeterministicAddress(
             childTokenTemplate, keccak256(abi.encodePacked(NATIVE_ETH)), childERC20Bridge
         );
-        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
-        childBridgeAdaptor = newChildBridgeAdaptor;
-        childChain = newChildChain;
+        rootBridgeAdaptor = IRootBridgeAdaptor(newRootBridgeAdaptor);
         imxCumulativeDepositLimit = newImxCumulativeDepositLimit;
+
+        // Map the supported tokens by default
+        rootTokenToChildToken[rootIMXToken] = rootIMXToken;
+        rootTokenToChildToken[NATIVE_ETH] = NATIVE_ETH;
+        rootTokenToChildToken[rootWETHToken] = NATIVE_ETH;
     }
 
     /**
@@ -200,18 +200,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
             revert ZeroAddress();
         }
         emit RootBridgeAdaptorUpdated(address(rootBridgeAdaptor), newRootBridgeAdaptor);
-        rootBridgeAdaptor = IRootERC20BridgeAdaptor(newRootBridgeAdaptor);
-    }
-
-    /**
-     * @inheritdoc IRootERC20Bridge
-     */
-    function updateChildBridgeAdaptor(string memory newChildBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
-        if (bytes(newChildBridgeAdaptor).length == 0) {
-            revert InvalidChildERC20BridgeAdaptor();
-        }
-        emit ChildBridgeAdaptorUpdated(childBridgeAdaptor, newChildBridgeAdaptor);
-        childBridgeAdaptor = newChildBridgeAdaptor;
+        rootBridgeAdaptor = IRootBridgeAdaptor(newRootBridgeAdaptor);
     }
 
     /**
@@ -251,22 +240,10 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
     /**
      * @inheritdoc IRootERC20Bridge
      * @dev This is only callable by the root chain bridge adaptor.
-     * @dev Validates `sourceAddress` is the child chain's bridgeAdaptor.
+     *      This method assumes that the adaptor will have performed all
+     *     validations relating to the source of the message, prior to calling this method.
      */
-    function onMessageReceive(string calldata messageSourceChain, string calldata sourceAddress, bytes calldata data)
-        external
-        override
-        whenNotPaused
-    {
-        if (msg.sender != address(rootBridgeAdaptor)) {
-            revert NotBridgeAdaptor();
-        }
-        if (!Strings.equal(messageSourceChain, childChain)) {
-            revert InvalidSourceChain();
-        }
-        if (!Strings.equal(sourceAddress, childBridgeAdaptor)) {
-            revert InvalidSourceAddress();
-        }
+    function onMessageReceive(bytes calldata data) external override whenNotPaused onlyBridgeAdaptor {
         if (data.length <= 32) {
             // Data must always be greater than 32.
             // 32 bytes for the signature, and at least some information for the payload
@@ -404,7 +381,12 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         return childToken;
     }
 
-    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount) private whenNotPaused {
+    function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount)
+        private
+        nonReentrant
+        whenNotPaused
+        wontIMXOverflow(address(rootToken), amount)
+    {
         if (receiver == address(0) || address(rootToken) == address(0)) {
             revert ZeroAddress();
         }
@@ -414,52 +396,46 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
         if (msg.value == 0) {
             revert NoGas();
         }
-        if (
-            address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT
-                && IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit
-        ) {
-            revert ImxDepositLimitExceeded();
+        // ETH, WETH and IMX do not need to be mapped since it should have been mapped on initialization
+        if (rootTokenToChildToken[address(rootToken)] == address(0)) {
+            revert NotMapped();
         }
 
-        // ETH, WETH and IMX do not need to be mapped since it should have been mapped on initialization
-        // ETH also cannot be transferred since it was received in the payable function call
-        // WETH is also not transferred here since it was earlier unwrapped to ETH
-
-        // TODO We can call _mapToken here, but ordering in the GMP is not guaranteed.
+        // We can call _mapToken here, but ordering in the GMP is not guaranteed.
         // Therefore, we need to decide how to handle this and it may be a UI decision to wait until map token message is executed on child chain.
         // Discuss this, and add this decision to the design doc.
 
-        address childToken;
-        uint256 feeAmount = msg.value;
-        address payloadToken = address(rootToken);
-
-        if (address(rootToken) == NATIVE_ETH) {
-            feeAmount = msg.value - amount;
-        } else if (address(rootToken) == rootWETHToken) {
-            payloadToken = NATIVE_ETH;
-        } else {
-            if (address(rootToken) != rootIMXToken) {
-                childToken = rootTokenToChildToken[address(rootToken)];
-                if (childToken == address(0)) {
-                    revert NotMapped();
-                }
-            }
-            rootToken.safeTransferFrom(msg.sender, address(this), amount);
-        }
+        address payloadToken = (address(rootToken) == rootWETHToken) ? NATIVE_ETH : address(rootToken);
 
         // Deposit sig, root token address, depositor, receiver, amount
         bytes memory payload = abi.encode(DEPOSIT_SIG, payloadToken, msg.sender, receiver, amount);
 
+        // Adjust for fee amount on native transfers
+        uint256 feeAmount = (address(rootToken) == NATIVE_ETH) ? msg.value - amount : msg.value;
+
+        // Send message to child chain
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
-        if (address(rootToken) == NATIVE_ETH) {
-            emit NativeEthDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
-        } else if (address(rootToken) == rootWETHToken) {
-            emit WETHDeposit(address(rootToken), childETHToken, msg.sender, receiver, amount);
-        } else if (address(rootToken) == rootIMXToken) {
-            emit IMXDeposit(address(rootToken), msg.sender, receiver, amount);
+        // Emit the appropriate deposit event
+        transferTokensAndEmitEvent(address(rootToken), receiver, amount);
+    }
+
+    /**
+     * @notice Private helper function to emit the appropriate deposit event and execute transfer if rootIMX or rootERC20
+     */
+    function transferTokensAndEmitEvent(address rootToken, address receiver, uint256 amount) private {
+        // ETH also cannot be transferred since it was received in the payable function call
+        if (rootToken == NATIVE_ETH) {
+            emit NativeEthDeposit(rootToken, childETHToken, msg.sender, receiver, amount);
+            // WETH is also not transferred here since it was earlier unwrapped to ETH
+        } else if (rootToken == rootWETHToken) {
+            emit WETHDeposit(rootToken, childETHToken, msg.sender, receiver, amount);
+        } else if (rootToken == rootIMXToken) {
+            emit IMXDeposit(rootToken, msg.sender, receiver, amount);
+            IERC20Metadata(rootToken).safeTransferFrom(msg.sender, address(this), amount);
         } else {
-            emit ChildChainERC20Deposit(address(rootToken), childToken, msg.sender, receiver, amount);
+            emit ChildChainERC20Deposit(rootToken, rootTokenToChildToken[rootToken], msg.sender, receiver, amount);
+            IERC20Metadata(rootToken).safeTransferFrom(msg.sender, address(this), amount);
         }
     }
 
@@ -506,6 +482,17 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
             emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
+    }
+
+    modifier wontIMXOverflow(address rootToken, uint256 amount) {
+        // Assert whether the deposit is root IMX
+        if (address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT) {
+            // Based on the balance of this contract, check if the deposit will exceed the cumulative limit
+            if (IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit) {
+                revert ImxDepositLimitExceeded();
+            }
+        }
+        _;
     }
 
     // slither-disable-next-line unused-state,naming-convention

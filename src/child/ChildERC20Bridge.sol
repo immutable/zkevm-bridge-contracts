@@ -3,15 +3,15 @@
 pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {
     IChildERC20BridgeEvents,
     IChildERC20BridgeErrors,
     IChildERC20Bridge
 } from "../interfaces/child/IChildERC20Bridge.sol";
-import {IChildERC20BridgeAdaptor} from "../interfaces/child/IChildERC20BridgeAdaptor.sol";
+import {IChildBridgeAdaptor} from "../interfaces/child/IChildBridgeAdaptor.sol";
 import {IChildERC20} from "../interfaces/child/IChildERC20.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {IWIMX} from "../interfaces/child/IWIMX.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
 
@@ -40,7 +40,13 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
  */
-contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Bridge, IChildERC20BridgeEvents {
+contract ChildERC20Bridge is
+    BridgeRoles,
+    ReentrancyGuardUpgradeable,
+    IChildERC20BridgeErrors,
+    IChildERC20Bridge,
+    IChildERC20BridgeEvents
+{
     /// @dev leave this as the first param for the integration tests.
     mapping(address => address) public rootTokenToChildToken;
 
@@ -53,14 +59,11 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     address public constant NATIVE_ETH = address(0xeee);
     address public constant NATIVE_IMX = address(0xfff);
 
-    IChildERC20BridgeAdaptor public bridgeAdaptor;
+    /// @dev The address of the bridge adapter used to send and receive messages to and from the root chain.
+    IChildBridgeAdaptor public childBridgeAdaptor;
 
-    /// @dev The address that will be sending messages to, and receiving messages from, the child chain.
-    string public rootERC20BridgeAdaptor;
     /// @dev The address of the token template that will be cloned to create tokens.
     address public childTokenTemplate;
-    /// @dev The name of the chain that this bridge is connected to.
-    string public rootChain;
     /// @dev The address of the IMX ERC20 token on L1.
     address public rootIMXToken;
     /// @dev The address of the ETH ERC20 token on L2.
@@ -69,12 +72,20 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     address public wIMXToken;
 
     /**
+     * @notice Modifier to ensure that the caller is the registered child bridge adaptor.
+     */
+    modifier onlyBridgeAdaptor() {
+        if (msg.sender != address(childBridgeAdaptor)) {
+            revert NotBridgeAdaptor();
+        }
+        _;
+    }
+
+    /**
      * @notice Initialization function for ChildERC20Bridge.
      * @param newRoles Struct containing addresses of roles.
      * @param newBridgeAdaptor Address of StateSender to send deposit information to.
-     * @param newRootERC20BridgeAdaptor Stringified address of root ERC20 bridge adaptor to communicate with.
      * @param newChildTokenTemplate Address of child token template to clone.
-     * @param newRootChain A stringified representation of the chain that this bridge is connected to. Used for validation.
      * @param newRootIMXToken Address of ECR20 IMX on the root chain.
      * @param newWIMXToken Address of wrapped IMX on the child chain.
      * @dev Can only be called once.
@@ -82,9 +93,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
     function initialize(
         InitializationRoles memory newRoles,
         address newBridgeAdaptor,
-        string memory newRootERC20BridgeAdaptor,
         address newChildTokenTemplate,
-        string memory newRootChain,
         address newRootIMXToken,
         address newWIMXToken
     ) public initializer {
@@ -97,16 +106,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert ZeroAddress();
         }
 
-        if (bytes(newRootERC20BridgeAdaptor).length == 0) {
-            revert InvalidRootERC20BridgeAdaptor();
-        }
-
-        if (bytes(newRootChain).length == 0) {
-            revert InvalidRootChain();
-        }
-
         __AccessControl_init();
         __Pausable_init();
+        __ReentrancyGuard_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
@@ -115,10 +117,8 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         _grantRole(TREASURY_MANAGER_ROLE, newRoles.initialDepositor);
         _grantRole(TREASURY_MANAGER_ROLE, newRoles.treasuryManager);
 
-        rootERC20BridgeAdaptor = newRootERC20BridgeAdaptor;
         childTokenTemplate = newChildTokenTemplate;
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
-        rootChain = newRootChain;
+        childBridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
         rootIMXToken = newRootIMXToken;
         wIMXToken = newWIMXToken;
 
@@ -130,6 +130,9 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         // Initialize
         clonedETHToken.initialize(NATIVE_ETH, "Ethereum", "ETH", 18);
         childETHToken = address(clonedETHToken);
+
+        // Map the supported tokens by default
+        rootTokenToChildToken[NATIVE_ETH] = childETHToken;
     }
 
     /**
@@ -164,48 +167,27 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert ZeroAddress();
         }
 
-        emit ChildBridgeAdaptorUpdated(address(bridgeAdaptor), newBridgeAdaptor);
-        bridgeAdaptor = IChildERC20BridgeAdaptor(newBridgeAdaptor);
+        emit ChildBridgeAdaptorUpdated(address(childBridgeAdaptor), newBridgeAdaptor);
+        childBridgeAdaptor = IChildBridgeAdaptor(newBridgeAdaptor);
     }
 
     /**
      * @inheritdoc IChildERC20Bridge
+     * @dev This is only callable by the child chain bridge adaptor.
+     *      This method assumes that the adaptor will have performed all
+     *      validations relating to the source of the message, prior to calling this method.
      */
-    function updateRootBridgeAdaptor(string memory newRootBridgeAdaptor) external onlyRole(ADAPTOR_MANAGER_ROLE) {
-        if (bytes(newRootBridgeAdaptor).length == 0) {
-            revert InvalidRootERC20BridgeAdaptor();
-        }
-
-        emit RootBridgeAdaptorUpdated(rootERC20BridgeAdaptor, newRootBridgeAdaptor);
-        rootERC20BridgeAdaptor = newRootBridgeAdaptor;
-    }
-
-    /**
-     * @inheritdoc IChildERC20Bridge
-     */
-    function onMessageReceive(string calldata messageSourceChain, string calldata sourceAddress, bytes calldata data)
-        external
-        override
-        whenNotPaused
-    {
-        if (msg.sender != address(bridgeAdaptor)) {
-            revert NotBridgeAdaptor();
-        }
-        if (!Strings.equal(messageSourceChain, rootChain)) {
-            revert InvalidSourceChain();
-        }
-        if (!Strings.equal(sourceAddress, rootERC20BridgeAdaptor)) {
-            revert InvalidSourceAddress();
-        }
+    function onMessageReceive(bytes calldata data) external whenNotPaused onlyBridgeAdaptor {
         if (data.length <= 32) {
             // Data must always be greater than 32.
             // 32 bytes for the signature, and at least some information for the payload
             revert InvalidData("Data too short");
         }
 
-        if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
+        bytes32 sig = bytes32(data[:32]);
+        if (sig == MAP_TOKEN_SIG) {
             _mapToken(data);
-        } else if (bytes32(data[:32]) == DEPOSIT_SIG) {
+        } else if (sig == DEPOSIT_SIG) {
             _deposit(data[32:]);
         } else {
             revert InvalidData("Unsupported action signature");
@@ -284,7 +266,7 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
      * - `childToken` must be mapped.
      * - `childToken` must have a the bridge set.
      */
-    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private whenNotPaused {
+    function _withdraw(address childTokenAddr, address receiver, uint256 amount) private nonReentrant whenNotPaused {
         if (childTokenAddr == address(0) || receiver == address(0)) {
             revert ZeroAddress();
         }
@@ -296,81 +278,121 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
         }
 
         address rootToken;
-        uint256 feeAmount = msg.value;
         if (childTokenAddr == NATIVE_IMX) {
-            // Native IMX.
-            if (msg.value < amount) {
-                revert InsufficientValue();
-            }
-
-            feeAmount = msg.value - amount;
-            rootToken = rootIMXToken;
+            rootToken = _withdrawIMX(amount);
         } else if (childTokenAddr == wIMXToken) {
-            // Wrapped IMX.
-            // Transfer and unwrap IMX.
-            uint256 expectedBalance = address(this).balance + amount;
-
-            IWIMX wIMX = IWIMX(wIMXToken);
-            if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
-                revert TransferWIMXFailed();
-            }
-            wIMX.withdraw(amount);
-
-            if (address(this).balance != expectedBalance) {
-                revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
-            }
-
-            rootToken = rootIMXToken;
+            rootToken = _withdrawWIMX(amount);
         } else if (childTokenAddr == childETHToken) {
-            // Wrapped ETH.
-            IChildERC20 childToken = IChildERC20(childTokenAddr);
-            rootToken = NATIVE_ETH;
-
-            if (!childToken.burn(msg.sender, amount)) {
-                revert BurnFailed();
-            }
+            rootToken = _withdrawETH(amount);
         } else {
-            // Other ERC20 Tokens
-            IChildERC20 childToken = IChildERC20(childTokenAddr);
-
-            if (address(childToken).code.length == 0) {
-                revert EmptyTokenContract();
-            }
-            rootToken = childToken.rootToken();
-
-            if (rootTokenToChildToken[rootToken] != address(childToken)) {
-                revert NotMapped();
-            }
-
-            // A mapped token should never have root token unset
-            if (rootToken == address(0)) {
-                revert ZeroAddressRootToken();
-            }
-
-            // A mapped token should never have the bridge unset
-            if (childToken.bridge() != address(this)) {
-                revert IncorrectBridgeAddress();
-            }
-
-            if (!childToken.burn(msg.sender, amount)) {
-                revert BurnFailed();
-            }
+            rootToken = _withdrawERC20(childTokenAddr, amount);
         }
 
         // Encode the message payload
         bytes memory payload = abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount);
 
-        // Send the message to the bridge adaptor and up to root chain
-        bridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
+        // Account for fee amount
+        uint256 feeAmount = (childTokenAddr == NATIVE_IMX) ? msg.value - amount : msg.value;
 
-        if (childTokenAddr == NATIVE_IMX) {
-            emit ChildChainNativeIMXWithdraw(rootToken, msg.sender, receiver, amount);
-        } else if (childTokenAddr == wIMXToken) {
-            emit ChildChainWrappedIMXWithdraw(rootToken, msg.sender, receiver, amount);
-        } else if (childTokenAddr == childETHToken) {
-            emit ChildChainEthWithdraw(msg.sender, receiver, amount);
+        // Send the message to the bridge adaptor and up to root chain
+        childBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
+
+        _emitWithdrawEvent(rootToken, childTokenAddr, msg.sender, receiver, amount);
+    }
+
+    /**
+     * @notice Private function to handle withdrawal of L2 native IMX.
+     */
+    function _withdrawIMX(uint256 amount) private returns (address) {
+        if (msg.value < amount) {
+            revert InsufficientValue();
+        }
+        return rootIMXToken;
+    }
+
+    /**
+     * @notice Private function to handle withdrawal of L1 native ETH.
+     */
+    function _withdrawETH(uint256 amount) private returns (address) {
+        if (!IChildERC20(childETHToken).burn(msg.sender, amount)) {
+            revert BurnFailed();
+        }
+        return NATIVE_ETH;
+    }
+
+    /**
+     * @notice Private function to handle withdrawal of native IMX.
+     */
+    function _withdrawWIMX(uint256 amount) private returns (address) {
+        // Calculate expected balance
+        uint256 expectedBalance = address(this).balance + amount;
+
+        IWIMX wIMX = IWIMX(wIMXToken);
+
+        // Transfer to contract
+        if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
+            revert TransferWIMXFailed();
+        }
+
+        // Withdraw
+        wIMX.withdraw(amount);
+
+        // Assert balance
+        if (address(this).balance != expectedBalance) {
+            revert BalanceInvariantCheckFailed(address(this).balance, expectedBalance);
+        }
+
+        return rootIMXToken;
+    }
+
+    /**
+     * @notice Private function to handle withdrawal of ERC20 tokens.
+     */
+    function _withdrawERC20(address childToken, uint256 amount) private returns (address) {
+        // Validate code existence
+        if (address(childToken).code.length == 0) {
+            revert EmptyTokenContract();
+        }
+
+        address rootToken = IChildERC20(childToken).rootToken();
+
+        // A mapped token should never have root token unset
+        if (rootToken == address(0)) {
+            revert ZeroAddressRootToken();
+        }
+
+        // Assert mapping
+        if (rootTokenToChildToken[rootToken] != address(childToken)) {
+            revert NotMapped();
+        }
+
+        // A mapped token should never have the bridge unset
+        if (IChildERC20(childToken).bridge() != address(this)) {
+            revert IncorrectBridgeAddress();
+        }
+
+        // Burn tokens
+        if (!IChildERC20(childToken).burn(msg.sender, amount)) {
+            revert BurnFailed();
+        }
+
+        return rootToken;
+    }
+
+    /**
+     * @notice Private function to emit withdraw events.
+     */
+    function _emitWithdrawEvent(address rootToken, address childToken, address sender, address receiver, uint256 amount)
+        private
+    {
+        if (childToken == NATIVE_IMX) {
+            emit ChildChainNativeIMXWithdraw(rootToken, sender, receiver, amount);
+        } else if (childToken == wIMXToken) {
+            emit ChildChainWrappedIMXWithdraw(rootToken, sender, receiver, amount);
+        } else if (childToken == childETHToken) {
+            emit ChildChainEthWithdraw(sender, receiver, amount);
         } else {
-            emit ChildChainERC20Withdraw(rootToken, childTokenAddr, msg.sender, receiver, amount);
+            emit ChildChainERC20Withdraw(rootToken, childToken, sender, receiver, amount);
         }
     }
 
@@ -437,33 +459,41 @@ contract ChildERC20Bridge is BridgeRoles, IChildERC20BridgeErrors, IChildERC20Br
             revert ZeroAddress();
         }
 
-        IChildERC20 childToken;
-        if (rootToken != rootIMXToken) {
-            if (rootToken == NATIVE_ETH) {
-                childToken = IChildERC20(childETHToken);
-            } else {
-                childToken = IChildERC20(rootTokenToChildToken[rootToken]);
-                if (address(childToken) == address(0)) {
-                    revert NotMapped();
-                }
-            }
+        transferTokensAndEmitEvent(rootToken, rootTokenToChildToken[rootToken], sender, receiver, amount);
+    }
 
-            if (address(childToken).code.length == 0) {
-                revert EmptyTokenContract();
+    function transferTokensAndEmitEvent(
+        address rootToken,
+        address childToken,
+        address sender,
+        address receiver,
+        uint256 amount
+    ) private {
+        if (rootToken == rootIMXToken) {
+            if (address(this).balance < amount) {
+                revert InsufficientIMX();
             }
-
-            if (!childToken.mint(receiver, amount)) {
-                revert MintFailed();
-            }
-
-            if (rootToken == NATIVE_ETH) {
-                emit NativeEthDeposit(rootToken, address(childToken), sender, receiver, amount);
-            } else {
-                emit ChildChainERC20Deposit(rootToken, address(childToken), sender, receiver, amount);
-            }
-        } else {
             Address.sendValue(payable(receiver), amount);
             emit IMXDeposit(rootToken, sender, receiver, amount);
+            return;
+        }
+
+        if (childToken == address(0)) {
+            revert NotMapped();
+        }
+
+        if (childToken.code.length == 0) {
+            revert EmptyTokenContract();
+        }
+
+        if (!IChildERC20(childToken).mint(receiver, amount)) {
+            revert MintFailed();
+        }
+
+        if (rootToken == NATIVE_ETH) {
+            emit NativeEthDeposit(rootToken, address(childToken), sender, receiver, amount);
+        } else {
+            emit ChildChainERC20Deposit(rootToken, address(childToken), sender, receiver, amount);
         }
     }
 

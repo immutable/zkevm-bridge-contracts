@@ -64,8 +64,8 @@ contract ChildERC20BridgeWithdrawWIMXIntegrationTest is
             0,
             abi.encodeWithSelector(
                 mockAxelarGateway.callContract.selector,
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload
             )
         );
@@ -87,8 +87,8 @@ contract ChildERC20BridgeWithdrawWIMXIntegrationTest is
             abi.encodeWithSelector(
                 mockAxelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload,
                 address(this)
             )
@@ -106,7 +106,7 @@ contract ChildERC20BridgeWithdrawWIMXIntegrationTest is
             abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
+        emit AxelarMessageSent(axelarAdaptor.rootChainId(), axelarAdaptor.rootBridgeAdaptor(), predictedPayload);
 
         childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
     }

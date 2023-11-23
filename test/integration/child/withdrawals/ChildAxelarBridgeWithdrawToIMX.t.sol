@@ -84,8 +84,8 @@ contract ChildERC20BridgewithdrawIMXToIntegrationTest is
             0,
             abi.encodeWithSelector(
                 mockAxelarGateway.callContract.selector,
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload
             )
         );
@@ -105,8 +105,8 @@ contract ChildERC20BridgewithdrawIMXToIntegrationTest is
             0,
             abi.encodeWithSelector(
                 mockAxelarGateway.callContract.selector,
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload
             )
         );
@@ -127,8 +127,8 @@ contract ChildERC20BridgewithdrawIMXToIntegrationTest is
             abi.encodeWithSelector(
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload,
                 address(this)
             )
@@ -151,8 +151,8 @@ contract ChildERC20BridgewithdrawIMXToIntegrationTest is
             abi.encodeWithSelector(
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload,
                 address(this)
             )
@@ -169,7 +169,7 @@ contract ChildERC20BridgewithdrawIMXToIntegrationTest is
             abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
+        emit AxelarMessageSent(axelarAdaptor.rootChainId(), axelarAdaptor.rootBridgeAdaptor(), predictedPayload);
 
         childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(address(this), withdrawAmount);
     }
@@ -183,7 +183,7 @@ contract ChildERC20BridgewithdrawIMXToIntegrationTest is
             abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), receiver, withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
+        emit AxelarMessageSent(axelarAdaptor.rootChainId(), axelarAdaptor.rootBridgeAdaptor(), predictedPayload);
 
         childBridge.withdrawIMXTo{value: withdrawFee + withdrawAmount}(receiver, withdrawAmount);
     }
