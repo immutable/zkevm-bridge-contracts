@@ -14,7 +14,7 @@ import "../interfaces/child/IChildERC20.sol";
  *   @dev All child tokens are clones of this contract. Burning and minting is controlled by the ChildERC20Bridge.
  *   @dev This is an upgradeable contract so it's possible to patch any future security vulnerabilities or extend the token's functionality.
  *   @dev During the bootstrap process this contract is deployed on-chain. 
- *        When a token is initially mapped by the ChildERC20Bridge the deployed contract is cloned by the bridge to a deterministic address.
+ *        When a token is initially mapped by the ChildERC20Bridge the deployed contract is cloned by the ChildERC20Bridge to a deterministic address.
  *        The address of the new ChildERC20 token is the keccak256 hash of the rootToken's address.
  *        The newly deployed token is then initialized with the same name, symbol and decimals as the rootToken.
  *        This deterministic cloning approach allows the token mapping on the root and child bridges to stay congruent.
