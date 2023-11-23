@@ -4,10 +4,7 @@ pragma solidity 0.8.19;
 import "forge-std/Test.sol";
 
 import {FlowRateWithdrawalQueue} from "../../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
-import {
-    IFlowRateWithdrawalQueueEvents,
-    IFlowRateWithdrawalQueueErrors
-} from "../../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
+import {IFlowRateWithdrawalQueueErrors} from "../../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
 
 contract FlowRateWithdrawalQueueT is FlowRateWithdrawalQueue {
     uint256 public constant DEFAULT_WITHDRAW_DELAY = 60 * 60 * 24;
