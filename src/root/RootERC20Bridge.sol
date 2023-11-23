@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {
     IRootERC20Bridge,
@@ -44,7 +44,13 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
  */
-contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvents, IRootERC20BridgeErrors {
+contract RootERC20Bridge is
+    BridgeRoles,
+    ReentrancyGuardUpgradeable,
+    IRootERC20Bridge,
+    IRootERC20BridgeEvents,
+    IRootERC20BridgeErrors
+{
     using SafeERC20 for IERC20Metadata;
 
     /// @dev leave this as the first param for the integration tests.
@@ -148,6 +154,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
 
         __AccessControl_init();
         __Pausable_init();
+        __ReentrancyGuard_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, newRoles.defaultAdmin);
         _grantRole(PAUSER_ROLE, newRoles.pauser);
@@ -376,6 +383,7 @@ contract RootERC20Bridge is BridgeRoles, IRootERC20Bridge, IRootERC20BridgeEvent
 
     function _deposit(IERC20Metadata rootToken, address receiver, uint256 amount)
         private
+        nonReentrant
         whenNotPaused
         wontIMXOverflow(address(rootToken), amount)
     {

@@ -14,6 +14,22 @@ import {
 import {ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {Utils, IPausable} from "../../utils.t.sol";
 
+contract ReentrancyAttackWithdraw is ChildERC20 {
+    IChildERC20Bridge bridge;
+
+    constructor(address _bridge) {
+        bridge = IChildERC20Bridge(_bridge);
+    }
+
+    function burn(address from, uint256 value) public override returns (bool) {
+        if (msg.sender == address(bridge)) {
+            bridge.withdraw(ChildERC20(address(this)), value);
+        }
+        _burn(from, value);
+        return true;
+    }
+}
+
 contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20BridgeErrors, Utils {
     address constant ROOT_BRIDGE = address(3);
     address constant ROOT_IMX_TOKEN = address(0xccc);
@@ -54,7 +70,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         address caller = address(0x123a);
         payable(caller).transfer(2 ether);
         // forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "wIMXToken"
-        uint256 wIMXStorageSlot = 256;
+        uint256 wIMXStorageSlot = 306;
         vm.store(address(childBridge), bytes32(wIMXStorageSlot), bytes32(uint256(uint160(caller))));
 
         vm.startPrank(caller);
@@ -570,7 +586,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         address rootAddress = address(0x123);
         {
             // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
-            uint256 rootTokenToChildTokenMappingSlot = 251;
+            uint256 rootTokenToChildTokenMappingSlot = 301;
             address childAddress = address(444444);
             bytes32 slot = getMappingStorageSlotFor(rootAddress, rootTokenToChildTokenMappingSlot);
             bytes32 data = bytes32(uint256(uint160(childAddress)));
@@ -581,5 +597,36 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
 
         vm.expectRevert(EmptyTokenContract.selector);
         childBridge.onMessageReceive(depositData);
+    }
+
+    /**
+     * WITHDRAW
+     */
+
+    function test_RevertIf_WithdrawReentered() public {
+        // Create attack token
+        vm.startPrank(address(childBridge));
+        ReentrancyAttackWithdraw attackToken = new ReentrancyAttackWithdraw(address(childBridge));
+        address rootAddr = makeAddr("rootAddr");
+        attackToken.initialize(rootAddr, "Test", "TST", 18);
+
+        // Map
+        {
+            // Found by running `forge inspect src/child/ChildERC20Bridge.sol:ChildERC20Bridge storageLayout | grep -B3 -A5 -i "rootTokenToChildToken"`
+            uint256 rootTokenToChildTokenMappingSlot = 301;
+            bytes32 slot = getMappingStorageSlotFor(rootAddr, rootTokenToChildTokenMappingSlot);
+            bytes32 data = bytes32(uint256(uint160(address(attackToken))));
+            vm.store(address(childBridge), slot, data);
+        }
+
+        // Create attacker
+        address attacker = makeAddr("attacker");
+        attackToken.mint(attacker, 1000);
+        vm.deal(attacker, 10 ether);
+        changePrank(attacker);
+
+        // Execute withdraw
+        vm.expectRevert("ReentrancyGuard: reentrant call");
+        childBridge.withdraw{value: 1 ether}(ChildERC20(address(attackToken)), 100);
     }
 }
