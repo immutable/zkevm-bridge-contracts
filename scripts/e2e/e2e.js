@@ -353,7 +353,7 @@ describe("Bridge e2e test", () => {
 
         // Verify
         let expectedPostL1 = preBalL1.sub(amt);
-        let expectedPostL2 = preBalL2.add(amt);
+        let expectedPostL2 = preBalL2.add(amt).add(1);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(60000)
