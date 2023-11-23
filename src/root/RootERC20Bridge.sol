@@ -417,13 +417,13 @@ contract RootERC20Bridge is
         rootBridgeAdaptor.sendMessage{value: feeAmount}(payload, msg.sender);
 
         // Emit the appropriate deposit event
-        transferTokensAndEmitEvent(address(rootToken), receiver, amount);
+        _transferTokensAndEmitEvent(address(rootToken), receiver, amount);
     }
 
     /**
      * @notice Private helper function to emit the appropriate deposit event and execute transfer if rootIMX or rootERC20
      */
-    function transferTokensAndEmitEvent(address rootToken, address receiver, uint256 amount) private {
+    function _transferTokensAndEmitEvent(address rootToken, address receiver, uint256 amount) private {
         // ETH also cannot be transferred since it was received in the payable function call
         if (rootToken == NATIVE_ETH) {
             emit NativeEthDeposit(rootToken, childETHToken, msg.sender, receiver, amount);
@@ -486,9 +486,11 @@ contract RootERC20Bridge is
 
     modifier wontIMXOverflow(address rootToken, uint256 amount) {
         // Assert whether the deposit is root IMX
-        if (address(rootToken) == rootIMXToken && imxCumulativeDepositLimit != UNLIMITED_DEPOSIT) {
+        address imxToken = rootIMXToken;
+        uint256 depositLimit = imxCumulativeDepositLimit;
+        if (rootToken == imxToken && depositLimit != UNLIMITED_DEPOSIT) {
             // Based on the balance of this contract, check if the deposit will exceed the cumulative limit
-            if (IERC20Metadata(rootIMXToken).balanceOf(address(this)) + amount > imxCumulativeDepositLimit) {
+            if (IERC20Metadata(imxToken).balanceOf(address(this)) + amount > depositLimit) {
                 revert ImxDepositLimitExceeded();
             }
         }
