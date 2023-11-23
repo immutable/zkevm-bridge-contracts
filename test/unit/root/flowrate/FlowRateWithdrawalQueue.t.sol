@@ -34,9 +34,9 @@ contract FlowRateWithdrawalQueueT is FlowRateWithdrawalQueue {
 
 abstract contract FlowRateWithdrawalQueueTests is Test, IFlowRateWithdrawalQueueErrors {
     // Indicates a withdrawal has been queued.
-    event QueuedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 timestamp, uint256 index);
+    event EnQueuedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 timestamp, uint256 index);
     // Indicates a withdrawal has been processed.
-    event ProcessedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 index);
+    event ProcessedWithdrawal(address indexed token, address indexed withdrawer, address indexed receiver, uint256 amount, uint256 timestamp, uint256 index);
 
     FlowRateWithdrawalQueueT flowRateWithdrawalQueue;
 
@@ -109,12 +109,12 @@ contract UninitializedFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTes
 }
 
 contract ControlFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests {
-    event WithdrawalDelayUpdated(uint256 delay);
+    event WithdrawalDelayUpdated(uint256 delay, uint256 previousDelay);
 
     function testInitWithdrawalQueue() public {
         uint256 expectedDelay = flowRateWithdrawalQueue.DEFAULT_WITHDRAW_DELAY();
         vm.expectEmit(false, false, false, true);
-        emit WithdrawalDelayUpdated(expectedDelay);
+        emit WithdrawalDelayUpdated(expectedDelay, 0);
         flowRateWithdrawalQueue.init();
         uint256 delay = flowRateWithdrawalQueue.withdrawalDelay();
         assertEq(delay, expectedDelay, "Delay");
@@ -124,7 +124,7 @@ contract ControlFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests {
         uint256 expectedDelay = 1999;
         flowRateWithdrawalQueue.init();
         vm.expectEmit(false, false, false, true);
-        emit WithdrawalDelayUpdated(expectedDelay);
+        emit WithdrawalDelayUpdated(expectedDelay, 86400);
         flowRateWithdrawalQueue.setWithdrawalDelay(expectedDelay);
         uint256 delay = flowRateWithdrawalQueue.withdrawalDelay();
         assertEq(delay, expectedDelay, "Delay");
@@ -155,7 +155,7 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         vm.warp(now1);
         uint256 amount = 123;
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount, now1, 0);
+        emit EnQueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount, now1, 0);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount);
         uint256 len = flowRateWithdrawalQueue.getPendingWithdrawalsLength(RUSER1);
         assertEq(len, 1, "Pending withdrawal length");
@@ -167,12 +167,12 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         uint256 amount1 = 123;
         uint256 amount2 = 456;
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now1, 0);
+        emit EnQueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now1, 0);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount1);
         uint256 now2 = 200;
         vm.warp(now2);
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now2, 1);
+        emit EnQueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now2, 1);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER2, TOKEN2, amount2);
 
         uint256[] memory indices = new uint256[](2);
@@ -209,7 +209,7 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         vm.warp(now2);
 
         vm.expectEmit(true, true, true, true);
-        emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, 0);
+        emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now2, 0);
         (address withdrawer, address token, uint256 amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 0);
         assertEq(withdrawer, WUSER1, "Withdrawer");
         assertEq(token, TOKEN1, "Token");
@@ -230,14 +230,14 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         vm.warp(now3);
 
         vm.expectEmit(true, true, true, true);
-        emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, 0);
+        emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now3, 0);
         (address withdrawer, address token, uint256 amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 0);
         assertEq(withdrawer, WUSER1, "Withdrawer");
         assertEq(token, TOKEN1, "Token");
         assertEq(amount, amount1, "Amount");
         
         vm.expectEmit(true, true, true, true);
-        emit ProcessedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, 1);
+        emit ProcessedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now3, 1);
         (withdrawer, token, amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 1);
         assertEq(withdrawer, WUSER2, "Withdrawer");
         assertEq(token, TOKEN2, "Token");
@@ -263,21 +263,21 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         vm.warp(now4);
 
         vm.expectEmit(true, true, true, true);
-        emit ProcessedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, 1);
+        emit ProcessedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now4, 1);
         (address withdrawer, address token, uint256 amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 1);
         assertEq(withdrawer, WUSER2, "Withdrawer");
         assertEq(token, TOKEN2, "Token");
         assertEq(amount, amount2, "Amount");
 
         vm.expectEmit(true, true, true, true);
-        emit ProcessedWithdrawal(TOKEN3, WUSER1, RUSER1, amount3, 2);
+        emit ProcessedWithdrawal(TOKEN3, WUSER1, RUSER1, amount3, now4, 2);
        (withdrawer, token, amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 2);
         assertEq(withdrawer, WUSER1, "Withdrawer");
         assertEq(token, TOKEN3, "Token");
         assertEq(amount, amount3, "Amount");
 
         vm.expectEmit(true, true, true, true);
-        emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, 0);
+        emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now4, 0);
         (withdrawer, token, amount) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, 0);
         assertEq(withdrawer, WUSER1, "Withdrawer");
         assertEq(token, TOKEN1, "Token");
@@ -347,12 +347,12 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         uint256 amount1 = 123;
         uint256 amount2 = 456;
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now1, 0);
+        emit EnQueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now1, 0);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount1);
         uint256 now2 = 200;
         vm.warp(now2);
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now2, 1);
+        emit EnQueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now2, 1);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER2, TOKEN2, amount2);
 
         pending = flowRateWithdrawalQueue.getPendingWithdrawals(RUSER1, indices);
@@ -373,23 +373,23 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
         uint256 now1 = 100;
         vm.warp(now1);
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now1, 0);
+        emit EnQueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount1, now1, 0);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount1);
         uint256 now2 = 200;
         vm.warp(now2);
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now2, 1);
+        emit EnQueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount2, now2, 1);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER2, TOKEN2, amount2);
         uint256 now3 = 300;
         vm.warp(now3);
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount3, now3, 2);
+        emit EnQueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount3, now3, 2);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER2, TOKEN2, amount3);
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount4, now3, 3);
+        emit EnQueuedWithdrawal(TOKEN2, WUSER2, RUSER1, amount4, now3, 3);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER2, TOKEN2, amount4);
         vm.expectEmit(true, true, true, true);
-        emit QueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount5, now3, 4);
+        emit EnQueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount5, now3, 4);
         flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount5);
 
         FlowRateWithdrawalQueue.FindPendingWithdrawal[] memory pending =
@@ -413,7 +413,7 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
             vm.warp(timeNow);
             uint256 amount = timeNow + 1;
             vm.expectEmit(true, true, true, true);
-            emit QueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount, timeNow, i);
+            emit EnQueuedWithdrawal(TOKEN1, WUSER1, RUSER1, amount, timeNow, i);
             flowRateWithdrawalQueue.enqueueWithdrawal(RUSER1, WUSER1, TOKEN1, amount);
             uint256 enqueueTime = timeNow;
             timeNow += withdrawalDelay;
@@ -425,7 +425,7 @@ contract OperationalFlowRateWithdrawalQueueTests is FlowRateWithdrawalQueueTests
             checkFindValues(pending[0], i, amount, enqueueTime);
 
             vm.expectEmit(true, true, true, true);
-            emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount, i);
+            emit ProcessedWithdrawal(TOKEN1, WUSER1, RUSER1, amount, timeNow, i);
             (address withdrawer, address token, uint256 amountOut) = flowRateWithdrawalQueue.processWithdrawal(RUSER1, i);
             assertEq(withdrawer, WUSER1, "Withdrawer");
             assertEq(token, TOKEN1, "Token");
