@@ -56,7 +56,7 @@ async function run() {
     // Get amount to balance on L2
     let bridgeBal = await childProvider.getBalance(childBridgeAddr);
     let multisigBal = await childProvider.getBalance(multisigAddr);
-    let balanceAmt = ethers.utils.parseEther(TOTAL_SUPPLY).sub(bridgeBal).sub(multisigBal).mul(1000);
+    let balanceAmt = ethers.utils.parseEther(TOTAL_SUPPLY).sub(bridgeBal).sub(multisigBal);
 
     console.log("The amount to balance on L1 is: ", ethers.utils.formatEther(balanceAmt));
     let IMX = new ethers.Contract(rootIMXAddr, IMX_ABI, rootProvider);
