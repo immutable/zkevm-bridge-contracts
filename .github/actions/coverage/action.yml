@@ -1,0 +1,12 @@
+---
+name: 'Publish coverage report'
+description: 'Create or update PR comment with coverage report'
+
+inputs:
+  coverage: 
+    description: The coverage report to publish
+    required: true
+
+runs:
+  using: 'node16'
+  main: 'index.js'
