@@ -12,9 +12,9 @@ import "../interfaces/child/IChildERC20.sol";
  *   @author Polygon Technology (@QEDK)
  *   @notice Child token template for ChildERC20 predicate deployments
  *   @dev All child tokens are clones of this contract. Burning and minting is controlled by the ChildERC20Bridge.
- *   
+ *
  *   @dev Upgradability:
- *        This contract is deployed using cloneDeterministic. It is then initialized using an initialize function. 
+ *        This contract is deployed using cloneDeterministic. It is then initialized using an initialize function.
  *        However, the contract is accessed directly, and not via a transparent upgrade proxy. As such, this contract is not upgradeable.
  *
  *   @dev Cloning and Initialization:
