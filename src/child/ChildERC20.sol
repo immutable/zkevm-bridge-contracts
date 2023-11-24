@@ -12,8 +12,13 @@ import "../interfaces/child/IChildERC20.sol";
  *   @author Polygon Technology (@QEDK)
  *   @notice Child token template for ChildERC20 predicate deployments
  *   @dev All child tokens are clones of this contract. Burning and minting is controlled by the ChildERC20Bridge.
- *   @dev This is an upgradeable contract so it's possible to patch any future security vulnerabilities or extend the token's functionality.
- *   @dev During the bootstrap process this contract is deployed on-chain.
+ *   
+ *   @dev Upgradability:
+ *        This contract is deployed using cloneDeterministic. It is then initialized using an initialize function. 
+ *        However, the contract is accessed directly, and not via a transparent upgrade proxy. As such, this contract is not upgradeable.
+ *
+ *   @dev Cloning and Initialization:
+ *        During the bootstrap process this contract is deployed on-chain.
  *        When a token is initially mapped by the ChildERC20Bridge the deployed contract is cloned by the ChildERC20Bridge to a deterministic address.
  *        The new ChildERC20 token is created using cloneDeterministic with the keccak256 hash of the rootToken's address as the salt.
  *        This new ChildERC20 token is then initialized with the same name, symbol and decimals as the rootToken.
