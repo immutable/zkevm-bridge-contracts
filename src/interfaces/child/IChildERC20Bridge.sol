@@ -22,13 +22,13 @@ interface IChildERC20Bridge {
         address pauser; // The address which will inherit `PAUSER_ROLE`.
         address unpauser; // The address which will inherit `UNPAUSER_ROLE`.
         address adaptorManager; // The address which will inherit `ADAPTOR_MANAGER_ROLE`.
-        address initialDepositor; // The address which will inherit `PREVILEGED_DEPOSITOR_ROLE`.
-        address treasuryManager; // The address which will inherit `PREVILEGED_DEPOSITOR_ROLE`.
+        address initialDepositor; // The address which will inherit `PRIVILEGED_DEPOSITOR_ROLE`.
+        address treasuryManager; // The address which will inherit `PRIVILEGED_DEPOSITOR_ROLE`.
     }
 
     /**
      * @notice Deposit native IMX to the child chain bridge contract.
-     * @dev This function can only be called by callers who have the PREVILEGED_DEPOSITOR_ROLE.
+     * @dev This function can only be called by callers who have the PRIVILEGED_DEPOSITOR_ROLE.
      */
     function privilegedDeposit() external payable;
 

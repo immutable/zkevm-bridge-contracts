@@ -128,7 +128,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     }
 
     function test_RevertsIf_privilegedDepositCalledFromNonTreasuryManager() public {
-        bytes32 role = childBridge.PREVILEGED_DEPOSITOR_ROLE();
+        bytes32 role = childBridge.PRIVILEGED_DEPOSITOR_ROLE();
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
