@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {MockAxelarGateway} from "../../../../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../../../../src/test/root/MockAxelarGasService.sol";
+import {MockAxelarGateway} from "../../../mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "../../../mocks/root/MockAxelarGasService.sol";
 import {ChildERC20Bridge, IChildERC20BridgeEvents} from "../../../../src/child/ChildERC20Bridge.sol";
 import {
     ChildAxelarBridgeAdaptor,
@@ -14,7 +12,6 @@ import {
     IChildAxelarBridgeAdaptorErrors
 } from "../../../../src/child/ChildAxelarBridgeAdaptor.sol";
 import {Utils} from "../../../utils.t.sol";
-import {WETH} from "../../../../src/test/root/WETH.sol";
 import {ChildERC20} from "../../../../src/child/ChildERC20.sol";
 
 contract ChildERC20BridgeWithdrawIMXIntegrationTest is
@@ -70,8 +67,8 @@ contract ChildERC20BridgeWithdrawIMXIntegrationTest is
             0,
             abi.encodeWithSelector(
                 mockAxelarGateway.callContract.selector,
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload
             )
         );
@@ -92,8 +89,8 @@ contract ChildERC20BridgeWithdrawIMXIntegrationTest is
             abi.encodeWithSelector(
                 axelarGasService.payNativeGasForContractCall.selector,
                 address(axelarAdaptor),
-                childBridge.rootChain(),
-                childBridge.rootERC20BridgeAdaptor(),
+                axelarAdaptor.rootChainId(),
+                axelarAdaptor.rootBridgeAdaptor(),
                 predictedPayload,
                 address(this)
             )
@@ -110,7 +107,7 @@ contract ChildERC20BridgeWithdrawIMXIntegrationTest is
             abi.encode(WITHDRAW_SIG, ROOT_IMX_TOKEN, address(this), address(this), withdrawAmount);
 
         vm.expectEmit(address(axelarAdaptor));
-        emit AxelarMessageSent(childBridge.rootChain(), childBridge.rootERC20BridgeAdaptor(), predictedPayload);
+        emit AxelarMessageSent(axelarAdaptor.rootChainId(), axelarAdaptor.rootBridgeAdaptor(), predictedPayload);
 
         childBridge.withdrawIMX{value: withdrawFee + withdrawAmount}(withdrawAmount);
     }

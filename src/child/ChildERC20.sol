@@ -1,6 +1,7 @@
+// Copyright Immutable Pty Ltd 2018 - 2023
 // SPDX-License-Identifier: Apache 2.0
 // Adapted from OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/ERC20.sol)
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "../lib/EIP712MetaTransaction.sol";
@@ -10,7 +11,18 @@ import "../interfaces/child/IChildERC20.sol";
  *   @title ChildERC20
  *   @author Polygon Technology (@QEDK)
  *   @notice Child token template for ChildERC20 predicate deployments
- *   @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
+ *   @dev All child tokens are clones of this contract. Burning and minting is controlled by the ChildERC20Bridge.
+ *
+ *   @dev Upgradability:
+ *        This contract is deployed using cloneDeterministic. It is then initialized using an initialize function.
+ *        However, the contract is accessed directly, and not via a transparent upgrade proxy. As such, this contract is not upgradeable.
+ *
+ *   @dev Cloning and Initialization:
+ *        During the bootstrap process this contract is deployed on-chain.
+ *        When a token is initially mapped by the ChildERC20Bridge the deployed contract is cloned by the ChildERC20Bridge to a deterministic address.
+ *        The new ChildERC20 token is created using cloneDeterministic with the keccak256 hash of the rootToken's address as the salt.
+ *        This new ChildERC20 token is then initialized with the same name, symbol and decimals as the rootToken.
+ *        This deterministic cloning approach allows the token mapping on the root and child bridges to stay congruent.
  */
 // solhint-disable reason-string
 contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IChildERC20 {

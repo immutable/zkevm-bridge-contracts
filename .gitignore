@@ -30,3 +30,11 @@ broadcast/DeployRootContracts.s.sol/2500/
 broadcast/DeployChildContracts.s.sol/2501/
 
 node_modules/
+
+# Bootstrap output files
+scripts/bootstrap/*.contracts.json
+scripts/localdev/*.contracts.json
+bootstrap.out
+
+# MacOS
+.DS_Store

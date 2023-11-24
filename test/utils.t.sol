@@ -1,23 +1,47 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.21;
+pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {ERC20PresetMinterPauser} from "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {MockAxelarGateway} from "../src/test/root/MockAxelarGateway.sol";
-import {MockAxelarGasService} from "../src/test/root/MockAxelarGasService.sol";
+import {MockAxelarGateway} from "./mocks/root/MockAxelarGateway.sol";
+import {MockAxelarGasService} from "./mocks/root/MockAxelarGasService.sol";
 import {RootERC20Bridge, IERC20Metadata} from "../src/root/RootERC20Bridge.sol";
-import {ChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
-import {ChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
-import {WETH} from "../src/test/root/WETH.sol";
+import {RootERC20BridgeFlowRate} from "../src/root//flowrate/RootERC20BridgeFlowRate.sol";
+import {ChildERC20Bridge, IChildERC20Bridge} from "../src/child/ChildERC20Bridge.sol";
+import {ChildAxelarBridgeAdaptor, IChildAxelarBridgeAdaptor} from "../src/child/ChildAxelarBridgeAdaptor.sol";
 import {IWETH} from "../src/interfaces/root/IWETH.sol";
+import {WIMX} from "../src/child/WIMX.sol";
 
 import {IChildERC20, ChildERC20} from "../src/child/ChildERC20.sol";
+import {IRootERC20Bridge} from "../src/root/RootERC20Bridge.sol";
 import {RootAxelarBridgeAdaptor} from "../src/root/RootAxelarBridgeAdaptor.sol";
+import {IRootAxelarBridgeAdaptor} from "../src/interfaces/root/IRootAxelarBridgeAdaptor.sol";
+
+interface IPausable {
+    function pause() external;
+
+    function unpause() external;
+}
 
 contract Utils is Test {
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
+
+    address pauser = makeAddr("pauser");
+    address unpauser = makeAddr("unpauser");
+
+    function pause(IPausable bridge) public {
+        vm.startPrank(pauser);
+        bridge.pause();
+        vm.stopPrank();
+    }
+
+    function unpause(IPausable bridge) public {
+        vm.startPrank(unpauser);
+        bridge.unpause();
+        vm.stopPrank();
+    }
 
     function childIntegrationSetup()
         public
@@ -34,6 +58,9 @@ contract Utils is Test {
         string memory rootAdaptor = Strings.toHexString(address(99999));
         rootIMX = address(555555);
         rootToken = address(44444);
+        address childWIMX = address(0xabc);
+
+        deployCodeTo("WIMX.sol", childWIMX);
 
         axelarGasService = new MockAxelarGasService();
         mockAxelarGateway = new MockAxelarGateway();
@@ -41,17 +68,45 @@ contract Utils is Test {
         childTokenTemplate.initialize(address(1), "Test", "TST", 18);
         childBridge = new ChildERC20Bridge();
         childBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockAxelarGateway));
-        childBridge.initialize(address(childBridgeAdaptor), rootAdaptor, address(childTokenTemplate), "ROOT", rootIMX);
-        childBridgeAdaptor.initialize("ROOT", address(childBridge), address(axelarGasService));
+        IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            adaptorManager: address(this),
+            initialDepositor: address(this),
+            treasuryManager: address(this)
+        });
+        childBridge.initialize(roles, address(childBridgeAdaptor), address(childTokenTemplate), rootIMX, childWIMX);
+
+        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor
+            .InitializationRoles({
+            defaultAdmin: address(this),
+            bridgeManager: address(this),
+            gasServiceManager: address(this),
+            targetManager: address(this)
+        });
+
+        address childBridgeAddr = address(childBridge);
+
+        childBridgeAdaptor.initialize(adaptorRoles, childBridgeAddr, "ROOT", rootAdaptor, address(axelarGasService));
 
         bytes memory mapTokenData = abi.encode(MAP_TOKEN_SIG, rootToken, "TEST NAME", "TNM", 18);
         vm.prank(address(childBridgeAdaptor));
-        childBridge.onMessageReceive("ROOT", rootAdaptor, mapTokenData);
+        childBridge.onMessageReceive(mapTokenData);
 
         ChildERC20 childToken = ChildERC20(childBridge.rootTokenToChildToken(address(rootToken)));
-        vm.prank(address(childBridge));
+        vm.prank(childBridgeAddr);
         childToken.mint(address(this), 1000000 ether);
-        childToken.approve(address(childBridge), 1000000 ether);
+        childToken.approve(childBridgeAddr, 1000000 ether);
+    }
+
+    struct RootIntegration {
+        ERC20PresetMinterPauser imxToken;
+        ERC20PresetMinterPauser token;
+        RootERC20BridgeFlowRate rootBridgeFlowRate;
+        RootAxelarBridgeAdaptor axelarAdaptor;
+        MockAxelarGateway mockAxelarGateway;
+        MockAxelarGasService axelarGasService;
     }
 
     function rootIntegrationSetup(
@@ -61,46 +116,53 @@ contract Utils is Test {
         address imxTokenAddress,
         address wethTokenAddress,
         uint256 imxCumulativeDepositLimit
-    )
-        public
-        returns (
-            ERC20PresetMinterPauser imxToken,
-            ERC20PresetMinterPauser token,
-            RootERC20Bridge rootBridge,
-            RootAxelarBridgeAdaptor axelarAdaptor,
-            MockAxelarGateway mockAxelarGateway,
-            MockAxelarGasService axelarGasService
-        )
-    {
-        token = new ERC20PresetMinterPauser("Test", "TST");
-        token.mint(address(this), 1000000 ether);
+    ) public returns (RootIntegration memory integrationTest) {
+        integrationTest.token = new ERC20PresetMinterPauser("Test", "TST");
+        integrationTest.token.mint(address(this), 1000000 ether);
 
         deployCodeTo("ERC20PresetMinterPauser.sol", abi.encode("ImmutableX", "IMX"), imxTokenAddress);
-        imxToken = ERC20PresetMinterPauser(imxTokenAddress);
-        imxToken.mint(address(this), 1000000 ether);
+        integrationTest.imxToken = ERC20PresetMinterPauser(imxTokenAddress);
+        integrationTest.imxToken.mint(address(this), 1000000 ether);
 
-        // deployCodeTo("WETH9.sol", abi.encode("Wrapped ETH", "WETH"), wethTokenAddress);
-        // imxToken = ERC20PresetMinterPauser(imxTokenAddress);
-        // imxToken.mint(address(this), 1000000 ether);
+        integrationTest.rootBridgeFlowRate = new RootERC20BridgeFlowRate();
+        integrationTest.mockAxelarGateway = new MockAxelarGateway();
+        integrationTest.axelarGasService = new MockAxelarGasService();
 
-        rootBridge = new RootERC20Bridge();
-        mockAxelarGateway = new MockAxelarGateway();
-        axelarGasService = new MockAxelarGasService();
+        integrationTest.axelarAdaptor = new RootAxelarBridgeAdaptor(address(integrationTest.mockAxelarGateway));
 
-        axelarAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
 
-        rootBridge.initialize(
-            address(axelarAdaptor),
+        integrationTest.rootBridgeFlowRate.initialize(
+            roles,
+            address(integrationTest.axelarAdaptor),
             childBridge,
-            Strings.toHexString(childBridgeAdaptor),
-            address(token),
+            address(integrationTest.token),
             imxTokenAddress,
             wethTokenAddress,
-            "CHILD",
-            imxCumulativeDepositLimit
+            imxCumulativeDepositLimit,
+            address(this)
         );
 
-        axelarAdaptor.initialize(address(rootBridge), childBridgeName, address(axelarGasService));
+        IRootAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IRootAxelarBridgeAdaptor.InitializationRoles({
+            defaultAdmin: address(this),
+            bridgeManager: address(this),
+            gasServiceManager: address(this),
+            targetManager: address(this)
+        });
+
+        integrationTest.axelarAdaptor.initialize(
+            adaptorRoles,
+            address(integrationTest.rootBridgeFlowRate),
+            childBridgeName,
+            Strings.toHexString(childBridgeAdaptor),
+            address(integrationTest.axelarGasService)
+        );
     }
 
     function setupDeposit(
@@ -157,19 +219,14 @@ contract Utils is Test {
         return (childToken, predictedPayload);
     }
 
-    function setupChildDeposit(
-        ChildERC20 token,
-        ChildERC20Bridge childBridge,
-        string memory sourceChain,
-        string memory sourceAddress
-    ) public {
+    function setupChildDeposit(ChildERC20 token, ChildERC20Bridge childBridge) public {
         string memory name = token.name();
         string memory symbol = token.symbol();
         uint8 decimals = token.decimals();
 
         bytes memory payload = abi.encode(childBridge.MAP_TOKEN_SIG(), address(token), name, symbol, decimals);
 
-        childBridge.onMessageReceive(sourceChain, sourceAddress, payload);
+        childBridge.onMessageReceive(payload);
     }
 
     function getMappingStorageSlotFor(address key, uint256 position) public pure returns (bytes32 slot) {
