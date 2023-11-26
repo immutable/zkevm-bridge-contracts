@@ -154,8 +154,21 @@ The [smart contracts include](https://github.com/immutable/zkevm-bridge-contract
     - [`ChildAxelarBridgeAdaptor`](../src/child/ChildAxelarBridgeAdaptor.sol): Enables the bridge to send and receive messages to and from the Axelar GMP bridge.
 
 ### Transaction Lifecycle
+The example below illustrates the lifecycle of transaction where a user deposits ETH on Ethereum. The example is illustrative of the lifecycle of a typical token bridging transaction. 
 
 <img src="diagrams/transaction-lifecycle.png" alt="drawing"/>
+
+1. Alice initiates a call to `depositETH()` on the `RootERC20BridgeFlowRate` contract, sending her desired amount of ETH and a bridging fee. This fee covers the Axelar protocol services, which include validator attestation, relaying, and executing the cross-chain message on the destination chain.
+2. The deposit request is then validated and a cross-chain message payload is sent to the bridge adapter.
+3. This bridge adapter forwards the message payload to the `AxelarGateway` contract and sends the bridge fee to the `AxelarGasService` contract.
+4. The `AxelarGateway` emits events associated with the request to send the cross-chain message. These events are noticed by Axelar validators who then attest to the cross-chain message.
+5. Once a quorum of Axelar validators attests to a message, an Axelar relayer sends the approval information to the `AxelarGateway` contract on the destination chain.
+6. Subsequently, an Axelar executor service triggers the execution of the cross-chain message to complete the deposit process on the destination chain. This is done by calling the `execute()` method on `ChildAxelarBridgeAdaptor`. While the Axelar executor service is compensated as part of the bridging fee, the process is permissionless and can be executed by any entity.
+7. The bridge adapter validates the cross-chain message, ensuring it has been attested by the Axelar validator set and originated from the `RootAxelarBridgeAdaptor` on Ethereum.
+8. The bridge adapter forwards the message to the `ChildERC20Bridge` contract.
+9. The `ChildERC20Bridge` performs various validations and triggers a mint on the wrapped ETH ERC20 contract on the child chain, transferring `wETH` to Alice on the child chain.
+
+The deposit of ERC20 tokens follows a similar flow with two subtle differences: 1) A prerequisite step where the user grants approval to the ERC20 token, enabling the bridge to transfer the deposit amount, and 2) As part of the deposit initiation step (step 1 in the process above), the bridge transfers the tokens from the user to the bridge itself.
 
 
 # Glossary
