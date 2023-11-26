@@ -154,9 +154,11 @@ The [smart contracts include](https://github.com/immutable/zkevm-bridge-contract
     - [`ChildAxelarBridgeAdaptor`](../src/child/ChildAxelarBridgeAdaptor.sol): Enables the bridge to send and receive messages to and from the Axelar GMP bridge.
 
 ### Transaction Lifecycle
+
+#### Deposit Transaction Flow
 The example below illustrates the lifecycle of transaction where a user deposits ETH on Ethereum. The example is illustrative of the lifecycle of a typical token bridging transaction. 
 
-<img src="diagrams/transaction-lifecycle.png" alt="drawing"/>
+<img src="diagrams/deposit-transaction-flow.png" alt="drawing"/>
 
 1. Alice initiates a call to `depositETH()` on the `RootERC20BridgeFlowRate` contract, sending her desired amount of ETH and a bridging fee. This fee covers the Axelar protocol services, which include validator attestation, relaying, and executing the cross-chain message on the destination chain.
 2. The deposit request is then validated and a cross-chain message payload is sent to the bridge adapter.
@@ -170,6 +172,8 @@ The example below illustrates the lifecycle of transaction where a user deposits
 
 The deposit of ERC20 tokens follows a similar flow with two subtle differences: 1) A prerequisite step where the user grants approval to the ERC20 token, enabling the bridge to transfer the deposit amount, and 2) As part of the deposit initiation step (step 1 in the process above), the bridge transfers the tokens from the user to the bridge itself.
 
+#### Withdrawal Transaction Flow
+<img src="diagrams/withdraw-transaction-flow.png" alt="drawing"/>
 
 # Glossary
 - **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
