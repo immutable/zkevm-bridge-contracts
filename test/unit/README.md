@@ -123,7 +123,7 @@ The tests below are solely related to the portion of the flow involving the L1 b
 | `test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX`                   | Withdrawal emits a `RootChainERC20WithdrawEvent` when withdrawing IMX tokens.                           | Yes        |
 | `test_onMessageReceive_EmitsRootChainERC20WithdrawEventForIMX_DifferentReceiver` | Withdrawal emits a `RootChainERC20WithdrawEvent` when withdrawing IMX tokens with a different receiver. | Yes        |
 
-#### ETH (Not Implemented)
+#### ETH
 
 | Test                                                                           | Description                                                              | Happy Path |
 |--------------------------------------------------------------------------------|--------------------------------------------------------------------------|------------|
@@ -144,7 +144,7 @@ The tests below are solely related to the portion of the flow involving the L1 b
 ----
 
 
-## Root ERC 20 Flow Rate (Not Implemented)
+## Root ERC 20 Flow Rate
 Contract: [RootERC20FlowRate.sol](../../src/root/RootERC20FlowRate.sol) inherits from [RootERC20Bridge.sol](../../src/root/RootERC20Bridge.sol)
 Tests: [RootERC20FlowRate.t.sol](./root/RootERC20FlowRate.t.sol)
 
@@ -327,7 +327,7 @@ Tests for the `mapToken` function, which maps a token on the L1 bridge contract 
 | `test_RevertIf_ZeroAmountIsProvided`                                 | Should revert if zero amount is provided in the `withdrawIMX` call.                  | No         |
 | `test_RevertsIf_withdrawIMXToCalledWithInsufficientFund`             | Should revert if the IMX value provided is less than amount requested for withdrawal | No         |
 
-#### ETH (Not Implemented)
+#### ETH
 
 | Test                                                                 | Description                                                                          | Happy Path |
 |----------------------------------------------------------------------|--------------------------------------------------------------------------------------|------------|
