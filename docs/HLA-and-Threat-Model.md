@@ -14,6 +14,7 @@
 * [Architecture](#architecture)
   * [System Overview](#adaptor-pattern)
   * [Core Components](#adaptor-pattern)
+  * [Transaction Lifecycle](#transaction-lifecycle)
 * [Deployment Architecture]()
 * [Threat Model]()
   * [Threat Identification](#threat-identification)
@@ -133,35 +134,36 @@ The following stakeholders are involved in the bridge's design, implementation, 
 2. Bridge Operators: Bridge operators are the entities that operate the bridge. They are responsible for the bridge's security, maintenance, and upgrades. They are also responsible for the bridge's operational aspects, such as key management, deployment, and configuration.In the context of Immutable Bridge, this role is undertaken exclusively by Immutable.
 
 ### Core Components
-The Immutable Bridge consists of a set of solidity smart contracts deployed on both the Root and Child chains. These contracts handle enable capabilities such as deposits, withdrawals, and token mapping between the Root and Child chains, as discussed in the [core features](#core-features*) section.
+The Immutable Bridge consists of a set of solidity smart contracts deployed on both the Root and Child chains. These contracts enable capabilities such as deposits, withdrawals, and token mapping between the Root and Child chains, as discussed in the [core features](#core-features*) section.
 
-The design of the contracts follows an adaptor pattern, which abstracts away GMP specific functionality from the core bridge functionality. This allows the bridge to be easily ported to other GMPs if required. 
+The design of the contracts follows an adaptor pattern, in order to abstract away GMP specific functionality from the core bridge functionality. This allows the bridge to be easily replace the underlying GMP if required. 
 
-Hence, the contracts consist of adaptors, which handle GMP specific message sending and receiving functionality, and bridge contracts, which handle the core bridge functionality.
-
-Both adaptors and bridge contracts are upgradeable, and follow the Transparent Proxy pattern. This allows the bridge to be upgraded without requiring users to interact with a new contract address.
+Hence, the bridge consist of a pair of contracts deployed on each chain: an adaptor, which handle sending and receiving messages to the underlying GMP, and the bridge contract, which handles the core bridge functionality. Both adaptors and bridge contracts are upgradeable, and follow the Transparent proxy pattern. This allows the bridge to be upgraded without requiring users to interact with a new contract address.
 
 <img src="diagrams/bridge-HLA.png" alt="drawing" width="1638"/>
 
-The smart contracts include:
-1. [Root Chain](https://github.com/immutable/zkevm-bridge-contracts/tree/main/src/): Contracts deployed on the Root Chain include:
+The [smart contracts include](https://github.com/immutable/zkevm-bridge-contracts/tree/main/src):
+1. [Root Chain](https://github.com/immutable/zkevm-bridge-contracts/tree/main/src/): Contracts deployed on the Root Chain:
     - [`RootERC20Bridge`](../src/root/RootERC20Bridge.sol): The bridge contract that handles mapping, deposits and withdrawals of ERC20 tokens, and native tokens between the Root and Child chains.
     - [`RootERC20BridgeFlowRate`](../src/root/RootERC20BridgeFlowRate.sol): Extends `RootERC20Bridge` to include flow rate control functionality. This is the primary bridge contract that users will interact with.
     - [`FlowRateDetection`](../src/root/flowrate/FlowRateDetection.sol): Implements flow rate control detection functionality.
     - [`FlowRateWithdrawalQueue`](../src/root/flowrate/FlowRateWithdrawalQueue.sol): Implements withdrawal queue functionality.
     - [`RootAxelarBridgeAdaptor`](../src/root/RootAxelarBridgeAdaptor.sol): Enables the bridge to send and receive messages to and from the Axelar GMP bridge.
-2. [Child Chain](https://github.com/immutable/zkevm-bridge-contracts/tree/main/src/): Contracts deployed on the Child Chain include:
+2. [Child Chain](https://github.com/immutable/zkevm-bridge-contracts/tree/main/src/): Contracts deployed on the Child Chain:
     - [`ChildERC20Bridge`](../src/child/ChildERC20Bridge.sol): The bridge contract that handles mapping, deposits and withdrawals of ERC20 tokens, and native tokens between the Root and Child chains.
     - [`ChildAxelarBridgeAdaptor`](../src/child/ChildAxelarBridgeAdaptor.sol): Enables the bridge to send and receive messages to and from the Axelar GMP bridge.
 
+### Transaction Lifecycle
+
+<img src="diagrams/transaction-lifecycle.png" alt="drawing"/>
+
+
 # Glossary
-- General Message Passing (GMP) bridge: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
-- Token bridge: A bridge that enables the transfer of tokens between two chains, using an underlying GMP. The Immutable zkEVM bridge is a token bridge.
-- Layer 1 (L1): Refers to Ethereum, which is also referred to as the Root chain in this document.
-- Layer 2 (L2): Refers to Immutable zkEVM, which is also referred to as the Child chain in this document.
-- Root chain: Refers to the Layer 1 chain, which is Ethereum.
-- Child chain: Refers to the Layer 2, which is the Immutable zkEVM chain.
-- Deposit: The transfer of tokens from the Root chain to the Child chain.
-- Withdrawal: The transfer of tokens from the Child chain to the Root chain.
-- Root token: An original token that is deployed on the Root chain.
-- Child token: A wrapped token that is deployed on the Child chain, which is used to represent the Root token on the Child chain.
+- **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
+- **Token bridge**: A bridge that enables the transfer of tokens between two chains, using an underlying GMP. The Immutable zkEVM bridge is a token bridge.
+- **Root chain**: Refers to Ethereum, which is also referred to as the L1 in this document.
+- **Child chain**: Refers to the Immutable Chain, which is also referred to as the L2 in this document.
+- **Layer 1 (L1)**: Refers to Ethereum, which is also referred to as the Root chain in this document.
+- **Layer 2 (L2)**: Refers to Immutable zkEVM, which is also referred to as the Child chain in this document.
+- **Root token**: An original token that is deployed on the Root chain.
+- **Child token**: A wrapped token that is deployed on the Child chain, which is used to represent the Root token on the Child chain.
