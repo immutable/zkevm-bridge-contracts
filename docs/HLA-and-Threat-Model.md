@@ -15,6 +15,7 @@
   * [Stakeholders](#stakeholders)
   * [Core Components](#core-components)
   * [Transaction Lifecycle](#transaction-lifecycle)
+  * [Flow Rate Control](#transaction-lifecycle)
 * [Deployment Architecture]()
 * [Threat Model]()
   * [Threat Identification](#threat-identification)
@@ -111,7 +112,12 @@ To mitigate the impact of potential exploits, withdrawal transactions (token tra
    - If no thresholds are defined for a given token, all withdrawals relating to that token are queued.
 
 #### Emergency Pause
-In the event of an emergency, the bridge can be paused to mitigate the potential impact of an incident. This suspends all user-accessible capabilities, including token mapping, deposits, and withdrawals, until the bridge is resumed. However, this doesn't restrict privileged functions accessible by accounts with certain roles. It allows administrators to perform necessary operations that can address the incident (e.g., bridge parameter changes, upgrades).
+In the event of an emergency, the bridge can be paused to mitigate the potential impact of an incident. This suspends all user-accessible capabilities, including token mapping, deposits, and withdrawals, until the bridge is resumed. However, this doesn't restrict privileged functions accessible by accounts with certain roles. It allows administrators to perform necessary operations that can address the incident (e.g., bridge parameter changes, upgrades). The specific functions that are halted by the emergency pause mechanism for each contract are listed below:
+- Root Chain
+   - `RootERC20Bridge`: `mapToken()`, `deposit()`, `depositTo()`, `depositETH()`, `depositToETH()`, `onMessageReceive()`
+   - `RootERC20BridgeFlowRate` contract: `finaliseQueuedWithdrawal()`, `finaliseQueuedWithdrawalsAggregated()`, as well as all functions from `RootERC20Bridge`.
+- Child Chain:
+  - `ChildERC20Bridge`: `withdraw()`, `withdrawTo()`, `withdrawIMX()`, `withdrawIMXTo()`, `withdrawWIMX()`, `withdrawWIMXTo()`,`onMessageReceive()`
 
 #### Role-Based-Access-Control
 The bridge employs fine-grained Role-Based-Access-Controls (RBAC), for privileged operations that control various parameters of the bridge. These include:
