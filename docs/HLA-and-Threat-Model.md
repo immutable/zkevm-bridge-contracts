@@ -156,24 +156,39 @@ The [smart contracts include](https://github.com/immutable/zkevm-bridge-contract
 ### Transaction Lifecycle
 
 #### Deposit Transaction Flow
-The example below illustrates the lifecycle of transaction where a user deposits ETH on Ethereum. The example is illustrative of the lifecycle of a typical token bridging transaction. 
+The example below illustrates the lifecycle of transaction where a user deposits ETH on Ethereum. The example is illustrative of the lifecycle of a typical token deposit transaction. 
 
 <img src="diagrams/deposit-transaction-flow.png" alt="drawing"/>
 
 1. Alice initiates a call to `depositETH()` on the `RootERC20BridgeFlowRate` contract, sending her desired amount of ETH and a bridging fee. This fee covers the Axelar protocol services, which include validator attestation, relaying, and executing the cross-chain message on the destination chain.
-2. The deposit request is then validated and a cross-chain message payload is sent to the bridge adapter.
-3. This bridge adapter forwards the message payload to the `AxelarGateway` contract and sends the bridge fee to the `AxelarGasService` contract.
-4. The `AxelarGateway` emits events associated with the request to send the cross-chain message. These events are noticed by Axelar validators who then attest to the cross-chain message.
-5. Once a quorum of Axelar validators attests to a message, an Axelar relayer sends the approval information to the `AxelarGateway` contract on the destination chain.
-6. Subsequently, an Axelar executor service triggers the execution of the cross-chain message to complete the deposit process on the destination chain. This is done by calling the `execute()` method on `ChildAxelarBridgeAdaptor`. While the Axelar executor service is compensated as part of the bridging fee, the process is permissionless and can be executed by any entity.
-7. The bridge adapter validates the cross-chain message, ensuring it has been attested by the Axelar validator set and originated from the `RootAxelarBridgeAdaptor` on Ethereum.
-8. The bridge adapter forwards the message to the `ChildERC20Bridge` contract.
+2. The deposit request is then validated and a cross-chain message payload is sent to the bridge adaptor.
+3. This bridge adaptor forwards the message payload to the `AxelarGateway` contract and sends the bridge fee to the `AxelarGasService` contract.
+4. The `AxelarGateway` emits events associated with the request to send the cross-chain message. These events are observed by Axelar validators who then attest to the cross-chain message.
+5. Once a quorum of Axelar validators attests to a message, an Axelar validator sends the approval information to the `AxelarGateway` contract on the destination chain.
+6. Subsequently, the Axelar executor service triggers the execution of the cross-chain message to complete the deposit process on the destination chain. This is done by calling the `execute()` method on `ChildAxelarBridgeAdaptor`. While the Axelar executor service is compensated as part of the bridging fee, the process is permissionless and can be executed by any entity.
+7. The bridge adaptor validates the cross-chain message, ensuring it has been attested by the Axelar validator set and originated from the `RootAxelarBridgeAdaptor` on Ethereum.
+8. The bridge adaptor forwards the message to the `ChildERC20Bridge` contract.
 9. The `ChildERC20Bridge` performs various validations and triggers a mint on the wrapped ETH ERC20 contract on the child chain, transferring `wETH` to Alice on the child chain.
 
 The deposit of ERC20 tokens follows a similar flow with two subtle differences: 1) A prerequisite step where the user grants approval to the ERC20 token, enabling the bridge to transfer the deposit amount, and 2) As part of the deposit initiation step (step 1 in the process above), the bridge transfers the tokens from the user to the bridge itself.
 
 #### Withdrawal Transaction Flow
+The example below illustrates the lifecycle of transaction where a user withdraws wETH from the Immutable chain. The example is illustrative of the lifecycle of a typical token withdrawal transaction. A prerequisite step to this withdrawal process is that a user approves the bridge's transfer of the required amount of the ERC20 token from the user's account.
+
 <img src="diagrams/withdraw-transaction-flow.png" alt="drawing"/>
+
+1. Alice initiates a call to `withdrawETH()` on the `ChildERC20Bridge` contract, sending her desired amount of wETH to withdraw and a bridging fee in IMX, the native currency of the Immutable chain. The bridge fee covers the Axelar protocol services, which include validator attestation, relaying, and executing the cross-chain message on the destination chain.
+2. The corresponding amount of wETH is burnt from Alice's balance, on the Wrapped ETH ERC20 contract.
+3. The bridge sends a cross-chain message payload to the `ChildAxelarBridgeAdaptor`.
+4. This bridge adaptor forwards the message payload to the `AxelarGateway` contract and sends the bridge fee to the `AxelarGasService` contract.
+5. The `AxelarGateway` emits events associated with the request to send the cross-chain message. These events are observed by Axelar validators who then attest to the cross-chain message.
+6. Once a quorum of Axelar validators attests to a message, an Axelar validator sends the approval information to the `AxelarGateway` contract on the destination chain.
+7. Subsequently, the Axelar executor service triggers the execution of the cross-chain message to complete the deposit process on the destination chain. This is done by calling the `execute()` method on `RootAxelarBridgeAdaptor`. While the Axelar executor service is compensated as part of the bridging fee, the process is permissionless and can be executed by any entity.
+8. The bridge adaptor validates the cross-chain message, ensuring it has been attested by the Axelar validator set and originated from the `ChildAxelarBridgeAdaptor` on Immutable.
+9. The bridge adaptor forwards the message to the `RootERC20BridgeFlowRate` contract.
+10. The `RootERC20BridgeFlowRate` performs various validations. These checks include determining if the withdrawal exceeds the configured flow rate for ETH. If it does, the transaction is placed in a withdrawal queue. Requiring Alice to manually finalise the withdrawal, after the withdrawal delay (default of 1 day) has elapsed. If it doesn't, the bridge transfers a corresponding amount of native ETH from the bridge to Alice, thus completing the withdrawal flow.
+
+The withdrawal of native IMX follows a similar flow with two subtle differences. These differences are due to the fact that IMX is a native token on the child chain, not an ERC20 token: 1) A pre-requisite ERC20 token approval step is not required, and 2) The IMX sent by the user is locked in the bridge, and there is no token burning step.
 
 # Glossary
 - **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
