@@ -8,12 +8,12 @@
     * [Cross-chain Messaging Stack](#cross-chain-messaging-stack)
     * [Axelar GMP Bridge](#axelar-gmp-bridge)
     * [Immutable zkEVM](#immutable-zkevm)
-* [Immutable Token Bridge]()
+* [Immutable Token Bridge](#immutable-token-bridge)
   * [Core Features](#core-features)
   * [Security Features](#security-features) 
 * [Architecture](#architecture)
-  * [System Overview](#adaptor-pattern)
-  * [Core Components](#adaptor-pattern)
+  * [Stakeholders](#stakeholders)
+  * [Core Components](#core-components)
   * [Transaction Lifecycle](#transaction-lifecycle)
 * [Deployment Architecture]()
 * [Threat Model]()
@@ -125,7 +125,7 @@ Axelar General-purpose Messaging Bridge
 ### Immutable Chain
 The Immutable chain is an EVM-based single sequencer chain, derived from a fork of the Geth client and operating on the Clique consensus protocol. As a permissioned chain, it has a fixed set of validators. The chain utilizes a native token, IMX, for transaction gas payments. An ERC20 version of IMX also exists on Ethereum. Upon the launch of the Immutable chain, native IMX will be pre-mined to support the floating supply of IMX on Ethereum. Users bridging IMX from Ethereum to Immutable will receive native IMX on the Immutable chain. The Immutable bridge will maintain a supply of IMX to service this bridging process.
 
-## System Overview
+## Architecture
 
 ### Stakeholders
 The following stakeholders are involved in the bridge's design, implementation, and operation:
