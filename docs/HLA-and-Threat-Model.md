@@ -289,6 +289,143 @@ A possible issue with this methodology is that the calculations are quantized, b
 The `_updateFlowRateBucket` function in [`FlowRateDetection.sol`](../src/root/flowrate/FlowRateDetection.sol) implements the bucket update calculations.
 
 ---
+## Threat Model
+### Attack Surfaces
+#### Smart Contracts
+The smart contracts are the primary attack surface for the bridge. They are the components that handle the core bridge functionality that users interact with, and custody significant amount of user-funds. 
+The contracts are deployed on both the Root and Child chains. The contracts are written in Solidity, and are compiled using the Solidity compiler (v0.8.19). 
+
+**RootERC20BridgeFlowRate**
+The `RootERC20BridgeFlowRate` contract is the contract that users will interact with on the Root chain in order to bridge their assets.
+The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
+
+| Method Name                                                                                                     | Function Selector | Access Control          |
+|-----------------------------------------------------------------------------------------------------------------|-------------------|-------------------------|
+| `grantRole(bytes32,address)`                                                                                    | `2f2ff15d`        | `DEFAULT_ADMIN`         |
+| `revokeRole(bytes32,address)`                                                                                   | `d547741f`        | `DEFAULT_ADMIN`         |
+| `grantPauserRole(address)`                                                                                      | `6c11c21c`        | `DEFAULT_ADMIN`         |
+| `revokePauserRole(address)`                                                                                     | `f865af08`        | `DEFAULT_ADMIN`         |
+| `grantUnpauserRole(address)`                                                                                    | `32968782`        | `DEFAULT_ADMIN`         |
+| `revokeUnpauserRole(address)`                                                                                   | `2540e2da`        | `DEFAULT_ADMIN`         |
+| `grantAdaptorManagerRole(address)`                                                                              | `8f70121f`        | `DEFAULT_ADMIN`         |
+| `revokeAdaptorManagerRole(address)`                                                                             | `89c65d41`        | `DEFAULT_ADMIN`         |
+| `grantVariableManagerRole(address)`                                                                             | `07b2b7ad`        | `DEFAULT_ADMIN`         |
+| `revokeVariableManagerRole(address)`                                                                            | `6066ae87`        | `DEFAULT_ADMIN`         |
+| `renounceRole(bytes32,address)`                                                                                 | `36568abe`        | `DEFAULT_ADMIN`         |
+| `updateImxCumulativeDepositLimit(uint256)`                                                                      | `d68d5fd6`        | `VARIABLE_MANAGER_ROLE` |
+| `updateRootBridgeAdaptor(address)`                                                                              | `a8deae56`        | `ADAPTOR_MANAGER_ROLE`  |
+| `setWithdrawalDelay(uint256)`                                                                                   | `d2c13da5`        | `RATE_ROLE`             |
+| `setRateControlThreshold(address,uint256,uint256,uint256)`                                                      | `8f3a4e4f`        | `RATE_ROLE`             |
+| `activateWithdrawalQueue()`                                                                                     | `af8bbb5e`        | `RATE_ROLE`             |
+| `deactivateWithdrawalQueue()`                                                                                   | `1657a6e5`        | `RATE_ROLE`             |
+| `pause()`                                                                                                       | `8456cb59`        | `PAUSER_ROLE`           |
+| `unpause()`                                                                                                     | `3f4ba83a`        | `UNPAUSER_ROLE`         |
+| `onMessageReceive(bytes)`                                                                                       | `7248c77c`        | (Only Bridge Adaptor)   |
+| `initialize((address,address,address,address,address),address,address,address,address,address,uint256)`         | `c880d915`        | -                       |
+| `initialize((address,address,address,address,address),address,address,address,address,address,uint256,address)` | `0800dd27`        | -                       |
+| `mapToken(address)`                                                                                             | `f4a120f7`        | -                       |
+| `deposit(address,uint256)`                                                                                      | `47e7ef24`        | -                       |
+| `depositETH(uint256)`                                                                                           | `5358fbda`        | -                       |
+| `depositTo(address,address,uint256)`                                                                            | `f213159c`        | -                       |
+| `depositToETH(address,uint256)`                                                                                 | `e0410432`        | -                       |
+| `finaliseQueuedWithdrawal(address,uint256)`                                                                     | `3a7a228e`        | -                       |
+| `finaliseQueuedWithdrawalsAggregated(address,address,uint256[])`                                                | `5d3a22ab`        | -                       |
+
+**RootAxelarBridgeAdaptor**
+The `RootAxelarBridgeAdaptor` contract is the contract that enables `RootERC20BridgeFlowRate` contract to send and receive messages using the Axelar GMP bridge.
+The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
+
+| Method Name                                                                   | Function Selector | Access Control              |
+|-------------------------------------------------------------------------------|-------------------|-----------------------------|
+| `grantBridgeManager(address)`                                                 | `a76d8067`        | `DEFAULT_ADMIN`             |
+| `grantGasServiceManager(address)`                                             | `2ee5d49e`        | `DEFAULT_ADMIN`             |
+| `grantRole(bytes32,address)`                                                  | `2f2ff15d`        | `DEFAULT_ADMIN`             |
+| `grantTargetManagerRole(address)`                                             | `96d220ce`        | `DEFAULT_ADMIN`             |
+| `renounceRole(bytes32,address)`                                               | `36568abe`        | `DEFAULT_ADMIN`             |
+| `revokeBridgeManagerRole(address)`                                            | `7d9da79b`        | `DEFAULT_ADMIN`             |
+| `revokeGasServiceManagerRole(address)`                                        | `bd655992`        | `DEFAULT_ADMIN`             |
+| `revokeRole(bytes32,address)`                                                 | `d547741f`        | `DEFAULT_ADMIN`             |
+| `revokeTargetManagerRole(address)`                                            | `8e6444a8`        | `DEFAULT_ADMIN`             |
+| `updateChildBridgeAdaptor(string)`                                            | `0bbf3766`        | `TARGET_MANAGER_ROLE`       |
+| `updateChildChain(string)`                                                    | `17a0e3e2`        | `TARGET_MANAGER_ROLE`       |
+| `updateGasService(address)`                                                   | `3bed20e8`        | `GAS_SERVICE_MANAGER_ROLE`  |
+| `updateRootBridge(address)`                                                   | `e4426af4`        | `BRIDGE_MANAGER_ROLE`       |
+| `sendMessage(bytes,address)`                                                  | `f20755ba`        | (Only Root Bridge Contract) |
+| `initialize((address,address,address,address),address,string,string,address)` | `381fe249`        | -                           |
+| `execute(bytes32,string,string,bytes)`                                        | `49160658`        | -                           |
+
+
+*ChildERC20Bridge**
+The `ChildERC20Bridge` contract is the contract that users will interact with on the Child chain in order to bridge their assets.
+The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
+
+| Method Name                                                                                     | Function Selector | Access Control              |
+|-------------------------------------------------------------------------------------------------|-------------------|-----------------------------|
+| `privilegedDeposit()`                                                                           | `18428c50`        | `PRIVILEGED_DEPOSITOR_ROLE` |
+| `grantAdaptorManagerRole(address)`                                                              | `8f70121f`        | `DEFAULT_ADMIN`             |
+| `grantPauserRole(address)`                                                                      | `6c11c21c`        | `DEFAULT_ADMIN`             |
+| `grantRole(bytes32,address)`                                                                    | `2f2ff15d`        | `DEFAULT_ADMIN`             |
+| `grantUnpauserRole(address)`                                                                    | `32968782`        | `DEFAULT_ADMIN`             |
+| `renounceRole(bytes32,address)`                                                                 | `36568abe`        | `DEFAULT_ADMIN`             |
+| `revokeAdaptorManagerRole(address)`                                                             | `89c65d41`        | `DEFAULT_ADMIN`             |
+| `revokePauserRole(address)`                                                                     | `f865af08`        | `DEFAULT_ADMIN`             |
+| `revokeRole(bytes32,address)`                                                                   | `d547741f`        | `DEFAULT_ADMIN`             |
+| `revokeUnpauserRole(address)`                                                                   | `2540e2da`        | `DEFAULT_ADMIN`             |
+| `pause()`                                                                                       | `8456cb59`        | `PAUSER_ROLE`               |
+| `unpause()`                                                                                     | `3f4ba83a`        | `UNPAUSER_ROLE`             |
+| `updateChildBridgeAdaptor(address)`                                                             | `0765c405`        | `ADAPTOR_MANAGER_ROLE`      |
+| `initialize((address,address,address,address,address,address),address,address,address,address)` | `f3dfce1d`        | -                           |
+| `withdraw(address,uint256)`                                                                     | `f3fef3a3`        | -                           |
+| `withdrawETH(uint256)`                                                                          | `f14210a6`        | -                           |
+| `withdrawETHTo(address,uint256)`                                                                | `697b894a`        | -                           |
+| `withdrawIMX(uint256)`                                                                          | `de65c2e4`        | -                           |
+| `withdrawIMXTo(address,uint256)`                                                                | `92ffd2e2`        | -                           |
+| `withdrawTo(address,address,uint256)`                                                           | `c3b35a7e`        | -                           |
+| `withdrawWIMX(uint256)`                                                                         | `52b61e36`        | -                           |
+| `withdrawWIMXTo(address,uint256)`                                                               | `274346b9`        | -                           |
+
+
+**ChildAxelarBridgeAdaptor**
+The `ChildAxelarBridgeAdaptor` contract is the contract that enables `ChildERC20Bridge` contract to send and receive messages using the Axelar GMP bridge.
+The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
+
+| Method Name                                                                   | Function Selector | Access Control               |
+|-------------------------------------------------------------------------------|-------------------|------------------------------|
+| `grantBridgeManager(address)`                                                 | `a76d8067`        | `DEFAULT_ADMIN`              |
+| `grantGasServiceManager(address)`                                             | `2ee5d49e`        | `DEFAULT_ADMIN`              |
+| `grantRole(bytes32,address)`                                                  | `2f2ff15d`        | `DEFAULT_ADMIN`              |
+| `grantTargetManagerRole(address)`                                             | `96d220ce`        | `DEFAULT_ADMIN`              |
+| `renounceRole(bytes32,address)`                                               | `36568abe`        | `DEFAULT_ADMIN`              |
+| `revokeBridgeManagerRole(address)`                                            | `7d9da79b`        | `DEFAULT_ADMIN`              |
+| `revokeGasServiceManagerRole(address)`                                        | `bd655992`        | `DEFAULT_ADMIN`              |
+| `revokeRole(bytes32,address)`                                                 | `d547741f`        | `DEFAULT_ADMIN`              |
+| `revokeTargetManagerRole(address)`                                            | `8e6444a8`        | `DEFAULT_ADMIN`              |
+| `updateChildBridge(address)`                                                  | `49ffc2e8`        | `BRIDGE_MANAGER_ROLE`        |
+| `updateGasService(address)`                                                   | `3bed20e8`        | `GAS_SERVICE_MANAGER_ROLE`   |
+| `updateRootBridgeAdaptor(string)`                                             | `fab10bd6`        | `TARGET_MANAGER_ROLE`        |
+| `updateRootChain(string)`                                                     | `8f2e3f38`        | `TARGET_MANAGER_ROLE`        |
+| `sendMessage(bytes,address)`                                                  | `f20755ba`        | (Only Child Bridge Contract) |
+| `initialize((address,address,address,address),address,string,string,address)` | `381fe249`        |                              |
+| `execute(bytes32,string,string,bytes)`                                        | `49160658`        | -                            |
+
+
+**ChildERC20**
+The `ChildERC20` contract is the contract that represents ERC20 tokens on the Child chain.
+The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
+
+
+| Method Name                                                   | Function Selector | Access Control               |
+|---------------------------------------------------------------|-------------------|------------------------------|
+| `burn(address,uint256)`                                       | `9dc29fac`        | (Only Child Bridge Contract) |
+| `mint(address,uint256)`                                       | `40c10f19`        | (Only Child Bridge Contract) |
+| `initialize(address,string,string,uint8)`                     | `f6d2ee86`        | -                            |
+| `decreaseAllowance(address,uint256)`                          | `a457c2d7`        | -                            |
+| `executeMetaTransaction(address,bytes,bytes32,bytes32,uint8)` | `0c53c51c`        | -                            |
+| `increaseAllowance(address,uint256)`                          | `39509351`        | -                            |
+| `invalidateNext(uint256)`                                     | `9b77ef11`        | -                            |
+| `transfer(address,uint256)`                                   | `a9059cbb`        | -                            |
+| `transferFrom(address,address,uint256)`                       | `23b872dd`        | -                            |
+
 
 ## Glossary
 - **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
