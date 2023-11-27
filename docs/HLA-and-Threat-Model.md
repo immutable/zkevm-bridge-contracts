@@ -16,6 +16,8 @@
   * [Core Components](#core-components)
   * [Transaction Lifecycle](#transaction-lifecycle)
   * [Withdrawal Delay Mechanism](#transaction-lifecycle)
+    * [Withdrawal Queue](#withdrawal-queue)
+    * [Flow Rate Detection](#flow-rate-detection)
 * [Deployment Architecture]()
 * [Cryptographic Key Management](#key-management)
 * [Threat Model]()
@@ -51,7 +53,7 @@ Token bridges rely on underlying messaging bridges to enable the transfer of ass
 The Immutable bridge, is a token bridge. It relies on an underlying messaging protocol provided by Axelar.
 
 <p align="center">
-<img src="diagrams/cross-chain-stack.png" alt="drawing" width="520"/>
+<img src="diagrams/cross-chain-stack.png" alt="drawing" width="490"/>
 </p>
 <p align="center">
 Cross-chain Messaging Stack
