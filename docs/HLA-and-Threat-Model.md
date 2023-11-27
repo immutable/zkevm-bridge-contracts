@@ -1,5 +1,7 @@
 # High-Level Architecture and Threat Model
 
+---
+
 <!-- TOC -->
 * [Introduction](#introduction)
   * [Purpose](#purpose)
@@ -18,14 +20,20 @@
   * [Withdrawal Delay Mechanism](#transaction-lifecycle)
     * [Withdrawal Queue](#withdrawal-queue)
     * [Flow Rate Detection](#flow-rate-detection)
-* [Deployment Architecture]()
-* [Cryptographic Key Management](#key-management)
-* [Threat Model]()
+* [Deployment and Operations](#)
+  * [Bootstrap Process](#)
+  * [Deployment and Initialisation](#)
+  * [Cryptographic Key Management](#key-management)
+  * [Monitoring and Alerting](#)
+  * [Incident Response](#)
+* [Threat Model](#)
   * [Threat Identification](#threat-identification)
   * [Threat Analysis](#threat-identification)
   * [Mitigation Strategies](#mitigation-strategies)
 * [Glossary](#glossary)
 <!-- TOC -->
+
+---
 
 ## Introduction
 ### Purpose
@@ -40,6 +48,8 @@ The purpose of this document is to two-fold:
 
 ### Scope
 This document primarily focuses on the on-chain part of the Immutable token bridge infrastructure, covering its design, implementation, and operational aspects. Although various off-chain components and services will support this infrastructure, they are not included in the scope of this document. Furthermore, key dependencies like the GMP and underlying chains are only discussed at a high level, to the extent they influence the bridge's security model.
+
+---
 
 ## Background
 
@@ -75,6 +85,8 @@ Axelar General-purpose Messaging Bridge
 
 ### Immutable Chain
 The Immutable chain is an EVM-based single sequencer chain, derived from a fork of the Geth client and operating on the Clique consensus protocol. As a permissioned chain, it has a fixed set of validators. The chain utilizes a native token, IMX, for transaction gas payments. An ERC20 version of IMX also exists on Ethereum. Upon the launch of the Immutable chain, native IMX will be pre-mined to support the floating supply of IMX on Ethereum. Users bridging IMX from Ethereum to Immutable will receive native IMX on the Immutable chain. The Immutable bridge will maintain a supply of IMX to service this bridging process.
+
+---
 
 ## Immutable Token Bridge
 The Immutable token bridge facilitates the transfer of assets between two chains, namely Ethereum (the Root chain) and the Immutable chain (the Child chain). At present, the bridge only supports the transfer of standard ERC20 tokens originating from Ethereum, as well as native assets (ETH and IMX). Other types of assets (such as ERC721) and assets originating from the Child chain are not currently supported.
@@ -135,7 +147,7 @@ The bridge employs fine-grained Role-Based-Access-Controls (RBAC), for privilege
 - `GAS_SERVICE_MANAGER_ROLE`: Role identifier for those who can update the gas service used by the adaptor.
 - `PAUSER_ROLE`: Role identifier for those who can pause functionanlity.
 - `UNPAUSER_ROLE`: Role identifier for those who can unpause functionality
-
+---
 ## Architecture
 
 ### Stakeholders
@@ -273,8 +285,9 @@ Each token has its own virtual bucket. Each bucket has a capacity, which is the 
 
 A possible issue with this methodology is that the calculations are quantized, being subject to rounding issues. That is, rather than using floating point numbers, integers are used. For the tokens envisaged to be used in the Immutable system, rounding issues should not present a problem as the ERC 20 contracts have been configured to have large numbers of decimal places. For instance, IMX and MATIC have 18 decimal places configured, as will the wrapped Ether.
 
-The `_updateFlowRateBucket` function in `FlowRateDetection.sol` implements the bucket update calculations.
+The `_updateFlowRateBucket` function in [`FlowRateDetection.sol`](../src/root/flowrate/FlowRateDetection.sol) implements the bucket update calculations.
 
+---
 ## Glossary
 - **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
 - **Token bridge**: A bridge that enables the transfer of tokens between two chains, using an underlying GMP. The Immutable zkEVM bridge is a token bridge.
