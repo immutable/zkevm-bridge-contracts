@@ -1,12 +1,10 @@
 // Initialise child contracts
-'use strict';
-require('dotenv').config();
-const init = require("../deploy/child_initialisation.js");
+import { initialiseChildContracts } from "../deploy/child_initialisation";
 
 async function run() {
     console.log("=======Start Child Initialisation=======");
 
-    await init.initialiseChildContracts();
+    await initialiseChildContracts();
 
     console.log("=======End Child Initialisation=======");
 }

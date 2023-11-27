@@ -1,10 +1,10 @@
 // IMX rebalancing
-'use strict';
-require('dotenv').config();
-const { ethers } = require("ethers");
-const helper = require("../helpers/helpers.js");
-const { LedgerSigner } = require('@ethersproject/hardware-wallets')
-const fs = require('fs');
+import * as dotenv from "dotenv";
+dotenv.config();
+import { ethers } from "ethers";
+import { requireEnv, waitForConfirmation, waitForReceipt, getFee, hasDuplicates } from "../helpers/helpers";
+import { LedgerSigner } from "../helpers/ledger_signer";
+import * as fs from "fs";
 
 // The total supply of IMX
 const TOTAL_SUPPLY = "2000000000";
@@ -16,13 +16,13 @@ async function run() {
     console.log("=======Start IMX Rebalancing=======");
 
     // Check environment variables
-    let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
-    let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let rootRPCURL = helper.requireEnv("ROOT_RPC_URL");
-    let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
-    let rootDeployerSecret = helper.requireEnv("ROOT_DEPLOYER_SECRET");
-    let multisigAddr = helper.requireEnv("MULTISIG_CONTRACT_ADDRESS");
-    let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
+    let childRPCURL = requireEnv("CHILD_RPC_URL");
+    let childChainID = requireEnv("CHILD_CHAIN_ID");
+    let rootRPCURL = requireEnv("ROOT_RPC_URL");
+    let rootChainID = requireEnv("ROOT_CHAIN_ID");
+    let rootDeployerSecret = requireEnv("ROOT_DEPLOYER_SECRET");
+    let multisigAddr = requireEnv("MULTISIG_CONTRACT_ADDRESS");
+    let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
 
     // Read from contract file.
     let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
@@ -37,7 +37,9 @@ async function run() {
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
     let adminWallet;
     if (rootDeployerSecret == "ledger") {
-        adminWallet = new LedgerSigner(rootProvider);
+        let index = requireEnv("ROOT_DEPLOYER_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        adminWallet = new LedgerSigner(rootProvider, derivationPath);
     } else {
         adminWallet = new ethers.Wallet(rootDeployerSecret, rootProvider);
     }
@@ -45,10 +47,10 @@ async function run() {
     console.log("Deployer address is: ", adminAddr);
 
     // Check duplicates
-    if (helper.hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
+    if (hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
         throw("Duplicate address detected!");
     }
-    if (helper.hasDuplicates([adminAddr, rootBridgeAddr, rootIMXAddr])) {
+    if (hasDuplicates([adminAddr, rootBridgeAddr, rootIMXAddr])) {
         throw("Duplicate address detected!");
     }
 
@@ -72,13 +74,13 @@ async function run() {
     }
 
     console.log("Rebalance in...");
-    await helper.waitForConfirmation();
+    await waitForConfirmation();
 
     // Rebalancing
     console.log("Transfer...")
     let resp = await IMX.connect(adminWallet).transfer(rootBridgeAddr, balanceAmt);
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
     adminL1Balance = await IMX.balanceOf(adminAddr);
     rootBridgeBalance = await IMX.balanceOf(rootBridgeAddr);

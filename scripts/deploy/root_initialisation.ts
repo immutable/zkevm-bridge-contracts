@@ -1,53 +1,53 @@
 // Initialise root contracts
-'use strict';
-require('dotenv').config();
-const { ethers } = require("ethers");
-const helper = require("../helpers/helpers.js");
-const { LedgerSigner } = require('@ethersproject/hardware-wallets')
-const fs = require('fs');
+import * as dotenv from "dotenv";
+dotenv.config();
+import { ethers } from "ethers";
+import { requireEnv, waitForConfirmation, waitForReceipt, getContract } from "../helpers/helpers";
+import { LedgerSigner } from "../helpers/ledger_signer";
+import * as fs from "fs";
 
-exports.initialiseRootContracts = async() => {
+export async function initialiseRootContracts() {
     // Check environment variables
-    let childChainName = helper.requireEnv("CHILD_CHAIN_NAME");
-    let rootRPCURL = helper.requireEnv("ROOT_RPC_URL");
-    let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
-    let rootDeployerSecret = helper.requireEnv("ROOT_DEPLOYER_SECRET");
-    let rootRateAdminSecret = helper.requireEnv("ROOT_BRIDGE_RATE_ADMIN_SECRET");
-    let rootBridgeDefaultAdmin = helper.requireEnv("ROOT_BRIDGE_DEFAULT_ADMIN");
-    let rootBridgePauser = helper.requireEnv("ROOT_BRIDGE_PAUSER");
-    let rootBridgeUnpauser = helper.requireEnv("ROOT_BRIDGE_UNPAUSER");
-    let rootBridgeVariableManager = helper.requireEnv("ROOT_BRIDGE_VARIABLE_MANAGER");
-    let rootBridgeAdaptorManager = helper.requireEnv("ROOT_BRIDGE_ADAPTOR_MANAGER");
-    let rootAdaptorDefaultAdmin = helper.requireEnv("ROOT_ADAPTOR_DEFAULT_ADMIN");
-    let rootAdaptorBridgeManager = helper.requireEnv("ROOT_ADAPTOR_BRIDGE_MANAGER");
-    let rootAdaptorGasServiceManager = helper.requireEnv("ROOT_ADAPTOR_GAS_SERVICE_MANAGER");
-    let rootAdaptorTargetManager = helper.requireEnv("ROOT_ADAPTOR_TARGET_MANAGER");
-    let rootGasServiceAddr = helper.requireEnv("ROOT_GAS_SERVICE_ADDRESS");
-    let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
-    let rootWETHAddr = helper.requireEnv("ROOT_WETH_ADDR");
-    let imxDepositLimit = helper.requireEnv("IMX_DEPOSIT_LIMIT");
-    let rateLimitIMXCap = helper.requireEnv("RATE_LIMIT_IMX_CAPACITY");
-    let rateLimitIMXRefill = helper.requireEnv("RATE_LIMIT_IMX_REFILL_RATE");
-    let rateLimitIMXLargeThreshold = helper.requireEnv("RATE_LIMIT_IMX_LARGE_THRESHOLD");
-    let rateLimitETHCap = helper.requireEnv("RATE_LIMIT_ETH_CAPACITY");
-    let rateLimitETHRefill = helper.requireEnv("RATE_LIMIT_ETH_REFILL_RATE");
-    let rateLimitETHLargeThreshold = helper.requireEnv("RATE_LIMIT_ETH_LARGE_THRESHOLD");
-    let rateLimitUSDCAddr = helper.requireEnv("RATE_LIMIT_USDC_ADDR");
-    let rateLimitUSDCCap = helper.requireEnv("RATE_LIMIT_USDC_CAPACITY");
-    let rateLimitUSDCRefill = helper.requireEnv("RATE_LIMIT_USDC_REFILL_RATE");
-    let rateLimitUSDCLargeThreshold = helper.requireEnv("RATE_LIMIT_USDC_LARGE_THRESHOLD");
-    let rateLimitGUAddr = helper.requireEnv("RATE_LIMIT_GU_ADDR");
-    let rateLimitGUCap = helper.requireEnv("RATE_LIMIT_GU_CAPACITY");
-    let rateLimitGURefill = helper.requireEnv("RATE_LIMIT_GU_REFILL_RATE");
-    let rateLimitGULargeThreshold = helper.requireEnv("RATE_LIMIT_GU_LARGE_THRESHOLD");
-    let rateLimitCheckMateAddr = helper.requireEnv("RATE_LIMIT_CHECKMATE_ADDR");
-    let rateLimitCheckMateCap = helper.requireEnv("RATE_LIMIT_CHECKMATE_CAPACITY");
-    let rateLimitCheckMateRefill = helper.requireEnv("RATE_LIMIT_CHECKMATE_REFILL_RATE");
-    let rateLimitCheckMateLargeThreshold = helper.requireEnv("RATE_LIMIT_CHECKMATE_LARGE_THRESHOLD");
-    let rateLimitGOGAddr = helper.requireEnv("RATE_LIMIT_GOG_ADDR");
-    let rateLimitGOGCap = helper.requireEnv("RATE_LIMIT_GOG_CAPACITY");
-    let rateLimitGOGRefill = helper.requireEnv("RATE_LIMIT_GOG_REFILL_RATE");
-    let rateLimitGOGLargeThreshold = helper.requireEnv("RATE_LIMIT_GOG_LARGE_THRESHOLD");
+    let childChainName = requireEnv("CHILD_CHAIN_NAME");
+    let rootRPCURL = requireEnv("ROOT_RPC_URL");
+    let rootChainID = requireEnv("ROOT_CHAIN_ID");
+    let rootDeployerSecret = requireEnv("ROOT_DEPLOYER_SECRET");
+    let rootRateAdminSecret = requireEnv("ROOT_BRIDGE_RATE_ADMIN_SECRET");
+    let rootBridgeDefaultAdmin = requireEnv("ROOT_BRIDGE_DEFAULT_ADMIN");
+    let rootBridgePauser = requireEnv("ROOT_BRIDGE_PAUSER");
+    let rootBridgeUnpauser = requireEnv("ROOT_BRIDGE_UNPAUSER");
+    let rootBridgeVariableManager = requireEnv("ROOT_BRIDGE_VARIABLE_MANAGER");
+    let rootBridgeAdaptorManager = requireEnv("ROOT_BRIDGE_ADAPTOR_MANAGER");
+    let rootAdaptorDefaultAdmin = requireEnv("ROOT_ADAPTOR_DEFAULT_ADMIN");
+    let rootAdaptorBridgeManager = requireEnv("ROOT_ADAPTOR_BRIDGE_MANAGER");
+    let rootAdaptorGasServiceManager = requireEnv("ROOT_ADAPTOR_GAS_SERVICE_MANAGER");
+    let rootAdaptorTargetManager = requireEnv("ROOT_ADAPTOR_TARGET_MANAGER");
+    let rootGasServiceAddr = requireEnv("ROOT_GAS_SERVICE_ADDRESS");
+    let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
+    let rootWETHAddr = requireEnv("ROOT_WETH_ADDR");
+    let imxDepositLimit = requireEnv("IMX_DEPOSIT_LIMIT");
+    let rateLimitIMXCap = requireEnv("RATE_LIMIT_IMX_CAPACITY");
+    let rateLimitIMXRefill = requireEnv("RATE_LIMIT_IMX_REFILL_RATE");
+    let rateLimitIMXLargeThreshold = requireEnv("RATE_LIMIT_IMX_LARGE_THRESHOLD");
+    let rateLimitETHCap = requireEnv("RATE_LIMIT_ETH_CAPACITY");
+    let rateLimitETHRefill = requireEnv("RATE_LIMIT_ETH_REFILL_RATE");
+    let rateLimitETHLargeThreshold = requireEnv("RATE_LIMIT_ETH_LARGE_THRESHOLD");
+    let rateLimitUSDCAddr = requireEnv("RATE_LIMIT_USDC_ADDR");
+    let rateLimitUSDCCap = requireEnv("RATE_LIMIT_USDC_CAPACITY");
+    let rateLimitUSDCRefill = requireEnv("RATE_LIMIT_USDC_REFILL_RATE");
+    let rateLimitUSDCLargeThreshold = requireEnv("RATE_LIMIT_USDC_LARGE_THRESHOLD");
+    let rateLimitGUAddr = requireEnv("RATE_LIMIT_GU_ADDR");
+    let rateLimitGUCap = requireEnv("RATE_LIMIT_GU_CAPACITY");
+    let rateLimitGURefill = requireEnv("RATE_LIMIT_GU_REFILL_RATE");
+    let rateLimitGULargeThreshold = requireEnv("RATE_LIMIT_GU_LARGE_THRESHOLD");
+    let rateLimitCheckMateAddr = requireEnv("RATE_LIMIT_CHECKMATE_ADDR");
+    let rateLimitCheckMateCap = requireEnv("RATE_LIMIT_CHECKMATE_CAPACITY");
+    let rateLimitCheckMateRefill = requireEnv("RATE_LIMIT_CHECKMATE_REFILL_RATE");
+    let rateLimitCheckMateLargeThreshold = requireEnv("RATE_LIMIT_CHECKMATE_LARGE_THRESHOLD");
+    let rateLimitGOGAddr = requireEnv("RATE_LIMIT_GOG_ADDR");
+    let rateLimitGOGCap = requireEnv("RATE_LIMIT_GOG_CAPACITY");
+    let rateLimitGOGRefill = requireEnv("RATE_LIMIT_GOG_REFILL_RATE");
+    let rateLimitGOGLargeThreshold = requireEnv("RATE_LIMIT_GOG_LARGE_THRESHOLD");
 
     // Read from contract file.
     let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
@@ -64,7 +64,9 @@ exports.initialiseRootContracts = async() => {
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
     let adminWallet;
     if (rootDeployerSecret == "ledger") {
-        adminWallet = new LedgerSigner(rootProvider);
+        let index = requireEnv("ROOT_DEPLOYER_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        adminWallet = new LedgerSigner(rootProvider, derivationPath);
     } else {
         adminWallet = new ethers.Wallet(rootDeployerSecret, rootProvider);
     }
@@ -74,7 +76,9 @@ exports.initialiseRootContracts = async() => {
     // Get rate admin address
     let rateAdminWallet;
     if (rootRateAdminSecret == "ledger") {
-        rateAdminWallet = new LedgerSigner(rateAdminWallet);
+        let index = requireEnv("ROOT_BRIDGE_RATE_ADMIN_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        rateAdminWallet = new LedgerSigner(rootProvider, derivationPath);
     } else {
         rateAdminWallet = new ethers.Wallet(rootRateAdminSecret, rootProvider);
     }
@@ -84,12 +88,11 @@ exports.initialiseRootContracts = async() => {
 
     // Execute
     console.log("Initialise root contracts in...");
-    await helper.waitForConfirmation();
+    await waitForConfirmation();
 
     // Initialise root bridge
-    let rootBridgeObj = JSON.parse(fs.readFileSync('../../out/RootERC20BridgeFlowRate.sol/RootERC20BridgeFlowRate.json', 'utf8'));
     console.log("Initialise root bridge...");
-    let rootBridge = new ethers.Contract(rootBridgeAddr, rootBridgeObj.abi, rootProvider);
+    let rootBridge = getContract("RootERC20BridgeFlowRate", rootBridgeAddr, rootProvider);
     let resp = await rootBridge.connect(adminWallet)["initialize((address,address,address,address,address),address,address,address,address,address,uint256,address)"](
         {
             defaultAdmin: rootBridgeDefaultAdmin,
@@ -106,7 +109,7 @@ exports.initialiseRootContracts = async() => {
         ethers.utils.parseEther(imxDepositLimit),
         rateAdminAddr);
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
     // Configure rate
     // IMX
@@ -118,7 +121,7 @@ exports.initialiseRootContracts = async() => {
         ethers.utils.parseEther(rateLimitIMXLargeThreshold)
     );
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
     // ETH
     console.log("Configure rate limiting for ETH...")
@@ -129,7 +132,7 @@ exports.initialiseRootContracts = async() => {
         ethers.utils.parseEther(rateLimitETHLargeThreshold)
     );
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
     // USDC
     console.log("Configure rate limiting for USDC...")
@@ -140,7 +143,7 @@ exports.initialiseRootContracts = async() => {
         ethers.utils.parseEther(rateLimitUSDCLargeThreshold)
     );
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
     // GU
     console.log("Configure rate limiting for GU...")
@@ -151,7 +154,7 @@ exports.initialiseRootContracts = async() => {
         ethers.utils.parseEther(rateLimitGULargeThreshold)
     );
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
     // Checkmate
     console.log("Configure rate limiting for CheckMate...")
@@ -162,7 +165,7 @@ exports.initialiseRootContracts = async() => {
         ethers.utils.parseEther(rateLimitCheckMateLargeThreshold)
     );
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
     // GOG
     console.log("Configure rate limiting for GOG...")
@@ -173,12 +176,11 @@ exports.initialiseRootContracts = async() => {
         ethers.utils.parseEther(rateLimitGOGLargeThreshold)
     );
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
     // Initialise root adaptor
-    let rootAdaptorObj = JSON.parse(fs.readFileSync('../../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Initialise root adaptor...");
-    let rootAdaptor = new ethers.Contract(rootAdaptorAddr, rootAdaptorObj.abi, rootProvider);
+    let rootAdaptor = getContract("RootAxelarBridgeAdaptor", rootAdaptorAddr, rootProvider);
     resp = await rootAdaptor.connect(adminWallet).initialize(
         {
             defaultAdmin: rootAdaptorDefaultAdmin,
@@ -191,5 +193,5 @@ exports.initialiseRootContracts = async() => {
         childAdaptorAddr,
         rootGasServiceAddr);
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 }

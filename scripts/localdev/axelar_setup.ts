@@ -1,23 +1,23 @@
-'use strict';
-const { Network, networks, EvmRelayer, relay } = require('@axelar-network/axelar-local-dev');
-const helper = require("../helpers/helpers.js");
-const { ethers } = require("ethers");
-const fs = require('fs');
-require('dotenv').config();
+import * as dotenv from "dotenv";
+dotenv.config();
+import { Network, networks, EvmRelayer, relay } from '@axelar-network/axelar-local-dev';
+import { requireEnv, waitForReceipt } from "../helpers/helpers";
+import { ethers } from "ethers";
+import * as fs from "fs";
 
 let relaying = false;
 const defaultEvmRelayer = new EvmRelayer();
 
 async function main() {
-    let rootChainName = helper.requireEnv("ROOT_CHAIN_NAME");
-    let rootRPCURL = helper.requireEnv("ROOT_RPC_URL");
-    let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
-    let childChainName = helper.requireEnv("CHILD_CHAIN_NAME");
-    let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
-    let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let axelarRootEOAKey = helper.requireEnv("AXELAR_ROOT_EOA_SECRET");
-    let axelarChildEOAKey = helper.requireEnv("AXELAR_CHILD_EOA_SECRET");
-    let axelarDeployerKey = helper.requireEnv("AXELAR_DEPLOYER_SECRET");
+    let rootChainName = requireEnv("ROOT_CHAIN_NAME");
+    let rootRPCURL = requireEnv("ROOT_RPC_URL");
+    let rootChainID = requireEnv("ROOT_CHAIN_ID");
+    let childChainName = requireEnv("CHILD_CHAIN_NAME");
+    let childRPCURL = requireEnv("CHILD_RPC_URL");
+    let childChainID = requireEnv("CHILD_CHAIN_ID");
+    let axelarRootEOAKey = requireEnv("AXELAR_ROOT_EOA_SECRET");
+    let axelarChildEOAKey = requireEnv("AXELAR_CHILD_EOA_SECRET");
+    let axelarDeployerKey = requireEnv("AXELAR_DEPLOYER_SECRET");
 
     // Create root chain.
     let rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -75,23 +75,23 @@ async function main() {
         to: childChain.ownerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
-    await helper.waitForReceipt(resp.hash, childProvider);
+    await waitForReceipt(resp.hash, childProvider);
     resp = await axelarChildEOA.sendTransaction({
         to: childChain.operatorWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
-    await helper.waitForReceipt(resp.hash, childProvider);
+    await waitForReceipt(resp.hash, childProvider);
     resp = await axelarChildEOA.sendTransaction({
         to: childChain.relayerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
-    await helper.waitForReceipt(resp.hash, childProvider);
+    await waitForReceipt(resp.hash, childProvider);
     for (let i = 0; i < 10; i++) {
         resp = await axelarChildEOA.sendTransaction({
             to: childChain.adminWallets[i].address,
             value: ethers.utils.parseEther("35.0"),
         })
-        await helper.waitForReceipt(resp.hash, childProvider);
+        await waitForReceipt(resp.hash, childProvider);
     }
     // Deploy child contracts.
     await childChain.deployConstAddressDeployer();
@@ -106,23 +106,23 @@ async function main() {
         to: rootChain.ownerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
     resp = await axelarRootEOA.sendTransaction({
         to: rootChain.operatorWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
     resp = await axelarRootEOA.sendTransaction({
         to: rootChain.relayerWallet.address,
         value: ethers.utils.parseEther("35.0"),
     })
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
     for (let i = 0; i < 10; i++) {
         resp = await axelarRootEOA.sendTransaction({
             to: rootChain.adminWallets[i].address,
             value: ethers.utils.parseEther("35.0"),
         })
-        await helper.waitForReceipt(resp.hash, rootProvider);
+        await waitForReceipt(resp.hash, rootProvider);
     }
     // Deploy root contracts.
     await rootChain.deployConstAddressDeployer();

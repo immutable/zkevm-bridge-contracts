@@ -24,10 +24,16 @@ CHILD_ADMIN_ADDR=
 MULTISIG_CONTRACT_ADDRESS=
 ## The private key for the deployer on child chain or "ledger" if using hardware wallet.
 CHILD_DEPLOYER_SECRET=
+## The ledger index for the deployer on child chain, required if using ledger.
+CHILD_DEPLOYER_LEDGER_INDEX=
 ## The private key for the deployer on root chain or "ledger" if using hardware wallet.
 ROOT_DEPLOYER_SECRET=
+## The ledger index for the deployer on root chain, required if using ledger.
+ROOT_DEPLOYER_LEDGER_INDEX=
 ## The private key for rate admin or "ledger" if using hardware wallet.
 ROOT_BRIDGE_RATE_ADMIN_SECRET=
+## The ledger index for the rate admin, required if using ledger.
+ROOT_BRIDGE_RATE_ADMIN_LEDGER_INDEX=
 ## The IMX token address on root chain.
 ROOT_IMX_ADDR=
 ## The Wrapped ETH token address on the root chain.
@@ -128,5 +134,5 @@ ROOT_GAS_SERVICE_ADDRESS=
 
 3. Deploy and setup contracts:
 ```
-node deployAndInit.js
+npx ts-node deployAndInit.ts
 ```

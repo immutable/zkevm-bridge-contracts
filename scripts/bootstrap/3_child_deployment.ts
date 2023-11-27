@@ -1,12 +1,10 @@
 // Deploy child contracts
-'use strict';
-require('dotenv').config();
-const deploy = require("../deploy/child_deployment.js");
+import { deployChildContracts } from "../deploy/child_deployment";
 
 async function run() {
     console.log("=======Start Child Deployment=======");
 
-    await deploy.deployChildContracts();
+    await deployChildContracts();
     
     console.log("=======End Child Deployment=======");
 }

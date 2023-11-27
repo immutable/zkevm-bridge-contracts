@@ -34,18 +34,26 @@ ROOT_CHAIN_ID=
 CHILD_ADMIN_ADDR=
 ## The private key for the admin EOA or "ledger" if using hardware wallet.
 CHILD_ADMIN_EOA_SECRET=
+## The ledger index for the admin EOA, required if using ledger.
+CHILD_ADMIN_EOA_LEDGER_INDEX=
 ## The deployer address on child chain.
 CHILD_DEPLOYER_ADDR=
 ## The private key for the deployer on child chain or "ledger" if using hardware wallet.
 CHILD_DEPLOYER_SECRET=
+## The ledger index for the deployer on child chain, required if using ledger.
+CHILD_DEPLOYER_LEDGER_INDEX=
 ## The amount of fund deployer required on L2, unit is in IMX or 10^18 Wei.
 CHILD_DEPLOYER_FUND=
 ## The deployer address on root chain.
 ROOT_DEPLOYER_ADDR=
 ## The private key for the deployer on root chain or "ledger" if using hardware wallet.
 ROOT_DEPLOYER_SECRET=
+## The ledger index for the deployer on root chain, required if using ledger.
+ROOT_DEPLOYER_LEDGER_INDEX=
 ## The private key for rate admin or "ledger" if using hardware wallet.
 ROOT_BRIDGE_RATE_ADMIN_SECRET=
+## The ledger index for the rate admin, required if using ledger.
+ROOT_BRIDGE_RATE_ADMIN_LEDGER_INDEX=
 ## The IMX token address on root chain.
 ROOT_IMX_ADDR=
 ## The Wrapped ETH token address on the root chain.
@@ -141,7 +149,7 @@ RATE_LIMIT_GOG_LARGE_THRESHOLD=
 ```
 3. Fund deployer
 ```
-node 1_deployer_funding.js 2>&1 | tee bootstrap.out
+npx ts-node 1_deployer_funding.ts 2>&1 | tee bootstrap.out
 ```
 4. Wait for Axelar to deploy & setup their system and Security team to deploy & setup multisig wallet.
 5. Set the following environment variables
@@ -156,32 +164,32 @@ ROOT_GAS_SERVICE_ADDRESS=
 
 If multisig is deployed:
 ```
-node 2_deployment_validation.js 2>&1 | tee -a bootstrap.out
+npx ts-node 2_deployment_validation.ts 2>&1 | tee -a bootstrap.out
 ```
 If multisig isn't deployed:
 ```
-SKIP_MULTISIG_CHECK=true node 2_deployment_validation.js 2>&1 | tee -a bootstrap.out
+SKIP_MULTISIG_CHECK=true npx ts-node 2_deployment_validation.ts 2>&1 | tee -a bootstrap.out
 ```
 7. Deploy bridge contracts on child and root chain.
 ```
-node 3_child_deployment.js 2>&1 | tee -a bootstrap.out
-node 4_root_deployment.js 2>&1 | tee -a bootstrap.out
+npx ts-node 3_child_deployment.ts 2>&1 | tee -a bootstrap.out
+npx ts-node 4_root_deployment.ts 2>&1 | tee -a bootstrap.out
 ```
 8. Initialise bridge contracts on child chain.
 ```
-node 5_child_initialisation.js 2>&1 | tee -a bootstrap.out
+npx ts-node 5_child_initialisation.ts 2>&1 | tee -a bootstrap.out
 ```
 9. IMX Burning
 ```
-node 6_imx_burning.js 2>&1 | tee -a bootstrap.out
+npx ts-node 6_imx_burning.ts 2>&1 | tee -a bootstrap.out
 ```
 10. IMX Rebalancing
 ```
-node 7_imx_rebalancing.js 2>&1 | tee -a bootstrap.out
+npx ts-node 7_imx_rebalancing.ts 2>&1 | tee -a bootstrap.out
 ```
 11. Initialise bridge contracts on root chain.
 ```
-node 8_root_initialisation.js 2>&1 | tee -a bootstrap.out
+npx ts-node 8_root_initialisation.ts 2>&1 | tee -a bootstrap.out
 ```
 12. Set the following environment variable
 ```

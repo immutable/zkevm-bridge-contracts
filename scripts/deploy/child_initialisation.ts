@@ -1,28 +1,29 @@
 // Initialise child contracts
 'use strict';
-require('dotenv').config();
-const { ethers } = require("ethers");
-const helper = require("../helpers/helpers.js");
-const { LedgerSigner } = require('@ethersproject/hardware-wallets')
-const fs = require('fs');
+import * as dotenv from "dotenv";
+dotenv.config();
+import { ethers } from "ethers";
+import { requireEnv, waitForConfirmation, waitForReceipt, getFee, getContract } from "../helpers/helpers";
+import { LedgerSigner } from "../helpers/ledger_signer";
+import * as fs from "fs";
 
-exports.initialiseChildContracts = async () => {
-    let rootChainName = helper.requireEnv("ROOT_CHAIN_NAME");
-    let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
-    let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let adminEOAAddr = helper.requireEnv("CHILD_ADMIN_ADDR");
-    let childBridgeDefaultAdmin = helper.requireEnv("CHILD_BRIDGE_DEFAULT_ADMIN");
-    let childBridgePauser = helper.requireEnv("CHILD_BRIDGE_PAUSER");
-    let childBridgeUnpauser = helper.requireEnv("CHILD_BRIDGE_UNPAUSER");
-    let childBridgeAdaptorManager = helper.requireEnv("CHILD_BRIDGE_ADAPTOR_MANAGER");
-    let childAdaptorDefaultAdmin = helper.requireEnv("CHILD_ADAPTOR_DEFAULT_ADMIN");
-    let childAdaptorBridgeManager = helper.requireEnv("CHILD_ADAPTOR_BRIDGE_MANAGER");
-    let childAdaptorGasServiceManager = helper.requireEnv("CHILD_ADAPTOR_GAS_SERVICE_MANAGER");
-    let childAdaptorTargetManager = helper.requireEnv("CHILD_ADAPTOR_TARGET_MANAGER");
-    let childDeployerSecret = helper.requireEnv("CHILD_DEPLOYER_SECRET");
-    let childGasServiceAddr = helper.requireEnv("CHILD_GAS_SERVICE_ADDRESS");
-    let multisigAddr = helper.requireEnv("MULTISIG_CONTRACT_ADDRESS");
-    let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
+export async function initialiseChildContracts() {
+    let rootChainName = requireEnv("ROOT_CHAIN_NAME");
+    let childRPCURL = requireEnv("CHILD_RPC_URL");
+    let childChainID = requireEnv("CHILD_CHAIN_ID");
+    let adminEOAAddr = requireEnv("CHILD_ADMIN_ADDR");
+    let childBridgeDefaultAdmin = requireEnv("CHILD_BRIDGE_DEFAULT_ADMIN");
+    let childBridgePauser = requireEnv("CHILD_BRIDGE_PAUSER");
+    let childBridgeUnpauser = requireEnv("CHILD_BRIDGE_UNPAUSER");
+    let childBridgeAdaptorManager = requireEnv("CHILD_BRIDGE_ADAPTOR_MANAGER");
+    let childAdaptorDefaultAdmin = requireEnv("CHILD_ADAPTOR_DEFAULT_ADMIN");
+    let childAdaptorBridgeManager = requireEnv("CHILD_ADAPTOR_BRIDGE_MANAGER");
+    let childAdaptorGasServiceManager = requireEnv("CHILD_ADAPTOR_GAS_SERVICE_MANAGER");
+    let childAdaptorTargetManager = requireEnv("CHILD_ADAPTOR_TARGET_MANAGER");
+    let childDeployerSecret = requireEnv("CHILD_DEPLOYER_SECRET");
+    let childGasServiceAddr = requireEnv("CHILD_GAS_SERVICE_ADDRESS");
+    let multisigAddr = requireEnv("MULTISIG_CONTRACT_ADDRESS");
+    let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
 
     // Read from contract file.
     let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
@@ -39,7 +40,9 @@ exports.initialiseChildContracts = async () => {
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
     let adminWallet;
     if (childDeployerSecret == "ledger") {
-        adminWallet = new LedgerSigner(childProvider);
+        let index = requireEnv("CHILD_DEPLOYER_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        adminWallet = new LedgerSigner(childProvider, derivationPath);
     } else {
         adminWallet = new ethers.Wallet(childDeployerSecret, childProvider);
     }
@@ -48,13 +51,12 @@ exports.initialiseChildContracts = async () => {
 
     // Execute
     console.log("Initialise child contracts in...");
-    await helper.waitForConfirmation();
+    await waitForConfirmation();
 
     // Initialise child bridge
-    let childBridgeObj = JSON.parse(fs.readFileSync('../../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
     console.log("Initialise child bridge...");
-    let childBridge = new ethers.Contract(childBridgeAddr, childBridgeObj.abi, childProvider);
-    let [priorityFee, maxFee] = await helper.getFee(adminWallet);
+    let childBridge = getContract("ChildERC20Bridge", childBridgeAddr, childProvider);
+    let [priorityFee, maxFee] = await getFee(childProvider);
     let resp = await childBridge.connect(adminWallet).initialize(
         {
             defaultAdmin: childBridgeDefaultAdmin,
@@ -73,13 +75,13 @@ exports.initialiseChildContracts = async () => {
         maxFeePerGas: maxFee,
     });
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, childProvider);
+    await waitForReceipt(resp.hash, childProvider);
 
     // Initialise child adaptor
-    let childAdaptorObj = JSON.parse(fs.readFileSync('../../out/ChildAxelarBridgeAdaptor.sol/ChildAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Initialise child adaptor...");
-    let childAdaptor = new ethers.Contract(childAdaptorAddr, childAdaptorObj.abi, childProvider);
-    [priorityFee, maxFee] = await helper.getFee(adminWallet);
+    let childAdaptor = getContract("ChildAxelarBridgeAdaptor", childAdaptorAddr, childProvider);
+    // let childAdaptor = new ethers.Contract(childAdaptorAddr, childAdaptorObj.abi, childProvider);
+    [priorityFee, maxFee] = await getFee(childProvider);
     resp = await childAdaptor.connect(adminWallet).initialize(
         {
             defaultAdmin: childAdaptorDefaultAdmin,
@@ -96,5 +98,5 @@ exports.initialiseChildContracts = async () => {
         maxFeePerGas: maxFee,
     });
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await helper.waitForReceipt(resp.hash, childProvider);
+    await waitForReceipt(resp.hash, childProvider);
 }

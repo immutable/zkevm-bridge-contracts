@@ -1,13 +1,13 @@
-'use strict';
-const { ethers: hardhat } = require("hardhat");
-const { ethers } = require("ethers");
-const helper = require("../helpers/helpers.js");
-require('dotenv').config();
+import * as dotenv from "dotenv";
+dotenv.config();
+import { ethers as hardhat } from "hardhat";
+import { ethers } from "ethers";
+import { requireEnv } from "../helpers/helpers";
 
 async function main() {
-    let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
-    let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let childEOAKey = helper.requireEnv("CHILD_ADMIN_EOA_SECRET");
+    let childRPCURL = requireEnv("CHILD_RPC_URL");
+    let childChainID = requireEnv("CHILD_CHAIN_ID");
+    let childEOAKey = requireEnv("CHILD_ADMIN_EOA_SECRET");
 
     // Get child provider.
     let childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
