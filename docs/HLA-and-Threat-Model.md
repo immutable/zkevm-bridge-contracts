@@ -265,10 +265,10 @@ The flow rate detection mechanism operates using a bucket system. This can be li
 Each token has its own virtual bucket. Each bucket has a capacity, which is the total number of tokens the bucket can hold, the current depth, the refill rate, and the time when tokens were last removed from the bucket. The refill rate is the number of tokens added to the bucket each second. The capacity is the refill rate multiplied by the period over which the flow rate will be averaged. For instance, if the flow rate was going to be 10,000,000,000 tokens per hour, then the capacity and refill rate can be calculated as:
 
 ```
-  capacity = 10000000000
+  capacity = 10_000_000_000
   refill rate = capacity ÷ (60 minutes per hour x 60 seconds per minute)
-              = 10000000000 ÷ (60 x 60)
-              = 2777777
+              = 10_000_000_000 ÷ (60 x 60)
+              = 2_777_777
 ```
 
 A possible issue with this methodology is that the calculations are quantized, being subject to rounding issues. That is, rather than using floating point numbers, integers are used. For the tokens envisaged to be used in the Immutable system, rounding issues should not present a problem as the ERC 20 contracts have been configured to have large numbers of decimal places. For instance, IMX and MATIC have 18 decimal places configured, as will the wrapped Ether.
