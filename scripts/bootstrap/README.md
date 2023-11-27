@@ -197,5 +197,5 @@ TEST_ACCOUNT_SECRET=
 ```
 13. Test bridge functions
 ```
-npx mocha --require mocha-suppress-logs ../e2e/ 2>&1 | tee -a bootstrap.out
+npx mocha --require mocha-suppress-logs ../e2e/e2e.ts 2>&1 | tee -a bootstrap.out
 ```
