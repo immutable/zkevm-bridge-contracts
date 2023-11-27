@@ -15,8 +15,9 @@
   * [Stakeholders](#stakeholders)
   * [Core Components](#core-components)
   * [Transaction Lifecycle](#transaction-lifecycle)
-  * [Flow Rate Control](#transaction-lifecycle)
+  * [Withdrawal Delay Mechanism](#transaction-lifecycle)
 * [Deployment Architecture]()
+* [Cryptographic Key Management](#key-management)
 * [Threat Model]()
   * [Threat Identification](#threat-identification)
   * [Threat Analysis](#threat-identification)
@@ -57,7 +58,7 @@ Cross-chain Messaging Stack
 </p>
 
 ### Axelar: General-purpose Messaging Protocol
-Axelar is a general-purpose cross-chain messaging protocol that uses cryptoeconomic guarantees for security. The protocol employs a delegated [proof-of-stake](https://crosschainriskframework.github.io/framework/20categories/20architecture/architecture/#proof-of-stake) mechanism and a permissionless set of validators coordinated through a [Tendermint](https://tendermint.com/)-based blockchain network. Validators are incentivized with block rewards, and penalised if they deviate from the protocol or experience extended downtimes. This incentivizes validators to operate performant and secure validator nodes and behave honestly. The protocol's safety and liveness guarantees stem directly from the financial stake of the validator set and the in-protocol mechanism that governs their behavior.
+Axelar is a general-purpose cross-chain messaging protocol that uses cryptoeconomic guarantees for security. The protocol employs a delegated [proof-of-stake](https://cross-chainriskframework.github.io/framework/20categories/20architecture/architecture/#proof-of-stake) mechanism and a permissionless set of validators coordinated through a [Tendermint](https://tendermint.com/)-based blockchain network. Validators are incentivized with block rewards, and penalised if they deviate from the protocol or experience extended downtimes. This incentivizes validators to operate performant and secure validator nodes and behave honestly. The protocol's safety and liveness guarantees stem directly from the financial stake of the validator set and the in-protocol mechanism that governs their behavior.
 
 Axelar's validator network comprise 75 active validators, and employs a quadratic voting mechanism to achieve consensus. This approach helps to distribute voting power more evenly across validators and mitigate risks associated with the concentration of stake distribution and centralization. The protocol sets a 60% safety threshold by quadratic share of voting power, which, with the current distribution of stake, requires at least 30 out of 70 validators to sign a message for it to be considered valid.
 
@@ -110,6 +111,8 @@ To mitigate the impact of potential exploits, withdrawal transactions (token tra
    - Specific flow rates can be set for individual tokens. These rates regulate the amount that can be withdrawn over a period of time. If a token's withdrawal rate exceeds its specific threshold, all subsequent withdrawals from the bridge are queued.
    - Any withdrawal that exceeds a token-specific amount is queued. This only affects the individual withdrawal in question and does not impact other withdrawals by the same user or others.
    - If no thresholds are defined for a given token, all withdrawals relating to that token are queued.
+
+For further details, see the [withdrawal delay mechanism section](#withdrawal-delay-mechanism).
 
 #### Emergency Pause
 In the event of an emergency, the bridge can be paused to mitigate the potential impact of an incident. This suspends all user-accessible capabilities, including token mapping, deposits, and withdrawals, until the bridge is resumed. However, this doesn't restrict privileged functions accessible by accounts with certain roles. It allows administrators to perform necessary operations that can address the incident (e.g., bridge parameter changes, upgrades). The specific functions that are halted by the emergency pause mechanism for each contract are listed below:
@@ -195,6 +198,80 @@ The example below illustrates the lifecycle of transaction where a user withdraw
 10. The `RootERC20BridgeFlowRate` performs various validations. These checks include determining if the withdrawal exceeds the configured flow rate for ETH. If it does, the transaction is placed in a withdrawal queue. Requiring Alice to manually finalise the withdrawal, after the withdrawal delay (default of 1 day) has elapsed. If it doesn't, the bridge transfers a corresponding amount of native ETH from the bridge to Alice, thus completing the withdrawal flow.
 
 The withdrawal of native IMX follows a similar flow with two subtle differences. These differences are due to the fact that IMX is a native token on the child chain, not an ERC20 token: 1) A pre-requisite ERC20 token approval step is not required, and 2) The IMX sent by the user is locked in the bridge, and there is no token burning step.
+
+
+----
+### Withdrawal Delay Mechanism
+
+[`RootERC20BridgeFlowRate`](../src/root/flowrate/RootERC20BridgeFlowRate.sol) implements a withdrawal queue. This is a mechanism in which withdrawals that meet certain conditions are delayed for a period of time before they can be processed. The rationale for having a queue is to give teams monitoring the bridge time to determine if suspicious withdrawals are valid or whether they relate to an attack in progress. Withdrawals enter the withdrawal queue in the following scenarios:
+
+- All withdrawals:
+    - Manual activation: An account with `RATE` role has called the `activateWithdrawalQueue` function.
+    - Automatic activation: The flow rate for any configured token exceeds the configured maximum flow rate for that token.
+- Individual withdrawals:
+    - The number of tokens for the withdrawal exceeds the _large withdrawal_ threshold for the token.
+    - The withdrawal is for a token for which flow rate and large withdrawal thresholds have not been configured.
+
+An account with `RATE` role can:
+
+- Activate the queue by calling the `activateWithdrawalQueue` function.
+- Deactivate the queue by calling the `deactivateWithdrawalQueue` function.
+- Configure the withdrawal delay (the length of time withdrawals remain in the queue) by calling the `setWithdrawalDelay` function.
+- Configure the flow rate and large withdrawal thresholds for a token by calling the `setRateControlThreshold` function.
+
+The rationale for having the same role for activating, deactivating, and configuring the withdrawal queue is that it is expected that the threshold number signers of the multi-sig for these operations should be all high.
+
+The default withdrawal delay is 24 hours. The rationale for this length of delay is that it would give the teams monitoring the bridge enough time to make a determination that an attack was in progress and arrange for all of the multi-sig signers required to pause the bridge to sign and execute the `pause` function.
+
+#### Withdrawal Queue
+
+When a user initiates a withdrawal transaction from the Immutable chain to Ethereum, as discussed in the [withdrawal transaction flow section](#withdrawal-transaction-flow)), the request eventually triggers the `_withdraw` function in `RootERC20BridgeFlowRate` contract on the root chain. As described above, the withdrawal may then be enqueued into the withdrawal queue. Each `receiver` account has their own withdrawal queue, where the `receiver` is the recipient of the withdrawal. After the withdrawal delay, anyone can call the `RootERC20BridgeFlowRate` contract’s `finaliseQueuedWithdrawal` function or `finaliseQueuedWithdrawalsAggregated` function to complete the withdrawal.
+
+The withdrawal queue is implemented as a map of arrays:
+
+```solidity
+    struct PendingWithdrawal {
+        // The account that initiated the cross-chain transfer on the child chain.
+        address withdrawer;
+        // The token being withdrawn.
+        address token;
+        // The number of tokens.
+        uint256 amount;
+        // The time when the withdraw was requested. The pending withdrawal can be
+        // withdrawn at time timestamp + withdrawalDelay. Note that it is possible
+        // that the withdrawalDelay is updated while the withdrawal is still pending.
+        uint256 timestamp;
+    }
+    // Mapping of user addresses to withdrawal queue.
+    mapping(address => PendingWithdrawal[]) private pendingWithdrawals;
+```
+
+Each `receiver` account has their own array of `PendingWithdrawal` structures. New withdrawals are added to the end of the array. Users can choose to finalise any withdrawal. That is, they do not need to finalise withdrawals that they are not interested in. This is important as `receiver` accounts could be sent _attack_ tokens that cause ERC 20 `transfer` to fail, or they could be sent low value tokens that would cost more to finalise than they are worth.
+
+The timestamp is the block timestamp when the withdrawal entered the queue. That is, when the `_withdraw()` function was called on the `RootERC20BridgeFlowRate` contract. The withdrawal delay is added to this time when assessing if the withdrawal can be finalised. Adding the withdrawal delay when the withdrawal is being finalised, rather than when it entered the queue means than changes to the withdrawal queue affect all withdrawals in all queues.
+
+Users know which withdrawals in their withdrawal queue to finalise in the following ways:
+
+- By observing `QueuedWithdrawal` events which are emitted when a withdrawal is enqueued. This event includes the offset into the array of the withdrawal, known as the index.
+- By calling `getPendingWithdrawals` to get information about pending withdrawals with certain indices.
+- By calling `findPendingWithdrawals` to fetch information about pending withdrawals based on a token type.
+
+### Flow Rate Detection
+
+The flow rate detection mechanism operates using a bucket system. This can be likened to a bucket that's constantly filled with water. Glasses of varying sizes can take water from this bucket. If the bucket, initially full, ever gets emptied by the glasses, it signifies that the inflow rate of water has been exceeded.
+
+Each token has its own virtual bucket. Each bucket has a capacity, which is the total number of tokens the bucket can hold, the current depth, the refill rate, and the time when tokens were last removed from the bucket. The refill rate is the number of tokens added to the bucket each second. The capacity is the refill rate multiplied by the period over which the flow rate will be averaged. For instance, if the flow rate was going to be 10,000,000,000 tokens per hour, then the capacity and refill rate can be calculated as:
+
+```
+  capacity = 10000000000
+  refill rate = capacity ÷ (60 minutes per hour x 60 seconds per minute)
+              = 10000000000 ÷ (60 x 60)
+              = 2777777
+```
+
+A possible issue with this methodology is that the calculations are quantized, being subject to rounding issues. That is, rather than using floating point numbers, integers are used. For the tokens envisaged to be used in the Immutable system, rounding issues should not present a problem as the ERC 20 contracts have been configured to have large numbers of decimal places. For instance, IMX and MATIC have 18 decimal places configured, as will the wrapped Ether.
+
+The `_updateFlowRateBucket` function in `FlowRateDetection.sol` implements the bucket update calculations.
 
 ## Glossary
 - **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
