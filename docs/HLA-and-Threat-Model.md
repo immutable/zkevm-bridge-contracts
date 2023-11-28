@@ -291,10 +291,45 @@ The `_updateFlowRateBucket` function in [`FlowRateDetection.sol`](../src/root/fl
 ---
 ## Threat Model
 ### Attack Surfaces
-#### Smart Contracts
-The smart contracts are the primary attack surface for the bridge. They are the components that handle the core bridge functionality that users interact with, and custody significant amount of user-funds. 
-The contracts are deployed on both the Root and Child chains. The contracts are written in Solidity, and are compiled using the Solidity compiler (v0.8.19). 
+#### Bridge Smart Contracts
+The smart contracts are the primary attack surface for the bridge. 
+They are the components that handle the core bridge functionality that users interact with, and custody significant amount of user-funds.
+Detail listing of the state mutating functions in each of the core functions, any access controls they employ are listed in the [appendix](#appendix-a-smart-contract-state-mutation-functions).
+The contracts are deployed on both the Root and Child chains. The contracts are written in Solidity, and are compiled using the Solidity compiler (v0.8.19).
+Vulnerabilities in the smart contracts can be exploited in a number of ways, to lead to a range of potential impacts, such as loss of user funds, double-spends, and denial of service.
+- execution of invalid messages
+- unauthorised access to privileged functions
+- loss of user funds
+- 
 
+#### Bridge Operators
+
+#### User Interfaces and Supporting Services
+
+#### Axelar GMP
+- validators, smart contracts other infrastructure and operational risk
+
+#### Cryptographic Keys
+
+#### 
+
+#### Immutable Chain
+
+#### Ethereum Chain
+
+
+
+## Glossary
+- **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
+- **Token bridge**: A bridge that enables the transfer of tokens between two chains, using an underlying GMP. The Immutable zkEVM bridge is a token bridge.
+- **Root chain**: Refers to Ethereum, which is also referred to as the L1 in this document.
+- **Child chain**: Refers to the Immutable Chain, which is also referred to as the L2 in this document.
+- **Layer 1 (L1)**: Refers to Ethereum, which is also referred to as the Root chain in this document.
+- **Layer 2 (L2)**: Refers to Immutable zkEVM, which is also referred to as the Child chain in this document.
+- **Root token**: An original token that is deployed on the Root chain.
+- **Child token**: A wrapped token that is deployed on the Child chain, which is used to represent the Root token on the Child chain.
+
+## Appendix A: Smart Contract State Mutation Functions
 **RootERC20BridgeFlowRate**
 
 The `RootERC20BridgeFlowRate` contract is the contract that users will interact with on the Root chain in order to bridge their assets.
@@ -409,7 +444,7 @@ The table below lists all the state mutating methods in the contract. In this ta
 | `updateRootBridgeAdaptor(string)`                                             | `fab10bd6`        | `TARGET_MANAGER_ROLE`        |
 | `updateRootChain(string)`                                                     | `8f2e3f38`        | `TARGET_MANAGER_ROLE`        |
 | `sendMessage(bytes,address)`                                                  | `f20755ba`        | (Only Child Bridge Contract) |
-| `initialize((address,address,address,address),address,string,string,address)` | `381fe249`        |                              |
+| `initialize((address,address,address,address),address,string,string,address)` | `381fe249`        | -                            |
 | `execute(bytes32,string,string,bytes)`                                        | `49160658`        | -                            |
 
 
@@ -430,14 +465,3 @@ The table below lists all the state mutating methods in the contract. In this ta
 | `invalidateNext(uint256)`                                     | `9b77ef11`        | -                            |
 | `transfer(address,uint256)`                                   | `a9059cbb`        | -                            |
 | `transferFrom(address,address,uint256)`                       | `23b872dd`        | -                            |
-
-
-## Glossary
-- **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
-- **Token bridge**: A bridge that enables the transfer of tokens between two chains, using an underlying GMP. The Immutable zkEVM bridge is a token bridge.
-- **Root chain**: Refers to Ethereum, which is also referred to as the L1 in this document.
-- **Child chain**: Refers to the Immutable Chain, which is also referred to as the L2 in this document.
-- **Layer 1 (L1)**: Refers to Ethereum, which is also referred to as the Root chain in this document.
-- **Layer 2 (L2)**: Refers to Immutable zkEVM, which is also referred to as the Child chain in this document.
-- **Root token**: An original token that is deployed on the Root chain.
-- **Child token**: A wrapped token that is deployed on the Child chain, which is used to represent the Root token on the Child chain.
