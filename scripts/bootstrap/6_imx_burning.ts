@@ -1,20 +1,20 @@
 // IMX burning
-'use strict';
-require('dotenv').config();
-const { ethers } = require("ethers");
-const helper = require("../helpers/helpers.js");
-const { LedgerSigner } = require('@ethersproject/hardware-wallets')
-const fs = require('fs');
+import * as dotenv from "dotenv";
+dotenv.config();
+import { ethers } from "ethers";
+import { requireEnv, waitForConfirmation, hasDuplicates, waitForReceipt, getFee } from "../helpers/helpers";
+import { LedgerSigner } from "../helpers/ledger_signer";
+import * as fs from "fs";
 
 async function run() {
     console.log("=======Start IMX Burning=======");
 
     // Check environment variables
-    let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
-    let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let adminEOASecret = helper.requireEnv("CHILD_ADMIN_EOA_SECRET");
-    let multisigAddr = helper.requireEnv("MULTISIG_CONTRACT_ADDRESS");
-    let imxDepositLimit = helper.requireEnv("IMX_DEPOSIT_LIMIT");
+    let childRPCURL = requireEnv("CHILD_RPC_URL");
+    let childChainID = requireEnv("CHILD_CHAIN_ID");
+    let adminEOASecret = requireEnv("CHILD_ADMIN_EOA_SECRET");
+    let multisigAddr = requireEnv("MULTISIG_CONTRACT_ADDRESS");
+    let imxDepositLimit = requireEnv("IMX_DEPOSIT_LIMIT");
 
     // Read from contract file.
     let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
@@ -25,7 +25,9 @@ async function run() {
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
     let adminWallet;
     if (adminEOASecret == "ledger") {
-        adminWallet = new LedgerSigner(childProvider);
+        let index = requireEnv("CHILD_ADMIN_EOA_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        adminWallet = new LedgerSigner(childProvider, derivationPath);
     } else {
         adminWallet = new ethers.Wallet(adminEOASecret, childProvider);
     }
@@ -33,7 +35,7 @@ async function run() {
     console.log("Admin address is: ", adminAddr);
 
     // Check duplicates
-    if (helper.hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
+    if (hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
         throw("Duplicate address detected!");
     }
 
@@ -51,20 +53,20 @@ async function run() {
     }
 
     console.log("Burn IMX in...");
-    await helper.waitForConfirmation();
+    await waitForConfirmation();
 
     let childBridgeObj = JSON.parse(fs.readFileSync('../../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
     let childBridge = new ethers.Contract(childBridgeAddr, childBridgeObj.abi, childProvider);
 
     console.log("Transfer " + imxDepositLimit +  " IMX to child bridge...");
-    let [priorityFee, maxFee] = await helper.getFee(adminWallet);
+    let [priorityFee, maxFee] = await getFee(childProvider);
     let resp = await childBridge.connect(adminWallet).privilegedDeposit({
         value: ethers.utils.parseEther(imxDepositLimit),
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: maxFee,
     })
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
-    await helper.waitForReceipt(resp.hash, childProvider);
+    await waitForReceipt(resp.hash, childProvider);
 
     adminBal = await childProvider.getBalance(adminAddr);
     bridgeBal = await childProvider.getBalance(childBridgeAddr);
@@ -75,7 +77,7 @@ async function run() {
 
     // Transfer to multisig
     console.log("Transfer remaining to multisig...");
-    [priorityFee, maxFee] = await helper.getFee(adminWallet);
+    [priorityFee, maxFee] = await getFee(childProvider);
     resp = await adminWallet.sendTransaction({
         to: multisigAddr,
         value: adminBal.sub(ethers.utils.parseEther("0.01")),
@@ -83,7 +85,7 @@ async function run() {
         maxFeePerGas: maxFee,
     });
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
-    await helper.waitForReceipt(resp.hash, childProvider);
+    await waitForReceipt(resp.hash, childProvider);
 
     adminBal = await childProvider.getBalance(adminAddr);
     bridgeBal = await childProvider.getBalance(childBridgeAddr);

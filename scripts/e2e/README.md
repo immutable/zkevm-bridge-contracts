@@ -51,5 +51,5 @@ TEST_ACCOUNT_SECRET=
 
 3. Run end to end tests
 ```
-npx mocha --require mocha-suppress-logs .
+npx mocha --require mocha-suppress-logs ./e2e.ts
 ```
