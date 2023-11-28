@@ -296,6 +296,7 @@ The smart contracts are the primary attack surface for the bridge. They are the 
 The contracts are deployed on both the Root and Child chains. The contracts are written in Solidity, and are compiled using the Solidity compiler (v0.8.19). 
 
 **RootERC20BridgeFlowRate**
+
 The `RootERC20BridgeFlowRate` contract is the contract that users will interact with on the Root chain in order to bridge their assets.
 The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
 
@@ -332,6 +333,7 @@ The table below lists all the state mutating methods in the contract. In this ta
 | `finaliseQueuedWithdrawalsAggregated(address,address,uint256[])`                                                | `5d3a22ab`        | -                       |
 
 **RootAxelarBridgeAdaptor**
+
 The `RootAxelarBridgeAdaptor` contract is the contract that enables `RootERC20BridgeFlowRate` contract to send and receive messages using the Axelar GMP bridge.
 The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
 
@@ -355,7 +357,8 @@ The table below lists all the state mutating methods in the contract. In this ta
 | `execute(bytes32,string,string,bytes)`                                        | `49160658`        | -                           |
 
 
-*ChildERC20Bridge**
+**ChildERC20Bridge**
+
 The `ChildERC20Bridge` contract is the contract that users will interact with on the Child chain in order to bridge their assets.
 The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
 
@@ -386,6 +389,7 @@ The table below lists all the state mutating methods in the contract. In this ta
 
 
 **ChildAxelarBridgeAdaptor**
+
 The `ChildAxelarBridgeAdaptor` contract is the contract that enables `ChildERC20Bridge` contract to send and receive messages using the Axelar GMP bridge.
 The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
 
@@ -410,6 +414,7 @@ The table below lists all the state mutating methods in the contract. In this ta
 
 
 **ChildERC20**
+
 The `ChildERC20` contract is the contract that represents ERC20 tokens on the Child chain.
 The table below lists all the state mutating methods in the contract. In this table, methods that involve privileged operations are listed first.
 
