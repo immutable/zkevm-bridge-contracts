@@ -2,112 +2,177 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers } from "ethers";
-import { requireEnv, waitForConfirmation, deployChildContract, waitForReceipt, getFee } from "../helpers/helpers";
+import { requireEnv, waitForConfirmation, deployChildContract, waitForReceipt, getFee, getChildContracts, getContract, saveChildContracts } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
-import * as fs from "fs";
 
 export async function deployChildContracts() {
     // Check environment variables
     let childRPCURL = requireEnv("CHILD_RPC_URL");
     let childChainID = requireEnv("CHILD_CHAIN_ID");
-    let childDeployerSecret = requireEnv("CHILD_DEPLOYER_SECRET");
+    let deployerSecret = requireEnv("DEPLOYER_SECRET");
+    let nonceReservedDeployerSecret = requireEnv("NONCE_RESERVED_DEPLOYER_SECRET");
+    let nonceReserved = Number(requireEnv("NONCE_RESERVED"));
     let childGatewayAddr = requireEnv("CHILD_GATEWAY_ADDRESS");
-    let childProxyAdmin = requireEnv("CHILD_PROXY_ADMIN");
 
-    // Get admin address
+    // Read from contract file.
+    let childContracts = getChildContracts();
+
+    // Get deployer address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
-    let adminWallet;
-    if (childDeployerSecret == "ledger") {
-        let index = requireEnv("CHILD_DEPLOYER_LEDGER_INDEX");
+    let childDeployerWallet;
+    if (deployerSecret == "ledger") {
+        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
         const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
-        adminWallet = new LedgerSigner(childProvider, derivationPath);
+        childDeployerWallet = new LedgerSigner(childProvider, derivationPath);
     } else {
-        adminWallet = new ethers.Wallet(childDeployerSecret, childProvider);
+        childDeployerWallet = new ethers.Wallet(deployerSecret, childProvider);
     }
-    let adminAddr = await adminWallet.getAddress();
-    console.log("Deployer address is: ", adminAddr);
+    let deployerAddr = await childDeployerWallet.getAddress();
+    console.log("Deployer address is: ", deployerAddr);
+
+    // Get reserved wallet
+    let reservedDeployerWallet;
+    if (nonceReservedDeployerSecret == "ledger") {
+        let index = requireEnv("NONCE_RESERVED_DEPLOYER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        reservedDeployerWallet = new LedgerSigner(childProvider, derivationPath);
+    } else {
+        reservedDeployerWallet = new ethers.Wallet(nonceReservedDeployerSecret, childProvider);
+    }
+    let reservedDeployerAddr = await reservedDeployerWallet.getAddress();
+    console.log("Reserved deployer address is: ", reservedDeployerAddr);
+
+    // Check the current nonce matches the reserved nonce
+    let currentNonce = await childProvider.getTransactionCount(reservedDeployerAddr);
+    if (nonceReserved != currentNonce) {
+        throw("Nonce mismatch, expected " + nonceReserved + " actual " + currentNonce);
+    }
 
     // Execute 
     console.log("Deploy child contracts in...");
     await waitForConfirmation();
 
     // Deploy child token template
-    console.log("Deploy child token template...");
-    let childTokenTemplate = await deployChildContract("ChildERC20", adminWallet);
-    console.log("Transaction submitted: ", JSON.stringify(childTokenTemplate.deployTransaction, null, 2));
-    await waitForReceipt(childTokenTemplate.deployTransaction.hash, childProvider);
-    // Initialise template
-    console.log("Initialise child token template...");
-    let [priorityFee, maxFee] = await getFee(childProvider);
-    let resp = await childTokenTemplate.connect(adminWallet).initialize("000000000000000000000000000000000000007B", "TEMPLATE", "TPT", 18, {
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, childProvider);
+    let childTokenTemplate;
+    if (childContracts.CHILD_TOKEN_TEMPLATE != "") {
+        console.log("Child token template has already been deployed to: " + childContracts.CHILD_TOKEN_TEMPLATE + ", skip.");
+        childTokenTemplate = getContract("ChildERC20", childContracts.CHILD_TOKEN_TEMPLATE, childProvider);
+    } else {
+        console.log("Deploy child token template...");
+        childTokenTemplate = await deployChildContract("ChildERC20", reservedDeployerWallet, nonceReserved);
+        console.log("Transaction submitted: ", JSON.stringify(childTokenTemplate.deployTransaction, null, 2));
+        await waitForReceipt(childTokenTemplate.deployTransaction.hash, childProvider);
+    }
+    childContracts.CHILD_TOKEN_TEMPLATE = childTokenTemplate.address;
+    saveChildContracts(childContracts);
     console.log("Deployed to CHILD_TOKEN_TEMPLATE: ", childTokenTemplate.address);
+    
+    // Initialise template
+    if (await childTokenTemplate.name() == "TEMPLATE") {
+        console.log("Child token template has already been initialised, skip.");
+    } else {
+        console.log("Initialise child token template...");
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childTokenTemplate.connect(reservedDeployerWallet).initialize("000000000000000000000000000000000000007B", "TEMPLATE", "TPT", 18, {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, childProvider);
+    }
+    console.log("Initialised CHILD_TOKEN_TEMPLATE at: ", childTokenTemplate.address);
 
     // Deploy wrapped IMX
-    console.log("Deploy wrapped IMX...");
-    let wrappedIMX = await deployChildContract("WIMX", adminWallet);
-    console.log("Transaction submitted: ", JSON.stringify(wrappedIMX.deployTransaction, null, 2));
-    await waitForReceipt(wrappedIMX.deployTransaction.hash, childProvider);
+    let wrappedIMX;
+    if (childContracts.WRAPPED_IMX_ADDRESS != "") {
+        console.log("Wrapped IMX has already been deployed to: " + childContracts.WRAPPED_IMX_ADDRESS + ", skip.");
+        wrappedIMX = getContract("WIMX", childContracts.WRAPPED_IMX_ADDRESS, childProvider);
+    } else {
+        console.log("Deploy wrapped IMX...");
+        wrappedIMX = await deployChildContract("WIMX", childDeployerWallet, null);
+        console.log("Transaction submitted: ", JSON.stringify(wrappedIMX.deployTransaction, null, 2));
+        await waitForReceipt(wrappedIMX.deployTransaction.hash, childProvider);
+    }
+    childContracts.WRAPPED_IMX_ADDRESS = wrappedIMX.address;
+    saveChildContracts(childContracts);
     console.log("Deployed to WRAPPED_IMX_ADDRESS: ", wrappedIMX.address);
 
     // Deploy proxy admin
-    console.log("Deploy proxy admin...");
-    let proxyAdmin = await deployChildContract("ProxyAdmin", adminWallet);
-    console.log("Transaction submitted: ", JSON.stringify(proxyAdmin.deployTransaction, null, 2));
-    await waitForReceipt(proxyAdmin.deployTransaction.hash, childProvider);
-    // Change owner
-    console.log("Change ownership...");
-    [priorityFee, maxFee] = await getFee(childProvider);
-    resp = await proxyAdmin.connect(adminWallet).transferOwnership(childProxyAdmin, {
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, childProvider);
+    let proxyAdmin;
+    if (childContracts.CHILD_PROXY_ADMIN != "") {
+        console.log("Proxy admin has already been deployed to: " + childContracts.CHILD_PROXY_ADMIN + ", skip.");
+        proxyAdmin = getContract("ProxyAdmin", childContracts.CHILD_PROXY_ADMIN, childProvider);
+    } else {
+        console.log("Deploy proxy admin...");
+        proxyAdmin = await deployChildContract("ProxyAdmin", childDeployerWallet, null);
+        console.log("Transaction submitted: ", JSON.stringify(proxyAdmin.deployTransaction, null, 2));
+        await waitForReceipt(proxyAdmin.deployTransaction.hash, childProvider);
+    }
+    childContracts.CHILD_PROXY_ADMIN = proxyAdmin.address;
+    saveChildContracts(childContracts);
     console.log("Deployed to CHILD_PROXY_ADMIN: ", proxyAdmin.address);
 
     // Deploy child bridge impl
-    console.log("Deploy child bridge impl...");
-    let childBridgeImpl = await deployChildContract("ChildERC20Bridge", adminWallet);
-    console.log("Transaction submitted: ", JSON.stringify(childBridgeImpl.deployTransaction, null, 2));
-    await waitForReceipt(childBridgeImpl.deployTransaction.hash, childProvider);
+    let childBridgeImpl;
+    if (childContracts.CHILD_BRIDGE_IMPL_ADDRESS != "") {
+        console.log("Child bridge impl has already been deployed to: " + childContracts.CHILD_BRIDGE_IMPL_ADDRESS + ", skip.");
+        childBridgeImpl = getContract("ChildERC20Bridge", childContracts.CHILD_BRIDGE_IMPL_ADDRESS, childProvider);
+    } else {
+        console.log("Deploy child bridge impl...");
+        childBridgeImpl = await deployChildContract("ChildERC20Bridge", childDeployerWallet, null);
+        console.log("Transaction submitted: ", JSON.stringify(childBridgeImpl.deployTransaction, null, 2));
+        await waitForReceipt(childBridgeImpl.deployTransaction.hash, childProvider);
+    }
+    childContracts.CHILD_BRIDGE_IMPL_ADDRESS = childBridgeImpl.address;
+    saveChildContracts(childContracts);
     console.log("Deployed to CHILD_BRIDGE_IMPL_ADDRESS: ", childBridgeImpl.address);
     
     // Deploy child bridge proxy
-    console.log("Deploy child bridge proxy...");
-    let childBridgeProxy = await deployChildContract("TransparentUpgradeableProxy", adminWallet, childBridgeImpl.address, proxyAdmin.address, []);
-    console.log("Transaction submitted: ", JSON.stringify(childBridgeProxy.deployTransaction, null, 2));
-    await waitForReceipt(childBridgeProxy.deployTransaction.hash, childProvider);
+    let childBridgeProxy;
+    if (childContracts.CHILD_BRIDGE_PROXY_ADDRESS != "") {
+        console.log("Child bridge proxy has already been deployed to: " + childContracts.CHILD_BRIDGE_PROXY_ADDRESS + ", skip.");
+        childBridgeProxy = getContract("TransparentUpgradeableProxy", childContracts.CHILD_BRIDGE_PROXY_ADDRESS, childProvider);
+    } else {
+        console.log("Deploy child bridge proxy...");
+        childBridgeProxy = await deployChildContract("TransparentUpgradeableProxy", childDeployerWallet, null, childBridgeImpl.address, proxyAdmin.address, []);
+        console.log("Transaction submitted: ", JSON.stringify(childBridgeProxy.deployTransaction, null, 2));
+        await waitForReceipt(childBridgeProxy.deployTransaction.hash, childProvider);
+    }
+    childContracts.CHILD_BRIDGE_PROXY_ADDRESS = childBridgeProxy.address;
+    saveChildContracts(childContracts);
     console.log("Deployed to CHILD_BRIDGE_PROXY_ADDRESS: ", childBridgeProxy.address);
-    
+
     // Deploy child adaptor impl
-    console.log("Deploy child adaptor impl...");
-    let childAdaptorImpl = await deployChildContract("ChildAxelarBridgeAdaptor", adminWallet, childGatewayAddr);
-    console.log("Transaction submitted: ", JSON.stringify(childAdaptorImpl.deployTransaction, null, 2));
-    await waitForReceipt(childAdaptorImpl.deployTransaction.hash, childProvider);
+    let childAdaptorImpl;
+    if (childContracts.CHILD_ADAPTOR_IMPL_ADDRESS != "") {
+        console.log("Child adaptor impl has already been deployed to: " + childContracts.CHILD_ADAPTOR_IMPL_ADDRESS + ", skip.");
+        childAdaptorImpl = getContract("ChildAxelarBridgeAdaptor", childContracts.CHILD_ADAPTOR_IMPL_ADDRESS, childProvider);
+    } else {
+        console.log("Deploy child adaptor impl...");
+        childAdaptorImpl = await deployChildContract("ChildAxelarBridgeAdaptor", childDeployerWallet, null, childGatewayAddr);
+        console.log("Transaction submitted: ", JSON.stringify(childAdaptorImpl.deployTransaction, null, 2));
+        await waitForReceipt(childAdaptorImpl.deployTransaction.hash, childProvider);
+    }
+    childContracts.CHILD_ADAPTOR_IMPL_ADDRESS = childAdaptorImpl.address;
+    saveChildContracts(childContracts);
     console.log("Deployed to CHILD_ADAPTOR_IMPL_ADDRESS: ", childAdaptorImpl.address);
     
     // Deploy child adaptor proxy
-    console.log("Deploy child adaptor proxy...");
-    let childAdaptorProxy = await deployChildContract("TransparentUpgradeableProxy", adminWallet, childAdaptorImpl.address, proxyAdmin.address, []);
-    console.log("Transaction submitted: ", JSON.stringify(childAdaptorProxy.deployTransaction, null, 2));
-    await waitForReceipt(childAdaptorProxy.deployTransaction.hash, childProvider);
+    let childAdaptorProxy;
+    if (childContracts.CHILD_ADAPTOR_PROXY_ADDRESS != "") {
+        console.log("Child adaptor proxy has already been deployed to: " + childContracts.CHILD_ADAPTOR_PROXY_ADDRESS + ", skip.");
+        childAdaptorProxy = getContract("TransparentUpgradeableProxy", childContracts.CHILD_ADAPTOR_PROXY_ADDRESS, childProvider);
+    } else {
+        console.log("Deploy child adaptor proxy...");
+        childAdaptorProxy = await deployChildContract("TransparentUpgradeableProxy", childDeployerWallet, null, childAdaptorImpl.address, proxyAdmin.address, []);
+        console.log("Transaction submitted: ", JSON.stringify(childAdaptorProxy.deployTransaction, null, 2));
+        await waitForReceipt(childAdaptorProxy.deployTransaction.hash, childProvider);
+    }
+    childContracts.CHILD_ADAPTOR_PROXY_ADDRESS = childAdaptorProxy.address;
+    saveChildContracts(childContracts);
     console.log("Deployed to CHILD_ADAPTOR_PROXY_ADDRESS: ", childAdaptorProxy.address);
 
-    let contractData = {
-        CHILD_PROXY_ADMIN: proxyAdmin.address,
-        CHILD_BRIDGE_IMPL_ADDRESS: childBridgeImpl.address,
-        CHILD_BRIDGE_PROXY_ADDRESS: childBridgeProxy.address,
-        CHILD_BRIDGE_ADDRESS: childBridgeProxy.address,
-        CHILD_ADAPTOR_IMPL_ADDRESS: childAdaptorImpl.address,
-        CHILD_ADAPTOR_PROXY_ADDRESS: childAdaptorProxy.address,
-        CHILD_ADAPTOR_ADDRESS: childAdaptorProxy.address,
-        CHILD_TOKEN_TEMPLATE: childTokenTemplate.address,
-        WRAPPED_IMX_ADDRESS: wrappedIMX.address,
-    };
-    fs.writeFileSync(".child.bridge.contracts.json", JSON.stringify(contractData, null, 2));
+    childContracts.CHILD_BRIDGE_ADDRESS = childBridgeProxy.address;
+    childContracts.CHILD_ADAPTOR_ADDRESS = childAdaptorProxy.address,
+    saveChildContracts(childContracts);
 }

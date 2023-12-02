@@ -26,8 +26,11 @@ npx hardhat run ./childchain_setup.ts --config ./childchain.config.ts --network 
 echo "Successfully setup root chain and child chain..."
 
 if [ -z ${LOCAL_CHAIN_ONLY+x} ]; then
+    # Pre validation
+    SKIP_WAIT_FOR_CONFIRMATION=true npx ts-node ../bootstrap/0_pre_validation.ts 2>&1 | tee bootstrap.out
+
     # Fund accounts
-    SKIP_WAIT_FOR_CONFIRMATION=true npx ts-node ../bootstrap/1_deployer_funding.ts 2>&1 | tee bootstrap.out
+    SKIP_WAIT_FOR_CONFIRMATION=true npx ts-node ../bootstrap/1_deployer_funding.ts 2>&1 | tee -a bootstrap.out
     echo "Successfully run 1_deployer_funding.ts..."
 
     # Setup axelar

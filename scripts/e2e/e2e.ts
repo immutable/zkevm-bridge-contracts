@@ -2,8 +2,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers, providers } from "ethers";
-import { requireEnv, waitForReceipt, getFee, getContract, deployRootContract, delay } from "../helpers/helpers";
-import * as fs from "fs";
+import { requireEnv, waitForReceipt, getFee, getContract, delay, getChildContracts, getRootContracts, saveChildContracts } from "../helpers/helpers";
 import { expect } from "chai";
 
 // The contract ABI of IMX on L1.
@@ -22,54 +21,50 @@ describe("Bridge e2e test", () => {
     let childWIMX: ethers.Contract;
     let rootCustomToken: ethers.Contract;
     let childCustomToken: ethers.Contract;
+    let longWait: number;
+    let shortWait: number;
     
     before(async function () {
-        this.timeout(30000);
+        this.timeout(300000);
         let rootRPCURL = requireEnv("ROOT_RPC_URL");
         let rootChainID = requireEnv("ROOT_CHAIN_ID");
         let childRPCURL = requireEnv("CHILD_RPC_URL");
         let childChainID = requireEnv("CHILD_CHAIN_ID");
-        let rootRateAdminSecret = requireEnv("ROOT_BRIDGE_RATE_ADMIN_SECRET");
         let testAccountKey = requireEnv("TEST_ACCOUNT_SECRET");
         let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
         let rootWETHAddr = requireEnv("ROOT_WETH_ADDR");
 
+        if (process.env["LONG_WAIT"] == null ||  process.env["LONG_WAIT"] == "") {
+            longWait = 1200000;
+        } else {
+            longWait = Number(process.env["LONG_WAIT"])
+        }
+        if (process.env["SHORT_WAIT"] == null ||  process.env["SHORT_WAIT"] == "") {
+            longWait = 300000;
+        } else {
+            longWait = Number(process.env["SHORT_WAIT"])
+        }
+
         // Read from contract file.
-        let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
-        let childContracts = JSON.parse(data);
+        let childContracts = getChildContracts();
         let childBridgeAddr = childContracts.CHILD_BRIDGE_ADDRESS;
         let childWIMXAddr = childContracts.WRAPPED_IMX_ADDRESS;
-        data = fs.readFileSync(".root.bridge.contracts.json", 'utf-8');
-        let rootContracts = JSON.parse(data);
+        let rootContracts = getRootContracts();
         let rootBridgeAddr = rootContracts.ROOT_BRIDGE_ADDRESS;
+        let rootCustomTokenAddr = rootContracts.ROOT_TEST_CUSTOM_TOKEN;
 
         rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
         childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
         rootTestWallet = new ethers.Wallet(testAccountKey, rootProvider);
         childTestWallet = new ethers.Wallet(testAccountKey, childProvider);
-        let rootRateAdminWallet = new ethers.Wallet(rootRateAdminSecret, rootProvider);
 
         rootBridge = getContract("RootERC20BridgeFlowRate", rootBridgeAddr, rootProvider);
         rootWETH = getContract("WETH", rootWETHAddr, rootProvider);
         rootIMX = new ethers.Contract(rootIMXAddr, IMX_ABI, rootProvider);
+        rootCustomToken = getContract("ChildERC20", rootCustomTokenAddr, rootProvider);
         childBridge = getContract("ChildERC20Bridge", childBridgeAddr, childProvider);
         childETH = getContract("ChildERC20", await childBridge.childETHToken(), childProvider);
         childWIMX = getContract("WIMX", childWIMXAddr, childProvider);
-
-        // Deploy a custom token
-        rootCustomToken = await deployRootContract("ERC20PresetMinterPauser", rootTestWallet, "Custom Token", "CTK");
-        await waitForReceipt(rootCustomToken.deployTransaction.hash, rootProvider);
-        // Mint tokens
-        let resp = await rootCustomToken.connect(rootTestWallet).mint(rootTestWallet.address, ethers.utils.parseEther("1000.0").toBigInt());
-        await waitForReceipt(resp.hash, rootProvider);
-        // Set rate control
-        resp = await rootBridge.connect(rootRateAdminWallet).setRateControlThreshold(
-            rootCustomToken.address,
-            ethers.utils.parseEther("20016.0"),
-            ethers.utils.parseEther("5.56"),
-            ethers.utils.parseEther("10008.0")
-        );
-        await waitForReceipt(resp.hash, rootProvider);
     })
 
     it("should successfully deposit IMX to self from L1 to L2", async() => {
@@ -93,6 +88,10 @@ describe("Bridge e2e test", () => {
         let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
         let postBalL2 = preBalL2;
 
+        console.log("Wait " + longWait + " ms");
+        await delay(longWait);
+        console.log("Done");
+
         while (postBalL2.eq(preBalL2)) {
             postBalL2 = await childProvider.getBalance(childTestWallet.address);
             await delay(1000);
@@ -103,7 +102,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(60000)
+    }).timeout(1800000)
 
     it("should successfully withdraw IMX to self from L2 to L1", async() => {
         // Get IMX balance on root & child chains before withdraw
@@ -125,6 +124,10 @@ describe("Bridge e2e test", () => {
         let postBalL1 = preBalL1;
         let postBalL2 = await childProvider.getBalance(childTestWallet.address);
 
+        console.log("Wait " + shortWait + " ms");
+        await delay(shortWait);
+        console.log("Done");
+
         while (postBalL1.eq(preBalL1)) {
             postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
             await delay(1000);
@@ -132,12 +135,12 @@ describe("Bridge e2e test", () => {
 
         // Verify
         let receipt = await childProvider.getTransactionReceipt(resp.hash);
-        let txFee = receipt.cumulativeGasUsed.mul(receipt.effectiveGasPrice);
+        let txFee = receipt.gasUsed.mul(receipt.effectiveGasPrice);
         let expectedPostL1 = preBalL1.add(amt);
         let expectedPostL2 = preBalL2.sub(txFee).sub(amt).sub(bridgeFee);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(120000)
+    }).timeout(1800000)
 
     it("should successfully withdraw wIMX to self from L2 to L1", async() => {
         // Wrap 1 IMX
@@ -176,6 +179,10 @@ describe("Bridge e2e test", () => {
         let postBalL1 = preBalL1;
         let postBalL2 = await childWIMX.balanceOf(childTestWallet.address);
 
+        console.log("Wait " + shortWait + " ms");
+        await delay(shortWait);
+        console.log("Done");
+
         while (postBalL1.eq(preBalL1)) {
             postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
             await delay(1000);
@@ -186,7 +193,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(120000)
+    }).timeout(1800000)
 
     it("should successfully deposit ETH to self from L1 to L2", async() => {
         // Get ETH balance on root & child chains before deposit
@@ -205,6 +212,10 @@ describe("Bridge e2e test", () => {
         let postBalL1 = await rootProvider.getBalance(rootTestWallet.address);
         let postBalL2 = preBalL2;
 
+        console.log("Wait " + longWait + " ms");
+        await delay(longWait);
+        console.log("Done");
+
         while (postBalL2.eq(preBalL2)) {
             postBalL2 = await childETH.balanceOf(childTestWallet.address);
             await delay(1000);
@@ -217,7 +228,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(60000)
+    }).timeout(1800000)
 
     it("should successfully deposit wETH to self from L1 to L2", async() => {
         // Wrap 0.01 ETH
@@ -246,6 +257,10 @@ describe("Bridge e2e test", () => {
         let postBalL1 = await rootWETH.balanceOf(rootTestWallet.address);
         let postBalL2 = preBalL2;
 
+        console.log("Wait " + longWait + " ms");
+        await delay(longWait);
+        console.log("Done");
+
         while (postBalL2.eq(preBalL2)) {
             postBalL2 = await childETH.balanceOf(childTestWallet.address);
             await delay(1000);
@@ -256,7 +271,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(60000)
+    }).timeout(1800000)
 
     it("should successfully withdraw ETH to self from L2 to L1", async() => {
         // Get ETH balance on root & child chains before withdraw
@@ -278,6 +293,10 @@ describe("Bridge e2e test", () => {
         let postBalL1 = preBalL1;
         let postBalL2 = await childETH.balanceOf(childTestWallet.address);
 
+        console.log("Wait " + shortWait + " ms");
+        await delay(shortWait);
+        console.log("Done");
+
         while (postBalL1.eq(preBalL1)) {
             postBalL1 = await rootProvider.getBalance(rootTestWallet.address);
             await delay(1000);
@@ -288,9 +307,16 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(120000)
+    }).timeout(1800000)
 
     it("should successfully map a ERC20 Token", async() => {
+        let childContracts = getChildContracts();
+        let childCustomTokenAddr = childContracts.CHILD_TEST_CUSTOM_TOKEN;
+        if (childCustomTokenAddr != "") {
+            childCustomToken = getContract("ChildERC20", childCustomTokenAddr, childProvider);
+            console.log("Custom token has already been mapped, skip.");
+            return;
+        }
         // Map token
         let bridgeFee = ethers.utils.parseEther("0.001");
         let expectedChildTokenAddr = await rootBridge.callStatic.mapToken(rootCustomToken.address, {
@@ -302,15 +328,22 @@ describe("Bridge e2e test", () => {
         await waitForReceipt(resp.hash, rootProvider);
         
         let childTokenAddr = await childBridge.rootTokenToChildToken(rootCustomToken.address);
+
+        console.log("Wait " + longWait + " ms");
+        await delay(longWait);
+        console.log("Done");
+
         while (childTokenAddr == ethers.constants.AddressZero) {
             childTokenAddr = await childBridge.rootTokenToChildToken(rootCustomToken.address);
             await delay(1000);
         }
         childCustomToken = getContract("ChildERC20", childTokenAddr, childProvider);
+        childContracts.CHILD_TEST_CUSTOM_TOKEN = childTokenAddr;
+        saveChildContracts(childContracts);
 
         // Verify
         expect(childTokenAddr).to.equal(expectedChildTokenAddr);
-    }).timeout(60000)
+    }).timeout(1800000)
 
     it("should successfully deposit mapped ERC20 Token to self from L1 to L2", async() => {
         // Get token balance on root & child chains before deposit
@@ -332,6 +365,11 @@ describe("Bridge e2e test", () => {
 
         let postBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
         let postBalL2 = preBalL2;
+
+        console.log("Wait " + longWait + " ms");
+        await delay(longWait);
+        console.log("Done");
+
         while (postBalL2.eq(preBalL2)) {
             postBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
             await delay(1000);
@@ -342,7 +380,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(60000)
+    }).timeout(1800000)
 
     it("should successfully withdraw mapped ERC20 Token to self from L2 to L1", async() => {
         // Get token balance on root & child chains before deposit
@@ -364,6 +402,10 @@ describe("Bridge e2e test", () => {
         let postBalL1 = preBalL1;
         let postBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
 
+        console.log("Wait " + shortWait + " ms");
+        await delay(shortWait);
+        console.log("Done");
+
         while (postBalL1.eq(preBalL1)) {
             postBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
             await delay(1000);
@@ -374,5 +416,5 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(120000)
+    }).timeout(1800000)
 })

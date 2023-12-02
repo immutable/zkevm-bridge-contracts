@@ -2,32 +2,23 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers as hardhat } from "hardhat";
 import { ethers } from "ethers";
-import { requireEnv, deployRootContract, waitForReceipt } from "../helpers/helpers";
+import { requireEnv, deployRootContract, waitForReceipt, saveRootContracts } from "../helpers/helpers";
 import * as fs from "fs";
 
 async function main() {
     let rootRPCURL = requireEnv("ROOT_RPC_URL");
     let rootChainID = requireEnv("ROOT_CHAIN_ID");
     let rootAdminKey = requireEnv("ROOT_EOA_SECRET");
-    let rootDeployerKey = requireEnv("ROOT_DEPLOYER_SECRET");
-    let axelarDeployerKey = requireEnv("AXELAR_ROOT_EOA_SECRET");
+    let deployerAddr = requireEnv("DEPLOYER_ADDR");
+    let reservedAddr = requireEnv("NONCE_RESERVED_DEPLOYER_ADDR");
+    let axelarEOA = requireEnv("AXELAR_EOA");
     let rootTestKey = requireEnv("TEST_ACCOUNT_SECRET");
-    let rootRateAdminKey = requireEnv("ROOT_BRIDGE_RATE_ADMIN_SECRET");
 
     // Get root provider.
     let rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
 
-    // Get deployer wallet on the root chain.
-    let rootDeployer = new ethers.Wallet(rootDeployerKey, rootProvider);
-
-    // Get axelar wallet on the root chain.
-    let axelarDeployer = new ethers.Wallet(axelarDeployerKey, rootProvider);
-
     // Get test wwallet on the root chain.
     let testWallet = new ethers.Wallet(rootTestKey, rootProvider);
-
-    // Get rate admin wallet on the root chain.
-    let rateAdminWallet = new ethers.Wallet(rootRateAdminKey, rootProvider);
     
     // Get root admin eoa wallet.
     let admin = new ethers.Wallet(rootAdminKey, rootProvider);
@@ -40,18 +31,18 @@ async function main() {
 
     // Deploy IMX contract
     console.log("Deploy IMX contract on root chain...");
-    let IMX = await deployRootContract("ERC20PresetMinterPauser", admin, "IMX Token", "IMX");
+    let IMX = await deployRootContract("ERC20PresetMinterPauser", admin, null, "IMX Token", "IMX");
     await waitForReceipt(IMX.deployTransaction.hash, rootProvider);
     console.log("IMX deployed at: " + IMX.address);
 
     // Deploy WETH contract
     console.log("Deploy WETH contract on root chain...");
-    let WETH = await deployRootContract("WETH", admin);
+    let WETH = await deployRootContract("WETH", admin, null);
     await waitForReceipt(WETH.deployTransaction.hash, rootProvider);
     console.log("WETH deployed at: " + WETH.address);
 
-    // Mint 1100 IMX to root deployer
-    let resp = await IMX.connect(admin).mint(rootDeployer.address, ethers.utils.parseEther("1100.0"));
+    // Mint 1110 IMX to root deployer
+    let resp = await IMX.connect(admin).mint(deployerAddr, ethers.utils.parseEther("1110.0"));
     await waitForReceipt(resp.hash, rootProvider);
 
     // Transfer 1000 IMX to test wallet
@@ -60,14 +51,21 @@ async function main() {
 
     // Transfer 0.1 ETH to root deployer
     resp = await admin.sendTransaction({
-        to: rootDeployer.address,
+        to: deployerAddr,
+        value: ethers.utils.parseEther("0.1"),
+    })
+    await waitForReceipt(resp.hash, rootProvider);
+
+    // Transfer 0.1 ETH to nonce reserved root deployer
+    resp = await admin.sendTransaction({
+        to: reservedAddr,
         value: ethers.utils.parseEther("0.1"),
     })
     await waitForReceipt(resp.hash, rootProvider);
 
     // Transfer 500 ETH to axelar deployer
     resp = await admin.sendTransaction({
-        to: axelarDeployer.address,
+        to: axelarEOA,
         value: ethers.utils.parseEther("500.0"),
     })
 
@@ -78,16 +76,9 @@ async function main() {
     })
     await waitForReceipt(resp.hash, rootProvider);
 
-    // Transfer 0.1 ETH to rate admin
-    resp = await admin.sendTransaction({
-        to: rateAdminWallet.address,
-        value: ethers.utils.parseEther("10.0"),
-    })
-    await waitForReceipt(resp.hash, rootProvider);
-
-    console.log("Root deployer now has " + ethers.utils.formatEther(await IMX.balanceOf(rootDeployer.address)) + " IMX.");
-    console.log("Root deployer now has " + ethers.utils.formatEther(await rootProvider.getBalance(rootDeployer.address)) + " ETH.");
-    console.log("Root axelar now has " + ethers.utils.formatEther(await rootProvider.getBalance(axelarDeployer.address)) + " ETH.");
+    console.log("Root deployer now has " + ethers.utils.formatEther(await IMX.balanceOf(deployerAddr)) + " IMX.");
+    console.log("Root deployer now has " + ethers.utils.formatEther(await rootProvider.getBalance(deployerAddr)) + " ETH.");
+    console.log("Root axelar now has " + ethers.utils.formatEther(await rootProvider.getBalance(axelarEOA)) + " ETH.");
 
     console.log("Finished setting up on root chain.");
     let contractData = {

@@ -3,8 +3,6 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers } from "ethers";
 import { requireEnv, hasDuplicates, requireNonEmptyCode } from "../helpers/helpers";
-import { LedgerSigner } from "../helpers/ledger_signer";
-import * as fs from "fs";
 
 async function run() {
     console.log("=======Start Deployment Validation=======");

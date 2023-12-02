@@ -68,23 +68,90 @@ export function hasDuplicates(array: string[]) {
     return (new Set(array)).size !== array.length;
 }
 
-export async function deployChildContract(contract: string, adminWallet: ethers.Wallet | LedgerSigner, ...args: any) {
+export async function deployChildContract(contract: string, adminWallet: ethers.Wallet | LedgerSigner, reservedNonce: number | null, ...args: any) {
     let contractObj = JSON.parse(fs.readFileSync(`../../out/${contract}.sol/${contract}.json`, 'utf8'));
     let [priorityFee, maxFee] = await exports.getFee(adminWallet);
     let factory = new ContractFactory(contractObj.abi, contractObj.bytecode, adminWallet);
-    return await factory.deploy(...args, {
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
+    let overrides;
+    if (reservedNonce != null) {
+        overrides = {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+            nonce: reservedNonce,
+        }
+    } else {
+        overrides = {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        }
+    }
+    return await factory.deploy(...args, overrides);
 }
 
-export async function deployRootContract(contract: string, adminWallet: ethers.Wallet | LedgerSigner, ...args: any) {
+export async function deployRootContract(contract: string, adminWallet: ethers.Wallet | LedgerSigner, reservedNonce: number | null, ...args: any) {
     let contractObj = JSON.parse(fs.readFileSync(`../../out/${contract}.sol/${contract}.json`, 'utf8'));
     let factory = new ContractFactory(contractObj.abi, contractObj.bytecode, adminWallet);
-    return await factory.deploy(...args);
+    if (reservedNonce == null) {
+        return await factory.deploy(...args);
+    } else {
+        return await factory.deploy(...args, {
+            nonce: reservedNonce,
+        })
+    }
 }
 
 export function getContract(contract: string, contractAddr: string, provider: providers.JsonRpcProvider) {
     let contractObj = JSON.parse(fs.readFileSync(`../../out/${contract}.sol/${contract}.json`, 'utf8'));
     return new ethers.Contract(contractAddr, contractObj.abi, provider);
+}
+
+export function getChildContracts() {
+    let childContracts;
+    if (fs.existsSync(".child.bridge.contracts.json")) {
+        let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
+        childContracts = JSON.parse(data);
+    } else {
+        childContracts = {
+            CHILD_PROXY_ADMIN: "",
+            CHILD_BRIDGE_IMPL_ADDRESS: "",
+            CHILD_BRIDGE_PROXY_ADDRESS: "",
+            CHILD_BRIDGE_ADDRESS: "",
+            CHILD_ADAPTOR_IMPL_ADDRESS: "",
+            CHILD_ADAPTOR_PROXY_ADDRESS: "",
+            CHILD_ADAPTOR_ADDRESS: "",
+            CHILD_TOKEN_TEMPLATE: "",
+            WRAPPED_IMX_ADDRESS: "",
+            CHILD_TEST_CUSTOM_TOKEN: "",
+        };
+    }
+    return childContracts;
+}
+
+export function saveChildContracts(contractData: any) {
+    fs.writeFileSync(".child.bridge.contracts.json", JSON.stringify(contractData, null, 2));
+}
+
+export function getRootContracts() {
+    let rootContracts;
+    if (fs.existsSync(".root.bridge.contracts.json")) {
+        let data = fs.readFileSync(".root.bridge.contracts.json", 'utf-8');
+        rootContracts = JSON.parse(data);
+    } else {
+        rootContracts = {
+            ROOT_PROXY_ADMIN: "",
+            ROOT_BRIDGE_IMPL_ADDRESS: "",
+            ROOT_BRIDGE_PROXY_ADDRESS: "",
+            ROOT_BRIDGE_ADDRESS: "",
+            ROOT_ADAPTOR_IMPL_ADDRESS: "",
+            ROOT_ADAPTOR_PROXY_ADDRESS: "",
+            ROOT_ADAPTOR_ADDRESS: "",
+            ROOT_TOKEN_TEMPLATE: "",
+            ROOT_TEST_CUSTOM_TOKEN: "",
+        };
+    }
+    return rootContracts;
+}
+
+export function saveRootContracts(contractData: any) {
+    fs.writeFileSync(".root.bridge.contracts.json", JSON.stringify(contractData, null, 2));
 }

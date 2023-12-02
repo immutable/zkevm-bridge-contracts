@@ -2,9 +2,8 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers } from "ethers";
-import { requireEnv, waitForConfirmation, hasDuplicates, waitForReceipt, getFee } from "../helpers/helpers";
+import { requireEnv, waitForConfirmation, hasDuplicates, waitForReceipt, getFee, getContract, getChildContracts } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
-import * as fs from "fs";
 
 async function run() {
     console.log("=======Start IMX Burning=======");
@@ -12,85 +11,82 @@ async function run() {
     // Check environment variables
     let childRPCURL = requireEnv("CHILD_RPC_URL");
     let childChainID = requireEnv("CHILD_CHAIN_ID");
-    let adminEOASecret = requireEnv("CHILD_ADMIN_EOA_SECRET");
+    let deployerSecret = requireEnv("DEPLOYER_SECRET");
     let multisigAddr = requireEnv("MULTISIG_CONTRACT_ADDRESS");
     let imxDepositLimit = requireEnv("IMX_DEPOSIT_LIMIT");
+    let deployerFund = requireEnv("CHILD_DEPLOYER_FUND");
 
     // Read from contract file.
-    let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
-    let childContracts = JSON.parse(data);
+    let childContracts = getChildContracts();
     let childBridgeAddr = childContracts.CHILD_BRIDGE_ADDRESS;
 
-    // Get admin address
+    // Get deployer address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
-    let adminWallet;
-    if (adminEOASecret == "ledger") {
-        let index = requireEnv("CHILD_ADMIN_EOA_LEDGER_INDEX");
+    let childDeployerWallet;
+    if (deployerSecret == "ledger") {
+        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
         const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
-        adminWallet = new LedgerSigner(childProvider, derivationPath);
+        childDeployerWallet = new LedgerSigner(childProvider, derivationPath);
     } else {
-        adminWallet = new ethers.Wallet(adminEOASecret, childProvider);
+        childDeployerWallet = new ethers.Wallet(deployerSecret, childProvider);
     }
-    let adminAddr = await adminWallet.getAddress();
-    console.log("Admin address is: ", adminAddr);
+    let deployerAddr = await childDeployerWallet.getAddress();
+    console.log("Deployer address is: ", deployerAddr);
 
     // Check duplicates
-    if (hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
+    if (hasDuplicates([deployerAddr, childBridgeAddr, multisigAddr])) {
         throw("Duplicate address detected!");
     }
 
     // Execute
-    let adminBal = await childProvider.getBalance(adminAddr);
+    let deployerBal = await childProvider.getBalance(deployerAddr);
     let bridgeBal = await childProvider.getBalance(childBridgeAddr);
     let multisigBal = await childProvider.getBalance(multisigAddr);
-    console.log("Admin balance: ", ethers.utils.formatEther(adminBal));
+    console.log("Deployer balance: ", ethers.utils.formatEther(deployerBal));
     console.log("Bridge balance: ", ethers.utils.formatEther(bridgeBal));
     console.log("Multisig balance: ", ethers.utils.formatEther(multisigBal));
-
-    if (adminBal.lt(ethers.utils.parseEther("0.01"))) {
-        console.log("IMX Burning has already been done, skip.")
-        return;
-    }
 
     console.log("Burn IMX in...");
     await waitForConfirmation();
 
-    let childBridgeObj = JSON.parse(fs.readFileSync('../../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
-    let childBridge = new ethers.Contract(childBridgeAddr, childBridgeObj.abi, childProvider);
-
-    console.log("Transfer " + imxDepositLimit +  " IMX to child bridge...");
-    let [priorityFee, maxFee] = await getFee(childProvider);
-    let resp = await childBridge.connect(adminWallet).privilegedDeposit({
-        value: ethers.utils.parseEther(imxDepositLimit),
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    })
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
-    await waitForReceipt(resp.hash, childProvider);
-
-    adminBal = await childProvider.getBalance(adminAddr);
-    bridgeBal = await childProvider.getBalance(childBridgeAddr);
-    multisigBal = await childProvider.getBalance(multisigAddr);
-    console.log("Admin balance: ", ethers.utils.formatEther(adminBal));
-    console.log("Bridge balance: ", ethers.utils.formatEther(bridgeBal));
-    console.log("Multisig balance: ", ethers.utils.formatEther(multisigBal));
+    if ((await childProvider.getBalance(childBridgeAddr)).gte(ethers.utils.parseEther(imxDepositLimit))) {
+        console.log("Child bridge has already got burned IMX, skip.");
+    } else {
+        console.log("Transfer " + imxDepositLimit +  " IMX to child bridge...");
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let childBridge = getContract("ChildERC20Bridge", childBridgeAddr, childProvider);
+        let resp = await childBridge.connect(childDeployerWallet).privilegedDeposit({
+            value: ethers.utils.parseEther(imxDepositLimit),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
+        await waitForReceipt(resp.hash, childProvider);
+    }
 
     // Transfer to multisig
-    console.log("Transfer remaining to multisig...");
-    [priorityFee, maxFee] = await getFee(childProvider);
-    resp = await adminWallet.sendTransaction({
-        to: multisigAddr,
-        value: adminBal.sub(ethers.utils.parseEther("0.01")),
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
-    await waitForReceipt(resp.hash, childProvider);
+    let remain = ethers.utils.parseEther(deployerFund);
+    deployerBal = await childProvider.getBalance(deployerAddr);
+    if (deployerBal.lte(remain)) {
+        console.log("Multisig has already got remaining burned IMX, skip.");
+    } else {
+        console.log("Transfer remaining to multisig...");
+        let toTransfer = deployerBal.sub(remain);
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childDeployerWallet.sendTransaction({
+            to: multisigAddr,
+            value: toTransfer,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
+        await waitForReceipt(resp.hash, childProvider);
+    }
 
-    adminBal = await childProvider.getBalance(adminAddr);
+    deployerBal = await childProvider.getBalance(deployerAddr);
     bridgeBal = await childProvider.getBalance(childBridgeAddr);
     multisigBal = await childProvider.getBalance(multisigAddr);
-    console.log("Admin balance: ", ethers.utils.formatEther(adminBal));
+    console.log("Deployer balance: ", ethers.utils.formatEther(deployerBal));
     console.log("Bridge balance: ", ethers.utils.formatEther(bridgeBal));
     console.log("Multisig balance: ", ethers.utils.formatEther(multisigBal));
 

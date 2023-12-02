@@ -22,3 +22,6 @@ SKIP_WAIT_FOR_CONFIRMATION=true npx ts-node ../bootstrap/7_imx_rebalancing.ts 2>
 
 # Initialise root contracts
 SKIP_WAIT_FOR_CONFIRMATION=true npx ts-node ../bootstrap/8_root_initialisation.ts 2>&1 | tee -a bootstrap.out
+
+# Prepare for test
+SKIP_WAIT_FOR_CONFIRMATION=true npx ts-node ../bootstrap/9_test_preparation.ts 2>&1 | tee -a bootstrap.out

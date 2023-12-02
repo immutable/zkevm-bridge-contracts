@@ -4,6 +4,7 @@ import "@nomicfoundation/hardhat-toolbox";
 const config: HardhatUserConfig = {
   networks: {
     hardhat: {
+      hardfork: "shanghai",
       mining: {
         auto: false,
         interval: 1200

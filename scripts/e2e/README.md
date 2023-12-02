@@ -45,11 +45,12 @@ TEST_ACCOUNT_SECRET=
 {
   "ROOT_BRIDGE_ADDRESS": "",
   "ROOT_ADAPTOR_ADDRESS": "",
-  "ROOT_TOKEN_TEMPLATE": ""
+  "ROOT_TOKEN_TEMPLATE": "",
+  "ROOT_TEST_CUSTOM_TOKEN": ""
 }
 ```
 
 3. Run end to end tests
 ```
-npx mocha --require mocha-suppress-logs ./e2e.ts
+LONG_WAIT=1200000 SHORT_WAIT=300000 npx mocha --require mocha-suppress-logs ./e2e.ts
 ```

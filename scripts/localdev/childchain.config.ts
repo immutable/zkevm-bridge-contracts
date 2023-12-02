@@ -4,6 +4,7 @@ import "@nomicfoundation/hardhat-toolbox";
 const config: HardhatUserConfig = {
   networks: {
     hardhat: {
+      hardfork: "grayGlacier",
       mining: {
         auto: false,
         interval: 200

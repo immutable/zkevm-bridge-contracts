@@ -11,61 +11,69 @@ async function run() {
     // Check environment variables
     let childRPCURL = requireEnv("CHILD_RPC_URL");
     let childChainID = requireEnv("CHILD_CHAIN_ID");
-    let adminEOASecret = requireEnv("CHILD_ADMIN_EOA_SECRET");
+    let deployerSecret = requireEnv("DEPLOYER_SECRET");
+    let reservedDeployerAddr = requireEnv("NONCE_RESERVED_DEPLOYER_ADDR");
+    let reservedDeployerFund = requireEnv("CHILD_NONCE_RESERVED_DEPLOYER_FUND");
     let axelarEOA = requireEnv("AXELAR_EOA");
     let axelarFund = requireEnv("AXELAR_FUND");
-    let deployerEOA = requireEnv("CHILD_DEPLOYER_ADDR");
-    let deployerFund = requireEnv("CHILD_DEPLOYER_FUND");
 
-    // Get admin EOA address
+    // Get deployer address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
-    let adminWallet;
-    if (adminEOASecret == "ledger") {
-        let index = requireEnv("CHILD_ADMIN_EOA_LEDGER_INDEX");
+    let childDeployerWallet;
+    if (deployerSecret == "ledger") {
+        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
         const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
-        adminWallet = new LedgerSigner(childProvider, derivationPath);
+        childDeployerWallet = new LedgerSigner(childProvider, derivationPath);
     } else {
-        adminWallet = new ethers.Wallet(adminEOASecret, childProvider);
+        childDeployerWallet = new ethers.Wallet(deployerSecret, childProvider);
     }
-    let adminAddr = await adminWallet.getAddress();
-    console.log("Admin address is: ", adminAddr);
+    let deployerAddr = await childDeployerWallet.getAddress();
+    console.log("Deployer address is: ", deployerAddr);
 
     // Check duplicates
-    if (hasDuplicates([adminAddr, axelarEOA, deployerEOA])) {
+    if (hasDuplicates([deployerAddr, axelarEOA, reservedDeployerAddr])) {
         throw("Duplicate address detected!");
     }
 
     // Execute
+    console.log("Nonce reserved deployer now has: ", ethers.utils.formatEther(await childProvider.getBalance(reservedDeployerAddr)));
     console.log("Axelar EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(axelarEOA)));
-    console.log("Deployer EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(deployerEOA)));
     console.log("Fund Axelar and deployer on child chain in...");
     await waitForConfirmation();
 
-    let [priorityFee, maxFee] = await getFee(childProvider);
-    console.log("Transfer value to axelar...");
-    let resp = await adminWallet.sendTransaction({
-        to: axelarEOA,
-        value: ethers.utils.parseEther(axelarFund),
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    })
-    console.log("Transaction submitted: " + JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, childProvider);
+    if ((await childProvider.getBalance(reservedDeployerAddr)).gte(ethers.utils.parseEther(reservedDeployerFund))) {
+        console.log("Nonce reserved deployer has already got requested amount, skip.");
+    } else {
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        console.log("Transfer value to reserved nonce deployer...");
+        let resp = await childDeployerWallet.sendTransaction({
+            to: reservedDeployerAddr,
+            value: ethers.utils.parseEther(reservedDeployerFund),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })
+        console.log("Transaction submitted: " + JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, childProvider);
+    }
 
-    [priorityFee, maxFee] = await getFee(childProvider);
-    console.log("Transfer value to deployer...");
-    resp = await adminWallet.sendTransaction({
-        to: deployerEOA,
-        value: ethers.utils.parseEther(deployerFund),
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    })
-    console.log("Transaction submitted: " + JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, childProvider);
+    if ((await childProvider.getBalance(axelarEOA)).gte(ethers.utils.parseEther(axelarFund))) {
+        console.log("Axelar has already got requested amount, skip.");
+    } else {
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        console.log("Transfer value to axelar...");
+        let resp = await childDeployerWallet.sendTransaction({
+            to: axelarEOA,
+            value: ethers.utils.parseEther(axelarFund),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })
+        console.log("Transaction submitted: " + JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, childProvider);
+    }
 
     // Print target balance
+    console.log("Nonce reserved deployer now has: ", ethers.utils.formatEther(await childProvider.getBalance(reservedDeployerAddr)));
     console.log("Axelar EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(axelarEOA)));
-    console.log("Deployer EOA now has: ", ethers.utils.formatEther(await childProvider.getBalance(deployerEOA)));
 
     console.log("=======End Deployer Funding=======");
 }
