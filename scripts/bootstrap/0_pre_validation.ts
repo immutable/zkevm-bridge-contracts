@@ -74,6 +74,11 @@ async function run() {
     } else {
         deployerWallet = new ethers.Wallet(deployerSecret, childProvider);
     }
+    let actualDeployerAddress = await deployerWallet.getAddress();
+    if (deployerWallet instanceof LedgerSigner) {
+        deployerWallet.close();
+    }
+    
     let reservedWallet;
     if (reservedDeployerSecret == "ledger") {
         let index = requireEnv("NONCE_RESERVED_DEPLOYER_INDEX");
@@ -82,13 +87,12 @@ async function run() {
     } else {
         reservedWallet = new ethers.Wallet(reservedDeployerSecret, childProvider);
     }
+    let actualReservedDeployerAddress = await reservedWallet.getAddress();
 
     // Check deployer address matches deployer addr
-    let actualDeployerAddress = await deployerWallet.getAddress();
     if (actualDeployerAddress != deployerAddr) {
         tryThrow("Deployer addresses mismatch, expect " + deployerAddr + " actual " + actualDeployerAddress);
     }
-    let actualReservedDeployerAddress = await reservedWallet.getAddress();
     if (actualReservedDeployerAddress != reservedDeployerAddr) {
         tryThrow("Reserved Nonce deployer addresses mismatch, expect " + reservedDeployerAddr + " actual " + actualReservedDeployerAddress);
     }

@@ -17,19 +17,7 @@ export async function deployRootContracts() {
     // Read from contract file.
     let rootContracts = getRootContracts();
 
-    // Get deployer address
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
-    let rootDeployerWallet;
-    if (deployerSecret == "ledger") {
-        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
-        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
-        rootDeployerWallet = new LedgerSigner(rootProvider, derivationPath);
-    } else {
-        rootDeployerWallet = new ethers.Wallet(deployerSecret, rootProvider);
-    }
-    let deployerAddr = await rootDeployerWallet.getAddress();
-    console.log("Deployer address is: ", deployerAddr);
-
     // Get reserved wallet
     let reservedDeployerWallet;
     if (nonceReservedDeployerSecret == "ledger") {
@@ -77,6 +65,22 @@ export async function deployRootContracts() {
         await waitForReceipt(resp.hash, rootProvider);
     }
     console.log("Deployed to ROOT_TOKEN_TEMPLATE: ", rootTokenTemplate.address);
+
+    if (reservedDeployerWallet instanceof LedgerSigner) {
+        reservedDeployerWallet.close();
+    }
+
+    // Get deployer address
+    let rootDeployerWallet;
+    if (deployerSecret == "ledger") {
+        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        rootDeployerWallet = new LedgerSigner(rootProvider, derivationPath);
+    } else {
+        rootDeployerWallet = new ethers.Wallet(deployerSecret, rootProvider);
+    }
+    let deployerAddr = await rootDeployerWallet.getAddress();
+    console.log("Deployer address is: ", deployerAddr);
 
     // Deploy proxy admin
     let proxyAdmin;

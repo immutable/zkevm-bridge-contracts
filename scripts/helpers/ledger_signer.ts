@@ -142,4 +142,8 @@ export class LedgerSigner extends ethers.Signer {
   connect(provider: ethers.providers.Provider): ethers.Signer {
     return new LedgerSigner(provider, this.path);
   }
+
+  public async close() {
+    (await this._eth)?.transport.close();
+  }
 }

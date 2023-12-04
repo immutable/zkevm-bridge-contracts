@@ -17,19 +17,7 @@ export async function deployChildContracts() {
     // Read from contract file.
     let childContracts = getChildContracts();
 
-    // Get deployer address
     const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
-    let childDeployerWallet;
-    if (deployerSecret == "ledger") {
-        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
-        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
-        childDeployerWallet = new LedgerSigner(childProvider, derivationPath);
-    } else {
-        childDeployerWallet = new ethers.Wallet(deployerSecret, childProvider);
-    }
-    let deployerAddr = await childDeployerWallet.getAddress();
-    console.log("Deployer address is: ", deployerAddr);
-
     // Get reserved wallet
     let reservedDeployerWallet;
     if (nonceReservedDeployerSecret == "ledger") {
@@ -81,6 +69,22 @@ export async function deployChildContracts() {
         await waitForReceipt(resp.hash, childProvider);
     }
     console.log("Initialised CHILD_TOKEN_TEMPLATE at: ", childTokenTemplate.address);
+
+    if (reservedDeployerWallet instanceof LedgerSigner) {
+        reservedDeployerWallet.close();
+    }
+
+    // Get deployer address
+    let childDeployerWallet;
+    if (deployerSecret == "ledger") {
+        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        childDeployerWallet = new LedgerSigner(childProvider, derivationPath);
+    } else {
+        childDeployerWallet = new ethers.Wallet(deployerSecret, childProvider);
+    }
+    let deployerAddr = await childDeployerWallet.getAddress();
+    console.log("Deployer address is: ", deployerAddr);
 
     // Deploy wrapped IMX
     let wrappedIMX;
