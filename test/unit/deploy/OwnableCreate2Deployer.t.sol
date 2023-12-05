@@ -15,17 +15,21 @@ contract OwnableCreate2DeployerTest is Test {
 
     bytes private childERC20Bytecode;
     bytes32 private salt;
+    address private owner;
 
     event Deployed(address indexed deployedAddress, address indexed sender, bytes32 indexed salt, bytes32 bytecodeHash);
 
     function setUp() public {
+        owner = address(0x12345);
+
         // create a new deployer that is owned by this contract
-        deployer = new OwnableCreate2Deployer();
+        deployer = new OwnableCreate2Deployer(owner);
 
         childERC20 = new ChildERC20();
         childERC20Bytecode = type(ChildERC20).creationCode;
 
         salt = createSaltFromKey("test-salt");
+        vm.startPrank(owner);
     }
 
     function test_RevertIf_DeployWithEmptyByteCode() public {
@@ -34,6 +38,8 @@ contract OwnableCreate2DeployerTest is Test {
     }
 
     function test_RevertIf_DeployWithNonOwner() public {
+        vm.stopPrank();
+
         address nonOwner = address(0x1);
         vm.startPrank(nonOwner);
         vm.expectRevert("Ownable: caller is not the owner");
@@ -49,10 +55,10 @@ contract OwnableCreate2DeployerTest is Test {
     }
 
     function test_deploy_DeploysContract() public {
-        address expectedAddress = predictCreate2Address(childERC20Bytecode, address(deployer), address(this), salt);
+        address expectedAddress = predictCreate2Address(childERC20Bytecode, address(deployer), address(owner), salt);
 
         vm.expectEmit();
-        emit Deployed(expectedAddress, address(this), salt, keccak256(childERC20Bytecode));
+        emit Deployed(expectedAddress, address(owner), salt, keccak256(childERC20Bytecode));
         address deployed = deployer.deploy(childERC20Bytecode, salt);
 
         assertEq(deployed.code, address(childERC20).code, "deployed contract code does not match expected");
@@ -65,7 +71,7 @@ contract OwnableCreate2DeployerTest is Test {
 
     function test_deploy_DeploysToPredictedAddress() public {
         address deployedAddress = deployer.deploy(childERC20Bytecode, salt);
-        address expectedAddress = predictCreate2Address(childERC20Bytecode, address(deployer), address(this), salt);
+        address expectedAddress = predictCreate2Address(childERC20Bytecode, address(deployer), address(owner), salt);
         assertEq(deployedAddress, expectedAddress, "deployed address does not match expected address");
     }
 
@@ -105,6 +111,8 @@ contract OwnableCreate2DeployerTest is Test {
      */
 
     function test_RevertIf_DeployAndInitWithNonOwner() public {
+        vm.stopPrank();
+
         address nonOwner = address(0x1);
         vm.startPrank(nonOwner);
         vm.expectRevert("Ownable: caller is not the owner");
@@ -112,7 +120,7 @@ contract OwnableCreate2DeployerTest is Test {
     }
 
     function test_deployAndInit_DeploysAndInitsContract() public {
-        address expectedAddress = predictCreate2Address(childERC20Bytecode, address(deployer), address(this), salt);
+        address expectedAddress = predictCreate2Address(childERC20Bytecode, address(deployer), address(owner), salt);
         address rootToken = address(0x1);
         string memory name = "Test-Token";
         string memory symbol = "TST";
@@ -121,7 +129,7 @@ contract OwnableCreate2DeployerTest is Test {
             abi.encodeWithSelector(ChildERC20.initialize.selector, rootToken, name, symbol, decimals);
 
         vm.expectEmit();
-        emit Deployed(expectedAddress, address(this), salt, keccak256(childERC20Bytecode));
+        emit Deployed(expectedAddress, address(owner), salt, keccak256(childERC20Bytecode));
         address deployed = deployer.deployAndInit(childERC20Bytecode, salt, initPayload);
 
         // regardless of init data, the deployed address should match expected deployment
@@ -142,9 +150,9 @@ contract OwnableCreate2DeployerTest is Test {
      */
 
     function test_deployedAddress_ReturnsPredictedAddress() public {
-        address deployAddress = deployer.deployedAddress(childERC20Bytecode, address(this), salt);
+        address deployAddress = deployer.deployedAddress(childERC20Bytecode, address(owner), salt);
 
-        address predictedAddress = predictCreate2Address(childERC20Bytecode, address(deployer), address(this), salt);
+        address predictedAddress = predictCreate2Address(childERC20Bytecode, address(deployer), address(owner), salt);
         address deployedAddress = deployer.deploy(childERC20Bytecode, salt);
 
         assertEq(deployAddress, predictedAddress, "deployment address did not match predicted address");
@@ -167,6 +175,6 @@ contract OwnableCreate2DeployerTest is Test {
     }
 
     function createSaltFromKey(string memory key) private view returns (bytes32) {
-        return keccak256(abi.encode(address(this), key));
+        return keccak256(abi.encode(address(owner), key));
     }
 }

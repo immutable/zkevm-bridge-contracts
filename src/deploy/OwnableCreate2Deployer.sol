@@ -11,14 +11,15 @@ import {Create2} from "@axelar-gmp-sdk-solidity/contracts/deploy/Create2.sol";
  * @notice Deploys and optionally initializes contracts using the `CREATE2` opcode.
  * @dev This contract extends the {Deployer} contract from the Axelar SDK, by adding basic access control to the deployment functions.
  *      The contract has an owner, which is the only entity that can deploy new contracts.
- *      The owner is initially set to the deployer of this contract and can be changed using {transferOwnership}.
  *
  * @dev The contract deploys a contract with the same bytecode, salt, and sender(owner) to the same address.
  *      Attempting to deploy a contract with the same bytecode, salt, and sender(owner) will revert.
  *      The address where the contract will be deployed can be found using {deployedAddress}.
  */
 contract OwnableCreate2Deployer is Ownable, Create2, Deployer {
-    constructor() Ownable() {}
+    constructor(address owner) Ownable() {
+        transferOwnership(owner);
+    }
 
     /**
      * @dev Deploys a contract using the `CREATE2` opcode.
