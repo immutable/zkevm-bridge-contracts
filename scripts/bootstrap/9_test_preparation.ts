@@ -1,7 +1,7 @@
 // Prepare for test
 import * as dotenv from "dotenv";
 dotenv.config();
-import { ethers } from "ethers";
+import { ethers, utils } from "ethers";
 import { deployRootContract, getContract, getRootContracts, requireEnv, saveRootContracts, waitForConfirmation, waitForReceipt } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
 
@@ -13,6 +13,7 @@ async function run() {
     let rootChainID = requireEnv("ROOT_CHAIN_ID");
     let deployerSecret = requireEnv("DEPLOYER_SECRET");
     let testAccountKey = requireEnv("TEST_ACCOUNT_SECRET");
+    let rootMultisigAddr = requireEnv("PRIVILEGED_ROOT_MULTISIG_ADDR");
 
     // Get deployer address
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -45,7 +46,7 @@ async function run() {
         console.log("Deploy root test custom token...");
         rootCustomToken = await deployRootContract("ERC20PresetMinterPauser", rootDeployerWallet, null, "Custom Token", "CTK");
         await waitForReceipt(rootCustomToken.deployTransaction.hash, rootProvider);
-        console.log("Custom token deployed to: ", rootCustomToken)
+        console.log("Custom token deployed to: ", rootCustomToken.address);
     }
     rootContracts.ROOT_TEST_CUSTOM_TOKEN=rootCustomToken.address;
     saveRootContracts(rootContracts);
@@ -65,6 +66,23 @@ async function run() {
         ethers.utils.parseEther("10008.0")
     );
     await waitForReceipt(resp.hash, rootProvider);
+
+    // Revoke roles
+    console.log("Revoke RATE_CONTROL_ROLE of deployer...")
+    resp = await rootBridge.connect(rootDeployerWallet).revokeRole(utils.keccak256(utils.toUtf8Bytes("RATE")), deployerAddr);
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+    await waitForReceipt(resp.hash, rootProvider);
+
+    console.log("Revoke DEFAULT_ADMIN of deployer...")
+    resp = await rootBridge.connect(rootDeployerWallet).revokeRole(await rootBridge.DEFAULT_ADMIN_ROLE(), deployerAddr);
+    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+    await waitForReceipt(resp.hash, rootProvider);
+
+    // Print summary
+    console.log("Does multisig have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootMultisigAddr));
+    console.log("Does deployer have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), deployerAddr));
+    console.log("Does multisig have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootMultisigAddr));
+    console.log("Does deployer have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), deployerAddr));
 
     console.log("=======End Test Preparation=======");
 }
