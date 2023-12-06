@@ -18,6 +18,57 @@ export async function deployRootContracts() {
     let rootContracts = getRootContracts();
 
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
+
+    // Get deployer address
+    let rootDeployerWallet;
+    if (deployerSecret == "ledger") {
+        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        rootDeployerWallet = new LedgerSigner(rootProvider, derivationPath);
+    } else {
+        rootDeployerWallet = new ethers.Wallet(deployerSecret, rootProvider);
+    }
+    let deployerAddr = await rootDeployerWallet.getAddress();
+    console.log("Deployer address is: ", deployerAddr);
+
+    // Execute
+    console.log("Deploy root contracts in...");
+    await waitForConfirmation();
+
+    // Deploy root bridge impl
+    let rootBridgeImpl;
+    if (rootContracts.ROOT_BRIDGE_IMPL_ADDRESS != "") {
+        console.log("Root bridge impl has already been deployed to: " + rootContracts.ROOT_BRIDGE_IMPL_ADDRESS + ", skip.");
+        rootBridgeImpl = getContract("RootERC20BridgeFlowRate", rootContracts.ROOT_BRIDGE_IMPL_ADDRESS, rootProvider);
+    } else {
+        console.log("Deploy root bridge impl...");
+        rootBridgeImpl = await deployRootContract("RootERC20BridgeFlowRate", rootDeployerWallet, null);
+        console.log("Transaction submitted: ", JSON.stringify(rootBridgeImpl.deployTransaction, null, 2));
+        await waitForReceipt(rootBridgeImpl.deployTransaction.hash, rootProvider);
+    }
+    rootContracts.ROOT_BRIDGE_IMPL_ADDRESS = rootBridgeImpl.address;
+    saveRootContracts(rootContracts);
+    console.log("Deployed to ROOT_BRIDGE_IMPL_ADDRESS: ", rootBridgeImpl.address);
+
+    // Deploy root adaptor impl
+    let rootAdaptorImpl;
+    if (rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS != "") {
+        console.log("Root adaptor impl has already been deployed to: " + rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS + ", skip.");
+        rootAdaptorImpl = getContract("RootAxelarBridgeAdaptor", rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS, rootProvider);
+    } else {
+        console.log("Deploy root adaptor impl...");
+        rootAdaptorImpl = await deployRootContract("RootAxelarBridgeAdaptor", rootDeployerWallet, null, rootGatewayAddr);
+        console.log("Transaction submitted: ", JSON.stringify(rootAdaptorImpl.deployTransaction, null, 2));
+        await waitForReceipt(rootAdaptorImpl.deployTransaction.hash, rootProvider); 
+    }
+    rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS = rootAdaptorImpl.address;
+    saveRootContracts(rootContracts);
+    console.log("Deployed to ROOT_ADAPTOR_IMPL_ADDRESS: ", rootAdaptorImpl.address);
+
+    if (rootDeployerWallet instanceof LedgerSigner) {
+        rootDeployerWallet.close();
+    }
+
     // Get reserved wallet
     let reservedDeployerWallet;
     if (nonceReservedDeployerSecret == "ledger") {
@@ -29,10 +80,6 @@ export async function deployRootContracts() {
     }
     let reservedDeployerAddr = await reservedDeployerWallet.getAddress();
     console.log("Reserved deployer address is: ", reservedDeployerAddr);
-
-    // Execute
-    console.log("Deploy root contracts in...");
-    await waitForConfirmation();
 
     // Deploy root token template
     let rootTokenTemplate;
@@ -65,51 +112,25 @@ export async function deployRootContracts() {
     }
     console.log("Deployed to ROOT_TOKEN_TEMPLATE: ", rootTokenTemplate.address);
 
-    if (reservedDeployerWallet instanceof LedgerSigner) {
-        reservedDeployerWallet.close();
-    }
-
-    // Get deployer address
-    let rootDeployerWallet;
-    if (deployerSecret == "ledger") {
-        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
-        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
-        rootDeployerWallet = new LedgerSigner(rootProvider, derivationPath);
-    } else {
-        rootDeployerWallet = new ethers.Wallet(deployerSecret, rootProvider);
-    }
-    let deployerAddr = await rootDeployerWallet.getAddress();
-    console.log("Deployer address is: ", deployerAddr);
-
     // Deploy proxy admin
     let proxyAdmin;
     if (rootContracts.ROOT_PROXY_ADMIN != "") {
         console.log("Proxy admin has already been deployed to: " + rootContracts.ROOT_PROXY_ADMIN + ", skip.");
         proxyAdmin = getContract("ProxyAdmin", rootContracts.ROOT_PROXY_ADMIN, rootProvider);
     } else {
+        // Check the current nonce matches the reserved nonce
+        let currentNonce = await rootProvider.getTransactionCount(reservedDeployerAddr);
+        if (nonceReserved + 2 != currentNonce) {
+            throw("Nonce mismatch, expected " + (nonceReserved + 2) + " actual " + currentNonce);
+        }
         console.log("Deploy proxy admin...");
-        proxyAdmin = await deployRootContract("ProxyAdmin", rootDeployerWallet, null);
+        proxyAdmin = await deployRootContract("ProxyAdmin", reservedDeployerWallet, null);
         console.log("Transaction submitted: ", JSON.stringify(proxyAdmin.deployTransaction, null, 2));
-        await waitForReceipt(proxyAdmin.deployTransaction.hash, rootProvider);    
+        await waitForReceipt(proxyAdmin.deployTransaction.hash, rootProvider);
     }
     rootContracts.ROOT_PROXY_ADMIN = proxyAdmin.address;
     saveRootContracts(rootContracts);
     console.log("Deployed to ROOT_PROXY_ADMIN: ", proxyAdmin.address);
-    
-    // Deploy root bridge impl
-    let rootBridgeImpl;
-    if (rootContracts.ROOT_BRIDGE_IMPL_ADDRESS != "") {
-        console.log("Root bridge impl has already been deployed to: " + rootContracts.ROOT_BRIDGE_IMPL_ADDRESS + ", skip.");
-        rootBridgeImpl = getContract("RootERC20BridgeFlowRate", rootContracts.ROOT_BRIDGE_IMPL_ADDRESS, rootProvider);
-    } else {
-        console.log("Deploy root bridge impl...");
-        rootBridgeImpl = await deployRootContract("RootERC20BridgeFlowRate", rootDeployerWallet, null);
-        console.log("Transaction submitted: ", JSON.stringify(rootBridgeImpl.deployTransaction, null, 2));
-        await waitForReceipt(rootBridgeImpl.deployTransaction.hash, rootProvider);
-    }
-    rootContracts.ROOT_BRIDGE_IMPL_ADDRESS = rootBridgeImpl.address;
-    saveRootContracts(rootContracts);
-    console.log("Deployed to ROOT_BRIDGE_IMPL_ADDRESS: ", rootBridgeImpl.address);
     
     // Deploy root bridge proxy
     let rootBridgeProxy;
@@ -117,8 +138,13 @@ export async function deployRootContracts() {
         console.log("Root bridge proxy has already been deployed to: " + rootContracts.ROOT_BRIDGE_PROXY_ADDRESS + ", skip.");
         rootBridgeProxy = getContract("TransparentUpgradeableProxy", rootContracts.ROOT_BRIDGE_PROXY_ADDRESS, rootProvider);
     } else {
+        // Check the current nonce matches the reserved nonce
+        let currentNonce = await rootProvider.getTransactionCount(reservedDeployerAddr);
+        if (nonceReserved + 3 != currentNonce) {
+            throw("Nonce mismatch, expected " + (nonceReserved + 3) + " actual " + currentNonce);
+        }
         console.log("Deploy root bridge proxy...");
-        rootBridgeProxy = await deployRootContract("TransparentUpgradeableProxy", rootDeployerWallet, null, rootBridgeImpl.address, proxyAdmin.address, []);
+        rootBridgeProxy = await deployRootContract("TransparentUpgradeableProxy", reservedDeployerWallet, null, rootBridgeImpl.address, proxyAdmin.address, []);
         console.log("Transaction submitted: ", JSON.stringify(rootBridgeProxy.deployTransaction, null, 2));
         await waitForReceipt(rootBridgeProxy.deployTransaction.hash, rootProvider);
     }
@@ -126,29 +152,19 @@ export async function deployRootContracts() {
     saveRootContracts(rootContracts);
     console.log("Deployed to ROOT_BRIDGE_PROXY_ADDRESS: ", rootBridgeProxy.address);
 
-    // Deploy root adaptor impl
-    let rootAdaptorImpl;
-    if (rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS != "") {
-        console.log("Root adaptor impl has already been deployed to: " + rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS + ", skip.");
-        rootAdaptorImpl = getContract("RootAxelarBridgeAdaptor", rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS, rootProvider);
-    } else {
-        console.log("Deploy root adaptor impl...");
-        rootAdaptorImpl = await deployRootContract("RootAxelarBridgeAdaptor", rootDeployerWallet, null, rootGatewayAddr);
-        console.log("Transaction submitted: ", JSON.stringify(rootAdaptorImpl.deployTransaction, null, 2));
-        await waitForReceipt(rootAdaptorImpl.deployTransaction.hash, rootProvider); 
-    }
-    rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS = rootAdaptorImpl.address;
-    saveRootContracts(rootContracts);
-    console.log("Deployed to ROOT_ADAPTOR_IMPL_ADDRESS: ", rootAdaptorImpl.address);
-
     // Deploy root adaptor proxy
     let rootAdaptorProxy;
     if (rootContracts.ROOT_ADAPTOR_PROXY_ADDRESS != "") {
         console.log("Root adaptor proxy has already been deployed to: " + rootContracts.ROOT_ADAPTOR_PROXY_ADDRESS + ", skip.");
         rootAdaptorProxy = getContract("TransparentUpgradeableProxy", rootContracts.ROOT_ADAPTOR_PROXY_ADDRESS, rootProvider);
     } else {
+        // Check the current nonce matches the reserved nonce
+        let currentNonce = await rootProvider.getTransactionCount(reservedDeployerAddr);
+        if (nonceReserved + 4 != currentNonce) {
+            throw("Nonce mismatch, expected " + (nonceReserved + 4) + " actual " + currentNonce);
+        }
         console.log("Deploy root adaptor proxy...");
-        rootAdaptorProxy = await deployRootContract("TransparentUpgradeableProxy", rootDeployerWallet, null, rootAdaptorImpl.address, proxyAdmin.address, []);
+        rootAdaptorProxy = await deployRootContract("TransparentUpgradeableProxy", reservedDeployerWallet, null, rootAdaptorImpl.address, proxyAdmin.address, []);
         console.log("Transaction submitted: ", JSON.stringify(rootAdaptorProxy.deployTransaction, null, 2));
         await waitForReceipt(rootAdaptorProxy.deployTransaction.hash, rootProvider);
     }

@@ -122,10 +122,10 @@ async function run() {
     if (axelarRequiredIMX.lt(ethers.utils.parseEther("500.0"))) {
         tryThrow("Axelar on child chain should request at least 500 IMX, got" + ethers.utils.formatEther(axelarRequiredIMX));
     }
-    if (deployerRequiredIMX.lt(ethers.utils.parseEther("500.0"))) {
+    if (deployerRequiredIMX.lt(ethers.utils.parseEther("250.0"))) {
         tryThrow("Deployer on child chain should request at least 500 IMX, got" + ethers.utils.formatEther(deployerRequiredIMX));
     }
-    if (reservedDeployerRequiredIMX.lt(ethers.utils.parseEther("10.0"))) {
+    if (reservedDeployerRequiredIMX.lt(ethers.utils.parseEther("250.0"))) {
         tryThrow("Reserved deployer on child chain should request at least 10 IMX, got" + ethers.utils.formatEther(reservedDeployerRequiredIMX));
     }
     let extraIMX = ethers.utils.parseEther("100.0");
