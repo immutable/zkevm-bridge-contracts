@@ -30,12 +30,6 @@ export async function deployRootContracts() {
     let reservedDeployerAddr = await reservedDeployerWallet.getAddress();
     console.log("Reserved deployer address is: ", reservedDeployerAddr);
 
-    // Check the current nonce matches the reserved nonce
-    let currentNonce = await rootProvider.getTransactionCount(reservedDeployerAddr);
-    if (nonceReserved != currentNonce) {
-        throw("Nonce mismatch, expected " + nonceReserved + " actual " + currentNonce);
-    }
-
     // Execute
     console.log("Deploy root contracts in...");
     await waitForConfirmation();
@@ -46,6 +40,11 @@ export async function deployRootContracts() {
         console.log("Root token template has already been deployed to: " + rootContracts.ROOT_TOKEN_TEMPLATE + ", skip.");
         rootTokenTemplate = getContract("ChildERC20", rootContracts.ROOT_TOKEN_TEMPLATE, rootProvider);
     } else {
+        // Check the current nonce matches the reserved nonce
+        let currentNonce = await rootProvider.getTransactionCount(reservedDeployerAddr);
+        if (nonceReserved != currentNonce) {
+            throw("Nonce mismatch, expected " + nonceReserved + " actual " + currentNonce);
+        }
         console.log("Deploy root token template...");
         rootTokenTemplate = await deployRootContract("ChildERC20", reservedDeployerWallet, nonceReserved);
         console.log("Transaction submitted: ", JSON.stringify(rootTokenTemplate.deployTransaction, null, 2));
