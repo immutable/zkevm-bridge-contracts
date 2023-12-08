@@ -37,9 +37,11 @@ async function run() {
     let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
     let rootWETHAddr = requireEnv("ROOT_WETH_ADDR");
     let axelarEOA = requireEnv("AXELAR_EOA");
+    let passportDeployer = requireEnv("PASSPORT_NONCE_RESERVER_ADDR");
     let axelarFund = requireEnv("AXELAR_FUND");
     let childDeployerFund = requireEnv("CHILD_DEPLOYER_FUND");
     let childReservedDeployerFund = requireEnv("CHILD_NONCE_RESERVED_DEPLOYER_FUND");
+    let passportDeployerFund = requireEnv("PASSPORT_NONCE_RESERVER_FUND");
     let imxDepositLimit = requireEnv("IMX_DEPOSIT_LIMIT");
     requireEnv("RATE_LIMIT_IMX_CAPACITY");
     requireEnv("RATE_LIMIT_IMX_REFILL_RATE");
@@ -98,7 +100,7 @@ async function run() {
     }
 
     // Check duplicates
-    if (hasDuplicates([actualDeployerAddress, actualReservedDeployerAddress, axelarEOA])) {
+    if (hasDuplicates([actualDeployerAddress, actualReservedDeployerAddress, axelarEOA, passportDeployer])) {
         throw("Duplicate address detected!");
     }
     if (hasDuplicates([rootIMXAddr, rootWETHAddr])) {
@@ -119,14 +121,18 @@ async function run() {
     let axelarRequiredIMX = ethers.utils.parseEther(axelarFund);
     let deployerRequiredIMX = ethers.utils.parseEther(childDeployerFund);
     let reservedDeployerRequiredIMX = ethers.utils.parseEther(childReservedDeployerFund);
+    let passportRequiredIMX = ethers.utils.parseEther(passportDeployerFund);
     if (axelarRequiredIMX.lt(ethers.utils.parseEther("500.0"))) {
         tryThrow("Axelar on child chain should request at least 500 IMX, got" + ethers.utils.formatEther(axelarRequiredIMX));
     }
     if (deployerRequiredIMX.lt(ethers.utils.parseEther("250.0"))) {
         tryThrow("Deployer on child chain should request at least 500 IMX, got" + ethers.utils.formatEther(deployerRequiredIMX));
     }
-    if (reservedDeployerRequiredIMX.lt(ethers.utils.parseEther("250.0"))) {
-        tryThrow("Reserved deployer on child chain should request at least 10 IMX, got" + ethers.utils.formatEther(reservedDeployerRequiredIMX));
+    if (reservedDeployerRequiredIMX.lt(ethers.utils.parseEther("100.0"))) {
+        tryThrow("Reserved deployer on child chain should request at least 100 IMX, got" + ethers.utils.formatEther(reservedDeployerRequiredIMX));
+    }
+    if (passportRequiredIMX.lt(ethers.utils.parseEther("100.0"))) {
+        tryThrow("Passport deployer on child chain should request at least 100 IMX, got" + ethers.utils.formatEther(passportRequiredIMX));
     }
     let extraIMX = ethers.utils.parseEther("100.0");
     let requiredIMX = axelarRequiredIMX.add(deployerRequiredIMX).add(reservedDeployerRequiredIMX).add(extraIMX);
