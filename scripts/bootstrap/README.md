@@ -169,5 +169,5 @@ npx ts-node 9_test_preparation.ts 2>&1 | tee -a bootstrap.out
 ```
 15. Test bridge functions
 ```
-LONG_WAIT=1200000 SHORT_WAIT=300000 npx mocha --require mocha-suppress-logs ../e2e/e2e.ts 2>&1 | tee -a bootstrap.out
+AXELAR_API_URL=${Axelar API URL} npx mocha --require mocha-suppress-logs ../e2e/e2e.ts 2>&1 | tee -a bootstrap.out
 ```

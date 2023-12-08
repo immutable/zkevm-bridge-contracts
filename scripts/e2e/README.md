@@ -52,5 +52,5 @@ TEST_ACCOUNT_SECRET=
 
 3. Run end to end tests
 ```
-LONG_WAIT=1200000 SHORT_WAIT=300000 npx mocha --require mocha-suppress-logs ./e2e.ts
+AXELAR_API_URL=${Axelar API URL or "skip" if run on local} npx mocha --require mocha-suppress-logs ./e2e.ts
 ```

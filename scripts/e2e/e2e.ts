@@ -21,8 +21,7 @@ describe("Bridge e2e test", () => {
     let childWIMX: ethers.Contract;
     let rootCustomToken: ethers.Contract;
     let childCustomToken: ethers.Contract;
-    let longWait: number;
-    let shortWait: number;
+    let axelarAPI: string;
     
     before(async function () {
         this.timeout(300000);
@@ -33,17 +32,7 @@ describe("Bridge e2e test", () => {
         let testAccountKey = requireEnv("TEST_ACCOUNT_SECRET");
         let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
         let rootWETHAddr = requireEnv("ROOT_WETH_ADDR");
-
-        if (process.env["LONG_WAIT"] == null ||  process.env["LONG_WAIT"] == "") {
-            longWait = 1200000;
-        } else {
-            longWait = Number(process.env["LONG_WAIT"])
-        }
-        if (process.env["SHORT_WAIT"] == null ||  process.env["SHORT_WAIT"] == "") {
-            longWait = 300000;
-        } else {
-            longWait = Number(process.env["SHORT_WAIT"])
-        }
+        axelarAPI = requireEnv("AXELAR_API_URL");
 
         // Read from contract file.
         let childContracts = getChildContracts();
@@ -88,9 +77,7 @@ describe("Bridge e2e test", () => {
         let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
         let postBalL2 = preBalL2;
 
-        console.log("Wait " + longWait + " ms");
-        await delay(longWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (postBalL2.eq(preBalL2)) {
             postBalL2 = await childProvider.getBalance(childTestWallet.address);
@@ -102,7 +89,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(1800000)
+    }).timeout(2400000)
 
     it("should successfully withdraw IMX to self from L2 to L1", async() => {
         // Get IMX balance on root & child chains before withdraw
@@ -124,9 +111,7 @@ describe("Bridge e2e test", () => {
         let postBalL1 = preBalL1;
         let postBalL2 = await childProvider.getBalance(childTestWallet.address);
 
-        console.log("Wait " + shortWait + " ms");
-        await delay(shortWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (postBalL1.eq(preBalL1)) {
             postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
@@ -140,7 +125,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(txFee).sub(amt).sub(bridgeFee);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(1800000)
+    }).timeout(2400000)
 
     it("should successfully withdraw wIMX to self from L2 to L1", async() => {
         // Wrap 1 IMX
@@ -179,9 +164,7 @@ describe("Bridge e2e test", () => {
         let postBalL1 = preBalL1;
         let postBalL2 = await childWIMX.balanceOf(childTestWallet.address);
 
-        console.log("Wait " + shortWait + " ms");
-        await delay(shortWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (postBalL1.eq(preBalL1)) {
             postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
@@ -193,7 +176,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(1800000)
+    }).timeout(2400000)
 
     it("should successfully deposit ETH to self from L1 to L2", async() => {
         // Get ETH balance on root & child chains before deposit
@@ -212,9 +195,7 @@ describe("Bridge e2e test", () => {
         let postBalL1 = await rootProvider.getBalance(rootTestWallet.address);
         let postBalL2 = preBalL2;
 
-        console.log("Wait " + longWait + " ms");
-        await delay(longWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (postBalL2.eq(preBalL2)) {
             postBalL2 = await childETH.balanceOf(childTestWallet.address);
@@ -223,12 +204,12 @@ describe("Bridge e2e test", () => {
 
         // Verify
         let receipt = await rootProvider.getTransactionReceipt(resp.hash);
-        let txFee = receipt.cumulativeGasUsed.mul(receipt.effectiveGasPrice);
+        let txFee = receipt.gasUsed.mul(receipt.effectiveGasPrice);
         let expectedPostL1 = preBalL1.sub(txFee).sub(amt).sub(bridgeFee);
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(1800000)
+    }).timeout(2400000)
 
     it("should successfully deposit wETH to self from L1 to L2", async() => {
         // Wrap 0.01 ETH
@@ -257,9 +238,7 @@ describe("Bridge e2e test", () => {
         let postBalL1 = await rootWETH.balanceOf(rootTestWallet.address);
         let postBalL2 = preBalL2;
 
-        console.log("Wait " + longWait + " ms");
-        await delay(longWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (postBalL2.eq(preBalL2)) {
             postBalL2 = await childETH.balanceOf(childTestWallet.address);
@@ -271,7 +250,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(1800000)
+    }).timeout(2400000)
 
     it("should successfully withdraw ETH to self from L2 to L1", async() => {
         // Get ETH balance on root & child chains before withdraw
@@ -293,9 +272,7 @@ describe("Bridge e2e test", () => {
         let postBalL1 = preBalL1;
         let postBalL2 = await childETH.balanceOf(childTestWallet.address);
 
-        console.log("Wait " + shortWait + " ms");
-        await delay(shortWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (postBalL1.eq(preBalL1)) {
             postBalL1 = await rootProvider.getBalance(rootTestWallet.address);
@@ -307,7 +284,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(1800000)
+    }).timeout(2400000)
 
     it("should successfully map a ERC20 Token", async() => {
         let childContracts = getChildContracts();
@@ -329,9 +306,7 @@ describe("Bridge e2e test", () => {
         
         let childTokenAddr = await childBridge.rootTokenToChildToken(rootCustomToken.address);
 
-        console.log("Wait " + longWait + " ms");
-        await delay(longWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (childTokenAddr == ethers.constants.AddressZero) {
             childTokenAddr = await childBridge.rootTokenToChildToken(rootCustomToken.address);
@@ -343,7 +318,7 @@ describe("Bridge e2e test", () => {
 
         // Verify
         expect(childTokenAddr).to.equal(expectedChildTokenAddr);
-    }).timeout(1800000)
+    }).timeout(2400000)
 
     it("should successfully deposit mapped ERC20 Token to self from L1 to L2", async() => {
         // Get token balance on root & child chains before deposit
@@ -366,9 +341,7 @@ describe("Bridge e2e test", () => {
         let postBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
         let postBalL2 = preBalL2;
 
-        console.log("Wait " + longWait + " ms");
-        await delay(longWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (postBalL2.eq(preBalL2)) {
             postBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
@@ -380,7 +353,7 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(1800000)
+    }).timeout(2400000)
 
     it("should successfully withdraw mapped ERC20 Token to self from L2 to L1", async() => {
         // Get token balance on root & child chains before deposit
@@ -402,9 +375,7 @@ describe("Bridge e2e test", () => {
         let postBalL1 = preBalL1;
         let postBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
 
-        console.log("Wait " + shortWait + " ms");
-        await delay(shortWait);
-        console.log("Done");
+        await waitUntilSucceed(axelarAPI, resp.hash);
 
         while (postBalL1.eq(preBalL1)) {
             postBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
@@ -416,5 +387,35 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
-    }).timeout(1800000)
+    }).timeout(2400000)
 })
+
+async function waitUntilSucceed(axelarURL: string, txHash: any) {
+    if (axelarURL == "skip") {
+        return;
+    }
+    console.log("Wait until succeed... tx hash: ", txHash)
+    let response;
+    let req = '{"method": "searchGMP", "txHash": "' + txHash + '"}'
+    while (true) {
+        response = await fetch(axelarURL, {
+            method: 'POST',
+            body: req,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'} });
+        if (!response.ok) {}
+        if (response.body !== null) {
+            const asString = new TextDecoder("utf-8").decode(await response.arrayBuffer());
+            const asJSON = JSON.parse(asString);
+            if (asJSON.data[0] == undefined) {
+                console.log("Waiting for " + txHash + " to become available...");
+            } else {
+                console.log("Current status of " + txHash + ": " + asJSON.data[0].status);
+                if (asJSON.data[0].status == "executed") {
+                    console.log("Done");
+                    return;
+                }
+            }
+        }
+        await delay(60000);
+    }
+}
