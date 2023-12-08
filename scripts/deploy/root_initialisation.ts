@@ -73,7 +73,7 @@ export async function initialiseRootContracts() {
         {
             defaultAdmin: deployerAddr,
             pauser: rootPauser,
-            unpauser: rootPauser,
+            unpauser: rootMultisigAddr,
             variableManager: rootMultisigAddr,
             adaptorManager: rootMultisigAddr,
         },
