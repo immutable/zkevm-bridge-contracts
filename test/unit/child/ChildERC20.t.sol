@@ -14,7 +14,9 @@ contract ChildERC20Test is Test {
 
     function setUp() public {
         childToken = new ChildERC20();
-        childToken.initialize(DEFAULT_CHILDERC20_ADDRESS, DEFAULT_CHILDERC20_NAME, DEFAULT_CHILDERC20_SYMBOL, DEFAULT_CHILDERC20_DECIMALS);
+        childToken.initialize(
+            DEFAULT_CHILDERC20_ADDRESS, DEFAULT_CHILDERC20_NAME, DEFAULT_CHILDERC20_SYMBOL, DEFAULT_CHILDERC20_DECIMALS
+        );
     }
 
     function test_InitialState() public {
@@ -27,7 +29,9 @@ contract ChildERC20Test is Test {
     function test_FailInitialisationBadAddress() public {
         ChildERC20 failedToken = new ChildERC20();
         vm.expectRevert("ChildERC20: BAD_INITIALIZATION");
-        failedToken.initialize(address(0), DEFAULT_CHILDERC20_NAME, DEFAULT_CHILDERC20_SYMBOL, DEFAULT_CHILDERC20_DECIMALS);
+        failedToken.initialize(
+            address(0), DEFAULT_CHILDERC20_NAME, DEFAULT_CHILDERC20_SYMBOL, DEFAULT_CHILDERC20_DECIMALS
+        );
     }
 
     function test_FailInitialisationBadName() public {
@@ -44,7 +48,9 @@ contract ChildERC20Test is Test {
 
     function test_RevertIf_InitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
-        childToken.initialize(DEFAULT_CHILDERC20_ADDRESS, DEFAULT_CHILDERC20_NAME, DEFAULT_CHILDERC20_SYMBOL, DEFAULT_CHILDERC20_DECIMALS);        
+        childToken.initialize(
+            DEFAULT_CHILDERC20_ADDRESS, DEFAULT_CHILDERC20_NAME, DEFAULT_CHILDERC20_SYMBOL, DEFAULT_CHILDERC20_DECIMALS
+        );
     }
 
     function test_RevertIf_MintTokensByNotDeployer() public {
@@ -52,7 +58,7 @@ contract ChildERC20Test is Test {
         address receiver = address(222);
         vm.prank(notDeployer);
         vm.expectRevert("ChildERC20: Only bridge can call");
-        childToken.mint(receiver, 100);        
+        childToken.mint(receiver, 100);
     }
 
     function test_MintSuccess() public {
@@ -61,7 +67,7 @@ contract ChildERC20Test is Test {
 
         uint256 receiverPreBal = childToken.balanceOf(receiver);
 
-        childToken.mint(receiver, mintAmount);   
+        childToken.mint(receiver, mintAmount);
 
         uint256 receiverPostBal = childToken.balanceOf(receiver);
 
@@ -74,7 +80,7 @@ contract ChildERC20Test is Test {
         address receiver = address(222);
         vm.prank(notDeployer);
         vm.expectRevert("ChildERC20: Only bridge can call");
-        childToken.burn(receiver, 100);             
+        childToken.burn(receiver, 100);
     }
 
     function test_BurnSuccess() public {
@@ -82,11 +88,11 @@ contract ChildERC20Test is Test {
         uint256 burnAmount = 1000;
         address receiver = address(222);
 
-        childToken.mint(receiver, mintAmount);   
+        childToken.mint(receiver, mintAmount);
 
         uint256 receiverPreBurnBal = childToken.balanceOf(receiver);
 
-        childToken.burn(receiver, burnAmount);   
+        childToken.burn(receiver, burnAmount);
 
         uint256 receiverPostBurnBal = childToken.balanceOf(receiver);
 
