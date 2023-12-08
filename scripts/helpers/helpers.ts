@@ -155,3 +155,33 @@ export function getRootContracts() {
 export function saveRootContracts(contractData: any) {
     fs.writeFileSync(".root.bridge.contracts.json", JSON.stringify(contractData, null, 2));
 }
+
+export async function waitUntilSucceed(axelarURL: string, txHash: any) {
+    if (axelarURL == "skip") {
+        return;
+    }
+    console.log("Wait until succeed... tx hash: ", txHash)
+    let response;
+    let req = '{"method": "searchGMP", "txHash": "' + txHash + '"}'
+    while (true) {
+        response = await fetch(axelarURL, {
+            method: 'POST',
+            body: req,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'} });
+        if (!response.ok) {}
+        if (response.body !== null) {
+            const asString = new TextDecoder("utf-8").decode(await response.arrayBuffer());
+            const asJSON = JSON.parse(asString);
+            if (asJSON.data[0] == undefined) {
+                console.log("Waiting for " + txHash + " to become available...");
+            } else {
+                console.log("Current status of " + txHash + ": " + asJSON.data[0].status);
+                if (asJSON.data[0].status == "executed") {
+                    console.log("Done");
+                    return;
+                }
+            }
+        }
+        await delay(60000);
+    }
+}
