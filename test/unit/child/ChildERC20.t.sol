@@ -47,10 +47,10 @@ contract ChildERC20Test is Test {
         childToken.initialize(DEFAULT_CHILDERC20_ADDRESS, DEFAULT_CHILDERC20_NAME, DEFAULT_CHILDERC20_SYMBOL, DEFAULT_CHILDERC20_DECIMALS);        
     }
 
-    function test_RevertIf_MintTokensByNonDeployer() public {
-        address nonDeployer = address(333);
+    function test_RevertIf_MintTokensByNotDeployer() public {
+        address notDeployer = address(333);
         address receiver = address(222);
-        vm.prank(nonDeployer);
+        vm.prank(notDeployer);
         vm.expectRevert("ChildERC20: Only bridge can call");
         childToken.mint(receiver, 100);        
     }
@@ -69,10 +69,10 @@ contract ChildERC20Test is Test {
         assertEq(receiverPostBal, receiverPreBal + mintAmount, "Incorrect token balance");
     }
 
-    function test_RevertIf_BurnTokensByNonDeployer() public {
-        address nonDeployer = address(333);
+    function test_RevertIf_BurnTokensByNotDeployer() public {
+        address notDeployer = address(333);
         address receiver = address(222);
-        vm.prank(nonDeployer);
+        vm.prank(notDeployer);
         vm.expectRevert("ChildERC20: Only bridge can call");
         childToken.burn(receiver, 100);             
     }
