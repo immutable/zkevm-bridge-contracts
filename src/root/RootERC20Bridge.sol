@@ -230,7 +230,7 @@ contract RootERC20Bridge is
      *      The unwrapping is done through the WETH contract's `withdraw()` function, which sends the native ETH to this bridge contract.
      *      The only reason this `receive()` function is needed is for this process, hence the validation ensures that the sender is the WETH contract.
      */
-    receive() external payable whenNotPaused {
+    receive() external payable {
         // Revert if sender is not the WETH token address
         if (msg.sender != rootWETHToken) {
             revert NonWrappedNativeTransfer();
