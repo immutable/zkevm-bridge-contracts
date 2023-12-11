@@ -29,7 +29,7 @@ contract RootERC20BridgeMainnetForkTest is Test, IRootERC20BridgeEvents, IRootAx
     address private mockChildBridge = address(0x123);
     address private mockChildAdaptor = address(0x1234);
 
-    uint private mainnetForkId;
+    uint256 private mainnetForkId;
 
     RootERC20BridgeFlowRate private rootBridge;
     RootAxelarBridgeAdaptor private rootAdaptor;
@@ -84,14 +84,16 @@ contract RootERC20BridgeMainnetForkTest is Test, IRootERC20BridgeEvents, IRootAx
     }
 
     /// @dev Maps a token on Mainnet, and ensures operations emits the correct events
-    function _mapAndVerify(address token) private returns (IERC20Metadata){
-        uint bridgeFee = 100;
+    function _mapAndVerify(address token) private returns (IERC20Metadata) {
+        uint256 bridgeFee = 100;
         address predictedChildTokenAddress = Clones.predictDeterministicAddress(
             address(rootTokenTemplate), keccak256(abi.encodePacked(token)), address(mockChildBridge)
         );
 
         vm.expectEmit(true, false, false, false, AXELAR_GAS_SERVICE_ADDRESS);
-        emit NativeGasPaidForContractCall(rootAdaptorAddress, CHILD_CHAIN_ID, CHILD_BRIDGE_ADAPTOR, "", bridgeFee, address(this));
+        emit NativeGasPaidForContractCall(
+            rootAdaptorAddress, CHILD_CHAIN_ID, CHILD_BRIDGE_ADAPTOR, "", bridgeFee, address(this)
+        );
 
         vm.expectEmit(true, false, false, false, AXELAR_GATEWAY_ADDRESS);
         emit ContractCall(rootAdaptorAddress, CHILD_CHAIN_ID, CHILD_BRIDGE_ADAPTOR, "", "");
@@ -110,8 +112,8 @@ contract RootERC20BridgeMainnetForkTest is Test, IRootERC20BridgeEvents, IRootAx
     /// @dev Deposits token and ensures operations emits the correct events
     function _depositAndVerify(IERC20Metadata rootToken, IERC20Metadata childToken, address whale) private {
         // get some token from a whale
-        uint bridgeAmount = 100_000;
-        uint bridgeFee = 100;
+        uint256 bridgeAmount = 100_000;
+        uint256 bridgeFee = 100;
         vm.prank(whale);
         rootToken.transfer(address(this), bridgeAmount); // get some tokens from a whale
 
@@ -119,7 +121,9 @@ contract RootERC20BridgeMainnetForkTest is Test, IRootERC20BridgeEvents, IRootAx
 
         // deposit to the bridge and expect the following events to be emitted
         vm.expectEmit(true, false, false, false, AXELAR_GAS_SERVICE_ADDRESS);
-        emit NativeGasPaidForContractCall(rootAdaptorAddress, CHILD_CHAIN_ID, CHILD_BRIDGE_ADAPTOR, "", bridgeFee, address(this));
+        emit NativeGasPaidForContractCall(
+            rootAdaptorAddress, CHILD_CHAIN_ID, CHILD_BRIDGE_ADAPTOR, "", bridgeFee, address(this)
+        );
 
         vm.expectEmit(true, false, false, false, AXELAR_GATEWAY_ADDRESS);
         emit ContractCall(rootAdaptorAddress, CHILD_CHAIN_ID, CHILD_BRIDGE_ADAPTOR, "", "");
@@ -137,7 +141,7 @@ contract RootERC20BridgeMainnetForkTest is Test, IRootERC20BridgeEvents, IRootAx
         return new RootERC20BridgeFlowRate();
     }
 
-    function _deployRootAxelarAdaptor() private returns (RootAxelarBridgeAdaptor){
+    function _deployRootAxelarAdaptor() private returns (RootAxelarBridgeAdaptor) {
         return new RootAxelarBridgeAdaptor(AXELAR_GATEWAY_ADDRESS);
     }
 
