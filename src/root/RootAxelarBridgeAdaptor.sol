@@ -50,7 +50,12 @@ contract RootAxelarBridgeAdaptor is
     /// @notice Address of the Axelar Gas Service contract.
     IAxelarGasService public gasService;
 
-    constructor(address _gateway) AxelarExecutable(_gateway) {}
+    /// @notice Address of the authorized initializer.
+    address public immutable initializerAddress;
+
+    constructor(address _gateway) AxelarExecutable(_gateway) {
+        initializerAddress = msg.sender;
+    }
 
     /**
      * @notice Initialization function for RootAxelarBridgeAdaptor.
@@ -67,6 +72,9 @@ contract RootAxelarBridgeAdaptor is
         string memory _childBridgeAdaptor,
         address _gasService
     ) public initializer {
+        if (msg.sender != initializerAddress) {
+            revert UnauthorizedInitializer();
+        }
         if (
             _rootBridge == address(0) || _gasService == address(0) || _roles.defaultAdmin == address(0)
                 || _roles.bridgeManager == address(0) || _roles.gasServiceManager == address(0)

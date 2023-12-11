@@ -71,6 +71,8 @@ interface IChildAxelarBridgeAdaptorErrors {
     error InvalidSourceChain();
     /// @notice Error when the source chain's message sender is not a recognised address.
     error InvalidSourceAddress();
+    /// @notice Error when the an unauthorized initializer tries to initialize the contract.
+    error UnauthorizedInitializer();
 }
 
 /**

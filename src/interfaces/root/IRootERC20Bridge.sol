@@ -189,4 +189,6 @@ interface IRootERC20BridgeErrors {
     error ImxDepositLimitTooLow();
     /// @notice Error when native transfer is sent to contract from non wrapped-token address.
     error NonWrappedNativeTransfer();
+    /// @notice Error when the an unauthorized initializer tries to initialize the contract.
+    error UnauthorizedInitializer();
 }

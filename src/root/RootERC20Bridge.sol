@@ -82,6 +82,8 @@ contract RootERC20Bridge is
     /// @dev The maximum cumulative amount of IMX that can be deposited into the bridge.
     /// @dev A limit of zero indicates unlimited.
     uint256 public imxCumulativeDepositLimit;
+    /// @dev Address of the authorized initializer.
+    address public immutable initializerAddress;
 
     /**
      * @notice Modifier to ensure that the caller is the registered root bridge adaptor.
@@ -91,6 +93,10 @@ contract RootERC20Bridge is
             revert NotBridgeAdaptor();
         }
         _;
+    }
+
+    constructor() {
+        initializerAddress = msg.sender;
     }
 
     /**
@@ -143,6 +149,9 @@ contract RootERC20Bridge is
         address newRootWETHToken,
         uint256 newImxCumulativeDepositLimit
     ) internal {
+        if (msg.sender != initializerAddress) {
+            revert UnauthorizedInitializer();
+        }
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
                 || newChildTokenTemplate == address(0) || newRootIMXToken == address(0) || newRootWETHToken == address(0)

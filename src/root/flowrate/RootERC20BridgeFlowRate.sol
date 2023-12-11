@@ -80,6 +80,8 @@ contract RootERC20BridgeFlowRate is
     // Map ERC 20 token address to threshold
     mapping(address => uint256) public largeTransferThresholds;
 
+    constructor() RootERC20Bridge() {}
+
     function initialize(
         InitializationRoles memory newRoles,
         address newRootBridgeAdaptor,

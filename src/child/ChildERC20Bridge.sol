@@ -70,6 +70,8 @@ contract ChildERC20Bridge is
     address public childETHToken;
     /// @dev The address of the wrapped IMX token on L2.
     address public wIMXToken;
+    /// @dev Address of the authorized initializer.
+    address public immutable initializerAddress;
 
     /**
      * @notice Modifier to ensure that the caller is the registered child bridge adaptor.
@@ -79,6 +81,10 @@ contract ChildERC20Bridge is
             revert NotBridgeAdaptor();
         }
         _;
+    }
+
+    constructor() {
+        initializerAddress = msg.sender;
     }
 
     /**
@@ -97,6 +103,9 @@ contract ChildERC20Bridge is
         address newRootIMXToken,
         address newWIMXToken
     ) public initializer {
+        if (msg.sender != initializerAddress) {
+            revert UnauthorizedInitializer();
+        }
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
