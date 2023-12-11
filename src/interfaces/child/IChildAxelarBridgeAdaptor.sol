@@ -71,6 +71,8 @@ interface IChildAxelarBridgeAdaptorErrors {
     error InvalidSourceChain();
     /// @notice Error when the source chain's message sender is not a recognised address.
     error InvalidSourceAddress();
+    /// @notice Error when a function that isn't supported by the adaptor is called.
+    error UnsupportedOperation();
 }
 
 /**
