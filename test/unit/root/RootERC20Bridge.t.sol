@@ -447,7 +447,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
     function test_RevertIf_mapTokenWithoutName() public {
         vm.mockCallRevert(address(token), abi.encodeWithSelector(IERC20Metadata.name.selector), "Unsupported operation");
-        vm.expectRevert(NotSupportedToken.selector);
+        vm.expectRevert(TokenNotSupported.selector);
         rootBridge.mapToken{value: 300}(token);
     }
 
@@ -455,7 +455,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         vm.mockCallRevert(
             address(token), abi.encodeWithSelector(IERC20Metadata.symbol.selector), "Unsupported operation"
         );
-        vm.expectRevert(NotSupportedToken.selector);
+        vm.expectRevert(TokenNotSupported.selector);
         rootBridge.mapToken{value: 300}(token);
     }
 
@@ -463,7 +463,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         vm.mockCallRevert(
             address(token), abi.encodeWithSelector(IERC20Metadata.decimals.selector), "Unsupported operation"
         );
-        vm.expectRevert(NotSupportedToken.selector);
+        vm.expectRevert(TokenNotSupported.selector);
         rootBridge.mapToken{value: 300}(token);
     }
 

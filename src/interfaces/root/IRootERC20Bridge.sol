@@ -50,14 +50,21 @@ interface IRootERC20Bridge {
     function onMessageReceive(bytes calldata data) external;
 
     /**
-     * @notice Initiate sending a mapToken message to the child chain.
-     *         This is done when a token hasn't been mapped before.
-     * @dev Populates a root token => child token mapping on parent chain before
-     *      sending a message telling child chain to do the same.
+     * @notice Initiates sending a mapToken message to the child chain, if the token hasn't been mapped before.
+     *         This operation requires the `rootToken` to have the following public getter functions: `name()`, `symbol()`, and `decimals()`.
+     *         These functions are optional in the ERC20 standard. If the token does not provide these functions,
+     *         the mapping operation will fail and return a `TokenNotSupported` error.
+     *
+     * @dev The function:
+     *      - fails with a `AlreadyMapped` error if the token has already been mapped.
+     *      - populates a root token => child token mapping on the root chain before
+     *        sending a message telling the child chain to do the same.
+     *      - is `payable` because the message passing protocol requires a fee to be paid.
+     *
      * @dev The address of the child chain token is deterministic using CREATE2.
+     *
      * @param rootToken The address of the token on the root chain.
      * @return childToken The address of the token to be deployed on the child chain.
-     * @dev The function is `payable` because the message passing protocol requires a fee to be paid.
      */
     function mapToken(IERC20Metadata rootToken) external payable returns (address);
 
@@ -190,5 +197,5 @@ interface IRootERC20BridgeErrors {
     /// @notice Error when native transfer is sent to contract from non wrapped-token address.
     error NonWrappedNativeTransfer();
     /// @notice Error when attempt to map a ERC20 token that doesn't support name(), symbol() or decimals().
-    error NotSupportedToken();
+    error TokenNotSupported();
 }

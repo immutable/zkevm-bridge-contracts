@@ -16,6 +16,7 @@ import {
 import {IRootBridgeAdaptor} from "../interfaces/root/IRootBridgeAdaptor.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
  * @title Root ERC20 Bridge
@@ -373,27 +374,7 @@ contract RootERC20Bridge is
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
-        string memory tokenName;
-        string memory tokenSymbol;
-        uint8 tokenDecimals;
-
-        try rootToken.name() returns (string memory name) {
-            tokenName = name;
-        } catch {
-            revert NotSupportedToken();
-        }
-
-        try rootToken.symbol() returns (string memory symbol) {
-            tokenSymbol = symbol;
-        } catch {
-            revert NotSupportedToken();
-        }
-
-        try rootToken.decimals() returns (uint8 decimals) {
-            tokenDecimals = decimals;
-        } catch {
-            revert NotSupportedToken();
-        }
+        (string memory tokenName, string memory tokenSymbol, uint8 tokenDecimals) = _getTokenDetails(rootToken);
 
         bytes memory payload = abi.encode(MAP_TOKEN_SIG, rootToken, tokenName, tokenSymbol, tokenDecimals);
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
@@ -503,6 +484,31 @@ contract RootERC20Bridge is
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
             emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
+    }
+
+    function _getTokenDetails(IERC20Metadata token) private view returns (string memory, string memory, uint8) {
+        string memory tokenName;
+        try token.name() returns (string memory name) {
+            tokenName = name;
+        } catch {
+            revert TokenNotSupported();
+        }
+
+        string memory tokenSymbol;
+        try token.symbol() returns (string memory symbol) {
+            tokenSymbol = symbol;
+        } catch {
+            revert TokenNotSupported();
+        }
+
+        uint8 tokenDecimals;
+        try token.decimals() returns (uint8 decimals) {
+            tokenDecimals = decimals;
+        } catch {
+            revert TokenNotSupported();
+        }
+
+        return (tokenName, tokenSymbol, tokenDecimals);
     }
 
     modifier wontIMXOverflow(address rootToken, uint256 amount) {
