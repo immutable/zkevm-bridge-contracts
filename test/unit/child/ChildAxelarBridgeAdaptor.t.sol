@@ -76,6 +76,19 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         );
     }
 
+    function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        vm.prank(address(0x1234));
+        vm.expectRevert(UnauthorizedInitializer.selector);
+        newAdaptor.initialize(
+            roles,
+            address(mockChildERC20Bridge),
+            ROOT_CHAIN_NAME,
+            ROOT_BRIDGE_ADAPTOR,
+            address(mockChildAxelarGasService)
+        );
+    }
+
     function test_RevertIf_InitializeWithZeroAdmin() public {
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
         vm.expectRevert(ZeroAddress.selector);

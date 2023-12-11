@@ -76,6 +76,15 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         );
     }
 
+    function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
+        RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
+        vm.prank(address(0x1234));
+        vm.expectRevert(UnauthorizedInitializer.selector);
+        newAdaptor.initialize(
+            roles, address(this), CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, address(axelarGasService)
+        );
+    }
+
     function test_RevertIf_InitializeWithZeroAdmin() public {
         RootAxelarBridgeAdaptor newAdaptor = new RootAxelarBridgeAdaptor(address(mockAxelarGateway));
         vm.expectRevert(ZeroAddresses.selector);

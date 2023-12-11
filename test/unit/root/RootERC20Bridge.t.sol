@@ -133,6 +133,21 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         test_NativeTransferFromWETH();
     }
 
+    function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
+        RootERC20Bridge bridge = new RootERC20Bridge();
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
+
+        vm.prank(address(0x1234));
+        vm.expectRevert(UnauthorizedInitializer.selector);
+        bridge.initialize(roles, address(1), address(1), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
+    }
+
     function test_RevertIf_InitializeTwice() public {
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),

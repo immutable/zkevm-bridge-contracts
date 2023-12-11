@@ -164,6 +164,13 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assert(childBridge.rootTokenToChildToken(NATIVE_ETH) != address(0));
     }
 
+    function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
+        ChildERC20Bridge bridge = new ChildERC20Bridge();
+        vm.prank(address(0x1234));
+        vm.expectRevert(UnauthorizedInitializer.selector);
+        bridge.initialize(roles, address(1), address(1), address(1), address(1));
+    }
+
     function test_RevertIfInitializeTwice() public {
         vm.expectRevert("Initializable: contract is already initialized");
         childBridge.initialize(roles, address(this), address(childTokenTemplate), ROOT_IMX_TOKEN, CHILD_WIMX_TOKEN);
