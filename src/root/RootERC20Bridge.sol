@@ -373,8 +373,29 @@ contract RootERC20Bridge is
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
-        bytes memory payload =
-            abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
+        string memory tokenName;
+        string memory tokenSymbol;
+        uint8 tokenDecimals;
+
+        try rootToken.name() returns (string memory name) {
+            tokenName = name;
+        } catch {
+            revert NotSupportedToken();
+        }
+
+        try rootToken.symbol() returns (string memory symbol) {
+            tokenSymbol = symbol;
+        } catch {
+            revert NotSupportedToken();
+        }
+
+        try rootToken.decimals() returns (uint8 decimals) {
+            tokenDecimals = decimals;
+        } catch {
+            revert NotSupportedToken();
+        }
+
+        bytes memory payload = abi.encode(MAP_TOKEN_SIG, rootToken, tokenName, tokenSymbol, tokenDecimals);
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
         emit L1TokenMapped(address(rootToken), childToken);
