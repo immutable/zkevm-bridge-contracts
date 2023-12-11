@@ -39,10 +39,16 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - An account with a VARIABLE_MANAGER_ROLE can update the cumulative IMX deposit limit.
  *      - An account with an ADAPTOR_MANAGER_ROLE can update the root bridge adaptor address.
  *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
- * @dev Note:
+ *
+ * @dev Caution:
+ *      - When depositing IMX (L1 -> L2) it's crucial to make sure that the receiving address on the child chain,
+ *        if it's a contract, has a receive or fallback function that allows it to accept native IMX on the child chain.
+ *        If this isn't the case, the transaction on the child chain could revert, potentially locking the user's funds indefinitely.
  *      - There is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
- *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
+ *
+ * @dev Note:
+ *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  */
 contract RootERC20Bridge is
     BridgeRoles,
@@ -281,7 +287,11 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
-     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
+     * @dev Caution:
+     *      - When depositing IMX, it's crucial to make sure that the receiving address (`msg.sender`) on the child chain,
+     *        if it's a contract, has a receive or fallback function that allows it to accept native IMX.
+     *        If this isn't the case, the transaction on the child chain could revert, potentially locking the user's funds indefinitely.
+     *      - Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
         _depositToken(rootToken, msg.sender, amount);
@@ -289,7 +299,11 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
-     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
+     * @dev Caution:
+     *      - When depositing IMX, it's crucial to make sure that the receiving address (`receiver`) on the child chain,
+     *        if it's a contract, has a receive or fallback function that allows it to accept native IMX.
+     *        If this isn't the case, the transaction on the child chain could revert, potentially locking the user's funds indefinitely.
+     *      - Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
         _depositToken(rootToken, receiver, amount);
