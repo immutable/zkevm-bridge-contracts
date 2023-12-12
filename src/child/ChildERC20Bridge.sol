@@ -35,10 +35,16 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - An account with an UNPAUSER_ROLE can unpause the contract.
  *      - An account with an ADAPTOR_MANAGER_ROLE can update the root bridge adaptor address.
  *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
- * @dev Note:
+ *
+ * @dev Caution:
+ *      - When withdrawing ETH (L2 -> L1), it's crucial to make sure that the receiving address on the root chain,
+ *        if it's a contract, has a receive or fallback function that allows it to accept native ETH on the root chain.
+ *        If this isn't the case, the transaction on the root chain could revert, potentially locking the user's funds indefinitely.
  *      - There is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
- *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
+ *
+ * @dev Note:
+ *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  */
 contract ChildERC20Bridge is
     BridgeRoles,
@@ -254,6 +260,10 @@ contract ChildERC20Bridge is
 
     /**
      * @inheritdoc IChildERC20Bridge
+     * @dev Caution:
+     *      When withdrawing ETH, it's crucial to make sure that the receiving address (`msg.sender`) on the root chain,
+     *      if it's a contract, has a receive or fallback function that allows it to accept native ETH.
+     *      If this isn't the case, the transaction on the root chain could revert, potentially locking the user's funds indefinitely.
      */
     function withdrawETH(uint256 amount) external payable {
         _withdraw(childETHToken, msg.sender, amount);
@@ -261,6 +271,10 @@ contract ChildERC20Bridge is
 
     /**
      * @inheritdoc IChildERC20Bridge
+     * @dev Caution:
+     *      When withdrawing ETH, it's crucial to make sure that the receiving address (`receiver`) on the root chain,
+     *      if it's a contract, has a receive or fallback function that allows it to accept native ETH.
+     *      If this isn't the case, the transaction on the root chain could revert, potentially locking the user's funds indefinitely.
      */
     function withdrawETHTo(address receiver, uint256 amount) external payable {
         _withdraw(childETHToken, receiver, amount);

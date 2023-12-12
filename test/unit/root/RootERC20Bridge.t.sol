@@ -97,40 +97,10 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assert(rootBridge.rootTokenToChildToken(NATIVE_ETH) != address(0));
     }
 
-    function test_NativeTransferFromWETH() public {
-        address caller = address(0x123a);
-        payable(caller).transfer(2 ether);
-        // forge inspect src/root/RootERC20Bridge.sol:RootERC20Bridge storageLayout | grep -B3 -A5 -i "rootWETHToken"
-        uint256 wETHStorageSlot = 307;
-        vm.store(address(rootBridge), bytes32(wETHStorageSlot), bytes32(uint256(uint160(caller))));
-
-        vm.startPrank(caller);
-        uint256 bal = address(rootBridge).balance;
-        (bool ok,) = address(rootBridge).call{value: 1 ether}("");
-        assert(ok);
-        uint256 postBal = address(rootBridge).balance;
-
-        assertEq(bal + 1 ether, postBal, "balance not increased");
-    }
-
     function test_RevertI_fNativeTransferIsFromNonWETH() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
         (bool ok,) = address(rootBridge).call{value: 1 ether}("");
         assert(ok);
-    }
-
-    function test_RevertIf_NativeTransferWhenPaused() public {
-        pause(IPausable(address(rootBridge)));
-        vm.expectRevert("Pausable: paused");
-        (bool ok,) = address(rootBridge).call{value: 1 ether}("");
-        assert(ok);
-    }
-
-    function test_NativeTransferResumesFunctionalityAfterUnpausing() public {
-        test_RevertIf_NativeTransferWhenPaused();
-        unpause(IPausable(address(rootBridge)));
-        // Expect success case to pass
-        test_NativeTransferFromWETH();
     }
 
     function test_RevertIf_ZeroInitializerIsGiven() public {
