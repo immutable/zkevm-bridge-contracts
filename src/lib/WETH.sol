@@ -39,7 +39,7 @@ contract WETH is IWETH {
         require(balanceOf[msg.sender] >= wad, "Wrapped ETH: Insufficient balance");
         balanceOf[msg.sender] -= wad;
 
-        Address.sendValue(payable(msg.sender), wad);
+        payable(msg.sender).transfer(wad);
         emit Withdrawal(msg.sender, wad);
     }
 
