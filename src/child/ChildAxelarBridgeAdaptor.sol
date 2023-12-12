@@ -49,7 +49,20 @@ contract ChildAxelarBridgeAdaptor is
 
     IAxelarGasService public gasService;
 
-    constructor(address _gateway) AxelarExecutable(_gateway) {}
+    /// @notice Address of the authorized initializer.
+    address public immutable initializerAddress;
+
+    /**
+     * @notice Constructs the ChildAxelarBridgeAdaptor contract.
+     * @param _gateway The address of the Axelar gateway contract.
+     * @param _initializerAddress The address of the authorized initializer.
+     */
+    constructor(address _gateway, address _initializerAddress) AxelarExecutable(_gateway) {
+        if (_initializerAddress == address(0)) {
+            revert ZeroAddress();
+        }
+        initializerAddress = _initializerAddress;
+    }
 
     /**
      * @notice Initialization function for ChildAxelarBridgeAdaptor.
@@ -66,6 +79,9 @@ contract ChildAxelarBridgeAdaptor is
         string memory _rootBridgeAdaptor,
         address _gasService
     ) external initializer {
+        if (msg.sender != initializerAddress) {
+            revert UnauthorizedInitializer();
+        }
         if (
             _childBridge == address(0) || _gasService == address(0) || _adaptorRoles.defaultAdmin == address(0)
                 || _adaptorRoles.bridgeManager == address(0) || _adaptorRoles.gasServiceManager == address(0)

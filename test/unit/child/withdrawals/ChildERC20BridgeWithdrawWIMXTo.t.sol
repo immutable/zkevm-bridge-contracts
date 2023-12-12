@@ -33,7 +33,7 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
         wIMXToken = new WIMX();
         Address.sendValue(payable(wIMXToken), 100 ether);
 
-        childBridge = new ChildERC20Bridge();
+        childBridge = new ChildERC20Bridge(address(this));
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: pauser,

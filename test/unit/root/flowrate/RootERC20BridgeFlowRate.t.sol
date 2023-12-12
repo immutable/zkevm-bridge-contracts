@@ -136,7 +136,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         bob = makeAddr("bob");
         charlie = makeAddr("charlie");
 
-        rootBridgeFlowRate = new RootERC20BridgeFlowRate();
+        rootBridgeFlowRate = new RootERC20BridgeFlowRate(address(this));
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
 
@@ -257,7 +257,7 @@ contract RootERC20BridgeFlowRateUnitTest is
     }
 
     function test_RevertIf_InitializeWithAZeroAddressRateAdmin() public {
-        RootERC20BridgeFlowRate newRootBridgeFlowRate = new RootERC20BridgeFlowRate();
+        RootERC20BridgeFlowRate newRootBridgeFlowRate = new RootERC20BridgeFlowRate(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
