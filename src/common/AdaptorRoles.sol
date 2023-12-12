@@ -24,14 +24,14 @@ abstract contract AdaptorRoles is AccessControlUpgradeable {
     /**
      * @notice Function to grant bridge manager role to an address
      */
-    function grantBridgeManager(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function grantBridgeManagerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(BRIDGE_MANAGER_ROLE, account);
     }
 
     /**
      * @notice Function to grant gas service manager role to an address
      */
-    function grantGasServiceManager(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function grantGasServiceManagerRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(GAS_SERVICE_MANAGER_ROLE, account);
     }
 
