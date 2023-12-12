@@ -96,6 +96,10 @@ contract RootERC20Bridge is
         _;
     }
 
+    /**
+     * @notice Constructs the RootERC20Bridge contract.
+     * @param _initializerAddress The address of the authorized initializer.
+     */
     constructor(address _initializerAddress) {
         initializerAddress = _initializerAddress;
     }

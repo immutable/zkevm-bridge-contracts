@@ -52,6 +52,11 @@ contract ChildAxelarBridgeAdaptor is
     /// @notice Address of the authorized initializer.
     address public immutable initializerAddress;
 
+    /**
+     * @notice Constructs the ChildAxelarBridgeAdaptor contract.
+     * @param _gateway The address of the Axelar gateway contract.
+     * @param _initializerAddress The address of the authorized initializer.
+     */
     constructor(address _gateway, address _initializerAddress) AxelarExecutable(_gateway) {
         initializerAddress = _initializerAddress;
     }

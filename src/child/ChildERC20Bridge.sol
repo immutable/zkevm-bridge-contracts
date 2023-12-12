@@ -83,6 +83,10 @@ contract ChildERC20Bridge is
         _;
     }
 
+    /**
+     * @notice Constructs the ChildERC20Bridge contract.
+     * @param _initializerAddress The address of the authorized initializer.
+     */
     constructor(address _initializerAddress) {
         initializerAddress = _initializerAddress;
     }
