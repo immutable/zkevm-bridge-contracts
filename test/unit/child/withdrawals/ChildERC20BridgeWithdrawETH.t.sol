@@ -74,7 +74,7 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
         uint256 withdrawAmount = 101 ether;
         uint256 withdrawFee = 300;
 
-        vm.expectRevert(bytes("ERC20: burn amount exceeds balance"));
+        vm.expectRevert(BurnFailed.selector);
         childBridge.withdrawETH{value: withdrawFee}(withdrawAmount);
     }
 

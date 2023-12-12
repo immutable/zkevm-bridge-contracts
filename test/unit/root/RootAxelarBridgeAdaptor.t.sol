@@ -459,4 +459,21 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
         vm.expectRevert(ZeroAddresses.selector);
         axelarAdaptor.updateGasService(address(0));
     }
+
+    /**
+     * UNSUPPORTED OPERATION
+     */
+
+    /// Check that executeWithToken function in AxelarExecutable cannot be called
+    function test_RevertIf_executeWithTokenCalled() public {
+        bytes32 commandId = bytes32("testCommandId");
+        bytes memory payload = abi.encodePacked("payload");
+        string memory tokenSymbol = "TST";
+        uint256 amount = 100;
+
+        vm.expectRevert(UnsupportedOperation.selector);
+        axelarAdaptor.executeWithToken(
+            commandId, CHILD_CHAIN_NAME, CHILD_BRIDGE_ADAPTOR_STRING, payload, tokenSymbol, amount
+        );
+    }
 }

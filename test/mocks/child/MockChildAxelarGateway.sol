@@ -6,5 +6,13 @@ contract MockChildAxelarGateway {
         return true;
     }
 
+    function validateContractCallAndMint(bytes32, string calldata, string calldata, bytes32, string calldata, uint256)
+        external
+        pure
+        returns (bool)
+    {
+        return true;
+    }
+
     function callContract(string memory childChain, string memory childBridgeAdaptor, bytes memory payload) external {}
 }

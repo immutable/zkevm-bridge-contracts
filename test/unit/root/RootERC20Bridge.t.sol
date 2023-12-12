@@ -456,6 +456,32 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.mapToken{value: 300}(IERC20Metadata(NATIVE_ETH));
     }
 
+    function test_SucceedIf_mapTokenWithSupportedMethods() public {
+        rootBridge.mapToken{value: 300}(token);
+    }
+
+    function test_RevertIf_mapTokenWithoutName() public {
+        vm.mockCallRevert(address(token), abi.encodeWithSelector(IERC20Metadata.name.selector), "Unsupported operation");
+        vm.expectRevert(TokenNotSupported.selector);
+        rootBridge.mapToken{value: 300}(token);
+    }
+
+    function test_RevertIf_mapTokenWithoutSymbol() public {
+        vm.mockCallRevert(
+            address(token), abi.encodeWithSelector(IERC20Metadata.symbol.selector), "Unsupported operation"
+        );
+        vm.expectRevert(TokenNotSupported.selector);
+        rootBridge.mapToken{value: 300}(token);
+    }
+
+    function test_RevertIf_mapTokenWithoutDecimals() public {
+        vm.mockCallRevert(
+            address(token), abi.encodeWithSelector(IERC20Metadata.decimals.selector), "Unsupported operation"
+        );
+        vm.expectRevert(TokenNotSupported.selector);
+        rootBridge.mapToken{value: 300}(token);
+    }
+
     function test_updateRootBridgeAdaptor_UpdatesRootBridgeAdaptor() public {
         address newAdaptorAddress = address(0x11111);
 
