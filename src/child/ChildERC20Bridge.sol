@@ -459,10 +459,10 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
-        transferTokensAndEmitEvent(rootToken, rootTokenToChildToken[rootToken], sender, receiver, amount);
+        _transferTokensAndEmitEvent(rootToken, rootTokenToChildToken[rootToken], sender, receiver, amount);
     }
 
-    function transferTokensAndEmitEvent(
+    function _transferTokensAndEmitEvent(
         address rootToken,
         address childToken,
         address sender,
