@@ -198,6 +198,19 @@ contract RootAxelarBridgeAdaptor is
         rootBridge.onMessageReceive(_payload);
     }
 
+    /**
+     * @inheritdoc AxelarExecutable
+     * @dev This function is called by the parent `AxelarExecutable` contract's `executeWithToken()` function.
+     *      However, this function is not required for the bridge, and thus reverts with an `UnsupportedOperation` error.
+     */
+    function _executeWithToken(string calldata, string calldata, bytes calldata, string calldata, uint256)
+        internal
+        pure
+        override
+    {
+        revert UnsupportedOperation();
+    }
+
     // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gapRootAxelarBridgeAdaptor;
 }
