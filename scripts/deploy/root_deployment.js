@@ -58,7 +58,7 @@ exports.deployRootContracts = async () => {
     // Deploy root bridge impl
     let rootBridgeImplObj = JSON.parse(fs.readFileSync('../../out/RootERC20BridgeFlowRate.sol/RootERC20BridgeFlowRate.json', 'utf8'));
     console.log("Deploy root bridge impl...");
-    let rootBridgeImpl = await helper.deployRootContract(rootBridgeImplObj, adminWallet);
+    let rootBridgeImpl = await helper.deployRootContract(rootBridgeImplObj, adminWallet, adminWallet.address);
     console.log("Transaction submitted: ", JSON.stringify(rootBridgeImpl.deployTransaction, null, 2));
     await helper.waitForReceipt(rootBridgeImpl.deployTransaction.hash, rootProvider);
     console.log("Deployed to ROOT_BRIDGE_IMPL_ADDRESS: ", rootBridgeImpl.address);
@@ -74,7 +74,7 @@ exports.deployRootContracts = async () => {
     // Deploy root adaptor impl
     let rootAdaptorImplObj = JSON.parse(fs.readFileSync('../../out/RootAxelarBridgeAdaptor.sol/RootAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Deploy root adaptor impl...");
-    let rootAdaptorImpl = await helper.deployRootContract(rootAdaptorImplObj, adminWallet, rootGatewayAddr);
+    let rootAdaptorImpl = await helper.deployRootContract(rootAdaptorImplObj, adminWallet, rootGatewayAddr, adminWallet.address);
     console.log("Transaction submitted: ", JSON.stringify(rootAdaptorImpl.deployTransaction, null, 2));
     await helper.waitForReceipt(rootAdaptorImpl.deployTransaction.hash, rootProvider);
     console.log("Deployed to ROOT_ADAPTOR_IMPL_ADDRESS: ", rootAdaptorImpl.address);

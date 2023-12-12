@@ -74,7 +74,7 @@ exports.deployChildContracts = async () => {
     // Deploy child bridge impl
     let childBridgeImplObj = JSON.parse(fs.readFileSync('../../out/ChildERC20Bridge.sol/ChildERC20Bridge.json', 'utf8'));
     console.log("Deploy child bridge impl...");
-    let childBridgeImpl = await helper.deployChildContract(childBridgeImplObj, adminWallet);
+    let childBridgeImpl = await helper.deployChildContract(childBridgeImplObj, adminWallet, adminWallet.address);
     console.log("Transaction submitted: ", JSON.stringify(childBridgeImpl.deployTransaction, null, 2));
     await helper.waitForReceipt(childBridgeImpl.deployTransaction.hash, childProvider);
     console.log("Deployed to CHILD_BRIDGE_IMPL_ADDRESS: ", childBridgeImpl.address);
@@ -90,7 +90,7 @@ exports.deployChildContracts = async () => {
     // Deploy child adaptor impl
     let childAdaptorImplObj = JSON.parse(fs.readFileSync('../../out/ChildAxelarBridgeAdaptor.sol/ChildAxelarBridgeAdaptor.json', 'utf8'));
     console.log("Deploy child adaptor impl...");
-    let childAdaptorImpl = await helper.deployChildContract(childAdaptorImplObj, adminWallet, childGatewayAddr);
+    let childAdaptorImpl = await helper.deployChildContract(childAdaptorImplObj, adminWallet, childGatewayAddr, adminWallet.address);
     console.log("Transaction submitted: ", JSON.stringify(childAdaptorImpl.deployTransaction, null, 2));
     await helper.waitForReceipt(childAdaptorImpl.deployTransaction.hash, childProvider);
     console.log("Deployed to CHILD_ADAPTOR_IMPL_ADDRESS: ", childAdaptorImpl.address);
