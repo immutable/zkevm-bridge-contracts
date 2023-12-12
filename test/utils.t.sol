@@ -66,8 +66,8 @@ contract Utils is Test {
         mockAxelarGateway = new MockAxelarGateway();
         childTokenTemplate = new ChildERC20();
         childTokenTemplate.initialize(address(1), "Test", "TST", 18);
-        childBridge = new ChildERC20Bridge();
-        childBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockAxelarGateway));
+        childBridge = new ChildERC20Bridge(address(this));
+        childBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockAxelarGateway), address(this));
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -124,11 +124,12 @@ contract Utils is Test {
         integrationTest.imxToken = ERC20PresetMinterPauser(imxTokenAddress);
         integrationTest.imxToken.mint(address(this), 1000000 ether);
 
-        integrationTest.rootBridgeFlowRate = new RootERC20BridgeFlowRate();
+        integrationTest.rootBridgeFlowRate = new RootERC20BridgeFlowRate(address(this));
         integrationTest.mockAxelarGateway = new MockAxelarGateway();
         integrationTest.axelarGasService = new MockAxelarGasService();
 
-        integrationTest.axelarAdaptor = new RootAxelarBridgeAdaptor(address(integrationTest.mockAxelarGateway));
+        integrationTest.axelarAdaptor =
+            new RootAxelarBridgeAdaptor(address(integrationTest.mockAxelarGateway), address(this));
 
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),

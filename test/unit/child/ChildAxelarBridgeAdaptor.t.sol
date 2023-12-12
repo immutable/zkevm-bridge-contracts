@@ -43,7 +43,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         mockChildERC20Bridge = new MockChildERC20Bridge();
         mockChildAxelarGateway = new MockChildAxelarGateway();
         mockChildAxelarGasService = new MockChildAxelarGasService();
-        axelarAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
+        axelarAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(this));
         axelarAdaptor.initialize(
             roles,
             address(mockChildERC20Bridge),
@@ -77,7 +77,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.prank(address(0x1234));
         vm.expectRevert(UnauthorizedInitializer.selector);
         newAdaptor.initialize(
@@ -90,7 +90,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeWithZeroAdmin() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.expectRevert(ZeroAddress.selector);
         roles.defaultAdmin = address(0);
         newAdaptor.initialize(
@@ -103,7 +103,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeWithZeroBridgeManager() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.expectRevert(ZeroAddress.selector);
         roles.bridgeManager = address(0);
         newAdaptor.initialize(
@@ -116,7 +116,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeWithZeroGasServiceManager() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.expectRevert(ZeroAddress.selector);
         roles.gasServiceManager = address(0);
         newAdaptor.initialize(
@@ -129,7 +129,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeWithZeroTargetManager() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.expectRevert(ZeroAddress.selector);
         roles.targetManager = address(0);
         newAdaptor.initialize(
@@ -142,7 +142,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeGivenZeroAddress() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.expectRevert(ZeroAddress.selector);
         newAdaptor.initialize(
             roles, address(0), ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, address(mockChildAxelarGasService)
@@ -150,7 +150,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeGivenEmptyRootChain() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.expectRevert(InvalidRootChain.selector);
         newAdaptor.initialize(
             roles, address(mockChildERC20Bridge), "", ROOT_BRIDGE_ADAPTOR, address(mockChildAxelarGasService)
@@ -158,7 +158,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeGivenAnEmptyBridgeAdaptorString() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.expectRevert(InvalidRootBridgeAdaptor.selector);
         newAdaptor.initialize(
             roles, address(mockChildERC20Bridge), ROOT_CHAIN_NAME, "", address(mockChildAxelarGasService)
@@ -166,7 +166,7 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     }
 
     function test_RevertIf_InitializeGivenZeroGasService() public {
-        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS);
+        ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.expectRevert(ZeroAddress.selector);
         newAdaptor.initialize(roles, address(mockChildERC20Bridge), ROOT_CHAIN_NAME, ROOT_BRIDGE_ADAPTOR, address(0));
     }

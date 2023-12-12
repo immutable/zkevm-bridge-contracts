@@ -95,8 +95,8 @@ contract RootERC20Bridge is
         _;
     }
 
-    constructor() {
-        initializerAddress = msg.sender;
+    constructor(address _initializerAddress) {
+        initializerAddress = _initializerAddress;
     }
 
     /**

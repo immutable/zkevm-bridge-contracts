@@ -37,7 +37,7 @@ contract ChildERC20BridgeWithdrawETHToUnitTest is Test, IChildERC20BridgeEvents,
 
         mockAdaptor = new MockAdaptor();
 
-        childBridge = new ChildERC20Bridge();
+        childBridge = new ChildERC20Bridge(address(this));
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: pauser,
