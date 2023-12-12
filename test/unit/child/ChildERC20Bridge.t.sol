@@ -164,6 +164,11 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         assert(childBridge.rootTokenToChildToken(NATIVE_ETH) != address(0));
     }
 
+    function test_RevertIf_ZeroInitializerIsGiven() public {
+        vm.expectRevert(ZeroAddress.selector);
+        new ChildERC20Bridge(address(0));
+    }
+
     function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
         ChildERC20Bridge bridge = new ChildERC20Bridge(address(this));
         vm.prank(address(0x1234));

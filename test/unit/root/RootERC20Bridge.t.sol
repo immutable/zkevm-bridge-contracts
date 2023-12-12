@@ -133,6 +133,11 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         test_NativeTransferFromWETH();
     }
 
+    function test_RevertIf_ZeroInitializerIsGiven() public {
+        vm.expectRevert(ZeroAddress.selector);
+        new RootERC20Bridge(address(0));
+    }
+
     function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
         RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({

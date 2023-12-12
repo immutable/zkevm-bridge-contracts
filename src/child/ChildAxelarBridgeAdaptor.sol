@@ -58,6 +58,9 @@ contract ChildAxelarBridgeAdaptor is
      * @param _initializerAddress The address of the authorized initializer.
      */
     constructor(address _gateway, address _initializerAddress) AxelarExecutable(_gateway) {
+        if (_initializerAddress == address(0)) {
+            revert ZeroAddress();
+        }
         initializerAddress = _initializerAddress;
     }
 

@@ -88,6 +88,9 @@ contract ChildERC20Bridge is
      * @param _initializerAddress The address of the authorized initializer.
      */
     constructor(address _initializerAddress) {
+        if (_initializerAddress == address(0)) {
+            revert ZeroAddress();
+        }
         initializerAddress = _initializerAddress;
     }
 

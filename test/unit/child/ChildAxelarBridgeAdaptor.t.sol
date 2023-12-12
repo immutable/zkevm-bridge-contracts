@@ -76,6 +76,11 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
         );
     }
 
+    function test_RevertIf_ZeroInitializerIsGiven() public {
+        vm.expectRevert(ZeroAddress.selector);
+        new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(0));
+    }
+
     function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
         ChildAxelarBridgeAdaptor newAdaptor = new ChildAxelarBridgeAdaptor(GATEWAY_ADDRESS, address(this));
         vm.prank(address(0x1234));
