@@ -314,9 +314,12 @@ contract ChildERC20Bridge is
      * @notice Private function to handle withdrawal of L1 native ETH.
      */
     function _withdrawETH(uint256 amount) private returns (address) {
-        if (!IChildERC20(childETHToken).burn(msg.sender, amount)) {
+        try IChildERC20(childETHToken).burn(msg.sender, amount) returns (bool success) {
+            if (!success) revert BurnFailed();
+        } catch {
             revert BurnFailed();
         }
+
         return NATIVE_ETH;
     }
 
@@ -330,7 +333,9 @@ contract ChildERC20Bridge is
         IWIMX wIMX = IWIMX(wIMXToken);
 
         // Transfer to contract
-        if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
+        try wIMX.transferFrom(msg.sender, address(this), amount) returns (bool success) {
+            if (!success) revert TransferWIMXFailed();
+        } catch {
             revert TransferWIMXFailed();
         }
 
@@ -372,7 +377,9 @@ contract ChildERC20Bridge is
         }
 
         // Burn tokens
-        if (!IChildERC20(childToken).burn(msg.sender, amount)) {
+        try IChildERC20(childToken).burn(msg.sender, amount) returns (bool success) {
+            if (!success) revert BurnFailed();
+        } catch {
             revert BurnFailed();
         }
 
@@ -486,7 +493,9 @@ contract ChildERC20Bridge is
             revert EmptyTokenContract();
         }
 
-        if (!IChildERC20(childToken).mint(receiver, amount)) {
+        try IChildERC20(childToken).mint(receiver, amount) returns (bool success) {
+            if (!success) revert MintFailed();
+        } catch {
             revert MintFailed();
         }
 

@@ -74,7 +74,7 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         uint256 withdrawFee = 300;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
-        vm.expectRevert(bytes("Wrapped IMX: Insufficient balance"));
+        vm.expectRevert(TransferWIMXFailed.selector);
         childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
     }
 
@@ -83,7 +83,7 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
         uint256 withdrawFee = 300;
 
         wIMXToken.approve(address(childBridge), withdrawAmount - 1);
-        vm.expectRevert(bytes("Wrapped IMX: Insufficient allowance"));
+        vm.expectRevert(TransferWIMXFailed.selector);
         childBridge.withdrawWIMX{value: withdrawFee}(withdrawAmount);
     }
 

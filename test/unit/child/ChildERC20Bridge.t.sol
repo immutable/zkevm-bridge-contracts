@@ -628,7 +628,7 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
         changePrank(attacker);
 
         // Execute withdraw
-        vm.expectRevert("ReentrancyGuard: reentrant call");
+        vm.expectRevert(BurnFailed.selector);
         childBridge.withdraw{value: 1 ether}(ChildERC20(address(attackToken)), 100);
     }
 }
