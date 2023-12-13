@@ -57,7 +57,7 @@ export async function deployChildContracts() {
         childBridgeImpl = getContract("ChildERC20Bridge", childContracts.CHILD_BRIDGE_IMPL_ADDRESS, childProvider);
     } else {
         console.log("Deploy child bridge impl...");
-        childBridgeImpl = await deployChildContract("ChildERC20Bridge", childDeployerWallet, null);
+        childBridgeImpl = await deployChildContract("ChildERC20Bridge", childDeployerWallet, null, deployerAddr);
         console.log("Transaction submitted: ", JSON.stringify(childBridgeImpl.deployTransaction, null, 2));
         await waitForReceipt(childBridgeImpl.deployTransaction.hash, childProvider);
     }
@@ -72,7 +72,7 @@ export async function deployChildContracts() {
         childAdaptorImpl = getContract("ChildAxelarBridgeAdaptor", childContracts.CHILD_ADAPTOR_IMPL_ADDRESS, childProvider);
     } else {
         console.log("Deploy child adaptor impl...");
-        childAdaptorImpl = await deployChildContract("ChildAxelarBridgeAdaptor", childDeployerWallet, null, childGatewayAddr);
+        childAdaptorImpl = await deployChildContract("ChildAxelarBridgeAdaptor", childDeployerWallet, null, childGatewayAddr, deployerAddr);
         console.log("Transaction submitted: ", JSON.stringify(childAdaptorImpl.deployTransaction, null, 2));
         await waitForReceipt(childAdaptorImpl.deployTransaction.hash, childProvider);
     }

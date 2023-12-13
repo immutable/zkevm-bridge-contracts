@@ -42,7 +42,7 @@ export async function deployRootContracts() {
         rootBridgeImpl = getContract("RootERC20BridgeFlowRate", rootContracts.ROOT_BRIDGE_IMPL_ADDRESS, rootProvider);
     } else {
         console.log("Deploy root bridge impl...");
-        rootBridgeImpl = await deployRootContract("RootERC20BridgeFlowRate", rootDeployerWallet, null);
+        rootBridgeImpl = await deployRootContract("RootERC20BridgeFlowRate", rootDeployerWallet, null, deployerAddr);
         console.log("Transaction submitted: ", JSON.stringify(rootBridgeImpl.deployTransaction, null, 2));
         await waitForReceipt(rootBridgeImpl.deployTransaction.hash, rootProvider);
     }
@@ -57,7 +57,7 @@ export async function deployRootContracts() {
         rootAdaptorImpl = getContract("RootAxelarBridgeAdaptor", rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS, rootProvider);
     } else {
         console.log("Deploy root adaptor impl...");
-        rootAdaptorImpl = await deployRootContract("RootAxelarBridgeAdaptor", rootDeployerWallet, null, rootGatewayAddr);
+        rootAdaptorImpl = await deployRootContract("RootAxelarBridgeAdaptor", rootDeployerWallet, null, rootGatewayAddr, deployerAddr);
         console.log("Transaction submitted: ", JSON.stringify(rootAdaptorImpl.deployTransaction, null, 2));
         await waitForReceipt(rootAdaptorImpl.deployTransaction.hash, rootProvider); 
     }
