@@ -136,6 +136,10 @@ CHILD_GAS_SERVICE_ADDRESS=
 MULTISIG_CONTRACT_ADDRESS=
 ROOT_GATEWAY_ADDRESS=
 ROOT_GAS_SERVICE_ADDRESS=
+## (Optional) to verify child contract after deployment
+CHILD_CHAIN_BLOCKSCOUT_API_URL=
+## (Optional) to verify root contract after deployment
+ROOT_CHAIN_ETHERSCAN_API_KEY=
 ```
 7. Basic contract validation
 If multisig is deployed:

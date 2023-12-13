@@ -1,6 +1,8 @@
 import { ContractFactory, providers, ethers } from "ethers";
 import { LedgerSigner } from "./ledger_signer";
 import * as fs from "fs";
+import util from 'util';
+const exec = util.promisify(require('child_process').exec);
 
 export function delay(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
@@ -184,4 +186,32 @@ export async function waitUntilSucceed(axelarURL: string, txHash: any) {
         }
         await delay(60000);
     }
+}
+
+export async function verifyChildContract(contract: string, contractAddr: string) {
+    let url = process.env["CHILD_CHAIN_BLOCKSCOUT_API_URL"];
+    if (url == null) {
+        console.log("CHILD_CHAIN_BLOCKSCOUT_API_URL not set, skip contract verification...");
+        return; 
+    }
+    let cmd = `forge verify-contract --verifier blockscout --verifier-url ${url} ${contractAddr} ${contract}`;
+    const { stdout, stderr } = await exec(cmd);
+    if (stderr != "") {
+        throw(stderr);
+    }
+    console.log(stdout);
+}
+
+export async function verifyRootContract(contract: string, contractAddr: string) {
+    let key = process.env["ROOT_CHAIN_ETHERSCAN_API_KEY"];
+    if (key == null) {
+        console.log("ROOT_CHAIN_ETHERSCAN_API_KEY not set, skip contract verification...");
+    }
+    let chainID = requireEnv("ROOT_CHAIN_ID");
+    let cmd = `ETHER_SCAN_API_KEY=${key} forge verify-contract ${contractAddr} ${contract} --chain-id ${chainID}`;
+    const { stdout, stderr } = await exec(cmd);
+    if (stderr != "") {
+        throw(stderr);
+    }
+    console.log(stdout);
 }
