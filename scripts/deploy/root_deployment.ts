@@ -45,7 +45,7 @@ export async function deployRootContracts() {
         rootBridgeImpl = await deployRootContract("RootERC20BridgeFlowRate", rootDeployerWallet, null, deployerAddr);
         console.log("Transaction submitted: ", JSON.stringify(rootBridgeImpl.deployTransaction, null, 2));
         await waitForReceipt(rootBridgeImpl.deployTransaction.hash, rootProvider);
-        verifyRootContract("RootERC20BridgeFlowRate", rootBridgeImpl.address);
+        await verifyRootContract("RootERC20BridgeFlowRate", rootBridgeImpl.address);
     }
     rootContracts.ROOT_BRIDGE_IMPL_ADDRESS = rootBridgeImpl.address;
     saveRootContracts(rootContracts);
@@ -61,7 +61,7 @@ export async function deployRootContracts() {
         rootAdaptorImpl = await deployRootContract("RootAxelarBridgeAdaptor", rootDeployerWallet, null, rootGatewayAddr, deployerAddr);
         console.log("Transaction submitted: ", JSON.stringify(rootAdaptorImpl.deployTransaction, null, 2));
         await waitForReceipt(rootAdaptorImpl.deployTransaction.hash, rootProvider);
-        verifyRootContract("RootAxelarBridgeAdaptor", rootAdaptorImpl.address);
+        await verifyRootContract("RootAxelarBridgeAdaptor", rootAdaptorImpl.address);
     }
     rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS = rootAdaptorImpl.address;
     saveRootContracts(rootContracts);
@@ -98,7 +98,7 @@ export async function deployRootContracts() {
         rootTokenTemplate = await deployRootContract("ChildERC20", reservedDeployerWallet, nonceReserved);
         console.log("Transaction submitted: ", JSON.stringify(rootTokenTemplate.deployTransaction, null, 2));
         await waitForReceipt(rootTokenTemplate.deployTransaction.hash, rootProvider);
-        verifyRootContract("ChildERC20", rootTokenTemplate.address);
+        await verifyRootContract("ChildERC20", rootTokenTemplate.address);
     }
     rootContracts.ROOT_TOKEN_TEMPLATE = rootTokenTemplate.address;
     saveRootContracts(rootContracts);
@@ -130,7 +130,7 @@ export async function deployRootContracts() {
         proxyAdmin = await deployRootContract("ProxyAdmin", reservedDeployerWallet, null);
         console.log("Transaction submitted: ", JSON.stringify(proxyAdmin.deployTransaction, null, 2));
         await waitForReceipt(proxyAdmin.deployTransaction.hash, rootProvider);
-        verifyRootContract("ProxyAdmin", proxyAdmin.address);
+        await verifyRootContract("ProxyAdmin", proxyAdmin.address);
     }
     rootContracts.ROOT_PROXY_ADMIN = proxyAdmin.address;
     saveRootContracts(rootContracts);
@@ -151,7 +151,7 @@ export async function deployRootContracts() {
         rootBridgeProxy = await deployRootContract("TransparentUpgradeableProxy", reservedDeployerWallet, null, rootBridgeImpl.address, proxyAdmin.address, []);
         console.log("Transaction submitted: ", JSON.stringify(rootBridgeProxy.deployTransaction, null, 2));
         await waitForReceipt(rootBridgeProxy.deployTransaction.hash, rootProvider);
-        verifyRootContract("TransparentUpgradeableProxy", rootBridgeProxy.address);
+        await verifyRootContract("TransparentUpgradeableProxy", rootBridgeProxy.address);
     }
     rootContracts.ROOT_BRIDGE_PROXY_ADDRESS = rootBridgeProxy.address;
     saveRootContracts(rootContracts);
@@ -172,7 +172,7 @@ export async function deployRootContracts() {
         rootAdaptorProxy = await deployRootContract("TransparentUpgradeableProxy", reservedDeployerWallet, null, rootAdaptorImpl.address, proxyAdmin.address, []);
         console.log("Transaction submitted: ", JSON.stringify(rootAdaptorProxy.deployTransaction, null, 2));
         await waitForReceipt(rootAdaptorProxy.deployTransaction.hash, rootProvider);
-        verifyRootContract("TransparentUpgradeableProxy", rootAdaptorProxy.address);
+        await verifyRootContract("TransparentUpgradeableProxy", rootAdaptorProxy.address);
     }
     rootContracts.ROOT_ADAPTOR_PROXY_ADDRESS = rootAdaptorProxy.address;
     saveRootContracts(rootContracts);

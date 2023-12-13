@@ -190,7 +190,7 @@ export async function waitUntilSucceed(axelarURL: string, txHash: any) {
 
 export async function verifyChildContract(contract: string, contractAddr: string) {
     let url = process.env["CHILD_CHAIN_BLOCKSCOUT_API_URL"];
-    if (url == null) {
+    if (url == null || url == undefined) {
         console.log("CHILD_CHAIN_BLOCKSCOUT_API_URL not set, skip contract verification...");
         return; 
     }
@@ -204,8 +204,9 @@ export async function verifyChildContract(contract: string, contractAddr: string
 
 export async function verifyRootContract(contract: string, contractAddr: string) {
     let key = process.env["ROOT_CHAIN_ETHERSCAN_API_KEY"];
-    if (key == null) {
+    if (key == null || key == undefined) {
         console.log("ROOT_CHAIN_ETHERSCAN_API_KEY not set, skip contract verification...");
+        return;
     }
     let chainID = requireEnv("ROOT_CHAIN_ID");
     let cmd = `ETHER_SCAN_API_KEY=${key} forge verify-contract ${contractAddr} ${contract} --chain-id ${chainID}`;
