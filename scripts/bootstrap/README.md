@@ -68,9 +68,13 @@ PASSPORT_NONCE_RESERVER_FUND=
 ## The maximum amount of IMX that can be deposited to L2, unit is in IMX or 10^18 Wei.
 IMX_DEPOSIT_LIMIT=
 ## The privileged transaction Multisig address on the root chain.
-PRIVILEGED_ROOT_MULTISIG_ADDR=
-# The pauser address on the root chain.
-ROOT_PAUSER_ADDR=
+ROOT_PRIVILEGED_MULTISIG_ADDR=
+# The break glass signer address on the root chain.
+ROOT_BREAKGLASS_ADDR=
+## The privileged transaction Multisig address on the child chain.
+CHILD_PRIVILEGED_MULTISIG_ADDR=
+# The break glass signer address on the child chain.
+CHILD_BREAKGLASS_ADDR=
 ## The capacity of the rate limit policy of IMX token, unit is in 10^18.
 RATE_LIMIT_IMX_CAPACITY=
 ## The refill rate of the rate limit policy of IMX token, unit is in 10^18.

@@ -14,6 +14,8 @@ export async function initialiseChildContracts() {
     let childGasServiceAddr = requireEnv("CHILD_GAS_SERVICE_ADDRESS");
     let multisigAddr = requireEnv("MULTISIG_CONTRACT_ADDRESS");
     let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
+    let childPrivilegedMultisig = requireEnv("CHILD_PRIVILEGED_MULTISIG_ADDR");
+    let childBreakglass = requireEnv("CHILD_BREAKGLASS_ADDR");
 
     // Read from contract file.
     let childContracts = getChildContracts();
@@ -53,10 +55,10 @@ export async function initialiseChildContracts() {
     let [priorityFee, maxFee] = await getFee(childProvider);
     let resp = await childBridge.connect(childDeployerWallet).initialize(
         {
-            defaultAdmin: deployerAddr,
-            pauser: deployerAddr,
-            unpauser: deployerAddr,
-            adaptorManager: deployerAddr,
+            defaultAdmin: childPrivilegedMultisig,
+            pauser: childBreakglass,
+            unpauser: childPrivilegedMultisig,
+            adaptorManager: childPrivilegedMultisig,
             initialDepositor: deployerAddr,
             treasuryManager: multisigAddr,
         },
@@ -77,10 +79,10 @@ export async function initialiseChildContracts() {
     [priorityFee, maxFee] = await getFee(childProvider);
     resp = await childAdaptor.connect(childDeployerWallet).initialize(
         {
-            defaultAdmin: deployerAddr,
-            bridgeManager: deployerAddr,
-            gasServiceManager: deployerAddr,
-            targetManager: deployerAddr,
+            defaultAdmin: childPrivilegedMultisig,
+            bridgeManager: childPrivilegedMultisig,
+            gasServiceManager: childPrivilegedMultisig,
+            targetManager: childPrivilegedMultisig,
         },
         childBridgeAddr,
         rootChainName,

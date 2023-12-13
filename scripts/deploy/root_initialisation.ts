@@ -15,8 +15,8 @@ export async function initialiseRootContracts() {
     let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
     let rootWETHAddr = requireEnv("ROOT_WETH_ADDR");
     let imxDepositLimit = requireEnv("IMX_DEPOSIT_LIMIT");
-    let rootMultisigAddr = requireEnv("PRIVILEGED_ROOT_MULTISIG_ADDR");
-    let rootPauser = requireEnv("ROOT_PAUSER_ADDR");
+    let rootPrivilegedMultisig = requireEnv("ROOT_PRIVILEGED_MULTISIG_ADDR");
+    let rootBreakglass = requireEnv("ROOT_BREAKGLASS_ADDR");
     let rateLimitIMXCap = requireEnv("RATE_LIMIT_IMX_CAPACITY");
     let rateLimitIMXRefill = requireEnv("RATE_LIMIT_IMX_REFILL_RATE");
     let rateLimitIMXLargeThreshold = requireEnv("RATE_LIMIT_IMX_LARGE_THRESHOLD");
@@ -72,10 +72,10 @@ export async function initialiseRootContracts() {
     let resp = await rootBridge.connect(rootDeployerWallet)["initialize((address,address,address,address,address),address,address,address,address,address,uint256,address)"](
         {
             defaultAdmin: deployerAddr,
-            pauser: rootPauser,
-            unpauser: rootMultisigAddr,
-            variableManager: rootMultisigAddr,
-            adaptorManager: rootMultisigAddr,
+            pauser: rootBreakglass,
+            unpauser: rootPrivilegedMultisig,
+            variableManager: rootPrivilegedMultisig,
+            adaptorManager: rootPrivilegedMultisig,
         },
         rootAdaptorAddr,
         childBridgeAddr,
@@ -156,19 +156,19 @@ export async function initialiseRootContracts() {
 
     // Grant roles
     console.log("Grant RATE_CONTROL_ROLE to multisig...")
-    resp = await rootBridge.connect(rootDeployerWallet).grantRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootMultisigAddr);
+    resp = await rootBridge.connect(rootDeployerWallet).grantRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootPrivilegedMultisig);
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await waitForReceipt(resp.hash, rootProvider);
 
     console.log("Grant DEFAULT_ADMIN to multisig...")
-    resp = await rootBridge.connect(rootDeployerWallet).grantRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootMultisigAddr);
+    resp = await rootBridge.connect(rootDeployerWallet).grantRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootPrivilegedMultisig);
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
     await waitForReceipt(resp.hash, rootProvider);
 
     // Print summary
-    console.log("Does multisig have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootMultisigAddr));
+    console.log("Does multisig have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootPrivilegedMultisig));
     console.log("Does deployer have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), deployerAddr));
-    console.log("Does multisig have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootMultisigAddr));
+    console.log("Does multisig have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootPrivilegedMultisig));
     console.log("Does deployer have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), deployerAddr));
 
     // Initialise root adaptor
@@ -176,10 +176,10 @@ export async function initialiseRootContracts() {
     let rootAdaptor = getContract("RootAxelarBridgeAdaptor", rootAdaptorAddr, rootProvider);
     resp = await rootAdaptor.connect(rootDeployerWallet).initialize(
         {
-            defaultAdmin: rootMultisigAddr,
-            bridgeManager: rootMultisigAddr,
-            gasServiceManager: rootMultisigAddr,
-            targetManager: rootMultisigAddr,
+            defaultAdmin: rootPrivilegedMultisig,
+            bridgeManager: rootPrivilegedMultisig,
+            gasServiceManager: rootPrivilegedMultisig,
+            targetManager: rootPrivilegedMultisig,
         },
         rootBridgeAddr, 
         childChainName,

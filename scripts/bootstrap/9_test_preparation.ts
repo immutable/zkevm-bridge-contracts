@@ -13,7 +13,7 @@ async function run() {
     let rootChainID = requireEnv("ROOT_CHAIN_ID");
     let deployerSecret = requireEnv("DEPLOYER_SECRET");
     let testAccountKey = requireEnv("TEST_ACCOUNT_SECRET");
-    let rootMultisigAddr = requireEnv("PRIVILEGED_ROOT_MULTISIG_ADDR");
+    let rootPrivilegedMultisig = requireEnv("ROOT_PRIVILEGED_MULTISIG_ADDR");
 
     // Get deployer address
     const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
@@ -79,9 +79,9 @@ async function run() {
     await waitForReceipt(resp.hash, rootProvider);
 
     // Print summary
-    console.log("Does multisig have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootMultisigAddr));
+    console.log("Does multisig have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootPrivilegedMultisig));
     console.log("Does deployer have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), deployerAddr));
-    console.log("Does multisig have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootMultisigAddr));
+    console.log("Does multisig have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootPrivilegedMultisig));
     console.log("Does deployer have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), deployerAddr));
 
     console.log("=======End Test Preparation=======");
