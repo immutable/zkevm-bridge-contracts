@@ -35,10 +35,16 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - An account with an UNPAUSER_ROLE can unpause the contract.
  *      - An account with an ADAPTOR_MANAGER_ROLE can update the root bridge adaptor address.
  *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
- * @dev Note:
+ *
+ * @dev Caution:
+ *      - When withdrawing ETH (L2 -> L1), it's crucial to make sure that the receiving address on the root chain,
+ *        if it's a contract, has a receive or fallback function that allows it to accept native ETH on the root chain.
+ *        If this isn't the case, the transaction on the root chain could revert, potentially locking the user's funds indefinitely.
  *      - There is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
- *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
+ *
+ * @dev Note:
+ *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  */
 contract ChildERC20Bridge is
     BridgeRoles,
@@ -70,6 +76,8 @@ contract ChildERC20Bridge is
     address public childETHToken;
     /// @dev The address of the wrapped IMX token on L2.
     address public wIMXToken;
+    /// @dev Address of the authorized initializer.
+    address public immutable initializerAddress;
 
     /**
      * @notice Modifier to ensure that the caller is the registered child bridge adaptor.
@@ -79,6 +87,17 @@ contract ChildERC20Bridge is
             revert NotBridgeAdaptor();
         }
         _;
+    }
+
+    /**
+     * @notice Constructs the ChildERC20Bridge contract.
+     * @param _initializerAddress The address of the authorized initializer.
+     */
+    constructor(address _initializerAddress) {
+        if (_initializerAddress == address(0)) {
+            revert ZeroAddress();
+        }
+        initializerAddress = _initializerAddress;
     }
 
     /**
@@ -97,6 +116,9 @@ contract ChildERC20Bridge is
         address newRootIMXToken,
         address newWIMXToken
     ) public initializer {
+        if (msg.sender != initializerAddress) {
+            revert UnauthorizedInitializer();
+        }
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
                 || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
@@ -238,6 +260,10 @@ contract ChildERC20Bridge is
 
     /**
      * @inheritdoc IChildERC20Bridge
+     * @dev Caution:
+     *      When withdrawing ETH, it's crucial to make sure that the receiving address (`msg.sender`) on the root chain,
+     *      if it's a contract, has a receive or fallback function that allows it to accept native ETH.
+     *      If this isn't the case, the transaction on the root chain could revert, potentially locking the user's funds indefinitely.
      */
     function withdrawETH(uint256 amount) external payable {
         _withdraw(childETHToken, msg.sender, amount);
@@ -245,6 +271,10 @@ contract ChildERC20Bridge is
 
     /**
      * @inheritdoc IChildERC20Bridge
+     * @dev Caution:
+     *      When withdrawing ETH, it's crucial to make sure that the receiving address (`receiver`) on the root chain,
+     *      if it's a contract, has a receive or fallback function that allows it to accept native ETH.
+     *      If this isn't the case, the transaction on the root chain could revert, potentially locking the user's funds indefinitely.
      */
     function withdrawETHTo(address receiver, uint256 amount) external payable {
         _withdraw(childETHToken, receiver, amount);
@@ -314,9 +344,12 @@ contract ChildERC20Bridge is
      * @notice Private function to handle withdrawal of L1 native ETH.
      */
     function _withdrawETH(uint256 amount) private returns (address) {
-        if (!IChildERC20(childETHToken).burn(msg.sender, amount)) {
+        try IChildERC20(childETHToken).burn(msg.sender, amount) returns (bool success) {
+            if (!success) revert BurnFailed();
+        } catch {
             revert BurnFailed();
         }
+
         return NATIVE_ETH;
     }
 
@@ -330,7 +363,9 @@ contract ChildERC20Bridge is
         IWIMX wIMX = IWIMX(wIMXToken);
 
         // Transfer to contract
-        if (!wIMX.transferFrom(msg.sender, address(this), amount)) {
+        try wIMX.transferFrom(msg.sender, address(this), amount) returns (bool success) {
+            if (!success) revert TransferWIMXFailed();
+        } catch {
             revert TransferWIMXFailed();
         }
 
@@ -372,7 +407,9 @@ contract ChildERC20Bridge is
         }
 
         // Burn tokens
-        if (!IChildERC20(childToken).burn(msg.sender, amount)) {
+        try IChildERC20(childToken).burn(msg.sender, amount) returns (bool success) {
+            if (!success) revert BurnFailed();
+        } catch {
             revert BurnFailed();
         }
 
@@ -459,10 +496,10 @@ contract ChildERC20Bridge is
             revert ZeroAddress();
         }
 
-        transferTokensAndEmitEvent(rootToken, rootTokenToChildToken[rootToken], sender, receiver, amount);
+        _transferTokensAndEmitEvent(rootToken, rootTokenToChildToken[rootToken], sender, receiver, amount);
     }
 
-    function transferTokensAndEmitEvent(
+    function _transferTokensAndEmitEvent(
         address rootToken,
         address childToken,
         address sender,
@@ -486,7 +523,9 @@ contract ChildERC20Bridge is
             revert EmptyTokenContract();
         }
 
-        if (!IChildERC20(childToken).mint(receiver, amount)) {
+        try IChildERC20(childToken).mint(receiver, amount) returns (bool success) {
+            if (!success) revert MintFailed();
+        } catch {
             revert MintFailed();
         }
 

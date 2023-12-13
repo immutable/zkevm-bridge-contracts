@@ -45,7 +45,7 @@ contract RootERC20BridgeWithdrawUnitTest is Test, IRootERC20BridgeEvents, IRootE
 
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
-        rootBridge = new RootERC20Bridge();
+        rootBridge = new RootERC20Bridge(address(this));
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
 

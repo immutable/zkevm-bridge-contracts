@@ -28,7 +28,7 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
 
         mockAdaptor = new MockAdaptor();
 
-        childBridge = new ChildERC20Bridge();
+        childBridge = new ChildERC20Bridge(address(this));
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: pauser,
@@ -74,7 +74,7 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
         uint256 withdrawAmount = 101 ether;
         uint256 withdrawFee = 300;
 
-        vm.expectRevert(bytes("ERC20: burn amount exceeds balance"));
+        vm.expectRevert(BurnFailed.selector);
         childBridge.withdrawETH{value: withdrawFee}(withdrawAmount);
     }
 

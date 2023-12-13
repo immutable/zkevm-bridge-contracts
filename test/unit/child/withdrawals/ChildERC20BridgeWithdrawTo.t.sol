@@ -42,7 +42,7 @@ contract ChildERC20BridgeWithdrawToUnitTest is Test, IChildERC20BridgeEvents, IC
             initialDepositor: address(this),
             treasuryManager: address(this)
         });
-        childBridge = new ChildERC20Bridge();
+        childBridge = new ChildERC20Bridge(address(this));
         childBridge.initialize(
             roles, address(mockAdaptor), address(childTokenTemplate), ROOT_IMX_TOKEN, WIMX_TOKEN_ADDRESS
         );

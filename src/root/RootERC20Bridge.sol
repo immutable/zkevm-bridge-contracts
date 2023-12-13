@@ -16,6 +16,7 @@ import {
 import {IRootBridgeAdaptor} from "../interfaces/root/IRootBridgeAdaptor.sol";
 import {IWETH} from "../interfaces/root/IWETH.sol";
 import {BridgeRoles} from "../common/BridgeRoles.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
  * @title Root ERC20 Bridge
@@ -39,10 +40,16 @@ import {BridgeRoles} from "../common/BridgeRoles.sol";
  *      - An account with a VARIABLE_MANAGER_ROLE can update the cumulative IMX deposit limit.
  *      - An account with an ADAPTOR_MANAGER_ROLE can update the root bridge adaptor address.
  *      - An account with a DEFAULT_ADMIN_ROLE can grant and revoke roles.
- * @dev Note:
+ *
+ * @dev Caution:
+ *      - When depositing IMX (L1 -> L2) it's crucial to make sure that the receiving address on the child chain,
+ *        if it's a contract, has a receive or fallback function that allows it to accept native IMX on the child chain.
+ *        If this isn't the case, the transaction on the child chain could revert, potentially locking the user's funds indefinitely.
  *      - There is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
- *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  *      - The initialize function is susceptible to front running, so precautions should be taken to account for this scenario.
+ *
+ * @dev Note:
+ *      - This is an upgradeable contract that should be operated behind OpenZeppelin's TransparentUpgradeableProxy.
  */
 contract RootERC20Bridge is
     BridgeRoles,
@@ -82,6 +89,8 @@ contract RootERC20Bridge is
     /// @dev The maximum cumulative amount of IMX that can be deposited into the bridge.
     /// @dev A limit of zero indicates unlimited.
     uint256 public imxCumulativeDepositLimit;
+    /// @dev Address of the authorized initializer.
+    address public immutable initializerAddress;
 
     /**
      * @notice Modifier to ensure that the caller is the registered root bridge adaptor.
@@ -91,6 +100,17 @@ contract RootERC20Bridge is
             revert NotBridgeAdaptor();
         }
         _;
+    }
+
+    /**
+     * @notice Constructs the RootERC20Bridge contract.
+     * @param _initializerAddress The address of the authorized initializer.
+     */
+    constructor(address _initializerAddress) {
+        if (_initializerAddress == address(0)) {
+            revert ZeroAddress();
+        }
+        initializerAddress = _initializerAddress;
     }
 
     /**
@@ -143,6 +163,9 @@ contract RootERC20Bridge is
         address newRootWETHToken,
         uint256 newImxCumulativeDepositLimit
     ) internal {
+        if (msg.sender != initializerAddress) {
+            revert UnauthorizedInitializer();
+        }
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
                 || newChildTokenTemplate == address(0) || newRootIMXToken == address(0) || newRootWETHToken == address(0)
@@ -230,7 +253,7 @@ contract RootERC20Bridge is
      *      The unwrapping is done through the WETH contract's `withdraw()` function, which sends the native ETH to this bridge contract.
      *      The only reason this `receive()` function is needed is for this process, hence the validation ensures that the sender is the WETH contract.
      */
-    receive() external payable whenNotPaused {
+    receive() external payable {
         // Revert if sender is not the WETH token address
         if (msg.sender != rootWETHToken) {
             revert NonWrappedNativeTransfer();
@@ -281,7 +304,11 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
-     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
+     * @dev Caution:
+     *      - When depositing IMX, it's crucial to make sure that the receiving address (`msg.sender`) on the child chain,
+     *        if it's a contract, has a receive or fallback function that allows it to accept native IMX.
+     *        If this isn't the case, the transaction on the child chain could revert, potentially locking the user's funds indefinitely.
+     *      - Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
      */
     function deposit(IERC20Metadata rootToken, uint256 amount) external payable override {
         _depositToken(rootToken, msg.sender, amount);
@@ -289,7 +316,11 @@ contract RootERC20Bridge is
 
     /**
      * @inheritdoc IRootERC20Bridge
-     * @dev Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
+     * @dev Caution:
+     *      - When depositing IMX, it's crucial to make sure that the receiving address (`receiver`) on the child chain,
+     *        if it's a contract, has a receive or fallback function that allows it to accept native IMX.
+     *        If this isn't the case, the transaction on the child chain could revert, potentially locking the user's funds indefinitely.
+     *      - Note that there is undefined behaviour for bridging non-standard ERC20 tokens (e.g. rebasing tokens). Please approach such cases with great care.
      */
     function depositTo(IERC20Metadata rootToken, address receiver, uint256 amount) external payable override {
         _depositToken(rootToken, receiver, amount);
@@ -373,8 +404,9 @@ contract RootERC20Bridge is
 
         rootTokenToChildToken[address(rootToken)] = childToken;
 
-        bytes memory payload =
-            abi.encode(MAP_TOKEN_SIG, rootToken, rootToken.name(), rootToken.symbol(), rootToken.decimals());
+        (string memory tokenName, string memory tokenSymbol, uint8 tokenDecimals) = _getTokenDetails(rootToken);
+
+        bytes memory payload = abi.encode(MAP_TOKEN_SIG, rootToken, tokenName, tokenSymbol, tokenDecimals);
         rootBridgeAdaptor.sendMessage{value: msg.value}(payload, msg.sender);
 
         emit L1TokenMapped(address(rootToken), childToken);
@@ -482,6 +514,31 @@ contract RootERC20Bridge is
             IERC20Metadata(rootToken).safeTransfer(receiver, amount);
             emit RootChainERC20Withdraw(rootToken, childToken, withdrawer, receiver, amount);
         }
+    }
+
+    function _getTokenDetails(IERC20Metadata token) private view returns (string memory, string memory, uint8) {
+        string memory tokenName;
+        try token.name() returns (string memory name) {
+            tokenName = name;
+        } catch {
+            revert TokenNotSupported();
+        }
+
+        string memory tokenSymbol;
+        try token.symbol() returns (string memory symbol) {
+            tokenSymbol = symbol;
+        } catch {
+            revert TokenNotSupported();
+        }
+
+        uint8 tokenDecimals;
+        try token.decimals() returns (uint8 decimals) {
+            tokenDecimals = decimals;
+        } catch {
+            revert TokenNotSupported();
+        }
+
+        return (tokenName, tokenSymbol, tokenDecimals);
     }
 
     modifier wontIMXOverflow(address rootToken, uint256 amount) {

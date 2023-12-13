@@ -49,27 +49,43 @@ contract ChildAxelarBridgeAdaptor is
 
     IAxelarGasService public gasService;
 
-    constructor(address _gateway) AxelarExecutable(_gateway) {}
+    /// @notice Address of the authorized initializer.
+    address public immutable initializerAddress;
+
+    /**
+     * @notice Constructs the ChildAxelarBridgeAdaptor contract.
+     * @param _gateway The address of the Axelar gateway contract.
+     * @param _initializerAddress The address of the authorized initializer.
+     */
+    constructor(address _gateway, address _initializerAddress) AxelarExecutable(_gateway) {
+        if (_initializerAddress == address(0)) {
+            revert ZeroAddress();
+        }
+        initializerAddress = _initializerAddress;
+    }
 
     /**
      * @notice Initialization function for ChildAxelarBridgeAdaptor.
-     * @param _roles Struct containing addresses of roles.
+     * @param _adaptorRoles Struct containing addresses of roles.
      * @param _childBridge Address of child bridge contract.
      * @param _rootChainId Axelar's string ID for the root chain.
      * @param _rootBridgeAdaptor Address of the bridge adaptor on the root chain.
      * @param _gasService Address of Axelar Gas Service contract.
      */
     function initialize(
-        InitializationRoles memory _roles,
+        InitializationRoles memory _adaptorRoles,
         address _childBridge,
         string memory _rootChainId,
         string memory _rootBridgeAdaptor,
         address _gasService
     ) external initializer {
+        if (msg.sender != initializerAddress) {
+            revert UnauthorizedInitializer();
+        }
         if (
-            _childBridge == address(0) || _gasService == address(0) || _roles.defaultAdmin == address(0)
-                || _roles.bridgeManager == address(0) || _roles.gasServiceManager == address(0)
-                || _roles.targetManager == address(0)
+            _childBridge == address(0) || _gasService == address(0) || _adaptorRoles.defaultAdmin == address(0)
+                || _adaptorRoles.bridgeManager == address(0) || _adaptorRoles.gasServiceManager == address(0)
+                || _adaptorRoles.targetManager == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -83,10 +99,10 @@ contract ChildAxelarBridgeAdaptor is
         }
         __AccessControl_init();
 
-        _grantRole(DEFAULT_ADMIN_ROLE, _roles.defaultAdmin);
-        _grantRole(BRIDGE_MANAGER_ROLE, _roles.bridgeManager);
-        _grantRole(GAS_SERVICE_MANAGER_ROLE, _roles.gasServiceManager);
-        _grantRole(TARGET_MANAGER_ROLE, _roles.targetManager);
+        _grantRole(DEFAULT_ADMIN_ROLE, _adaptorRoles.defaultAdmin);
+        _grantRole(BRIDGE_MANAGER_ROLE, _adaptorRoles.bridgeManager);
+        _grantRole(GAS_SERVICE_MANAGER_ROLE, _adaptorRoles.gasServiceManager);
+        _grantRole(TARGET_MANAGER_ROLE, _adaptorRoles.targetManager);
 
         childBridge = IChildERC20Bridge(_childBridge);
         rootChainId = _rootChainId;
@@ -195,6 +211,19 @@ contract ChildAxelarBridgeAdaptor is
 
         emit AdaptorExecute(_sourceChain, _sourceAddress, _payload);
         childBridge.onMessageReceive(_payload);
+    }
+
+    /**
+     * @inheritdoc AxelarExecutable
+     * @dev This function is called by the parent `AxelarExecutable` contract's `executeWithToken()` function.
+     *      However, this function is not required for the bridge, and thus reverts with an `UnsupportedOperation` error.
+     */
+    function _executeWithToken(string calldata, string calldata, bytes calldata, string calldata, uint256)
+        internal
+        pure
+        override
+    {
+        revert UnsupportedOperation();
     }
 
     // slither-disable-next-line unused-state,naming-convention
