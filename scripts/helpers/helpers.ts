@@ -209,7 +209,7 @@ export async function verifyRootContract(contract: string, contractAddr: string)
         return;
     }
     let chainID = requireEnv("ROOT_CHAIN_ID");
-    let cmd = `ETHER_SCAN_API_KEY=${key} forge verify-contract ${contractAddr} ${contract} --chain-id ${chainID}`;
+    let cmd = `ETHERSCAN_API_KEY=${key} forge verify-contract ${contractAddr} ${contract} --chain-id ${chainID}`;
     const { stdout, stderr } = await exec(cmd);
     if (stderr != "") {
         throw(stderr);
