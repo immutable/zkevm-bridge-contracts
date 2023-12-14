@@ -9,6 +9,7 @@ The Immutable token bridge facilitates the transfer of assets between two chains
 * [Build and Test](#build-and-test)
 * [Contract Deployment](#deployment)
 * [Deployed Contract Addresses](#deployed-contract-addresses)
+* [Audits](#audits)
 <!-- TOC -->
 
 ## Features
@@ -130,3 +131,6 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | Bridge Implementation         | TBA     | [`0xA554Cf58b9524d43F1dee2fE1b0C928f18A93FE9`](https://explorer.testnet.immutable.com/address/0xA554Cf58b9524d43F1dee2fE1b0C928f18A93FE9) | TBA    |
 | Bridge Adaptor Proxy          | TBA     | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://explorer.testnet.immutable.com/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab) | TBA    |
 | Bridge Adaptor Implementation | TBA     | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://explorer.testnet.immutable.com/address/0xac88a57943b5BBa1ecd931F8494cAd0B7F717590) | TBA    |
+
+## Audits
+The Immutable token bridge has been audited by [Trail of Bits](https://www.trailofbits.com/). The audit report can be found [here](./audits/Trail-of-Bits-2023-12-14.pdf).
