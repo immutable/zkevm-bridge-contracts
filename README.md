@@ -112,18 +112,21 @@ yarn local:test
 When deploying these contracts on remote networks (i.e. testnets or mainnets). Refer to [deployment](./scripts/deploy/README.md) or [bootstrap](./scripts/bootstrap/README.md).
 
 ## Deployed Contract Addresses
+Addresses for the core bridge contracts are listed below. For a full list of deployed contracts, see [deployments/](./deployments/).
+ABIs for contracts can be obtained from the blockchain explorer links for each contract provided below.
 
-|                           | Mainnet | Testnet | Devnet  |
-|---------------------------|---------|---------|---------|
-| `RootERC20BridgeFlowRate` | [TBA]() | [TBA]() | [TBA]() |
-| `RootAxelarBridgeAdaptor` | [TBA]() | [TBA]() | [TBA]() |
-| `wIMX`                    | [TBA]() | [TBA]() | [TBA]() |
+### Root Chain
+|                               | Mainnet | Testnet                                                                                                                              | Devnet |
+|-------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------|--------|
+| Bridge Proxy                  | TBA     | [`0x0D3C59c779Fd552C27b23F723E80246c840100F5`](https://sepolia.etherscan.io/address/0x0d3c59c779fd552c27b23f723e80246c840100f5)      | TBA    |
+| Bridge Implementation         | TBA     | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://sepolia.etherscan.io/address/0xac88a57943b5bba1ecd931f8494cad0b7f717590#code) | TBA    |
+| Bridge Adaptor Proxy          | TBA     | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
+| Bridge Adaptor Implementation | TBA     | [`0xe9ec55e1fC90AB69B2Fb4C029d24a4622B94042e`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
 
-
-|                            | Mainnet | Testnet | Devnet  |
-|----------------------------|---------|---------|---------|
-| `ChildERC20Bridge`         | [TBA]() | [TBA]() | [TBA]() |
-| `ChildAxelarBridgeAdaptor` | [TBA]() | [TBA]() | [TBA]() |
-| `wETH`                     | [TBA]() | [TBA]() | [TBA]() |
-
-
+### Child Chain
+|                               | Mainnet | Testnet                                                                                                                                   | Devnet |
+|-------------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------|--------|
+| Bridge Proxy                  | TBA     | [`0x0D3C59c779Fd552C27b23F723E80246c840100F5`](https://explorer.testnet.immutable.com/address/0x0D3C59c779Fd552C27b23F723E80246c840100F5) | TBA    |
+| Bridge Implementation         | TBA     | [`0xA554Cf58b9524d43F1dee2fE1b0C928f18A93FE9`](https://explorer.testnet.immutable.com/address/0xA554Cf58b9524d43F1dee2fE1b0C928f18A93FE9) | TBA    |
+| Bridge Adaptor Proxy          | TBA     | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://explorer.testnet.immutable.com/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab) | TBA    |
+| Bridge Adaptor Implementation | TBA     | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://explorer.testnet.immutable.com/address/0xac88a57943b5BBa1ecd931F8494cAd0B7F717590) | TBA    |
