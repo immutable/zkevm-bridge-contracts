@@ -53,30 +53,46 @@ async function run() {
     console.log("Deployed to ROOT_TEST_CUSTOM_TOKEN: ", rootCustomToken.address);
 
     // Mint tokens
-    console.log("Mint tokens...");
-    let resp = await rootCustomToken.connect(rootDeployerWallet).mint(rootTestWallet.address, ethers.utils.parseEther("1000.0").toBigInt());
-    await waitForReceipt(resp.hash, rootProvider);
+    if ((await rootCustomToken.balanceOf(rootTestWallet.address)).toString() != "0") {
+        console.log("Test account has already been given test tokens, skip.");
+    } else {
+        console.log("Mint tokens...");
+        let resp = await rootCustomToken.connect(rootDeployerWallet).mint(rootTestWallet.address, ethers.utils.parseEther("1000.0").toBigInt());
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
-    console.log("Set rate control...");
-    // Set rate control
-    resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-        rootCustomToken.address,
-        ethers.utils.parseEther("20016.0"),
-        ethers.utils.parseEther("5.56"),
-        ethers.utils.parseEther("10008.0")
-    );
-    await waitForReceipt(resp.hash, rootProvider);
+    if ((await rootBridge.largeTransferThresholds(rootCustomToken.address)).toString() != "0") {
+        console.log("Rate limiting has already been configured for custom token, skip.");
+    } else {
+        console.log("Set rate control...");
+        // Set rate control
+        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+            rootCustomToken.address,
+            ethers.utils.parseEther("20016.0"),
+            ethers.utils.parseEther("5.56"),
+            ethers.utils.parseEther("10008.0")
+        );
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // Revoke roles
-    console.log("Revoke RATE_CONTROL_ROLE of deployer...")
-    resp = await rootBridge.connect(rootDeployerWallet).revokeRole(utils.keccak256(utils.toUtf8Bytes("RATE")), deployerAddr);
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if (!await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), deployerAddr)) {
+        console.log("Deployer has already revoked RATE_CONTROL_ROLE..., skip.");
+    } else {
+        console.log("Revoke RATE_CONTROL_ROLE of deployer...")
+        let resp = await rootBridge.connect(rootDeployerWallet).revokeRole(utils.keccak256(utils.toUtf8Bytes("RATE")), deployerAddr);
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
-    console.log("Revoke DEFAULT_ADMIN of deployer...")
-    resp = await rootBridge.connect(rootDeployerWallet).revokeRole(await rootBridge.DEFAULT_ADMIN_ROLE(), deployerAddr);
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if (!await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), deployerAddr)) {
+        console.log("Deployer has already revoked DEFAULT_ADMIN..., skip.");
+    } else {
+        console.log("Revoke DEFAULT_ADMIN of deployer...")
+        let resp = await rootBridge.connect(rootDeployerWallet).revokeRole(await rootBridge.DEFAULT_ADMIN_ROLE(), deployerAddr);
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // Print summary
     console.log("Does multisig have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootPrivilegedMultisig));
