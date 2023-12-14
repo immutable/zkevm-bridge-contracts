@@ -102,7 +102,7 @@ yarn local:setup
 
 3. Get contract addresses from `./scripts/localdev/.child.bridge.contracts.json` and `./scripts/localdev/.root.bridge.contracts.json`.
 
-4. (Optional) Run end to end tests
+4. (Optional) Run end-to-end tests
 ```
 yarn local:test
 ```
