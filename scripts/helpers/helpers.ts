@@ -190,7 +190,7 @@ export async function waitUntilSucceed(axelarURL: string, txHash: any) {
 
 export async function verifyChildContract(contract: string, contractAddr: string) {
     let url = process.env["CHILD_CHAIN_BLOCKSCOUT_API_URL"];
-    if (url == null || url == undefined) {
+    if (url == null || url == "") {
         console.log("CHILD_CHAIN_BLOCKSCOUT_API_URL not set, skip contract verification...");
         return; 
     }
@@ -204,7 +204,7 @@ export async function verifyChildContract(contract: string, contractAddr: string
 
 export async function verifyRootContract(contract: string, contractAddr: string) {
     let key = process.env["ROOT_CHAIN_ETHERSCAN_API_KEY"];
-    if (key == null || key == undefined) {
+    if (key == null || key == "") {
         console.log("ROOT_CHAIN_ETHERSCAN_API_KEY not set, skip contract verification...");
         return;
     }
