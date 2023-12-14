@@ -67,103 +67,139 @@ export async function initialiseRootContracts() {
     await waitForConfirmation();
 
     // Initialise root bridge
-    console.log("Initialise root bridge...");
     let rootBridge = getContract("RootERC20BridgeFlowRate", rootBridgeAddr, rootProvider);
-    let resp = await rootBridge.connect(rootDeployerWallet)["initialize((address,address,address,address,address),address,address,address,address,address,uint256,address)"](
-        {
-            defaultAdmin: deployerAddr,
-            pauser: rootBreakglass,
-            unpauser: rootPrivilegedMultisig,
-            variableManager: rootPrivilegedMultisig,
-            adaptorManager: rootPrivilegedMultisig,
-        },
-        rootAdaptorAddr,
-        childBridgeAddr,
-        rootTemplateAddr,
-        rootIMXAddr,
-        rootWETHAddr,
-        ethers.utils.parseEther(imxDepositLimit),
-        deployerAddr);
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if (await rootBridge.rootIMXToken() != "0x0000000000000000000000000000000000000000") {
+        console.log("Root bridge has already been initialised, skip.");
+    } else {
+        console.log("Initialise root bridge...");
+        let resp = await rootBridge.connect(rootDeployerWallet)["initialize((address,address,address,address,address),address,address,address,address,address,uint256,address)"](
+            {
+                defaultAdmin: deployerAddr,
+                pauser: rootBreakglass,
+                unpauser: rootPrivilegedMultisig,
+                variableManager: rootPrivilegedMultisig,
+                adaptorManager: rootPrivilegedMultisig,
+            },
+            rootAdaptorAddr,
+            childBridgeAddr,
+            rootTemplateAddr,
+            rootIMXAddr,
+            rootWETHAddr,
+            ethers.utils.parseEther(imxDepositLimit),
+            deployerAddr);
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // Configure rate
     // IMX
-    console.log("Configure rate limiting for IMX...")
-    resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-        rootIMXAddr,
-        ethers.utils.parseEther(rateLimitIMXCap),
-        ethers.utils.parseEther(rateLimitIMXRefill),
-        ethers.utils.parseEther(rateLimitIMXLargeThreshold)
-    );
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if ((await rootBridge.largeTransferThresholds(rootIMXAddr)).toString() != "0") {
+        console.log("IMX rate limiting has already been configured, skip.");
+    } else {
+        console.log("Configure rate limiting for IMX...")
+        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+            rootIMXAddr,
+            ethers.utils.parseEther(rateLimitIMXCap),
+            ethers.utils.parseEther(rateLimitIMXRefill),
+            ethers.utils.parseEther(rateLimitIMXLargeThreshold)
+        );
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // ETH
-    console.log("Configure rate limiting for ETH...")
-    resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-        await rootBridge.NATIVE_ETH(),
-        ethers.utils.parseEther(rateLimitETHCap),
-        ethers.utils.parseEther(rateLimitETHRefill),
-        ethers.utils.parseEther(rateLimitETHLargeThreshold)
-    );
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if ((await rootBridge.largeTransferThresholds(await rootBridge.NATIVE_ETH())).toString() != "0") {
+        console.log("ETH rate limiting has already been configured, skip.");
+    } else {
+        console.log("Configure rate limiting for ETH...")
+        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+            await rootBridge.NATIVE_ETH(),
+            ethers.utils.parseEther(rateLimitETHCap),
+            ethers.utils.parseEther(rateLimitETHRefill),
+            ethers.utils.parseEther(rateLimitETHLargeThreshold)
+        );
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // USDC
-    console.log("Configure rate limiting for USDC...")
-    resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-        rateLimitUSDCAddr,
-        ethers.utils.parseEther(rateLimitUSDCCap),
-        ethers.utils.parseEther(rateLimitUSDCRefill),
-        ethers.utils.parseEther(rateLimitUSDCLargeThreshold)
-    );
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if ((await rootBridge.largeTransferThresholds(rateLimitUSDCAddr)).toString() != "0") {
+        console.log("USDC rate limiting has already been configured, skip.");
+    } else {
+        console.log("Configure rate limiting for USDC...")
+        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+            rateLimitUSDCAddr,
+            ethers.utils.parseEther(rateLimitUSDCCap),
+            ethers.utils.parseEther(rateLimitUSDCRefill),
+            ethers.utils.parseEther(rateLimitUSDCLargeThreshold)
+        );
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // GU
-    console.log("Configure rate limiting for GU...")
-    resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-        rateLimitGUAddr,
-        ethers.utils.parseEther(rateLimitGUCap),
-        ethers.utils.parseEther(rateLimitGURefill),
-        ethers.utils.parseEther(rateLimitGULargeThreshold)
-    );
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if ((await rootBridge.largeTransferThresholds(rateLimitGUAddr)).toString() != "0") {
+        console.log("GU rate limiting has already been configured, skip.");
+    } else {
+        console.log("Configure rate limiting for GU...")
+        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+            rateLimitGUAddr,
+            ethers.utils.parseEther(rateLimitGUCap),
+            ethers.utils.parseEther(rateLimitGURefill),
+            ethers.utils.parseEther(rateLimitGULargeThreshold)
+        );
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // Checkmate
-    console.log("Configure rate limiting for CheckMate...")
-    resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-        rateLimitCheckMateAddr,
-        ethers.utils.parseEther(rateLimitCheckMateCap),
-        ethers.utils.parseEther(rateLimitCheckMateRefill),
-        ethers.utils.parseEther(rateLimitCheckMateLargeThreshold)
-    );
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if ((await rootBridge.largeTransferThresholds(rateLimitCheckMateAddr)).toString() != "0") {
+        console.log("CheckMate rate limiting has already been configured, skip.");
+    } else {
+        console.log("Configure rate limiting for CheckMate...")
+        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+            rateLimitCheckMateAddr,
+            ethers.utils.parseEther(rateLimitCheckMateCap),
+            ethers.utils.parseEther(rateLimitCheckMateRefill),
+            ethers.utils.parseEther(rateLimitCheckMateLargeThreshold)
+        );
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // GOG
-    console.log("Configure rate limiting for GOG...")
-    resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-        rateLimitGOGAddr,
-        ethers.utils.parseEther(rateLimitGOGCap),
-        ethers.utils.parseEther(rateLimitGOGRefill),
-        ethers.utils.parseEther(rateLimitGOGLargeThreshold)
-    );
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
-
+    if ((await rootBridge.largeTransferThresholds(rateLimitGOGAddr)).toString() != "0") {
+        console.log("GOG rate limiting has already been configured, skip.");
+    } else {
+        console.log("Configure rate limiting for GOG...")
+        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+            rateLimitGOGAddr,
+            ethers.utils.parseEther(rateLimitGOGCap),
+            ethers.utils.parseEther(rateLimitGOGRefill),
+            ethers.utils.parseEther(rateLimitGOGLargeThreshold)
+        );
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
+    
     // Grant roles
-    console.log("Grant RATE_CONTROL_ROLE to multisig...")
-    resp = await rootBridge.connect(rootDeployerWallet).grantRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootPrivilegedMultisig);
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if (await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootPrivilegedMultisig)) {
+        console.log("Multisig has already obtained RATE_CONTROL_ROLE..., skip.");
+    } else {
+        console.log("Grant RATE_CONTROL_ROLE to multisig...");
+        let resp = await rootBridge.connect(rootDeployerWallet).grantRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootPrivilegedMultisig);
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
-    console.log("Grant DEFAULT_ADMIN to multisig...")
-    resp = await rootBridge.connect(rootDeployerWallet).grantRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootPrivilegedMultisig);
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if (await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootPrivilegedMultisig)) {
+        console.log("Multisig has already obtained DEFAULT_ADMIN..., skip.");
+    } else {
+        console.log("Grant DEFAULT_ADMIN to multisig...")
+        let resp = await rootBridge.connect(rootDeployerWallet).grantRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootPrivilegedMultisig);
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 
     // Print summary
     console.log("Does multisig have DEFAULT_ADMIN: ", await rootBridge.hasRole(await rootBridge.DEFAULT_ADMIN_ROLE(), rootPrivilegedMultisig));
@@ -172,19 +208,23 @@ export async function initialiseRootContracts() {
     console.log("Does deployer have RATE_ADMIN: ", await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), deployerAddr));
 
     // Initialise root adaptor
-    console.log("Initialise root adaptor...");
     let rootAdaptor = getContract("RootAxelarBridgeAdaptor", rootAdaptorAddr, rootProvider);
-    resp = await rootAdaptor.connect(rootDeployerWallet).initialize(
-        {
-            defaultAdmin: rootPrivilegedMultisig,
-            bridgeManager: rootPrivilegedMultisig,
-            gasServiceManager: rootPrivilegedMultisig,
-            targetManager: rootPrivilegedMultisig,
-        },
-        rootBridgeAddr, 
-        childChainName,
-        childAdaptorAddr,
-        rootGasServiceAddr);
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, rootProvider);
+    if (await rootAdaptor.gasService() != "0x0000000000000000000000000000000000000000") {
+        console.log("Root adaptor has already been initialized, skip.");
+    } else {
+        console.log("Initialise root adaptor...");
+        let resp = await rootAdaptor.connect(rootDeployerWallet).initialize(
+            {
+                defaultAdmin: rootPrivilegedMultisig,
+                bridgeManager: rootPrivilegedMultisig,
+                gasServiceManager: rootPrivilegedMultisig,
+                targetManager: rootPrivilegedMultisig,
+            },
+            rootBridgeAddr, 
+            childChainName,
+            childAdaptorAddr,
+            rootGasServiceAddr);
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, rootProvider);
+    }
 }

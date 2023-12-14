@@ -50,48 +50,56 @@ export async function initialiseChildContracts() {
     await waitForConfirmation();
 
     // Initialise child bridge
-    console.log("Initialise child bridge...");
     let childBridge = getContract("ChildERC20Bridge", childBridgeAddr, childProvider);
-    let [priorityFee, maxFee] = await getFee(childProvider);
-    let resp = await childBridge.connect(childDeployerWallet).initialize(
+    if (await childBridge.rootIMXToken() != "0x0000000000000000000000000000000000000000") {
+        console.log("Child bridge has already been initialised, skip.");
+    } else {
+        console.log("Initialise child bridge...");
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childBridge.connect(childDeployerWallet).initialize(
+            {
+                defaultAdmin: childPrivilegedMultisig,
+                pauser: childBreakglass,
+                unpauser: childPrivilegedMultisig,
+                adaptorManager: childPrivilegedMultisig,
+                initialDepositor: deployerAddr,
+                treasuryManager: multisigAddr,
+            },
+            childAdaptorAddr,
+            childTemplateAddr,
+            rootIMXAddr,
+            childWIMXAddr,
         {
-            defaultAdmin: childPrivilegedMultisig,
-            pauser: childBreakglass,
-            unpauser: childPrivilegedMultisig,
-            adaptorManager: childPrivilegedMultisig,
-            initialDepositor: deployerAddr,
-            treasuryManager: multisigAddr,
-        },
-        childAdaptorAddr,
-        childTemplateAddr,
-        rootIMXAddr,
-        childWIMXAddr,
-    {
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, childProvider);
-
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, childProvider);
+    }
+    
     // Initialise child adaptor
-    console.log("Initialise child adaptor...");
     let childAdaptor = getContract("ChildAxelarBridgeAdaptor", childAdaptorAddr, childProvider);
-    [priorityFee, maxFee] = await getFee(childProvider);
-    resp = await childAdaptor.connect(childDeployerWallet).initialize(
+    if (await childAdaptor.gasService() != "0x0000000000000000000000000000000000000000") {
+        console.log("Child adaptor has already been initialized, skip.");
+    } else {
+        console.log("Initialise child adaptor...");
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childAdaptor.connect(childDeployerWallet).initialize(
+            {
+                defaultAdmin: childPrivilegedMultisig,
+                bridgeManager: childPrivilegedMultisig,
+                gasServiceManager: childPrivilegedMultisig,
+                targetManager: childPrivilegedMultisig,
+            },
+            childBridgeAddr,
+            rootChainName,
+            rootAdaptorAddr,
+            childGasServiceAddr,
         {
-            defaultAdmin: childPrivilegedMultisig,
-            bridgeManager: childPrivilegedMultisig,
-            gasServiceManager: childPrivilegedMultisig,
-            targetManager: childPrivilegedMultisig,
-        },
-        childBridgeAddr,
-        rootChainName,
-        rootAdaptorAddr,
-        childGasServiceAddr,
-    {
-        maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: maxFee,
-    });
-    console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-    await waitForReceipt(resp.hash, childProvider);
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+        await waitForReceipt(resp.hash, childProvider);
+    }
 }
