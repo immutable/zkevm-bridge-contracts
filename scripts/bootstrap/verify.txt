@@ -1,1 +1,0 @@
-forge verify-contract --verifier blockscout --verifier-url https://explorer.testnet.immutable.com/api <address> SomeContract
