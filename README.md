@@ -7,7 +7,7 @@ The Immutable token bridge facilitates the transfer of assets between two chains
 <!-- TOC -->
 * [Features](#features)
 * [Build and Test](#build-and-test)
-* [Contract Deployment](#deployment)
+* [Contract Deployment](#contract-deployment)
 * [Deployed Contract Addresses](#deployed-contract-addresses)
 * [Audits](#audits)
 <!-- TOC -->
