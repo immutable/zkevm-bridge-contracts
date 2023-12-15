@@ -1,29 +1,81 @@
-# Immutable zkEVM Bridge Contracts
+# Immutable Token Bridge
 
-(Work in progress doc)
+----
+The Immutable token bridge facilitates the transfer of assets between two chains, namely Ethereum (the Root chain) and the Immutable chain (the Child chain). At present, the bridge only supports the transfer of standard ERC20 tokens originating from Ethereum, as well as native assets (ETH and IMX). Other types of assets (such as ERC721) and assets originating from the Child chain are not currently supported.
 
-<p align="center"><img src="https://cdn.dribbble.com/users/1299339/screenshots/7133657/media/837237d447d36581ebd59ec36d30daea.gif" width="280"/></p>
+## Contents
+<!-- TOC -->
+* [Features](#features)
+* [Build and Test](#build-and-test)
+* [Contract Deployment](#contract-deployment)
+* [Deployed Contract Addresses](#deployed-contract-addresses)
+* [Audits](#audits)
+<!-- TOC -->
 
-zkevm-bridge-contracts is a repository of smart contracts for bridging in the Immutable zkEVM, a general-purpose permissionless L2 zero-knowledge rollup.
+## Features
+### Core Features
+The bridge provides two key functions, **deposits** and **withdrawals**.
 
-These contracts are used in the ERC20 and native ETH bridging functionality of the Immutable zkEVM.
+#### Deposit Assets (Root Chain → Child Chain)
+When a user wishes to transfer assets from Ethereum to Immutable, they initiate a deposit. This deposit moves an asset from the Root chain to the Child chain. It does so by first transferring the user's asset to the bridge (Root chain), then minting and transferring corresponding representation tokens of that asset to the user, on the Child chain. The following types of asset deposits flows are supported:
+1. Native ETH on Ethereum  → Wrapped ETH on Immutable zkEVM (ERC20 token)
+2. Wrapped ETH on Ethereum → Wrapped ETH on Immutable zkEVM (ERC20 token)
+3. ERC20 IMX on Ethereum   → Native IMX on Immutable zkEVM. IMX is represented on Immutable zkEVM as the native gas token, see [here](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79ff)
+4. Standard ERC20 tokens   → Wrapped equivalents on Immutable zkEVM (ERC20 token)
 
-The main development toolkit for this repository is [Foundry](https://book.getfoundry.sh)
-Foundry consists of:
+#### Withdraw Assets (Child Chain → Root Chain)
+When a user wants to transfer bridged assets from Immutable back to Ethereum, they start a withdrawal. This process moves an asset from the Child chain to the Root chain. It includes burning the user's bridged tokens on the child chain and unlocking the corresponding asset on the Root chain. Only assets that were bridged using the deposit flow described above can be withdrawn. Therefore, the available withdrawal flows are as follows:
+1. Native IMX on Immutable zkEVM →  for ERC20 IMX on Ethereum.
+2. Wrapped ETH on Immutable zkEVM →  Native ETH on Ethereum
+3. Wrapped IMX on Immutable zkEVM →  for ERC20 IMX on Ethereum
+4. Wrapped ERC20 on Immutable zkEVM →  Original ERC20 on Ethereum
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+**Not supported:**
+The following capabilities are not currently supported by the Immutable bridge:
+- Bridging of tokens that were originally deployed on the Child chain (i.e. ones that do not originate from the Root chain).
+- Bridging of non-standard ERC20 tokens
+- Bridging of ERC721 or other tokens standards
 
-## Usage
+### Security Features
+The bridge employs a number of security features to mitigate the likelihood and impact of potential exploits. These are discussed further in subsections below.
 
+#### IMX Deposit Limit
+The total amount of IMX that can be deposited (i.e. sent from the Root chain to the Child chain), is capped at a configurable threshold. In addition to mitigating the potential impact of an exploit, this limit serves to reduce the likelihood of scenarios where the bridge might not have sufficient native IMX to process the deposits on the child chain.
+
+#### Withdrawal Delays
+To mitigate the impact of potential exploits, withdrawal transactions (token transfers from the Child chain to the Root chain) may be automatically delayed under certain conditions. By default, this delay is one day. The delay is implemented as a withdrawal queue, which is an array of withdrawal transactions for each user. Once the required delay has passed, a user can finalize a queued withdrawal. The conditions that trigger a withdrawal delay are as follows:
+- Specific flow rates can be set for individual tokens. These rates regulate the amount that can be withdrawn over a period of time. If a token's withdrawal rate exceeds its specific threshold, all subsequent withdrawals from the bridge are queued.
+- Any withdrawal that exceeds a token-specific amount is queued. This only affects the individual withdrawal in question and does not impact other withdrawals by the same user or others.
+- If no thresholds are defined for a given token, all withdrawals relating to that token are queued.
+
+For further details, see the [withdrawal delay mechanism section](#withdrawal-delay-mechanism).
+
+#### Emergency Pause
+In the event of an emergency, the bridge can be paused to mitigate the potential impact of an incident. This suspends all user-accessible capabilities, including token mapping, deposits, and withdrawals, until the bridge is resumed. However, this doesn't restrict privileged functions accessible by accounts with certain roles. It allows administrators to perform necessary operations that can address the incident (e.g., bridge parameter changes, upgrades). The specific functions that are halted by the emergency pause mechanism for each contract are listed below:
+- **Root Chain**
+    - `RootERC20Bridge`: `mapToken()`, `deposit()`, `depositTo()`, `depositETH()`, `depositToETH()`, `onMessageReceive()`
+    - `RootERC20BridgeFlowRate` contract: `finaliseQueuedWithdrawal()`, `finaliseQueuedWithdrawalsAggregated()`, as well as all functions from `RootERC20Bridge`.
+- **Child Chain:**
+    - `ChildERC20Bridge`: `withdraw()`, `withdrawTo()`, `withdrawIMX()`, `withdrawIMXTo()`, `withdrawWIMX()`, `withdrawWIMXTo()`,`onMessageReceive()`
+
+#### Role-Based-Access-Control
+The bridge employs fine-grained Role-Based-Access-Controls (RBAC), for privileged operations that control various parameters of the bridge. These include:
+- `DEFAULT_ADMIN_ROLE`: Can manage granting and revoking of roles to accounts.
+- `VARIABLE_MANAGER_ROLE`: Can update the cumulative IMX deposit limit.
+- `RATE_MANAGER_ROLE`: Can enable or disable the withdrawal queue, and configure parameter for each token related to the withdrawal queue.
+- `BRIDGE_MANAGER_ROLE`: Can update the bridge used by the adaptor.
+- `ADAPTOR_MANAGER_ROLE`: Can update the bridge adaptor.
+- `TARGET_MANAGER_ROLE`: Can update targeted bridge used by the adaptor (e.g. target is child chain on root adaptors).
+- `GAS_SERVICE_MANAGER_ROLE`: Role identifier for those who can update the gas service used by the adaptor.
+- `PAUSER_ROLE`: Role identifier for those who can pause functionanlity.
+- `UNPAUSER_ROLE`: Role identifier for those who can unpause functionality
+
+## Build and Test
 ### Install Dependencies
 ```shell
 $ yarn install
 $ forge install
 ```
-
 ### Build
 
 ```shell
@@ -31,26 +83,12 @@ $ forge build
 ```
 
 ### Test
-
 ```shell
 $ forge test
 ```
 
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
+## Contract Deployment
 ### Local Deployment
-
-##### Instructions
 To set up the contracts on two separate local networks, we need to start running the local networks, then deploy and initialize the contracts.
 
 1. Set up the two local networks and axelar network
@@ -65,7 +103,7 @@ yarn local:setup
 
 3. Get contract addresses from `./scripts/localdev/.child.bridge.contracts.json` and `./scripts/localdev/.root.bridge.contracts.json`.
 
-4. (Optional) Run end to end tests
+4. (Optional) Run end-to-end tests
 ```
 yarn local:test
 ```
@@ -73,3 +111,26 @@ yarn local:test
 ### Remote Deployment
 
 When deploying these contracts on remote networks (i.e. testnets or mainnets). Refer to [deployment](./scripts/deploy/README.md) or [bootstrap](./scripts/bootstrap/README.md).
+
+## Deployed Contract Addresses
+Addresses for the core bridge contracts are listed below. For a full list of deployed contracts, see [deployments/](./deployments/).
+ABIs for contracts can be obtained from the blockchain explorer links for each contract provided below.
+
+### Root Chain
+|                               | Mainnet | Testnet                                                                                                                              | Devnet |
+|-------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------|--------|
+| Bridge Proxy                  | TBA     | [`0x0D3C59c779Fd552C27b23F723E80246c840100F5`](https://sepolia.etherscan.io/address/0x0d3c59c779fd552c27b23f723e80246c840100f5)      | TBA    |
+| Bridge Implementation         | TBA     | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://sepolia.etherscan.io/address/0xac88a57943b5bba1ecd931f8494cad0b7f717590#code) | TBA    |
+| Bridge Adaptor Proxy          | TBA     | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
+| Bridge Adaptor Implementation | TBA     | [`0xe9ec55e1fC90AB69B2Fb4C029d24a4622B94042e`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
+
+### Child Chain
+|                               | Mainnet | Testnet                                                                                                                                   | Devnet |
+|-------------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------|--------|
+| Bridge Proxy                  | TBA     | [`0x0D3C59c779Fd552C27b23F723E80246c840100F5`](https://explorer.testnet.immutable.com/address/0x0D3C59c779Fd552C27b23F723E80246c840100F5) | TBA    |
+| Bridge Implementation         | TBA     | [`0xA554Cf58b9524d43F1dee2fE1b0C928f18A93FE9`](https://explorer.testnet.immutable.com/address/0xA554Cf58b9524d43F1dee2fE1b0C928f18A93FE9) | TBA    |
+| Bridge Adaptor Proxy          | TBA     | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://explorer.testnet.immutable.com/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab) | TBA    |
+| Bridge Adaptor Implementation | TBA     | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://explorer.testnet.immutable.com/address/0xac88a57943b5BBa1ecd931F8494cAd0B7F717590) | TBA    |
+
+## Audits
+The Immutable token bridge has been audited by [Trail of Bits](https://www.trailofbits.com/). The audit report can be found [here](./audits/Trail-of-Bits-2023-12-14.pdf).
