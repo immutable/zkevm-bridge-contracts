@@ -189,6 +189,7 @@ export async function waitUntilSucceed(axelarURL: string, txHash: any) {
 }
 
 export async function verifyChildContract(contract: string, contractAddr: string) {
+    console.log("Verifying " + contract + " at " + contractAddr + " on child chain...");
     let url = process.env["CHILD_CHAIN_BLOCKSCOUT_API_URL"];
     if (url == null || url == "") {
         console.log("CHILD_CHAIN_BLOCKSCOUT_API_URL not set, skip contract verification...");
@@ -202,7 +203,8 @@ export async function verifyChildContract(contract: string, contractAddr: string
     console.log(stdout);
 }
 
-export async function verifyRootContract(contract: string, contractAddr: string) {
+export async function verifyRootContract(contract: string, contractAddr: string, args: string | null) {
+    console.log("Verifying " + contract + " at " + contractAddr + " on root chain...");
     let key = process.env["ROOT_CHAIN_ETHERSCAN_API_KEY"];
     if (key == null || key == "") {
         console.log("ROOT_CHAIN_ETHERSCAN_API_KEY not set, skip contract verification...");
@@ -210,6 +212,9 @@ export async function verifyRootContract(contract: string, contractAddr: string)
     }
     let chainID = requireEnv("ROOT_CHAIN_ID");
     let cmd = `ETHERSCAN_API_KEY=${key} forge verify-contract ${contractAddr} ${contract} --chain-id ${chainID}`;
+    if (args != null) {
+        cmd += ` --constructor-args $(cast abi-encode ${args})`
+    }
     const { stdout, stderr } = await exec(cmd);
     if (stderr != "") {
         throw(stderr);

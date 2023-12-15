@@ -45,11 +45,11 @@ export async function deployRootContracts() {
         rootBridgeImpl = await deployRootContract("RootERC20BridgeFlowRate", rootDeployerWallet, null, deployerAddr);
         console.log("Transaction submitted: ", JSON.stringify(rootBridgeImpl.deployTransaction, null, 2));
         await waitForReceipt(rootBridgeImpl.deployTransaction.hash, rootProvider);
-        await verifyRootContract("RootERC20BridgeFlowRate", rootBridgeImpl.address);
+        rootContracts.ROOT_BRIDGE_IMPL_ADDRESS = rootBridgeImpl.address;
+        saveRootContracts(rootContracts);
+        console.log("Deployed to ROOT_BRIDGE_IMPL_ADDRESS: ", rootBridgeImpl.address);
+        await verifyRootContract("RootERC20BridgeFlowRate", rootBridgeImpl.address, `"constructor(address)" "${deployerAddr}"`);
     }
-    rootContracts.ROOT_BRIDGE_IMPL_ADDRESS = rootBridgeImpl.address;
-    saveRootContracts(rootContracts);
-    console.log("Deployed to ROOT_BRIDGE_IMPL_ADDRESS: ", rootBridgeImpl.address);
 
     // Deploy root adaptor impl
     let rootAdaptorImpl;
@@ -61,11 +61,11 @@ export async function deployRootContracts() {
         rootAdaptorImpl = await deployRootContract("RootAxelarBridgeAdaptor", rootDeployerWallet, null, rootGatewayAddr, deployerAddr);
         console.log("Transaction submitted: ", JSON.stringify(rootAdaptorImpl.deployTransaction, null, 2));
         await waitForReceipt(rootAdaptorImpl.deployTransaction.hash, rootProvider);
-        await verifyRootContract("RootAxelarBridgeAdaptor", rootAdaptorImpl.address);
+        rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS = rootAdaptorImpl.address;
+        saveRootContracts(rootContracts);
+        console.log("Deployed to ROOT_ADAPTOR_IMPL_ADDRESS: ", rootAdaptorImpl.address);
+        await verifyRootContract("RootAxelarBridgeAdaptor", rootAdaptorImpl.address, `"constructor(address,address)" "${rootGatewayAddr}" "${deployerAddr}"`);
     }
-    rootContracts.ROOT_ADAPTOR_IMPL_ADDRESS = rootAdaptorImpl.address;
-    saveRootContracts(rootContracts);
-    console.log("Deployed to ROOT_ADAPTOR_IMPL_ADDRESS: ", rootAdaptorImpl.address);
 
     if (rootDeployerWallet instanceof LedgerSigner) {
         rootDeployerWallet.close();
@@ -98,11 +98,11 @@ export async function deployRootContracts() {
         rootTokenTemplate = await deployRootContract("ChildERC20", reservedDeployerWallet, nonceReserved);
         console.log("Transaction submitted: ", JSON.stringify(rootTokenTemplate.deployTransaction, null, 2));
         await waitForReceipt(rootTokenTemplate.deployTransaction.hash, rootProvider);
-        await verifyRootContract("ChildERC20", rootTokenTemplate.address);
+        rootContracts.ROOT_TOKEN_TEMPLATE = rootTokenTemplate.address;
+        saveRootContracts(rootContracts);
+        console.log("Deployed to ROOT_TOKEN_TEMPLATE: ", rootTokenTemplate.address);
+        await verifyRootContract("ChildERC20", rootTokenTemplate.address, null);
     }
-    rootContracts.ROOT_TOKEN_TEMPLATE = rootTokenTemplate.address;
-    saveRootContracts(rootContracts);
-    console.log("Deployed to ROOT_TOKEN_TEMPLATE: ", rootTokenTemplate.address);
 
     // Initialise template
     if (await rootTokenTemplate.name() == "TEMPLATE") {
@@ -113,7 +113,7 @@ export async function deployRootContracts() {
         console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
         await waitForReceipt(resp.hash, rootProvider);
     }
-    console.log("Deployed to ROOT_TOKEN_TEMPLATE: ", rootTokenTemplate.address);
+    console.log("Initialized ROOT_TOKEN_TEMPLATE at: ", rootTokenTemplate.address);
 
     // Deploy proxy admin
     let proxyAdmin;
@@ -130,11 +130,11 @@ export async function deployRootContracts() {
         proxyAdmin = await deployRootContract("ProxyAdmin", reservedDeployerWallet, null);
         console.log("Transaction submitted: ", JSON.stringify(proxyAdmin.deployTransaction, null, 2));
         await waitForReceipt(proxyAdmin.deployTransaction.hash, rootProvider);
-        await verifyRootContract("ProxyAdmin", proxyAdmin.address);
+        rootContracts.ROOT_PROXY_ADMIN = proxyAdmin.address;
+        saveRootContracts(rootContracts);
+        console.log("Deployed to ROOT_PROXY_ADMIN: ", proxyAdmin.address);
+        await verifyRootContract("ProxyAdmin", proxyAdmin.address, null);
     }
-    rootContracts.ROOT_PROXY_ADMIN = proxyAdmin.address;
-    saveRootContracts(rootContracts);
-    console.log("Deployed to ROOT_PROXY_ADMIN: ", proxyAdmin.address);
     
     // Deploy root bridge proxy
     let rootBridgeProxy;
@@ -151,11 +151,11 @@ export async function deployRootContracts() {
         rootBridgeProxy = await deployRootContract("TransparentUpgradeableProxy", reservedDeployerWallet, null, rootBridgeImpl.address, proxyAdmin.address, []);
         console.log("Transaction submitted: ", JSON.stringify(rootBridgeProxy.deployTransaction, null, 2));
         await waitForReceipt(rootBridgeProxy.deployTransaction.hash, rootProvider);
-        await verifyRootContract("TransparentUpgradeableProxy", rootBridgeProxy.address);
+        rootContracts.ROOT_BRIDGE_PROXY_ADDRESS = rootBridgeProxy.address;
+        saveRootContracts(rootContracts);
+        console.log("Deployed to ROOT_BRIDGE_PROXY_ADDRESS: ", rootBridgeProxy.address);
+        await verifyRootContract("TransparentUpgradeableProxy", rootBridgeProxy.address, `"constructor(address,address,bytes)" "${rootBridgeImpl.address}" "${proxyAdmin.address}" ""`);
     }
-    rootContracts.ROOT_BRIDGE_PROXY_ADDRESS = rootBridgeProxy.address;
-    saveRootContracts(rootContracts);
-    console.log("Deployed to ROOT_BRIDGE_PROXY_ADDRESS: ", rootBridgeProxy.address);
 
     // Deploy root adaptor proxy
     let rootAdaptorProxy;
@@ -172,11 +172,11 @@ export async function deployRootContracts() {
         rootAdaptorProxy = await deployRootContract("TransparentUpgradeableProxy", reservedDeployerWallet, null, rootAdaptorImpl.address, proxyAdmin.address, []);
         console.log("Transaction submitted: ", JSON.stringify(rootAdaptorProxy.deployTransaction, null, 2));
         await waitForReceipt(rootAdaptorProxy.deployTransaction.hash, rootProvider);
-        await verifyRootContract("TransparentUpgradeableProxy", rootAdaptorProxy.address);
+        rootContracts.ROOT_ADAPTOR_PROXY_ADDRESS = rootAdaptorProxy.address;
+        saveRootContracts(rootContracts);
+        console.log("Deployed to ROOT_ADAPTOR_PROXY_ADDRESS: ", rootAdaptorProxy.address);
+        await verifyRootContract("TransparentUpgradeableProxy", rootAdaptorProxy.address, `"constructor(address,address,bytes)" "${rootAdaptorImpl.address}" "${proxyAdmin.address}" ""`);
     }
-    rootContracts.ROOT_ADAPTOR_PROXY_ADDRESS = rootAdaptorProxy.address;
-    saveRootContracts(rootContracts);
-    console.log("Deployed to ROOT_ADAPTOR_PROXY_ADDRESS: ", rootAdaptorProxy.address);
 
     rootContracts.ROOT_BRIDGE_ADDRESS = rootBridgeProxy.address;
     rootContracts.ROOT_ADAPTOR_ADDRESS = rootAdaptorProxy.address;
