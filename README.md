@@ -117,13 +117,15 @@ Addresses for the core bridge contracts are listed below. For a full list of dep
 ABIs for contracts can be obtained from the blockchain explorer links for each contract provided below.
 
 ### Root Chain
-|                               | Mainnet | Testnet                                                                                                                              | Devnet |
-|-------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------|--------|
-| Bridge Proxy                  | TBA     | [`0x0D3C59c779Fd552C27b23F723E80246c840100F5`](https://sepolia.etherscan.io/address/0x0d3c59c779fd552c27b23f723e80246c840100f5)      | TBA    |
-| Bridge Implementation         | TBA     | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://sepolia.etherscan.io/address/0xac88a57943b5bba1ecd931f8494cad0b7f717590#code) | TBA    |
-| Bridge Adaptor Proxy          | TBA     | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
-| Bridge Adaptor Implementation | TBA     | [`0xe9ec55e1fC90AB69B2Fb4C029d24a4622B94042e`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
-| Bridge Adaptor Implementation | TBA     | [`0xe9ec55e1fC90AB69B2Fb4C029d24a4622B94042e`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
+|                               | Mainnet                                                                                                               | Testnet                                                                                                                              | Devnet |
+|-------------------------------|-----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|--------|
+| Bridge Proxy                  | TBA                                                                                                                   | [`0x0D3C59c779Fd552C27b23F723E80246c840100F5`](https://sepolia.etherscan.io/address/0x0d3c59c779fd552c27b23f723e80246c840100f5)      | TBA    |
+| Bridge Implementation         | TBA                                                                                                                   | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://sepolia.etherscan.io/address/0xac88a57943b5bba1ecd931f8494cad0b7f717590#code) | TBA    |
+| Bridge Adaptor Proxy          | TBA                                                                                                                   | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
+| Bridge Adaptor Implementation | TBA                                                                                                                   | [`0xe9ec55e1fC90AB69B2Fb4C029d24a4622B94042e`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
+| Bridge Adaptor Implementation | TBA                                                                                                                   | [`0xe9ec55e1fC90AB69B2Fb4C029d24a4622B94042e`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
+| Wrapped ETH                   | [`0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2`](https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2) | [`0x7b79995e5f793a07bc00c21412e50ecae098e7f9`](https://sepolia.etherscan.io/address/0x7b79995e5f793a07bc00c21412e50ecae098e7f9)      | TBA    |
+| Wrapped IMX                   | [`0xf57e7e7c23978c3caec3c3548e3d615c346e79ff`](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79ff) | [`0xe2629e08f4125d14e446660028bd98ee60ee69f2`](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69f2)      | TBA    |
 
 ### Child Chain
 |                               | Mainnet | Testnet                                                                                                                                   | Devnet |
