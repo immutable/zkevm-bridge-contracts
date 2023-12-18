@@ -123,6 +123,7 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | Bridge Implementation         | TBA     | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://sepolia.etherscan.io/address/0xac88a57943b5bba1ecd931f8494cad0b7f717590#code) | TBA    |
 | Bridge Adaptor Proxy          | TBA     | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
 | Bridge Adaptor Implementation | TBA     | [`0xe9ec55e1fC90AB69B2Fb4C029d24a4622B94042e`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
+| Bridge Adaptor Implementation | TBA     | [`0xe9ec55e1fC90AB69B2Fb4C029d24a4622B94042e`](https://sepolia.etherscan.io/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab)      | TBA    |
 
 ### Child Chain
 |                               | Mainnet | Testnet                                                                                                                                   | Devnet |
@@ -131,6 +132,8 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | Bridge Implementation         | TBA     | [`0xA554Cf58b9524d43F1dee2fE1b0C928f18A93FE9`](https://explorer.testnet.immutable.com/address/0xA554Cf58b9524d43F1dee2fE1b0C928f18A93FE9) | TBA    |
 | Bridge Adaptor Proxy          | TBA     | [`0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab`](https://explorer.testnet.immutable.com/address/0x6328Ac88ba8D466a0F551FC7C42C61d1aC7f92ab) | TBA    |
 | Bridge Adaptor Implementation | TBA     | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://explorer.testnet.immutable.com/address/0xac88a57943b5BBa1ecd931F8494cAd0B7F717590) | TBA    |
+| Wrapped ETH                   | TBA     | [`0xe9E96d1aad82562b7588F03f49aD34186f996478`](https://explorer.testnet.immutable.com/address/0xe9E96d1aad82562b7588F03f49aD34186f996478) | TBA    |
+| Wrapped IMX                   | TBA     | [`0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439`](https://explorer.testnet.immutable.com/address/0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439) | TBA    |
 
 ## Audits
 The Immutable token bridge has been audited by [Trail of Bits](https://www.trailofbits.com/). The audit report can be found [here](./audits/Trail-of-Bits-2023-12-14.pdf).
