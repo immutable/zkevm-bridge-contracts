@@ -4,6 +4,7 @@ dotenv.config();
 import { ethers } from "ethers";
 import { requireEnv, waitForConfirmation, waitForReceipt, getFee, hasDuplicates } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
+import { RetryProvider } from "../helpers/retry";
 
 async function run() {
     console.log("=======Start Deployer Funding=======");
@@ -20,7 +21,7 @@ async function run() {
     let passportDeployerFund = requireEnv("PASSPORT_NONCE_RESERVER_FUND");
 
     // Get deployer address
-    const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
+    const childProvider = new RetryProvider(childRPCURL, Number(childChainID));
     let childDeployerWallet;
     if (deployerSecret == "ledger") {
         let index = requireEnv("DEPLOYER_LEDGER_INDEX");

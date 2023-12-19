@@ -4,6 +4,7 @@ dotenv.config();
 import { ethers } from "ethers";
 import { requireEnv, waitForConfirmation, hasDuplicates, waitForReceipt, getFee, getContract, getChildContracts } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
+import { RetryProvider } from "../helpers/retry";
 
 async function run() {
     console.log("=======Start IMX Burning=======");
@@ -21,7 +22,7 @@ async function run() {
     let childBridgeAddr = childContracts.CHILD_BRIDGE_ADDRESS;
 
     // Get deployer address
-    const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
+    const childProvider = new RetryProvider(childRPCURL, Number(childChainID));
     let childDeployerWallet;
     if (deployerSecret == "ledger") {
         let index = requireEnv("DEPLOYER_LEDGER_INDEX");

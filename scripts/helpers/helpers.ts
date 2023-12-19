@@ -196,11 +196,15 @@ export async function verifyChildContract(contract: string, contractAddr: string
         return; 
     }
     let cmd = `forge verify-contract --verifier blockscout --verifier-url ${url} ${contractAddr} ${contract}`;
-    const { stdout, stderr } = await exec(cmd);
-    if (stderr != "") {
-        throw(stderr);
+    try {
+        const { stdout, stderr } = await exec(cmd);
+        if (stderr != "") {
+            console.log(stderr);
+        }
+        console.log(stdout);
+    } catch (e) {
+        console.log(e);
     }
-    console.log(stdout);
 }
 
 export async function verifyRootContract(contract: string, contractAddr: string, args: string | null) {
@@ -215,9 +219,13 @@ export async function verifyRootContract(contract: string, contractAddr: string,
     if (args != null) {
         cmd += ` --constructor-args $(cast abi-encode ${args})`
     }
-    const { stdout, stderr } = await exec(cmd);
-    if (stderr != "") {
-        throw(stderr);
+    try {
+        const { stdout, stderr } = await exec(cmd);
+        if (stderr != "") {
+            console.log(stderr);
+        }
+        console.log(stdout);
+    } catch (e) {
+        console.log(e);
     }
-    console.log(stdout);
 }

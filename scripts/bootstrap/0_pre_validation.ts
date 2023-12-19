@@ -4,6 +4,7 @@ dotenv.config();
 import { ethers } from "ethers";
 import { requireEnv, hasDuplicates } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
+import { RetryProvider } from "../helpers/retry";
 
 // The total supply of IMX
 const TOTAL_SUPPLY = "2000000000";
@@ -66,8 +67,8 @@ async function run() {
     requireEnv("RATE_LIMIT_GOG_REFILL_RATE");
     requireEnv("RATE_LIMIT_GOG_LARGE_THRESHOLD");
 
-    const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
-    const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
+    const childProvider = new RetryProvider(childRPCURL, Number(childChainID));
+    const rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
     let deployerWallet;
     if (deployerSecret == "ledger") {
         let index = requireEnv("DEPLOYER_LEDGER_INDEX");

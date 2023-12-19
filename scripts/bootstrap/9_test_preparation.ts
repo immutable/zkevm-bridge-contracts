@@ -4,6 +4,7 @@ dotenv.config();
 import { ethers, utils } from "ethers";
 import { deployRootContract, getContract, getRootContracts, requireEnv, saveRootContracts, waitForConfirmation, waitForReceipt } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
+import { RetryProvider } from "../helpers/retry";
 
 async function run() {
     console.log("=======Start Test Preparation=======");
@@ -16,7 +17,7 @@ async function run() {
     let rootPrivilegedMultisig = requireEnv("ROOT_PRIVILEGED_MULTISIG_ADDR");
 
     // Get deployer address
-    const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
+    const rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
     let rootDeployerWallet;
     if (deployerSecret == "ledger") {
         let index = requireEnv("DEPLOYER_LEDGER_INDEX");

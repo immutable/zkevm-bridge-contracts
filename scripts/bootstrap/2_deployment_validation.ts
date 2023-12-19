@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers } from "ethers";
 import { requireEnv, hasDuplicates, requireNonEmptyCode } from "../helpers/helpers";
+import { RetryProvider } from "../helpers/retry";
 
 async function run() {
     console.log("=======Start Deployment Validation=======");
@@ -26,8 +27,8 @@ async function run() {
         throw("Duplicate address detected!");
     }
 
-    const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
-    const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
+    const childProvider = new RetryProvider(childRPCURL, Number(childChainID));
+    const rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
 
     // Check child chain.
     console.log("Check contracts on child chain...");

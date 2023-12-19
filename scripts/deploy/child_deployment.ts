@@ -4,6 +4,7 @@ dotenv.config();
 import { ethers } from "ethers";
 import { requireEnv, waitForConfirmation, deployChildContract, waitForReceipt, getFee, getChildContracts, getContract, saveChildContracts, verifyChildContract } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
+import { RetryProvider } from "../helpers/retry";
 
 export async function deployChildContracts() {
     // Check environment variables
@@ -17,7 +18,7 @@ export async function deployChildContracts() {
     // Read from contract file.
     let childContracts = getChildContracts();
 
-    const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
+    const childProvider = new RetryProvider(childRPCURL, Number(childChainID));
 
     // Get deployer address
     let childDeployerWallet;

@@ -3,6 +3,7 @@ dotenv.config();
 import { ethers as hardhat } from "hardhat";
 import { ethers } from "ethers";
 import { requireEnv } from "../helpers/helpers";
+import { RetryProvider } from "../helpers/retry";
 
 async function main() {
     let childRPCURL = requireEnv("CHILD_RPC_URL");
@@ -10,7 +11,7 @@ async function main() {
     let deployerAddr = requireEnv("DEPLOYER_ADDR");
 
     // Get child provider.
-    let childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
+    let childProvider = new RetryProvider(childRPCURL, Number(childChainID));
 
     // Give admin EOA account 2B IMX.
     await hardhat.provider.send("hardhat_setBalance", [

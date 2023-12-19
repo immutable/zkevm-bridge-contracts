@@ -4,6 +4,7 @@ dotenv.config();
 import { ethers } from "ethers";
 import { requireEnv, waitForConfirmation, deployRootContract, waitForReceipt, getRootContracts, getContract, saveRootContracts, verifyRootContract } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
+import { RetryProvider } from "../helpers/retry";
 
 export async function deployRootContracts() {
     // Check environment variables
@@ -17,7 +18,7 @@ export async function deployRootContracts() {
     // Read from contract file.
     let rootContracts = getRootContracts();
 
-    const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
+    const rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
 
     // Get deployer address
     let rootDeployerWallet;

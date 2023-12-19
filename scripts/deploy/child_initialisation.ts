@@ -5,6 +5,7 @@ dotenv.config();
 import { ethers } from "ethers";
 import { requireEnv, waitForConfirmation, waitForReceipt, getFee, getContract, getChildContracts, getRootContracts } from "../helpers/helpers";
 import { LedgerSigner } from "../helpers/ledger_signer";
+import { RetryProvider } from "../helpers/retry";
 
 export async function initialiseChildContracts() {
     let rootChainName = requireEnv("ROOT_CHAIN_NAME");
@@ -33,7 +34,7 @@ export async function initialiseChildContracts() {
     }
 
     // Get deployer address
-    const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
+    const childProvider = new RetryProvider(childRPCURL, Number(childChainID));
     let childDeployerWallet;
     if (deployerSecret == "ledger") {
         let index = requireEnv("DEPLOYER_LEDGER_INDEX");

@@ -4,6 +4,7 @@ import { ethers as hardhat } from "hardhat";
 import { ethers } from "ethers";
 import { requireEnv, deployRootContract, waitForReceipt, saveRootContracts } from "../helpers/helpers";
 import * as fs from "fs";
+import { RetryProvider } from "../helpers/retry";
 
 async function main() {
     let rootRPCURL = requireEnv("ROOT_RPC_URL");
@@ -15,7 +16,7 @@ async function main() {
     let rootTestKey = requireEnv("TEST_ACCOUNT_SECRET");
 
     // Get root provider.
-    let rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
+    let rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
 
     // Get test wwallet on the root chain.
     let testWallet = new ethers.Wallet(rootTestKey, rootProvider);

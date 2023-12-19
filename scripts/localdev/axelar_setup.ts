@@ -4,6 +4,7 @@ import { Network, networks, EvmRelayer, relay } from '@axelar-network/axelar-loc
 import { requireEnv, waitForReceipt } from "../helpers/helpers";
 import { ethers } from "ethers";
 import * as fs from "fs";
+import { RetryProvider } from "../helpers/retry";
 
 let relaying = false;
 const defaultEvmRelayer = new EvmRelayer();
@@ -20,7 +21,7 @@ async function main() {
     let axelarDeployerKey = requireEnv("AXELAR_DEPLOYER_SECRET");
 
     // Create root chain.
-    let rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
+    let rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
     let rootChain = new Network();
     rootChain.name = rootChainName;
     rootChain.chainId = Number(rootChainID);
@@ -45,7 +46,7 @@ async function main() {
     rootChain.lastExpressedBlock = rootChain.lastRelayedBlock;
 
     // Create child chain.
-    let childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
+    let childProvider = new RetryProvider(childRPCURL, Number(childChainID));
     let childChain = new Network();
     childChain.name = childChainName;
     childChain.chainId = Number(childChainID);
