@@ -130,9 +130,9 @@ export async function initialiseRootContracts() {
         console.log("Configure rate limiting for USDC...")
         let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
             rateLimitUSDCAddr,
-            ethers.utils.parseEther(rateLimitUSDCCap),
-            ethers.utils.parseEther(rateLimitUSDCRefill),
-            ethers.utils.parseEther(rateLimitUSDCLargeThreshold)
+            ethers.utils.parseUnits(rateLimitUSDCCap, 6),
+            ethers.utils.parseUnits(rateLimitUSDCRefill, 6),
+            ethers.utils.parseUnits(rateLimitUSDCLargeThreshold, 6)
         );
         console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
         await waitForReceipt(resp.hash, rootProvider);
