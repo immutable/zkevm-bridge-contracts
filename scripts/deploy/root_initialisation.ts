@@ -28,18 +28,18 @@ export async function initialiseRootContracts() {
     let rateLimitUSDCCap = requireEnv("RATE_LIMIT_USDC_CAPACITY");
     let rateLimitUSDCRefill = requireEnv("RATE_LIMIT_USDC_REFILL_RATE");
     let rateLimitUSDCLargeThreshold = requireEnv("RATE_LIMIT_USDC_LARGE_THRESHOLD");
-    let rateLimitGUAddr = requireEnv("RATE_LIMIT_GU_ADDR");
-    let rateLimitGUCap = requireEnv("RATE_LIMIT_GU_CAPACITY");
-    let rateLimitGURefill = requireEnv("RATE_LIMIT_GU_REFILL_RATE");
-    let rateLimitGULargeThreshold = requireEnv("RATE_LIMIT_GU_LARGE_THRESHOLD");
-    let rateLimitCheckMateAddr = requireEnv("RATE_LIMIT_CHECKMATE_ADDR");
-    let rateLimitCheckMateCap = requireEnv("RATE_LIMIT_CHECKMATE_CAPACITY");
-    let rateLimitCheckMateRefill = requireEnv("RATE_LIMIT_CHECKMATE_REFILL_RATE");
-    let rateLimitCheckMateLargeThreshold = requireEnv("RATE_LIMIT_CHECKMATE_LARGE_THRESHOLD");
-    let rateLimitGOGAddr = requireEnv("RATE_LIMIT_GOG_ADDR");
-    let rateLimitGOGCap = requireEnv("RATE_LIMIT_GOG_CAPACITY");
-    let rateLimitGOGRefill = requireEnv("RATE_LIMIT_GOG_REFILL_RATE");
-    let rateLimitGOGLargeThreshold = requireEnv("RATE_LIMIT_GOG_LARGE_THRESHOLD");
+    // let rateLimitGUAddr = requireEnv("RATE_LIMIT_GU_ADDR");
+    // let rateLimitGUCap = requireEnv("RATE_LIMIT_GU_CAPACITY");
+    // let rateLimitGURefill = requireEnv("RATE_LIMIT_GU_REFILL_RATE");
+    // let rateLimitGULargeThreshold = requireEnv("RATE_LIMIT_GU_LARGE_THRESHOLD");
+    // let rateLimitCheckMateAddr = requireEnv("RATE_LIMIT_CHECKMATE_ADDR");
+    // let rateLimitCheckMateCap = requireEnv("RATE_LIMIT_CHECKMATE_CAPACITY");
+    // let rateLimitCheckMateRefill = requireEnv("RATE_LIMIT_CHECKMATE_REFILL_RATE");
+    // let rateLimitCheckMateLargeThreshold = requireEnv("RATE_LIMIT_CHECKMATE_LARGE_THRESHOLD");
+    // let rateLimitGOGAddr = requireEnv("RATE_LIMIT_GOG_ADDR");
+    // let rateLimitGOGCap = requireEnv("RATE_LIMIT_GOG_CAPACITY");
+    // let rateLimitGOGRefill = requireEnv("RATE_LIMIT_GOG_REFILL_RATE");
+    // let rateLimitGOGLargeThreshold = requireEnv("RATE_LIMIT_GOG_LARGE_THRESHOLD");
 
     // Read from contract file.
     let childContracts = getChildContracts();
@@ -138,50 +138,50 @@ export async function initialiseRootContracts() {
         await waitForReceipt(resp.hash, rootProvider);
     }
 
-    // GU
-    if ((await rootBridge.largeTransferThresholds(rateLimitGUAddr)).toString() != "0") {
-        console.log("GU rate limiting has already been configured, skip.");
-    } else {
-        console.log("Configure rate limiting for GU...")
-        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-            rateLimitGUAddr,
-            ethers.utils.parseEther(rateLimitGUCap),
-            ethers.utils.parseEther(rateLimitGURefill),
-            ethers.utils.parseEther(rateLimitGULargeThreshold)
-        );
-        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-        await waitForReceipt(resp.hash, rootProvider);
-    }
+    // // GU
+    // if ((await rootBridge.largeTransferThresholds(rateLimitGUAddr)).toString() != "0") {
+    //     console.log("GU rate limiting has already been configured, skip.");
+    // } else {
+    //     console.log("Configure rate limiting for GU...")
+    //     let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+    //         rateLimitGUAddr,
+    //         ethers.utils.parseEther(rateLimitGUCap),
+    //         ethers.utils.parseEther(rateLimitGURefill),
+    //         ethers.utils.parseEther(rateLimitGULargeThreshold)
+    //     );
+    //     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+    //     await waitForReceipt(resp.hash, rootProvider);
+    // }
 
-    // Checkmate
-    if ((await rootBridge.largeTransferThresholds(rateLimitCheckMateAddr)).toString() != "0") {
-        console.log("CheckMate rate limiting has already been configured, skip.");
-    } else {
-        console.log("Configure rate limiting for CheckMate...")
-        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-            rateLimitCheckMateAddr,
-            ethers.utils.parseEther(rateLimitCheckMateCap),
-            ethers.utils.parseEther(rateLimitCheckMateRefill),
-            ethers.utils.parseEther(rateLimitCheckMateLargeThreshold)
-        );
-        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-        await waitForReceipt(resp.hash, rootProvider);
-    }
+    // // Checkmate
+    // if ((await rootBridge.largeTransferThresholds(rateLimitCheckMateAddr)).toString() != "0") {
+    //     console.log("CheckMate rate limiting has already been configured, skip.");
+    // } else {
+    //     console.log("Configure rate limiting for CheckMate...")
+    //     let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+    //         rateLimitCheckMateAddr,
+    //         ethers.utils.parseEther(rateLimitCheckMateCap),
+    //         ethers.utils.parseEther(rateLimitCheckMateRefill),
+    //         ethers.utils.parseEther(rateLimitCheckMateLargeThreshold)
+    //     );
+    //     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+    //     await waitForReceipt(resp.hash, rootProvider);
+    // }
 
-    // GOG
-    if ((await rootBridge.largeTransferThresholds(rateLimitGOGAddr)).toString() != "0") {
-        console.log("GOG rate limiting has already been configured, skip.");
-    } else {
-        console.log("Configure rate limiting for GOG...")
-        let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
-            rateLimitGOGAddr,
-            ethers.utils.parseEther(rateLimitGOGCap),
-            ethers.utils.parseEther(rateLimitGOGRefill),
-            ethers.utils.parseEther(rateLimitGOGLargeThreshold)
-        );
-        console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
-        await waitForReceipt(resp.hash, rootProvider);
-    }
+    // // GOG
+    // if ((await rootBridge.largeTransferThresholds(rateLimitGOGAddr)).toString() != "0") {
+    //     console.log("GOG rate limiting has already been configured, skip.");
+    // } else {
+    //     console.log("Configure rate limiting for GOG...")
+    //     let resp = await rootBridge.connect(rootDeployerWallet).setRateControlThreshold(
+    //         rateLimitGOGAddr,
+    //         ethers.utils.parseEther(rateLimitGOGCap),
+    //         ethers.utils.parseEther(rateLimitGOGRefill),
+    //         ethers.utils.parseEther(rateLimitGOGLargeThreshold)
+    //     );
+    //     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2));
+    //     await waitForReceipt(resp.hash, rootProvider);
+    // }
     
     // Grant roles
     if (await rootBridge.hasRole(utils.keccak256(utils.toUtf8Bytes("RATE")), rootPrivilegedMultisig)) {
