@@ -135,6 +135,10 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | Adaptor Implementation | [`0x1d49c44dc4BbDE68D8D51a9C5732f3a24e48EFA6`](https://explorer.immutable.com/address/0x1d49c44dc4BbDE68D8D51a9C5732f3a24e48EFA6) | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://explorer.testnet.immutable.com/address/0xac88a57943b5BBa1ecd931F8494cAd0B7F717590) | TBA    |
 | Wrapped ETH            | [`0x52a6c53869ce09a731cd772f245b97a4401d3348`](https://explorer.immutable.com/address/0x52a6c53869ce09a731cd772f245b97a4401d3348) | [`0xe9E96d1aad82562b7588F03f49aD34186f996478`](https://explorer.testnet.immutable.com/address/0xe9E96d1aad82562b7588F03f49aD34186f996478) | TBA    |
 | Wrapped IMX            | [`0x3a0c2ba54d6cbd3121f01b96dfd20e99d1696c9d`](https://explorer.immutable.com/address/0x3a0c2ba54d6cbd3121f01b96dfd20e99d1696c9d) | [`0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439`](https://explorer.testnet.immutable.com/address/0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439) | TBA    |
+| USDC                   | [`0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2`](https://explorer.immutable.com/address/0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2) | TBA                                                                                                                                       | TBA    |
+| USDT                   | [`0x68bcc7F1190AF20e7b572BCfb431c3Ac10A936Ab`](https://explorer.immutable.com/address/0x68bcc7F1190AF20e7b572BCfb431c3Ac10A936Ab) | TBA                                                                                                                                       | TBA    |
+| Wrapped BTC            | [`0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De`](https://explorer.immutable.com/address/0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De) | TBA                                                                                                                                       | TBA    |
+
 
 ## Audits
 The Immutable token bridge has been audited by [Trail of Bits](https://www.trailofbits.com/). The audit report can be found [here](./audits/Trail-of-Bits-2023-12-14.pdf).
