@@ -13,12 +13,12 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
 
     function setUp() public {
         mainnetFork = vm.createFork(MAINNET_RPC_URL);
+        vm.selectFork(mainnetFork);
         rootBridgeFlowRate = RootERC20BridgeFlowRate(rootBridgeAddress);
     }
 
     function test_getWithdrawalDelay() public {
         uint256 withdrawDelay = rootBridgeFlowRate.withdrawalDelay();
-        console2.log("withdrawDelay");
         console2.logUint(withdrawDelay);
         assertEq(withdrawDelay, uint256(86400));
     }
