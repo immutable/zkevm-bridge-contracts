@@ -84,7 +84,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * INITIALIZE
      */
-
     function test_InitializeBridge() public {
         assertEq(address(rootBridge.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
         assertEq(rootBridge.childERC20Bridge(), CHILD_BRIDGE, "childERC20Bridge not set");
@@ -339,7 +338,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * MAP TOKEN
      */
-
     function test_RevertsIf_MapTokenWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
@@ -497,7 +495,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT ETH
      */
-
     function test_RevertsIf_DepositETHWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
@@ -544,7 +541,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TO ETH
      */
-
     function test_RevertsIf_DepositToETHWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
@@ -594,7 +590,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * ZERO AMOUNT
      */
-
     function test_RevertIf_depositETHAmountIsZero() public {
         uint256 amount = 0;
         setupDeposit(NATIVE_ETH, rootBridge, mapTokenFee, depositFee, amount, false);
@@ -633,7 +628,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT WETH
      */
-
     function test_depositWETHCallsSendMessage() public {
         uint256 amount = 100;
         (, bytes memory predictedPayload) =
@@ -708,7 +702,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TOKEN
      */
-
     function test_RevertsIf_DepositReentered() public {
         // Create attack token
         ReentrancyAttackDeposit attackToken = new ReentrancyAttackDeposit(address(rootBridge));
@@ -916,7 +909,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TO
      */
-
     function test_RevertsIf_DepositToWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");

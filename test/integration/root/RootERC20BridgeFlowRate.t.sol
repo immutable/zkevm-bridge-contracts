@@ -61,7 +61,6 @@ contract RootERC20BridgeFlowRateIntegrationTest is
      *      This test uses the same code as the mapToken function does to calculate this address, so we can
      *      not consider it sufficient.
      */
-
     function test_mapTokenTransfersValue() public {
         address childToken =
             Clones.predictDeterministicAddress(address(token), keccak256(abi.encodePacked(token)), CHILD_BRIDGE);
@@ -135,7 +134,6 @@ contract RootERC20BridgeFlowRateIntegrationTest is
     /**
      * DEPOSIT ETH
      */
-
     function test_depositETHTransfersValue() public {
         uint256 tokenAmount = 300;
         setupDeposit(NATIVE_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
@@ -211,7 +209,6 @@ contract RootERC20BridgeFlowRateIntegrationTest is
     /**
      * DEPOSIT IMX
      */
-
     function test_depositIMXTokenTransfersValue() public {
         uint256 tokenAmount = 300;
 
@@ -292,7 +289,6 @@ contract RootERC20BridgeFlowRateIntegrationTest is
     /**
      * DEPOSIT WETH
      */
-
     function test_depositWETHTransfersValue() public {
         uint256 tokenAmount = 300;
         setupDeposit(WRAPPED_ETH, rootBridgeFlowRate, mapTokenFee, depositFee, tokenAmount, false);
@@ -446,7 +442,6 @@ contract RootERC20BridgeFlowRateIntegrationTest is
     /**
      * DEPOSIT TO
      */
-
     function test_depositToTransfersValue() public {
         uint256 tokenAmount = 300;
         address recipient = address(9876);

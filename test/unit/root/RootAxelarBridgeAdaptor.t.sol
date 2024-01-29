@@ -55,7 +55,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     /**
      * INITIALIZE
      */
-
     function test_Initialize() public {
         assertEq(address(axelarAdaptor.rootBridge()), address(stubRootBridge), "rootBridge not set");
         assertEq(axelarAdaptor.childChainId(), CHILD_CHAIN_NAME, "childChain not set");
@@ -281,7 +280,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     /**
      * MAP TOKEN
      */
-
     function test_RevertIf_mapTokenCalledByNonRootBridge() public {
         address payable prankster = payable(address(0x33));
         uint256 value = 300;
@@ -304,7 +302,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     /**
      * UPDATE ROOT BRIDGE
      */
-
     function test_updateRootBridge_UpdatesRootBridge() public {
         vm.startPrank(bridgeManager);
         address newRootBridge = address(0x3333);
@@ -344,7 +341,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     /**
      * UPDATE CHILD CHAIN
      */
-
     function test_updateChildChain_UpdatesChildChain() public {
         vm.startPrank(targetManager);
         string memory newChildChain = "newChildChain";
@@ -384,7 +380,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     /**
      * UPDATE CHILD BRIDGE ADAPTOR
      */
-
     function test_updateChildBridgeAdaptor_UpdatesChildBridgeAdaptor() public {
         vm.startPrank(targetManager);
 
@@ -428,7 +423,6 @@ contract RootAxelarBridgeAdaptorTest is Test, IRootAxelarBridgeAdaptorEvents, IR
     /**
      * UPDATE GAS SERVICE
      */
-
     function test_updateGasService_UpdatesGasService() public {
         vm.startPrank(gasServiceManager);
         address newGasService = address(0x3333);

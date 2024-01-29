@@ -48,7 +48,6 @@ contract ChildERC20BridgeWithdrawWIMXUnitTest is Test, IChildERC20BridgeEvents, 
     /**
      * WITHDRAW WIMX
      */
-
     function test_RevertsIf_WithdrawWIMXWhenPaused() public {
         pause(IPausable(address(childBridge)));
         vm.expectRevert("Pausable: paused");

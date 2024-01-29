@@ -49,7 +49,6 @@ contract ChildERC20BridgeWithdrawETHUnitTest is Test, IChildERC20BridgeEvents, I
     /**
      * WITHDRAW ETH
      */
-
     function test_RevertsIf_WithdrawETHWhenPaused() public {
         pause(IPausable(address(childBridge)));
         vm.expectRevert("Pausable: paused");
