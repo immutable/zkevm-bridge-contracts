@@ -151,15 +151,15 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | Wrapped BTC            | [`0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De`](https://explorer.immutable.com/address/0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De) | TBA                                                                                                                                       |
 
 ## Flow Rate Parameters
-Below are the flow rate parameters that have been configured on the L1 Mainnet and Testnet for different tokens. 
+Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/blob/documentation/docs/HLA-and-Threat-Model.md#flow-rate-detection) parameters that have been configured on the L1 Mainnet and Testnet deployments.
 
 **Mainnet**
 
 | Token                                                                         | Units | Capacity | Refill Rate | Large Transfer Threshold | 
 |-------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
 | ETH                                                                           | 10^18 | 10.08    | 0.0028      | 5.04                     |
-| [IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79f)   | 10^18 | 10008    | 2.78        | 5004                     |
-| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) | 10^6  | 20016    | 5.56        | 10008                    |
+| [IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79f)   | 10^18 | 10,008   | 2.78        | 5,004                    |
+| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) | 10^6  | 20,016   | 5.56        | 10,008                   |
 
 **Testnet**
 
