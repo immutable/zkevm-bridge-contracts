@@ -156,11 +156,13 @@ Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/bl
 
 **Mainnet**
 
-| Token                                                                         | Units | Capacity | Refill Rate | Large Transfer Threshold | 
-|-------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
-| ETH                                                                           | 10^18 | 10.08    | 0.0028      | 5.04                     |
-| [IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79f)   | 10^18 | 10,008   | 2.78        | 5,004                    |
-| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) | 10^6  | 20,016   | 5.56        | 10,008                   |
+| Token                                                                                               | Units | Capacity | Refill Rate | Large Transfer Threshold | 
+|-----------------------------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
+| ETH                                                                                                 | 10^18 | 10.08    | 0.0028      | 5.04                     |
+| [IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79f)                         | 10^18 | 10,008   | 2.78        | 5,004                    |
+| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)                       | 10^6  | 20,016   | 5.56        | 10,008                   |
+| [Gods Unchained (GODS)](https://etherscan.io/address/0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97)    | 10^18 | TBA      | TBA         | TBA                      |
+| [Guild of Guardians (GOG)](https://etherscan.io/address/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62) | 10^18 | TBA      | TBA         | TBA                      |
 
 **Testnet**
 
@@ -168,11 +170,10 @@ Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/bl
 |----------------------------------------------------------------------------------------------|:------|------------|-------------|--------------------------|
 | ETH                                                                                          | 10^18 | 10.08      | 0.0028      | 5.04                     |
 | [IMX](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69ff)       | 10^18 | 68,976     | 19.16       | 34,488                   |
-| [GODS](https://sepolia.etherscan.io/address/0x5c9f1680bb6a4b4fc698e0cf702e0cc34aed91b7)      | 10^18 | 10,008     | 2.78        | 5,004                    |
-| [GOG](https://sepolia.etherscan.io/address/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62)       | 10^18 | 25,5816    | 71.06       | 127,908                  |
-| [CHECKMATE](https://sepolia.etherscan.io/address/0xE910c2a090516Fb7a7Be07f96a464785f2D5Dc18) | 10^18 | 12,276,000 | 3410        | 6,138,000                |
+| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)                | 10^6  | TBA        | TBA         | TBA                      |
+| [Gods Unchained (GODS)]()    | 10^18 | TBA      | TBA         | TBA                      |
+| [Guild of Guardians (GOG)]() | 10^18 | TBA      | TBA         | TBA                      |
 
-*Note: USDC flow rate parameters have not yet been configured on Testnet.*
 
 
 ## Audits
