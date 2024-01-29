@@ -30,6 +30,7 @@
         "@ledgerhq/hw-app-eth": "^6.35.0",
         "@ledgerhq/hw-transport-node-hid": "^6.28.0",
         "@openzeppelin/contracts": "^4.5.0",
+        "@types/chai-as-promised": "^7.1.8",
         "axios": "^0.27.2",
         "bip39": "^3.0.4",
         "config": "^3.3.9",

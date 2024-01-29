@@ -3,8 +3,9 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { ethers, providers } from "ethers";
 import { requireEnv, waitForReceipt, getFee, getContract, delay, getChildContracts, getRootContracts, saveChildContracts, waitUntilSucceed } from "../helpers/helpers";
-import { expect } from "chai";
-import { RetryProvider } from "../helpers/retry";
+import * as chai from "chai";
+chai.use(require('chai-as-promised'));
+const { expect } = chai;
 
 // The contract ABI of IMX on L1.
 const IMX_ABI = `[{"inputs":[{"internalType":"address","name":"minter","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"previousAdminRole","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"newAdminRole","type":"bytes32"}],"name":"RoleAdminChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"sender","type":"address"}],"name":"RoleGranted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"sender","type":"address"}],"name":"RoleRevoked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[],"name":"DEFAULT_ADMIN_ROLE","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MINTER_ROLE","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"cap","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"}],"name":"getRoleAdmin","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"grantRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"hasRole","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"mint","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"renounceRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"revokeRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]`;
@@ -14,6 +15,10 @@ describe("Bridge e2e test", () => {
     let childProvider: providers.JsonRpcProvider;
     let rootTestWallet: ethers.Wallet;
     let childTestWallet: ethers.Wallet;
+    let rootPauserWallet: ethers.Wallet;
+    let childPauserWallet: ethers.Wallet;
+    let rootPrivilegedWallet: ethers.Wallet;
+    let childPrivilegedWallet: ethers.Wallet;
     let rootBridge: ethers.Contract;
     let rootWETH: ethers.Contract;
     let rootIMX: ethers.Contract;
@@ -30,6 +35,8 @@ describe("Bridge e2e test", () => {
         let rootChainID = requireEnv("ROOT_CHAIN_ID");
         let childRPCURL = requireEnv("CHILD_RPC_URL");
         let childChainID = requireEnv("CHILD_CHAIN_ID");
+        let testBreakGlassKey = requireEnv("BREAKGLASS_EOA_SECRET");
+        let testPriviledgeKey = requireEnv("PRIVILEGED_EOA_SECRET");
         let testAccountKey = requireEnv("TEST_ACCOUNT_SECRET");
         let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
         let rootWETHAddr = requireEnv("ROOT_WETH_ADDR");
@@ -43,10 +50,14 @@ describe("Bridge e2e test", () => {
         let rootBridgeAddr = rootContracts.ROOT_BRIDGE_ADDRESS;
         let rootCustomTokenAddr = rootContracts.ROOT_TEST_CUSTOM_TOKEN;
 
-        rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
-        childProvider = new RetryProvider(childRPCURL, Number(childChainID));
+        rootProvider = new providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
+        childProvider = new providers.JsonRpcProvider(childRPCURL, Number(childChainID));
         rootTestWallet = new ethers.Wallet(testAccountKey, rootProvider);
         childTestWallet = new ethers.Wallet(testAccountKey, childProvider);
+        rootPauserWallet = new ethers.Wallet(testBreakGlassKey, rootProvider);
+        childPauserWallet = new ethers.Wallet(testBreakGlassKey, childProvider);
+        rootPrivilegedWallet = new ethers.Wallet(testPriviledgeKey, rootProvider);
+        childPrivilegedWallet = new ethers.Wallet(testPriviledgeKey, childProvider);
 
         rootBridge = getContract("RootERC20BridgeFlowRate", rootBridgeAddr, rootProvider);
         rootWETH = getContract("WETH", rootWETHAddr, rootProvider);
@@ -57,12 +68,101 @@ describe("Bridge e2e test", () => {
         childWIMX = getContract("WIMX", childWIMXAddr, childProvider);
     })
 
+    it("should not deposit IMX if allowance is insufficient", async() => {
+        let amt = ethers.utils.parseEther("50.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootIMX.connect(rootTestWallet).approve(rootBridge.address, amt.sub(1));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Fail to deposit on L1
+        await expect(rootBridge.connect(rootTestWallet).deposit(rootIMX.address, amt, {
+            value: bridgeFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+    }).timeout(2400000)
+
+    it("should not deposit IMX if balance is insufficient", async() => {
+        let balance = await rootIMX.balanceOf(rootTestWallet.address);
+
+        let amt = balance.add(1);
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootIMX.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Fail to deposit on L1
+        await expect(rootBridge.connect(rootTestWallet).deposit(rootIMX.address, amt, {
+            value: bridgeFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+    }).timeout(2400000)
+
+    // Local only
+    it("should not deposit IMX if root bridge is paused", async() => {
+        // Transfer 0.1 ETH to root pauser
+        let resp = await rootTestWallet.sendTransaction({
+            to: rootPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Transfer 0.1 ETH to root unpauser
+        resp = await rootTestWallet.sendTransaction({
+            to: rootPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Pause root bridge
+        if (!await rootBridge.paused()) {
+            resp = await rootBridge.connect(rootPauserWallet).pause();
+            await waitForReceipt(resp.hash, rootProvider);
+            expect(await rootBridge.paused()).to.true;
+        }
+
+        // Try to deposit.
+        let amt = ethers.utils.parseEther("10.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        resp = await rootIMX.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Fail to deposit on L1
+        await expect(rootBridge.connect(rootTestWallet).deposit(rootIMX.address, amt, {
+            value: bridgeFee,
+        })).to.be.rejectedWith("Pausable: paused");
+
+        // Unpause root bridge
+        resp = await rootBridge.connect(rootPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, rootProvider);
+        expect(await rootBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    // Local only
+    it("should not deposit IMX if deposit limit is reached", async() => {
+        let limit = ethers.utils.parseEther("100000000.0");
+
+        let amt = limit.add(1);
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootIMX.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Fail to deposit on L1
+        await expect(rootBridge.connect(rootTestWallet).deposit(rootIMX.address, amt, {
+                value: bridgeFee,
+        })).to.be.rejectedWith(rootBridge.interface.getSighash('ImxDepositLimitExceeded()'));
+    }).timeout(2400000)
+
     it("should successfully deposit IMX to self from L1 to L2", async() => {
         // Get IMX balance on root & child chains before deposit
         let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
         let preBalL2 = await childProvider.getBalance(childTestWallet.address);
 
-        let amt = ethers.utils.parseEther("10.0");
+        let amt = ethers.utils.parseEther("50.0");
         let bridgeFee = ethers.utils.parseEther("0.001");
 
         // Approve
@@ -90,6 +190,155 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    it("should successfully deposit IMX to others from L1 to L2", async() => {
+        let childRecipient = childPrivilegedWallet.address;
+        // Get IMX balance on root & child chains before deposit
+        let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childProvider.getBalance(childRecipient);
+
+        let amt = ethers.utils.parseEther("50.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootIMX.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // IMX deposit L1 to L2
+        resp = await rootBridge.connect(rootTestWallet).depositTo(rootIMX.address, childRecipient, amt, {
+            value: bridgeFee,
+        });
+        await waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let postBalL2 = preBalL2;
+
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while (postBalL2.eq(preBalL2)) {
+            postBalL2 = await childProvider.getBalance(childRecipient);
+            await delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.sub(amt);
+        let expectedPostL2 = preBalL2.add(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    // Local only
+    it("should not deposit IMX on L2 if child bridge is paused", async() => {
+        // Transfer 0.1 IMX to child pauser
+        let resp = await childTestWallet.sendTransaction({
+            to: childPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Transfer 0.1 IMX to child unpauser
+        resp = await childTestWallet.sendTransaction({
+            to: childPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Pause child bridge
+        if (!await childBridge.paused()) {
+            resp = await childBridge.connect(childPauserWallet).pause();
+            await waitForReceipt(resp.hash, childProvider);
+            expect(await childBridge.paused()).to.true;
+        }
+
+        // Get IMX balance on root & child chains before deposit
+        let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childProvider.getBalance(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("10.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        resp = await rootIMX.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Try to deposit
+        resp = await rootBridge.connect(rootTestWallet).deposit(rootIMX.address, amt, {
+            value: bridgeFee,
+        });
+        await waitForReceipt(resp.hash, rootProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        // Balance on L2 should not change.
+        await delay(10000);
+        let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let postBalL2 = await childProvider.getBalance(childTestWallet.address);
+
+        // Verify
+        let expectedPostL1 = preBalL1.sub(amt);
+        let expectedPostL2 = preBalL2;
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Unpause child bridge
+        resp = await childBridge.connect(childPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, childProvider);
+        expect(await childBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    // Local only
+    it("should not withdraw IMX if child bridge is paused", async() => {
+        // Transfer 0.1 IMX to child pauser
+        let resp = await childTestWallet.sendTransaction({
+            to: childPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Transfer 0.1 IMX to child unpauser
+        resp = await childTestWallet.sendTransaction({
+            to: childPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Pause child bridge
+        if (!await childBridge.paused()) {
+            resp = await childBridge.connect(childPauserWallet).pause();
+            await waitForReceipt(resp.hash, childProvider);
+            expect(await childBridge.paused()).to.true;
+        }
+
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // IMX withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdrawIMX(amt, {
+            value: amt.add(bridgeFee),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("Pausable: paused");
+
+        // Unpause child bridge
+        resp = await childBridge.connect(childPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, childProvider);
+        expect(await childBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    it("should not withdraw IMX if balance is insufficient", async() => {
+        let balance = await childProvider.getBalance(childTestWallet.address);
+
+        let amt = balance;
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // IMX withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdrawIMX(amt, {
+            value: amt.add(bridgeFee),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("sender doesn't have enough funds to send tx");
     }).timeout(2400000)
 
     it("should successfully withdraw IMX to self from L2 to L1", async() => {
@@ -126,6 +375,290 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(txFee).sub(amt).sub(bridgeFee);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    it("should successfully withdraw IMX to others from L2 to L1", async() => {
+        let rootRecipient = rootPrivilegedWallet.address;
+        // Get IMX balance on root & child chains before withdraw
+        let preBalL1 = await rootIMX.balanceOf(rootRecipient);
+        let preBalL2 = await childProvider.getBalance(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // IMX withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childBridge.connect(childTestWallet).withdrawIMXTo(rootRecipient, amt, {
+            value: amt.add(bridgeFee),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        let postBalL1 = preBalL1;
+        let postBalL2 = await childProvider.getBalance(childTestWallet.address);
+
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while (postBalL1.eq(preBalL1)) {
+            postBalL1 = await rootIMX.balanceOf(rootRecipient);
+            await delay(1000);
+        }
+
+        // Verify
+        let receipt = await childProvider.getTransactionReceipt(resp.hash);
+        let txFee = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        let expectedPostL1 = preBalL1.add(amt);
+        let expectedPostL2 = preBalL2.sub(txFee).sub(amt).sub(bridgeFee);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    // Local only
+    it("should not withdraw IMX on L1 if root bridge is paused", async() => {
+        // Transfer 0.1 ETH to root pauser
+        let resp = await rootTestWallet.sendTransaction({
+            to: rootPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Transfer 0.1 ETH to root unpauser
+        resp = await rootTestWallet.sendTransaction({
+            to: rootPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Pause root bridge
+        if (!await rootBridge.paused()) {
+            resp = await rootBridge.connect(rootPauserWallet).pause();
+            await waitForReceipt(resp.hash, rootProvider);
+            expect(await rootBridge.paused()).to.true;
+        }
+
+        // Get IMX balance on root & child chains before withdraw
+        let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childProvider.getBalance(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // IMX withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawIMX(amt, {
+            value: amt.add(bridgeFee),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        // Balance on L1 should not change.
+        await delay(10000);
+        let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let postBalL2 = await childProvider.getBalance(childTestWallet.address);
+
+        // Verify
+        let receipt = await childProvider.getTransactionReceipt(resp.hash);
+        let txFee = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        let expectedPostL1 = preBalL1;
+        let expectedPostL2 = preBalL2.sub(txFee).sub(amt).sub(bridgeFee);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Unpause root bridge
+        resp = await rootBridge.connect(rootPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, rootProvider);
+        expect(await rootBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    // Local only
+    it("should put IMX withdrawal in pending when violating rate limit policy", async() => {
+        // Set new rate limit
+        let resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(rootIMX.address, ethers.utils.parseEther("2.016"), ethers.utils.parseEther("0.00056"), ethers.utils.parseEther("1.008"));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Withdraw of IMX exceeding large threshold
+        // Get IMX balance on root & child chains before withdraw
+        let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childProvider.getBalance(childTestWallet.address);
+        let preLength = await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address);
+
+        let amt1 = ethers.utils.parseEther("1.1");
+        let bridgeFee1 = ethers.utils.parseEther("1.0");
+
+        // IMX withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawIMX(amt1, {
+            value: amt1.add(bridgeFee1),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        let receipt = await childProvider.getTransactionReceipt(resp.hash);
+        let txFee1 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+
+        while ((await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address)).eq(preLength)) {
+            await delay(1000);
+        }
+
+        // Withdraw of IMX exceeding rate limit
+        let amt2 = ethers.utils.parseEther("1.0");
+        let bridgeFee2 = ethers.utils.parseEther("1.0");
+
+        // IMX withdraw L2 to L1
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawIMX(amt2, {
+            value: amt2.add(bridgeFee2),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+        receipt = await childProvider.getTransactionReceipt(resp.hash);
+        let txFee2 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+
+        while ((await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address)).eq(preLength.add(1))) {
+            await delay(1000);
+        }
+
+        // Try to withdraw
+        await expect(rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength.add(1))).to.be.rejectedWith(
+            "UNPREDICTABLE_GAS_LIMIT"
+        );
+
+        // Fast-forward to 24 hours later.
+        await rootProvider.send(
+            "hardhat_mine", [
+            "0x15181", // 24 hours
+        ]);
+
+        // Withdraw again
+        resp = await rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength.add(1))
+        await waitForReceipt(resp.hash, rootProvider);
+
+        resp = await rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength)
+        await waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let postBalL2 = await childProvider.getBalance(childTestWallet.address);
+
+        // Verify
+        let expectedPostL1 = preBalL1.add(amt1).add(amt2);
+        let expectedPostL2 = preBalL2.sub(amt1).sub(amt2).sub(txFee1).sub(txFee2).sub(bridgeFee1).sub(bridgeFee2);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Recover rate limit
+        resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(rootIMX.address, ethers.utils.parseEther("15516"), ethers.utils.parseEther("4.31"), ethers.utils.parseEther("7758"));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Deactive withdraw queue
+        resp = await rootBridge.connect(rootPrivilegedWallet).deactivateWithdrawalQueue();
+        await waitForReceipt(resp.hash, rootProvider);
+    }).timeout(2400000)
+
+    // Local only
+    it("should not withdraw WIMX if child bridge is paused", async() => {
+        // Transfer 0.1 IMX to child pauser
+        let resp = await childTestWallet.sendTransaction({
+            to: childPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Transfer 0.1 IMX to child unpauser
+        resp = await childTestWallet.sendTransaction({
+            to: childPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Pause child bridge
+        if (!await childBridge.paused()) {
+            resp = await childBridge.connect(childPauserWallet).pause();
+            await waitForReceipt(resp.hash, childProvider);
+            expect(await childBridge.paused()).to.true;
+        }
+
+        // Wrap 1 IMX
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).deposit({
+            value: ethers.utils.parseEther("1.0"),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        let amt = ethers.utils.parseEther("0.5");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // Approve
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amt, {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        await expect(childBridge.connect(childTestWallet).withdrawWIMX(amt, {
+            value: amt.add(bridgeFee),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("Pausable: paused");
+
+        // Unpause child bridge
+        resp = await childBridge.connect(childPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, childProvider);
+        expect(await childBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    it("should not withdraw wIMX if allowance is insufficient", async() => {
+        // Wrap 1 IMX
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childWIMX.connect(childTestWallet).deposit({
+            value: ethers.utils.parseEther("1.0"),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        let amt = ethers.utils.parseEther("0.5");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // Approve
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amt.sub(1), {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        // wIMX withdraw L2 to L1
+        [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdrawWIMX(amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+    }).timeout(2400000)
+
+    it("should not withdraw wIMX if balance is insufficient", async() => {
+        let balance = await childWIMX.balanceOf(childTestWallet.address);
+
+        let amt = balance;
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // wIMX withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdrawWIMX(amt.add(1), {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
     }).timeout(2400000)
 
     it("should successfully withdraw wIMX to self from L2 to L1", async() => {
@@ -179,12 +712,294 @@ describe("Bridge e2e test", () => {
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(2400000)
 
+    it("should successfully withdraw wIMX to others from L2 to L1", async() => {
+        let rootRecipient = rootPrivilegedWallet.address;
+        // Wrap 1 IMX
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childWIMX.connect(childTestWallet).deposit({
+            value: ethers.utils.parseEther("1.0"),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Get IMX balance on root & child chains before withdraw
+        let preBalL1 = await rootIMX.balanceOf(rootRecipient);
+        let preBalL2 = await childWIMX.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("0.5");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // Approve
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amt, {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        // wIMX withdraw L2 to L1
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawWIMXTo(rootRecipient, amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        let postBalL1 = preBalL1;
+        let postBalL2 = await childWIMX.balanceOf(childTestWallet.address);
+
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while (postBalL1.eq(preBalL1)) {
+            postBalL1 = await rootIMX.balanceOf(rootRecipient);
+            await delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.add(amt);
+        let expectedPostL2 = preBalL2.sub(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    // Local only
+    it("should not withdraw wIMX on L1 if root bridge is paused", async() => {
+        // Transfer 0.1 ETH to root pauser
+        let resp = await rootTestWallet.sendTransaction({
+            to: rootPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Transfer 0.1 ETH to root unpauser
+        resp = await rootTestWallet.sendTransaction({
+            to: rootPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Pause root bridge
+        if (!await rootBridge.paused()) {
+            resp = await rootBridge.connect(rootPauserWallet).pause();
+            await waitForReceipt(resp.hash, rootProvider);
+            expect(await rootBridge.paused()).to.true;
+        }
+
+        // Wrap 1 IMX
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).deposit({
+            value: ethers.utils.parseEther("1.0"),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Get IMX balance on root & child chains before withdraw
+        let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childWIMX.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("0.5");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // Approve
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amt, {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        // wIMX withdraw L2 to L1
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawWIMX(amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        // Balance on L1 should not change.
+        await delay(10000);
+        let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let postBalL2 = await childWIMX.balanceOf(childTestWallet.address);
+
+        // Verify
+        let expectedPostL1 = preBalL1;
+        let expectedPostL2 = preBalL2.sub(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Unpause root bridge
+        resp = await rootBridge.connect(rootPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, rootProvider);
+        expect(await rootBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    // Local only
+    it("should put wIMX withdrawal in pending when violating rate limit policy", async() => {
+        // Set new rate limit
+        let resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(rootIMX.address, ethers.utils.parseEther("2.016"), ethers.utils.parseEther("0.00056"), ethers.utils.parseEther("1.008"));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Wrap 3 IMX
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).deposit({
+            value: ethers.utils.parseEther("3.0"),
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Withdraw of IMX exceeding large threshold
+        // Get IMX balance on root & child chains before withdraw
+        let preBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childWIMX.balanceOf(childTestWallet.address);
+        let preLength = await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address);
+
+        let amt1 = ethers.utils.parseEther("1.1");
+        let bridgeFee1 = ethers.utils.parseEther("1.0");
+
+        // Approve
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amt1, {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        // wIMX withdraw L2 to L1
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawWIMX(amt1, {
+            value: bridgeFee1,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while ((await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address)).eq(preLength)) {
+            await delay(1000);
+        }
+
+        // Withdraw of IMX exceeding rate limit
+        let amt2 = ethers.utils.parseEther("1.0");
+        let bridgeFee2 = ethers.utils.parseEther("1.0");
+
+        // Approve
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amt2, {
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        // IMX withdraw L2 to L1
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawWIMX(amt2, {
+            value: bridgeFee2,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while ((await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address)).eq(preLength.add(1))) {
+            await delay(1000);
+        }
+
+        // Try to withdraw
+        await expect(rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength.add(1))).to.be.rejectedWith(
+            "UNPREDICTABLE_GAS_LIMIT"
+        );
+
+        // Fast-forward to 24 hours later.
+        await rootProvider.send(
+            "hardhat_mine", [
+            "0x15181", // 24 hours
+        ]);
+
+        // Withdraw again
+        resp = await rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength.add(1))
+        await waitForReceipt(resp.hash, rootProvider);
+
+        resp = await rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength)
+        await waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let postBalL2 = await childWIMX.balanceOf(childTestWallet.address);
+
+        // Verify
+        let expectedPostL1 = preBalL1.add(amt1).add(amt2);
+        let expectedPostL2 = preBalL2.sub(amt1).sub(amt2);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Recover rate limit
+        resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(rootIMX.address, ethers.utils.parseEther("15516"), ethers.utils.parseEther("4.31"), ethers.utils.parseEther("7758"));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Deactive withdraw queue
+        resp = await rootBridge.connect(rootPrivilegedWallet).deactivateWithdrawalQueue();
+        await waitForReceipt(resp.hash, rootProvider);
+    }).timeout(2400000)
+
+    it("should not deposit ETH if balance is insufficient", async() => {
+        let balance = await rootProvider.getBalance(rootTestWallet.address);
+
+        let amt = balance;
+        let bridgeFee = ethers.utils.parseEther("0.001");
+        
+        await expect(rootBridge.connect(rootTestWallet).depositETH(amt, {
+            value: amt.add(bridgeFee),
+        })).to.be.rejectedWith("sender doesn't have enough funds to send tx");
+    }).timeout(2400000)
+
+    // Local only
+    it("should not deposit ETH if root bridge is paused", async() => {
+        // Transfer 0.1 ETH to root pauser
+        let resp = await rootTestWallet.sendTransaction({
+            to: rootPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Transfer 0.1 ETH to root unpauser
+        resp = await rootTestWallet.sendTransaction({
+            to: rootPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Pause root bridge
+        if (!await rootBridge.paused()) {
+            resp = await rootBridge.connect(rootPauserWallet).pause();
+            await waitForReceipt(resp.hash, rootProvider);
+            expect(await rootBridge.paused()).to.true;
+        }
+
+        let amt = ethers.utils.parseEther("0.001");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Fail to deposit on L1
+        await expect(rootBridge.connect(rootTestWallet).depositETH(amt, {
+            value: amt.add(bridgeFee),
+        })).to.be.rejectedWith("Pausable: paused");
+
+        // Unpause root bridge
+        resp = await rootBridge.connect(rootPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, rootProvider);
+        expect(await rootBridge.paused()).to.false;
+    }).timeout(2400000)
+
     it("should successfully deposit ETH to self from L1 to L2", async() => {
         // Get ETH balance on root & child chains before deposit
         let preBalL1 = await rootProvider.getBalance(rootTestWallet.address);
         let preBalL2 = await childETH.balanceOf(childTestWallet.address);
 
-        let amt = ethers.utils.parseEther("0.001");
+        let amt = ethers.utils.parseEther("1.0");
         let bridgeFee = ethers.utils.parseEther("0.001");
 
         // ETH deposit L1 to L2
@@ -210,6 +1025,96 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    it("should successfully deposit ETH to others from L1 to L2", async() => {
+        let childRecipient = childPrivilegedWallet.address;
+        // Get ETH balance on root & child chains before deposit
+        let preBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let preBalL2 = await childETH.balanceOf(childRecipient);
+
+        let amt = ethers.utils.parseEther("0.001");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // ETH deposit L1 to L2
+        let resp = await rootBridge.connect(rootTestWallet).depositToETH(childRecipient, amt, {
+            value: amt.add(bridgeFee),
+        });
+        await waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let postBalL2 = preBalL2;
+
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while (postBalL2.eq(preBalL2)) {
+            postBalL2 = await childETH.balanceOf(childRecipient);
+            await delay(1000);
+        }
+
+        // Verify
+        let receipt = await rootProvider.getTransactionReceipt(resp.hash);
+        let txFee = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        let expectedPostL1 = preBalL1.sub(txFee).sub(amt).sub(bridgeFee);
+        let expectedPostL2 = preBalL2.add(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    // Local only
+    it("should not deposit ETH on L2 if child bridge is paused", async() => {
+        // Transfer 0.1 IMX to child pauser
+        let resp = await childTestWallet.sendTransaction({
+            to: childPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Transfer 0.1 IMX to child unpauser
+        resp = await childTestWallet.sendTransaction({
+            to: childPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Pause child bridge
+        if (!await childBridge.paused()) {
+            resp = await childBridge.connect(childPauserWallet).pause();
+            await waitForReceipt(resp.hash, childProvider);
+            expect(await childBridge.paused()).to.true;
+        }
+
+        // Get ETH balance on root & child chains before deposit
+        let preBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let preBalL2 = await childETH.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("0.001");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Try to deposit
+        resp = await rootBridge.connect(rootTestWallet).depositETH(amt, {
+            value: amt.add(bridgeFee),
+        });
+        await waitForReceipt(resp.hash, rootProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        // Balance on L2 should not change.
+        await delay(10000);
+        let postBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let postBalL2 = await childETH.balanceOf(childTestWallet.address);
+
+        // Verify
+        let receipt = await rootProvider.getTransactionReceipt(resp.hash);
+        let txFee = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        let expectedPostL1 = preBalL1.sub(txFee).sub(amt).sub(bridgeFee);
+        let expectedPostL2 = preBalL2;
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Unpause child bridge
+        resp = await childBridge.connect(childPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, childProvider);
+        expect(await childBridge.paused()).to.false;
     }).timeout(2400000)
 
     it("should successfully deposit wETH to self from L1 to L2", async() => {
@@ -253,6 +1158,101 @@ describe("Bridge e2e test", () => {
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(2400000)
 
+    it("should successfully deposit wETH to others from L1 to L2", async() => {
+        let childRecipient = childPrivilegedWallet.address;
+        // Wrap 0.01 ETH
+        let resp = await rootWETH.connect(rootTestWallet).deposit({
+            value: ethers.utils.parseEther("0.01"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Get ETH balance on root & child chains before withdraw
+        let preBalL1 = await rootWETH.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childETH.balanceOf(childRecipient);
+
+        let amt = ethers.utils.parseEther("0.001");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        resp = await rootWETH.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // wETH deposit L1 to L2
+        resp = await rootBridge.connect(rootTestWallet).depositTo(rootWETH.address, childRecipient, amt, {
+            value: bridgeFee,
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootWETH.balanceOf(rootTestWallet.address);
+        let postBalL2 = preBalL2;
+
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while (postBalL2.eq(preBalL2)) {
+            postBalL2 = await childETH.balanceOf(childRecipient);
+            await delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.sub(amt);
+        let expectedPostL2 = preBalL2.add(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    // Local only
+    it("should not withdraw ETH if child bridge is paused", async() => {
+        // Transfer 0.1 IMX to child pauser
+        let resp = await childTestWallet.sendTransaction({
+            to: childPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Transfer 0.1 IMX to child unpauser
+        resp = await childTestWallet.sendTransaction({
+            to: childPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Pause child bridge
+        if (!await childBridge.paused()) {
+            resp = await childBridge.connect(childPauserWallet).pause();
+            await waitForReceipt(resp.hash, childProvider);
+            expect(await childBridge.paused()).to.true;
+        }
+
+        let amt = ethers.utils.parseEther("0.0005");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // ETH withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdrawETH(amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("Pausable: paused");
+
+        // Unpause child bridge
+        resp = await childBridge.connect(childPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, childProvider);
+        expect(await childBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    it("should not withdraw ETH if balance is insufficient", async() => {
+        let amt = await childETH.balanceOf(childTestWallet.address);
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // ETH withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdrawETH(amt.add(1), {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+    }).timeout(2400000)
+
     it("should successfully withdraw ETH to self from L2 to L1", async() => {
         // Get ETH balance on root & child chains before withdraw
         let preBalL1 = await rootProvider.getBalance(rootTestWallet.address);
@@ -285,6 +1285,196 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    it("should successfully withdraw ETH to others from L2 to L1", async() => {
+        let rootRecipient = rootPrivilegedWallet.address;
+        // Get ETH balance on root & child chains before withdraw
+        let preBalL1 = await rootProvider.getBalance(rootRecipient);
+        let preBalL2 = await childETH.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("0.0005");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // ETH withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childBridge.connect(childTestWallet).withdrawETHTo(rootRecipient, amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+
+        let postBalL1 = preBalL1;
+        let postBalL2 = await childETH.balanceOf(childTestWallet.address);
+
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while (postBalL1.eq(preBalL1)) {
+            postBalL1 = await rootProvider.getBalance(rootRecipient);
+            await delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.add(amt);
+        let expectedPostL2 = preBalL2.sub(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    // Local only
+    it("should not withdraw ETH on L1 if root bridge is paused", async() => {
+        // Transfer 0.1 ETH to root pauser
+        let resp = await rootTestWallet.sendTransaction({
+            to: rootPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Transfer 0.1 ETH to root unpauser
+        resp = await rootTestWallet.sendTransaction({
+            to: rootPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Pause root bridge
+        if (!await rootBridge.paused()) {
+            resp = await rootBridge.connect(rootPauserWallet).pause();
+            await waitForReceipt(resp.hash, rootProvider);
+            expect(await rootBridge.paused()).to.true;
+        }
+
+        // Get ETH balance on root & child chains before withdraw
+        let preBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let preBalL2 = await childETH.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("0.0005");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // ETH withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawETH(amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        // Balance on L1 should not change.
+        await delay(10000);
+        let postBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let postBalL2 = await childETH.balanceOf(childTestWallet.address);
+
+        // Verify
+        let expectedPostL1 = preBalL1;
+        let expectedPostL2 = preBalL2.sub(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Unpause root bridge
+        resp = await rootBridge.connect(rootPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, rootProvider);
+        expect(await rootBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    // Local only
+    it("should put ETH withdrawal in pending when violating rate limit policy", async() => {
+        // Set new rate limit
+        let resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(await rootBridge.NATIVE_ETH(), ethers.utils.parseEther("0.0010008"), ethers.utils.parseEther("0.000000278"), ethers.utils.parseEther("0.0005004"));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Withdraw of ETH exceeding large threshold
+        // Get ETH balance on root & child chains before withdraw
+        let preBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let preBalL2 = await childETH.balanceOf(childTestWallet.address);
+        let preLength = await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address);
+
+        let amt1 = ethers.utils.parseEther("0.0006");
+        let bridgeFee1 = ethers.utils.parseEther("1.0");
+
+        // ETH withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawETH(amt1, {
+            value: bridgeFee1,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while ((await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address)).eq(preLength)) {
+            await delay(1000);
+        }
+
+        // Withdraw of ETH exceeding rate limit
+        let amt2 = ethers.utils.parseEther("0.0005");
+        let bridgeFee2 = ethers.utils.parseEther("1.0");
+
+        // ETH withdraw L2 to L1
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdrawETH(amt2, {
+            value: bridgeFee2,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while ((await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address)).eq(preLength.add(1))) {
+            await delay(1000);
+        }
+
+        // Try to withdraw
+        await expect(rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength.add(1))).to.be.rejectedWith(
+            "UNPREDICTABLE_GAS_LIMIT"
+        );
+
+        // Fast-forward to 24 hours later.
+        await rootProvider.send(
+            "hardhat_mine", [
+            "0x15181", // 24 hours
+        ]);
+
+        // Withdraw again
+        resp = await rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength.add(1))
+        await waitForReceipt(resp.hash, rootProvider);
+        let receipt = await rootProvider.getTransactionReceipt(resp.hash);
+        let txFee1 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+
+        resp = await rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength)
+        await waitForReceipt(resp.hash, rootProvider);
+        receipt = await rootProvider.getTransactionReceipt(resp.hash);
+        let txFee2 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+
+        let postBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let postBalL2 = await childETH.balanceOf(childTestWallet.address);
+
+        // Verify
+        let expectedPostL1 = preBalL1.sub(txFee1).sub(txFee2).add(amt1).add(amt2);
+        let expectedPostL2 = preBalL2.sub(amt1).sub(amt2);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Recover rate limit
+        resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(await rootBridge.NATIVE_ETH(), ethers.utils.parseEther("10.08"), ethers.utils.parseEther("0.0028"), ethers.utils.parseEther("5.04"));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Deactive withdraw queue
+        resp = await rootBridge.connect(rootPrivilegedWallet).deactivateWithdrawalQueue();
+        await waitForReceipt(resp.hash, rootProvider);
+    }).timeout(2400000)
+
+    it("should not deposit unmapped token", async() => {
+        let unMappedToken = ethers.utils.getAddress("0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97");
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Token deposit L1 to L2
+        await expect(rootBridge.connect(rootTestWallet).deposit(unMappedToken, amt, {
+            value: bridgeFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
     }).timeout(2400000)
 
     it("should successfully map a ERC20 Token", async() => {
@@ -321,12 +1511,98 @@ describe("Bridge e2e test", () => {
         expect(childTokenAddr).to.equal(expectedChildTokenAddr);
     }).timeout(2400000)
 
+    it("should not map a mapped ERC20 Token", async() => {
+        let childContracts = getChildContracts();
+        let childCustomTokenAddr = childContracts.CHILD_TEST_CUSTOM_TOKEN;
+        if (childCustomTokenAddr == "") {
+            childCustomToken = getContract("ChildERC20", childCustomTokenAddr, childProvider);
+            console.log("Custom token has not been mapped yet, skip.");
+            return;
+        }
+        // Map token
+        let bridgeFee = ethers.utils.parseEther("0.001");
+        await expect(rootBridge.connect(rootTestWallet).mapToken(rootCustomToken.address, {
+            value: bridgeFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+    }).timeout(2400000)
+
+    it("should not deposit mapped ERC20 Token if allowance is insufficient", async() => {
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootCustomToken.connect(rootTestWallet).approve(rootBridge.address, amt.sub(1));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Fail to deposit on L1
+        await expect(rootBridge.connect(rootTestWallet).deposit(rootCustomToken.address, amt, {
+            value: bridgeFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+    }).timeout(2400000)
+
+    it("should not deposit mapped ERC20 Token if balance is insufficient", async() => {
+        let balance = await rootCustomToken.balanceOf(rootTestWallet.address);
+
+        let amt = balance.add(1);
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootCustomToken.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+        
+        await expect(rootBridge.connect(rootTestWallet).deposit(rootCustomToken.address, amt, {
+            value: bridgeFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+    }).timeout(2400000)
+
+    // Local only
+    it("should not deposit mapped ERC20 Token if root bridge is paused", async() => {
+        // Transfer 0.1 ETH to root pauser
+        let resp = await rootTestWallet.sendTransaction({
+            to: rootPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Transfer 0.1 ETH to root unpauser
+        resp = await rootTestWallet.sendTransaction({
+            to: rootPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Pause root bridge
+        if (!await rootBridge.paused()) {
+            resp = await rootBridge.connect(rootPauserWallet).pause();
+            await waitForReceipt(resp.hash, rootProvider);
+            expect(await rootBridge.paused()).to.true;
+        }
+
+        // Try to deposit.
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        resp = await rootCustomToken.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Fail to deposit on L1
+        await expect(rootBridge.connect(rootTestWallet).deposit(rootCustomToken.address, amt, {
+            value: bridgeFee,
+        })).to.be.rejectedWith("Pausable: paused");
+
+        // Unpause root bridge
+        resp = await rootBridge.connect(rootPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, rootProvider);
+        expect(await rootBridge.paused()).to.false;
+    }).timeout(2400000)
+
     it("should successfully deposit mapped ERC20 Token to self from L1 to L2", async() => {
         // Get token balance on root & child chains before deposit
         let preBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
         let preBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
 
-        let amt = ethers.utils.parseEther("1.0");
+        let amt = ethers.utils.parseEther("10.0");
         let bridgeFee = ethers.utils.parseEther("0.001");
 
         // Approve
@@ -354,6 +1630,109 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.add(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    it("should successfully deposit mapped ERC20 Token to others from L1 to L2", async() => {
+        let childRecipient = childPrivilegedWallet.address;
+        // Get token balance on root & child chains before deposit
+        let preBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childCustomToken.balanceOf(childRecipient);
+
+        let amt = ethers.utils.parseEther("1.0");
+        let bridgeFee = ethers.utils.parseEther("0.001");
+
+        // Approve
+        let resp = await rootCustomToken.connect(rootTestWallet).approve(rootBridge.address, amt);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Token deposit L1 to L2
+        resp = await rootBridge.connect(rootTestWallet).depositTo(rootCustomToken.address, childRecipient, amt, {
+            value: bridgeFee,
+        })
+        await waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let postBalL2 = preBalL2;
+
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while (postBalL2.eq(preBalL2)) {
+            postBalL2 = await childCustomToken.balanceOf(childRecipient);
+            await delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.sub(amt);
+        let expectedPostL2 = preBalL2.add(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    it("should not withdraw unmapped token", async() => {
+        let unMappedToken = ethers.utils.getAddress("0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97");
+        let amt = ethers.utils.parseEther("0.5");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // Token withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdraw(unMappedToken, amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+    }).timeout(2400000)
+
+    // Local only
+    it("should not withdraw mapped ERC20 Token if child bridge is paused", async() => {
+        // Transfer 0.1 IMX to child pauser
+        let resp = await childTestWallet.sendTransaction({
+            to: childPauserWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Transfer 0.1 IMX to child unpauser
+        resp = await childTestWallet.sendTransaction({
+            to: childPrivilegedWallet.address,
+            value: ethers.utils.parseEther("0.1"),
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Pause child bridge
+        if (!await childBridge.paused()) {
+            resp = await childBridge.connect(childPauserWallet).pause();
+            await waitForReceipt(resp.hash, childProvider);
+            expect(await childBridge.paused()).to.true;
+        }
+
+        let amt = ethers.utils.parseEther("0.5");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // Token withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdraw(childCustomToken.address, amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("Pausable: paused");
+
+        // Unpause child bridge
+        resp = await childBridge.connect(childPrivilegedWallet).unpause();
+        await waitForReceipt(resp.hash, childProvider);
+        expect(await childBridge.paused()).to.false;
+    }).timeout(2400000)
+
+    it("should not withdraw mapped ERC20 Token if balance is insufficient", async() => {
+        let amt = await childCustomToken.balanceOf(childTestWallet.address);
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // ETH withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdraw(childCustomToken.address, amt.add(1), {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
     }).timeout(2400000)
 
     it("should successfully withdraw mapped ERC20 Token to self from L2 to L1", async() => {
@@ -388,5 +1767,122 @@ describe("Bridge e2e test", () => {
         let expectedPostL2 = preBalL2.sub(amt);
         expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    it("should successfully withdraw mapped ERC20 Token to others from L2 to L1", async() => {
+        let rootRecipient = rootPrivilegedWallet.address;
+        // Get token balance on root & child chains before deposit
+        let preBalL1 = await rootCustomToken.balanceOf(rootRecipient);
+        let preBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+
+        let amt = ethers.utils.parseEther("0.5");
+        let bridgeFee = ethers.utils.parseEther("1.0");
+
+        // Token withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        let resp = await childBridge.connect(childTestWallet).withdrawTo(childCustomToken.address, rootRecipient, amt, {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })
+        await waitForReceipt(resp.hash, childProvider);
+
+        let postBalL1 = preBalL1;
+        let postBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while (postBalL1.eq(preBalL1)) {
+            postBalL1 = await rootCustomToken.balanceOf(rootRecipient);
+            await delay(1000);
+        }
+
+        // Verify
+        let expectedPostL1 = preBalL1.add(amt);
+        let expectedPostL2 = preBalL2.sub(amt);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+    }).timeout(2400000)
+
+    it("should put mapped ERC20 Token withdrawal in pending when violating rate limit policy", async() => {
+        // Set new rate limit
+        let resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(rootCustomToken.address, ethers.utils.parseEther("1.0008"), ethers.utils.parseEther("0.000278"), ethers.utils.parseEther("0.5004"));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Withdraw of ERC20 exceeding large threshold
+        // Get ERC20 balance on root & child chains before withdraw
+        let preBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let preBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+        let preLength = await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address);
+
+        let amt1 = ethers.utils.parseEther("0.6");
+        let bridgeFee1 = ethers.utils.parseEther("1.0");
+
+        // ERC20 withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdraw(childCustomToken.address, amt1, {
+            value: bridgeFee1,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while ((await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address)).eq(preLength)) {
+            await delay(1000);
+        }
+
+        // Withdraw of ERC20 exceeding rate limit
+        let amt2 = ethers.utils.parseEther("0.5");
+        let bridgeFee2 = ethers.utils.parseEther("1.0");
+
+        // ERC20 withdraw L2 to L1
+        [priorityFee, maxFee] = await getFee(childProvider);
+        resp = await childBridge.connect(childTestWallet).withdraw(childCustomToken.address, amt2, {
+            value: bridgeFee2,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        });
+        await waitForReceipt(resp.hash, childProvider);
+        await waitUntilSucceed(axelarAPI, resp.hash);
+
+        while ((await rootBridge.getPendingWithdrawalsLength(rootTestWallet.address)).eq(preLength.add(1))) {
+            await delay(1000);
+        }
+
+        // Try to withdraw
+        await expect(rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength.add(1))).to.be.rejectedWith(
+            "UNPREDICTABLE_GAS_LIMIT"
+        );
+
+        // Fast-forward to 24 hours later.
+        await rootProvider.send(
+            "hardhat_mine", [
+            "0x15181", // 24 hours
+        ]);
+
+        // Withdraw again
+        resp = await rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength.add(1))
+        await waitForReceipt(resp.hash, rootProvider);
+
+        resp = await rootBridge.connect(rootTestWallet).finaliseQueuedWithdrawal(rootTestWallet.address, preLength)
+        await waitForReceipt(resp.hash, rootProvider);
+
+        let postBalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let postBalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+
+        // Verify
+        let expectedPostL1 = preBalL1.add(amt1).add(amt2);
+        let expectedPostL2 = preBalL2.sub(amt1).sub(amt2);
+        expect(postBalL1.toBigInt()).to.equal(expectedPostL1.toBigInt());
+        expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
+
+        // Recover rate limit
+        resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(rootCustomToken.address, ethers.utils.parseEther("20016.0"), ethers.utils.parseEther("5.56"), ethers.utils.parseEther("10008.0"));
+        await waitForReceipt(resp.hash, rootProvider);
+
+        // Deactive withdraw queue
+        resp = await rootBridge.connect(rootPrivilegedWallet).deactivateWithdrawalQueue();
+        await waitForReceipt(resp.hash, rootProvider);
     }).timeout(2400000)
 })

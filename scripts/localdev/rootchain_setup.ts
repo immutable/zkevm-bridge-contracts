@@ -14,6 +14,8 @@ async function main() {
     let reservedAddr = requireEnv("NONCE_RESERVED_DEPLOYER_ADDR");
     let axelarEOA = requireEnv("AXELAR_EOA");
     let rootTestKey = requireEnv("TEST_ACCOUNT_SECRET");
+    let rootBreakGlassAddr = requireEnv("ROOT_BREAKGLASS_ADDR");
+    let rootPrivilegedAddr = requireEnv("ROOT_PRIVILEGED_MULTISIG_ADDR");
 
     // Get root provider.
     let rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
@@ -46,8 +48,8 @@ async function main() {
     let resp = await IMX.connect(admin).mint(deployerAddr, ethers.utils.parseEther("1110.0"));
     await waitForReceipt(resp.hash, rootProvider);
 
-    // Transfer 1000 IMX to test wallet
-    resp = await IMX.connect(admin).mint(testWallet.address, ethers.utils.parseEther("1000.0"))
+    // Transfer 1000000000 IMX to test wallet
+    resp = await IMX.connect(admin).mint(testWallet.address, ethers.utils.parseEther("1000000000.0"))
     await waitForReceipt(resp.hash, rootProvider);
 
     // Transfer 0.1 ETH to root deployer
@@ -70,10 +72,10 @@ async function main() {
         value: ethers.utils.parseEther("500.0"),
     })
 
-    // Transfer 10 ETH to test wallet
+    // Transfer 1000 ETH to test wallet
     resp = await admin.sendTransaction({
         to: testWallet.address,
-        value: ethers.utils.parseEther("10.0"),
+        value: ethers.utils.parseEther("1000.0"),
     })
     await waitForReceipt(resp.hash, rootProvider);
 
