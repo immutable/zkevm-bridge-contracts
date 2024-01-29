@@ -166,13 +166,13 @@ Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/bl
 
 **Testnet**
 
-| Token                                                                                        | Units | Capacity   | Refill Rate | Large Transfer Threshold | 
-|----------------------------------------------------------------------------------------------|:------|------------|-------------|--------------------------|
-| ETH                                                                                          | 10^18 | 10.08      | 0.0028      | 5.04                     |
-| [IMX](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69ff)       | 10^18 | 68,976     | 19.16       | 34,488                   |
-| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)                | 10^6  | TBA        | TBA         | TBA                      |
-| [Gods Unchained (GODS)]()    | 10^18 | TBA      | TBA         | TBA                      |
-| [Guild of Guardians (GOG)]() | 10^18 | TBA      | TBA         | TBA                      |
+| Token                                                                                  | Units | Capacity | Refill Rate | Large Transfer Threshold | 
+|----------------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
+| ETH                                                                                    | 10^18 | 10.08    | 0.0028      | 5.04                     |
+| [IMX](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69ff) | 10^18 | 68,976   | 19.16       | 34,488                   |
+| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)          | 10^6  | TBA      | TBA         | TBA                      |
+| [Gods Unchained (GODS)]()                                                              | 10^18 | TBA      | TBA         | TBA                      |
+| [Guild of Guardians (GOG)]()                                                           | 10^18 | TBA      | TBA         | TBA                      |
 
 
 
