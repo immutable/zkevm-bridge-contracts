@@ -109,7 +109,6 @@ contract OwnableCreate2DeployerTest is Test {
     /**
      * deployAndInit
      */
-
     function test_RevertIf_DeployAndInitWithNonOwner() public {
         vm.stopPrank();
 
@@ -148,7 +147,6 @@ contract OwnableCreate2DeployerTest is Test {
     /**
      * deployedAddress
      */
-
     function test_deployedAddress_ReturnsPredictedAddress() public {
         address deployAddress = deployer.deployedAddress(childERC20Bytecode, address(owner), salt);
 
@@ -162,7 +160,6 @@ contract OwnableCreate2DeployerTest is Test {
     /**
      * private helper functions
      */
-
     function predictCreate2Address(bytes memory _bytecode, address _deployer, address _sender, bytes32 _salt)
         private
         pure
