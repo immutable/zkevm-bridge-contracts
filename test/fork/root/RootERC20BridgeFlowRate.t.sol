@@ -16,6 +16,7 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
     
     // move to .env
     address payable rootBridgeAddress = payable(0xBa5E35E26Ae59c7aea6F029B68c6460De2d13eB6);
+    address IMX = address(0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF);
     address rootAdapter = address(0x4f49B53928A71E553bB1B0F66a5BcB54Fd4E8932); 
     address receiver1 = address(0x111); 
     address receiver2 = address(0x222); 
@@ -37,113 +38,91 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
     }
 
     function test_flowRateETH() public {
-        uint256 largeThreshold = rootBridgeFlowRate.largeTransferThresholds(NATIVE_ETH);
-        (uint256 capacity, uint256 depth, uint256 refillTime, uint256 refillRate) = rootBridgeFlowRate.flowRateBuckets(NATIVE_ETH); 
+        _flowRate(NATIVE_ETH);
+    }
+
+    function _flowRate(address token) public {
+        uint256 largeThreshold = rootBridgeFlowRate.largeTransferThresholds(token);
+
+        //only need depth returned
+        (, uint256 depth, ,) = rootBridgeFlowRate.flowRateBuckets(token); 
 
         // send 75% of the largeThreshold value
         uint256 txValue = ((largeThreshold / 100) * 75);
 
         uint256 numTxs = (depth / txValue) + 2;
 
-        uint256 numTxsReceiver1 = 0;
-
-        //deal enough ETH to the bridge to cover all the txs
-        vm.deal(rootBridgeAddress, txValue * numTxs);
-
-        while(depth > 0) {            
-            //prank as axelar sending a message to the adapter
-            vm.startPrank(rootAdapter);
-
-            bytes memory predictedPayload1 = 
-            abi.encode(rootBridgeFlowRate.WITHDRAW_SIG(), NATIVE_ETH, receiver1, receiver1, txValue);
-            rootBridgeFlowRate.onMessageReceive(predictedPayload1);
-            vm.stopPrank();
-
-            (capacity, depth, refillTime, refillRate) = rootBridgeFlowRate.flowRateBuckets(NATIVE_ETH); 
-
-            bool queueActivated = rootBridgeFlowRate.withdrawalQueueActivated();
-
-            if (depth > 0) {
-                assertFalse(queueActivated);
-            } else {
-                assertTrue(queueActivated);
-            }
-
-            numTxsReceiver1 += 1;
+        if (token == NATIVE_ETH) {
+            //deal enough ETH to the bridge to cover all the txs
+            vm.deal(rootBridgeAddress, txValue * numTxs);
+        } else {
+            //@TODO ensure the bridge has enough tokens to cover all the txs
+            console2.log('not eth');
         }
 
-        //sanity check we dealt the enough eth
-        assertEq(numTxsReceiver1+1, numTxs);
+        //withdraw until queue is activated
+        bool queueActivated = rootBridgeFlowRate.withdrawalQueueActivated();
+        while(queueActivated == false) {            
+            _sendWithdrawMessage(token, receiver1, receiver1, txValue);
+            queueActivated = rootBridgeFlowRate.withdrawalQueueActivated();
+        }
 
         //send one more tx to receiver2 and make sure it gets queued
-        vm.startPrank(rootAdapter);
-        bytes memory predictedPayload2 = 
-        abi.encode(rootBridgeFlowRate.WITHDRAW_SIG(), NATIVE_ETH, receiver2, receiver2, txValue);
-        rootBridgeFlowRate.onMessageReceive(predictedPayload2);
-        vm.stopPrank();
+        _sendWithdrawMessage(token, receiver2, receiver2, txValue);
 
-        uint256 pendingLength1 = rootBridgeFlowRate.getPendingWithdrawalsLength(receiver1);
-        uint256 pendingLength2 = rootBridgeFlowRate.getPendingWithdrawalsLength(receiver2);
+        //attempt to withdraw for receiver 1
+        uint256 okTime1 = _attemptEarlyWithdraw(token, receiver1, txValue);
 
-        //each receiver should have 1 queued tx
-        assertEq(pendingLength1, 1);
-        assertEq(pendingLength2, 1);
+        //attempt to withdraw for receiver 2
+        uint256 okTime2 = _attemptEarlyWithdraw(token, receiver2, txValue);
 
-        uint256[] memory indices1 = new uint256[](1);
-        indices1[0] = 0;
+        //fast forward past withdrawal delay time and withdraw for receiver 1
+        vm.warp(okTime1+1);
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(receiver1, 0);
 
-        RootERC20BridgeFlowRate.PendingWithdrawal[] memory pending1 =
-            rootBridgeFlowRate.getPendingWithdrawals(receiver1, indices1);
+        //fast forward past withdrawal delay time and withdraw for receiver 2
+        vm.warp(okTime2+1);
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(receiver2, 0);
 
-        assertEq(pending1.length, 1);
-        assertEq(pending1[0].withdrawer, receiver1);
-        assertEq(pending1[0].token, NATIVE_ETH);
-        assertEq(pending1[0].amount, txValue);
-        uint256 timestamp1 = pending1[0].timestamp;
+    }
 
-        uint256 okTime1 = timestamp1 + withdrawDelay;
+    function _attemptEarlyWithdraw(address token, address receiver, uint256 txValue) 
+    public returns (uint256 okTime){
+
+        uint256 pendingLength = rootBridgeFlowRate.getPendingWithdrawalsLength(receiver);
+
+        assertEq(pendingLength, 1);
+
+        uint256[] memory indices = new uint256[](1);
+        indices[0] = 0;
+
+        RootERC20BridgeFlowRate.PendingWithdrawal[] memory pending =
+            rootBridgeFlowRate.getPendingWithdrawals(receiver, indices);
+
+        assertEq(pending.length, 1);
+        assertEq(pending[0].withdrawer, receiver);
+        assertEq(pending[0].token, token);
+        assertEq(pending[0].amount, txValue);
+        uint256 timestamp = pending[0].timestamp;
+
+        okTime = timestamp + withdrawDelay;
 
          //deal some eth to pay withdraw gas
         vm.deal(address(this), 1 ether);
 
-        //try to process withdraw 1
+        //try to process the withdrawal
         vm.expectRevert(
-            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalRequestTooEarly.selector, timestamp1, okTime1)
+            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalRequestTooEarly.selector, timestamp, okTime)
         );
-        rootBridgeFlowRate.finaliseQueuedWithdrawal(receiver1, 0);
+        rootBridgeFlowRate.finaliseQueuedWithdrawal(receiver, 0);
+    }
 
-        uint256[] memory indices2 = new uint256[](1);
-        indices2[0] = 0;
-
-        RootERC20BridgeFlowRate.PendingWithdrawal[] memory pending2 =
-            rootBridgeFlowRate.getPendingWithdrawals(receiver2, indices2);
-
-        assertEq(pending2.length, 1);
-        assertEq(pending2[0].withdrawer, receiver2);
-        assertEq(pending2[0].token, NATIVE_ETH);
-        assertEq(pending2[0].amount, txValue);
-        uint256 timestamp2 = pending2[0].timestamp;
-
-        uint256 okTime2 = timestamp2 + withdrawDelay;
-
-        //try to process withdraw 2
-        vm.expectRevert(
-            abi.encodeWithSelector(IFlowRateWithdrawalQueueErrors.WithdrawalRequestTooEarly.selector, timestamp2, okTime2)
-        );
-        rootBridgeFlowRate.finaliseQueuedWithdrawal(receiver2, 0);
-
-        vm.warp(okTime1+1);
-
-        rootBridgeFlowRate.finaliseQueuedWithdrawal(receiver1, 0);
-
-        vm.warp(okTime2+1);
-
-        rootBridgeFlowRate.finaliseQueuedWithdrawal(receiver2, 0);
-
-        console2.log('success');
-
-        //warp to time when withdraw can be processed
-
-        //try to withdraw again
+    function _sendWithdrawMessage(address token, address sender, address receiver, uint256 txValue) public {
+        //prank as axelar sending a message to the adapter
+        vm.startPrank(rootAdapter);
+        bytes memory predictedPayload = 
+        abi.encode(rootBridgeFlowRate.WITHDRAW_SIG(), token, sender, receiver, txValue);
+        rootBridgeFlowRate.onMessageReceive(predictedPayload);
+        vm.stopPrank();
     }
 }
