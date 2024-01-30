@@ -203,7 +203,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     /**
      * INITIALIZE
      */
-
     function test_InitializeBridgeFlowRate() public {
         assertEq(address(rootBridgeFlowRate.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
         assertEq(rootBridgeFlowRate.childERC20Bridge(), CHILD_BRIDGE, "childERC20Bridge not set");
@@ -281,7 +280,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     /**
      * RATE ROLE ACTIONS
      */
-
     function testActivateWithdrawalQueue() public {
         vm.prank(rateAdmin);
         rootBridgeFlowRate.activateWithdrawalQueue();
@@ -504,7 +502,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     /**
      * FLOW RATE WITHDRAW
      */
-
     function testWithdrawalUnconfiguredToken() public {
         transferTokensToChild();
 

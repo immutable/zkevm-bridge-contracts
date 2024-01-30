@@ -8,6 +8,7 @@ The Immutable token bridge facilitates the transfer of assets between two chains
 * [Build and Test](#build-and-test)
 * [Contract Deployment](#contract-deployment)
 * [Deployed Contract Addresses](#deployed-contract-addresses)
+* [Flow Rate Parameters](#flow-rate-parameters)
 * [Audits](#audits)
 <!-- TOC -->
 
@@ -149,5 +150,31 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | USDC                   | [`0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2`](https://explorer.immutable.com/address/0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2) | [`0x3B2d8A1931736Fc321C24864BceEe981B11c3c57`](https://explorer.testnet.immutable.com/address/0x3B2d8A1931736Fc321C24864BceEe981B11c3c57)                                                                                                                                       |
 | USDT                   | [`0x68bcc7F1190AF20e7b572BCfb431c3Ac10A936Ab`](https://explorer.immutable.com/address/0x68bcc7F1190AF20e7b572BCfb431c3Ac10A936Ab) | TBA                                                                                                                                       |
 | Wrapped BTC            | [`0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De`](https://explorer.immutable.com/address/0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De) | TBA                                                                                                                                       |
+
+## Flow Rate Parameters
+Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/blob/documentation/docs/HLA-and-Threat-Model.md#flow-rate-detection) parameters that have been configured on the L1 Mainnet and Testnet deployments.
+
+**Mainnet**
+
+| Token                                                                                               | Units | Capacity | Refill Rate | Large Transfer Threshold | 
+|-----------------------------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
+| ETH                                                                                                 | 10^18 | 10.08    | 0.0028      | 5.04                     |
+| [IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79f)                         | 10^18 | 10,008   | 2.78        | 5,004                    |
+| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)                       | 10^6  | 20,016   | 5.56        | 10,008                   |
+| [Gods Unchained (GODS)](https://etherscan.io/address/0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97)    | 10^18 | TBA      | TBA         | TBA                      |
+| [Guild of Guardians (GOG)](https://etherscan.io/address/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62) | 10^18 | TBA      | TBA         | TBA                      |
+
+**Testnet**
+
+| Token                                                                                  | Units | Capacity | Refill Rate | Large Transfer Threshold | 
+|----------------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
+| ETH                                                                                    | 10^18 | 10.08    | 0.0028      | 5.04                     |
+| [IMX](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69ff) | 10^18 | 68,976   | 19.16       | 34,488                   |
+| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)          | 10^6  | TBA      | TBA         | TBA                      |
+| [Gods Unchained (GODS)]()                                                              | 10^18 | TBA      | TBA         | TBA                      |
+| [Guild of Guardians (GOG)]()                                                           | 10^18 | TBA      | TBA         | TBA                      |
+
+
+
 ## Audits
 The Immutable token bridge has been audited by [Trail of Bits](https://www.trailofbits.com/). The audit report can be found [here](./audits/Trail-of-Bits-2023-12-14.pdf).

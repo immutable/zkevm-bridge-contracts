@@ -56,7 +56,6 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     /**
      * INITIALIZE
      */
-
     function test_Initialize() public {
         assertEq(address(axelarAdaptor.childBridge()), address(mockChildERC20Bridge), "childBridge not set");
         assertEq(axelarAdaptor.rootChainId(), ROOT_CHAIN_NAME, "rootChain not set");
@@ -179,7 +178,6 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     /**
      * EXECUTE
      */
-
     function test_RevertIf_executeCalledWithInvalidSourceChain() public {
         bytes32 commandId = bytes32("testCommandId");
         bytes memory payload = abi.encodePacked("payload");
@@ -221,7 +219,6 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     /**
      * SEND MESSAGE
      */
-
     function test_sendMessage_CallsGasService() public {
         address refundRecipient = address(123);
         bytes memory payload = abi.encode(WITHDRAW_SIG, address(token), address(this), address(999), 11111);
@@ -342,7 +339,6 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     /**
      *  UPDATE CHILD BRIDGE
      */
-
     function test_updateChildBridge_UpdatesChildBridge() public {
         vm.startPrank(bridgeManager);
         address newChildBridge = address(0x123);
@@ -384,7 +380,6 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     /**
      *  UPDATE ROOT CHAIN
      */
-
     function test_updateRootChain_UpdatesRootChain() public {
         vm.startPrank(targetManager);
         string memory newRootChain = "newRoot";
@@ -425,7 +420,6 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     /**
      * UPDATE ROOT BRIDGE ADAPTOR
      */
-
     function test_updateRootBridgeAdaptor_UpdatesRootBridgeAdaptor() public {
         vm.startPrank(targetManager);
         string memory newAdaptor = "newAdaptor";
@@ -470,7 +464,6 @@ contract ChildAxelarBridgeAdaptorUnitTest is Test, IChildAxelarBridgeAdaptorErro
     /**
      * UPDATE GAS SERVICE
      */
-
     function test_updateGasService_UpdatesGasService() public {
         vm.startPrank(gasServiceManager);
         address newGasService = address(0x123);
