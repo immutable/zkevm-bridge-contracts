@@ -67,7 +67,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     /**
      * RECEIVE
      */
-
     function test_NativeTransferFromWIMX() public {
         address caller = address(0x123a);
         payable(caller).transfer(2 ether);
@@ -107,7 +106,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     /**
      * TREASURY DEPOSIT
      */
-
     function test_treasuryDepostIncreasesBalance() public {
         vm.deal(treasuryManager, 100 ether);
         vm.startPrank(treasuryManager);
@@ -150,7 +148,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     /**
      * INITIALIZE
      */
-
     function test_Initialize() public {
         assertEq(address(childBridge.childBridgeAdaptor()), address(address(this)), "bridgeAdaptor not set");
         assertEq(childBridge.childTokenTemplate(), address(childTokenTemplate), "childTokenTemplate not set");
@@ -257,7 +254,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     /**
      * UPDATE CHILD BRIDGE ADAPTOR
      */
-
     function test_updateChildBridgeAdaptor_UpdatesChildBridgeAdaptor() public {
         address newAdaptorAddress = address(0x11111);
 
@@ -298,7 +294,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     /**
      * ON MESSAGE RECIEVE
      */
-
     function test_onMessageReceive_SetsTokenMapping() public {
         address predictedChildToken = Clones.predictDeterministicAddress(
             address(childTokenTemplate), keccak256(abi.encodePacked(rootToken)), address(childBridge)
@@ -387,7 +382,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     /**
      * DEPOSIT ETH
      */
-
     function test_RevertsIf_OnMessageReceiveWhenPaused() public {
         pause(IPausable(address(childBridge)));
         bytes memory depositData =
@@ -461,7 +455,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     /**
      * DEPOSIT
      */
-
     function test_onMessageReceive_DepositIMX_EmitsIMXDepositEvent() public {
         uint256 fundedAmount = 10 ether;
         vm.deal(address(childBridge), fundedAmount);
@@ -616,7 +609,6 @@ contract ChildERC20BridgeUnitTest is Test, IChildERC20BridgeEvents, IChildERC20B
     /**
      * WITHDRAW
      */
-
     function test_RevertIf_WithdrawReentered() public {
         // Create attack token
         vm.startPrank(address(childBridge));
