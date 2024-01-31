@@ -27,7 +27,6 @@ export async function waitForReceipt(txHash: string, provider: providers.JsonRpc
         receipt = await provider.getTransactionReceipt(txHash)
         await exports.delay(1000);
     }
-    console.log("Receipt: " + JSON.stringify(receipt, null, 2));
     if (receipt.status != 1) {
         throw("Fail to execute: " + txHash);
     }

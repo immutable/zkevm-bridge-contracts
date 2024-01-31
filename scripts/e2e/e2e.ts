@@ -1804,6 +1804,7 @@ describe("Bridge e2e test", () => {
         expect(postBalL2.toBigInt()).to.equal(expectedPostL2.toBigInt());
     }).timeout(2400000)
 
+    // Local only
     it("should put mapped ERC20 Token withdrawal in pending when violating rate limit policy", async() => {
         // Set new rate limit
         let resp = await rootBridge.connect(rootPrivilegedWallet).setRateControlThreshold(rootCustomToken.address, ethers.utils.parseEther("1.0008"), ethers.utils.parseEther("0.000278"), ethers.utils.parseEther("0.5004"));
@@ -1884,5 +1885,146 @@ describe("Bridge e2e test", () => {
         // Deactive withdraw queue
         resp = await rootBridge.connect(rootPrivilegedWallet).deactivateWithdrawalQueue();
         await waitForReceipt(resp.hash, rootProvider);
+    }).timeout(2400000)
+
+    // Local only
+    it("should successfully process multiple deposit and withdrawal requests in parallel", async() => {
+        // Deposit & withdrawal amount
+        let amtL1 = ethers.utils.parseEther("1.0");
+        let bridgeFeeL1 = ethers.utils.parseEther("0.001");
+        let amtL2 = ethers.utils.parseEther("0.5");
+        let bridgeFeeL2 = ethers.utils.parseEther("1.0");
+
+        // Wrap & Approval
+        let resp = await rootIMX.connect(rootTestWallet).approve(rootBridge.address, amtL1);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        resp = await rootWETH.connect(rootTestWallet).deposit({ value: amtL1 });
+        await waitForReceipt(resp.hash, rootProvider);
+        resp = await rootWETH.connect(rootTestWallet).approve(rootBridge.address, amtL1);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        resp = await rootCustomToken.connect(rootTestWallet).approve(rootBridge.address, amtL1);
+        await waitForReceipt(resp.hash, rootProvider);
+
+        resp = await childWIMX.connect(childTestWallet).deposit( {value: amtL2 });
+        await waitForReceipt(resp.hash, childProvider);
+        resp = await childWIMX.connect(childTestWallet).approve(childBridge.address, amtL2);
+        await waitForReceipt(resp.hash, childProvider);
+
+        // Deposit IMX, ETH, WETH, ERC20, and withdraw IMX, WIMX, ETH, ERC20
+        let preIMXBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let preETHBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let preWETHBalL1 = await rootWETH.balanceOf(rootTestWallet.address);
+        let preERC20BalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let preIMXBalL2 = await childProvider.getBalance(childTestWallet.address);
+        let preWIMXBalL2 = await childWIMX.balanceOf(childTestWallet.address);
+        let preETHBalL2 = await childETH.balanceOf(childTestWallet.address);
+        let preERC20BalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+
+        // Stop mining
+        await rootProvider.send(
+            "evm_setIntervalMining", [
+            0,
+        ]);
+        await childProvider.send(
+            "evm_setIntervalMining", [
+            0,
+        ]);
+
+        // Calls on L1 & L2
+        let resp1 = await rootBridge.connect(rootTestWallet).deposit(rootIMX.address, amtL1, {
+            value: bridgeFeeL1,
+        });
+        let resp2 = await rootBridge.connect(rootTestWallet).depositETH(amtL1, {
+            value: bridgeFeeL1.add(amtL1),
+        });
+        let resp3 = await rootBridge.connect(rootTestWallet).deposit(rootWETH.address, amtL1, {
+            value: bridgeFeeL1,
+        });
+        let resp4 = await rootBridge.connect(rootTestWallet).deposit(rootCustomToken.address, amtL1, {
+            value: bridgeFeeL1,
+        });
+        let resp5 = await childBridge.connect(childTestWallet).withdrawIMX(amtL2, {
+            value: bridgeFeeL2.add(amtL2),
+        });
+        let resp6 = await childBridge.connect(childTestWallet).withdrawWIMX(amtL2, {
+            value: bridgeFeeL2,
+        });
+        let resp7 = await childBridge.connect(childTestWallet).withdrawETH(amtL2, {
+            value: bridgeFeeL2,
+        });
+        let resp8 = await childBridge.connect(childTestWallet).withdraw(childCustomToken.address, amtL2, {
+            value: bridgeFeeL2,
+        });
+
+
+        // Enable mining
+        await rootProvider.send(
+            "evm_setIntervalMining", [
+            1200,
+        ]);
+        await childProvider.send(
+            "evm_setIntervalMining", [
+            200,
+        ]);
+
+        // Wait for transactions to be mined.
+        await waitForReceipt(resp1.hash, rootProvider);
+        await waitForReceipt(resp2.hash, rootProvider);
+        await waitForReceipt(resp3.hash, rootProvider);
+        await waitForReceipt(resp4.hash, rootProvider);
+        await waitForReceipt(resp5.hash, childProvider);
+        await waitForReceipt(resp6.hash, childProvider);
+        await waitForReceipt(resp7.hash, childProvider);
+        await waitForReceipt(resp8.hash, childProvider);
+
+        // Wait for 30 seconds
+        await delay(30000);
+        let receipt = await rootProvider.getTransactionReceipt(resp1.hash);
+        let txFee1 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        receipt = await rootProvider.getTransactionReceipt(resp2.hash);
+        let txFee2 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        receipt = await rootProvider.getTransactionReceipt(resp3.hash);
+        let txFee3 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        receipt = await rootProvider.getTransactionReceipt(resp4.hash);
+        let txFee4 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        receipt = await childProvider.getTransactionReceipt(resp5.hash);
+        let txFee5 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        receipt = await childProvider.getTransactionReceipt(resp6.hash);
+        let txFee6 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        receipt = await childProvider.getTransactionReceipt(resp7.hash);
+        let txFee7 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+        receipt = await childProvider.getTransactionReceipt(resp8.hash);
+        let txFee8 = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+
+        let postIMXBalL1 = await rootIMX.balanceOf(rootTestWallet.address);
+        let postETHBalL1 = await rootProvider.getBalance(rootTestWallet.address);
+        let postWETHBalL1 = await rootWETH.balanceOf(rootTestWallet.address);
+        let postERC20BalL1 = await rootCustomToken.balanceOf(rootTestWallet.address);
+        let postIMXBalL2 = await childProvider.getBalance(childTestWallet.address);
+        let postWIMXBalL2 = await childWIMX.balanceOf(childTestWallet.address);
+        let postETHBalL2 = await childETH.balanceOf(childTestWallet.address);
+        let postERC20BalL2 = await childCustomToken.balanceOf(childTestWallet.address);
+
+        // Verify
+        let expectedIMXBalL1 = preIMXBalL1.sub(amtL1).add(amtL2.mul(2));
+        let expectedETHBalL1 = preETHBalL1.sub(amtL1).add(amtL2).sub(bridgeFeeL1.mul(4)).sub(txFee1).sub(txFee2).sub(txFee3).sub(txFee4);
+        let expectedWETHBalL1 = preWETHBalL1.sub(amtL1);
+        let expectedERC20BalL1 = preERC20BalL1.sub(amtL1).add(amtL2);
+        let expectedIMXBalL2 = preIMXBalL2.add(amtL1).sub(amtL2).sub(bridgeFeeL2.mul(4)).sub(txFee5).sub(txFee6).sub(txFee7).sub(txFee8);
+        let expectedWIMXBalL2 = preWIMXBalL2.sub(amtL2);
+        let expectedETHBalL2 = preETHBalL2.add(amtL1.mul(2)).sub(amtL2);
+        let expectedERC20BalL2 = preERC20BalL2.add(amtL1).sub(amtL2);
+        expect(postIMXBalL1.toBigInt()).to.equal(expectedIMXBalL1.toBigInt());
+        expect(postETHBalL1.toBigInt()).to.equal(expectedETHBalL1.toBigInt());
+        expect(postWETHBalL1.toBigInt()).to.equal(expectedWETHBalL1.toBigInt());
+        expect(postERC20BalL1.toBigInt()).to.equal(expectedERC20BalL1.toBigInt());
+        expect(postIMXBalL2.toBigInt()).to.equal(expectedIMXBalL2.toBigInt());
+        expect(postWIMXBalL2.toBigInt()).to.equal(expectedWIMXBalL2.toBigInt());
+        expect(postETHBalL2.toBigInt()).to.equal(expectedETHBalL2.toBigInt());
+        expect(postERC20BalL2.toBigInt()).to.equal(expectedERC20BalL2.toBigInt());
+
+        // Test balance.
     }).timeout(2400000)
 })
