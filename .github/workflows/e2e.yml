@@ -21,7 +21,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly-caef1360e29dfefb1723fa501f425e6f7824bf7f
+          version: nightly
 
       - name: Run install
         uses: borales/actions-yarn@v4
