@@ -35,7 +35,7 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
     address private constant ETH = address(0xeee);
 
     string[] private deployments = vm.envString("DEPLOYMENTS", ",");
-    
+
     // rpc endpoints to the root chain for each environment
     mapping(string => string) private rpcURLForEnv;
     // the fork id for each environment
