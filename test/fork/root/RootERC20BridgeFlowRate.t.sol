@@ -10,9 +10,9 @@ import {Utils} from "../../utils.t.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
- *  @dev This test suite evaluates the flow rate functionality of already deployed RootERC20BridgeFlowRate contracts.
+ *  @dev This test suite tests the flow rate control functionality of already deployed RootERC20BridgeFlowRate contracts.
  *    The tests are executed against forked chains for each deployment (e.g., mainnet, testnet).
- *    This test suite's objective is not to exhaustively test the flow rate functionality, as this is adequately
+ *    The objective of this test suite is not to exhaustively test the flow rate functionality, as this is adequately
  *    addressed in unit and integration tests. Instead, it aims to ensure that the functionality works as expected
  *    in each deployed environment. Conducting live E2E tests on the flow rate capability in a mainnet environment
  *    for each configured token would be complex, expensive, and potentially disruptive.
