@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {RootERC20BridgeFlowRate} from "../../../src/root/flowrate/RootERC20BridgeFlowRate.sol";
 import {IFlowRateWithdrawalQueueErrors} from "../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {console} from "forge-std/Console.sol";
 
 import {Utils} from "../../utils.t.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -144,9 +143,6 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
             address withdrawer = createAddress(1);
             _sendWithdrawalMessage(bridge, token, withdrawer, amount);
             _verifyWithdrawalWasQueued(bridge, token, withdrawer, amount);
-
-            console.log("Bridge balance: ", address(bridge).balance);
-            console.log("Test contract balance: ", address(this).balance);
 
             // check that early withdrawal attempt fails
             vm.expectRevert();
