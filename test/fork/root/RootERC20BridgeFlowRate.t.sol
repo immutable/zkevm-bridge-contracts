@@ -142,10 +142,17 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
 
             address withdrawer = createAddress(1);
             _sendWithdrawalMessage(bridge, token, withdrawer, amount);
-            _verifyWithdrawalWasQueued(bridge, token, withdrawer, amount);
+            RootERC20BridgeFlowRate.PendingWithdrawal memory pending =
+                _verifyWithdrawalWasQueued(bridge, token, withdrawer, amount);
 
             // check that early withdrawal attempt fails
-            vm.expectRevert();
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IFlowRateWithdrawalQueueErrors.WithdrawalRequestTooEarly.selector,
+                    block.timestamp,
+                    pending.timestamp + bridge.withdrawalDelay()
+                )
+            );
             bridge.finaliseQueuedWithdrawal(withdrawer, 0);
 
             // check that timely withdrawal succeeds
@@ -246,7 +253,7 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
         address token,
         address withdrawer,
         uint256 txValue
-    ) private {
+    ) private returns (RootERC20BridgeFlowRate.PendingWithdrawal memory) {
         uint256[] memory indices = new uint256[](1);
         indices[0] = 0;
         assertEq(bridge.getPendingWithdrawalsLength(withdrawer), 1, "Expected 1 pending withdrawal");
@@ -254,6 +261,7 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
         assertEq(pending[0].withdrawer, withdrawer, "Unexpected withdrawer");
         assertEq(pending[0].token, token, "Unexpected token");
         assertEq(pending[0].amount, txValue, "Unexpected amount");
+        return pending[0];
     }
 
     function _verifyBalance(address token, address withdrawer, uint256 expectedAmount) private {
