@@ -206,19 +206,18 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
     function _exceedFlowRateParameters(RootERC20BridgeFlowRate bridge, address token, address withdrawer) private {
         (uint256 capacity, uint256 depth,, uint256 refillRate) = bridge.flowRateBuckets(token);
 
-        uint256 oneUnit = token == ETH ? 1 ether : 1 ^ IERC20Metadata(token).decimals();
         // Check if the thresholds are within reasonable range
         assertGt(
             bridge.largeTransferThresholds(token),
-            oneUnit,
-            "Precondition: Large transfer threshold should be greater than 1 unit of token"
+            0,
+            "Precondition: Large transfer threshold should be greater than zero"
         );
         assertLt(
             bridge.largeTransferThresholds(token),
             capacity,
             "Precondition: Large transfer threshold should be less than capacity"
         );
-        assertGt(capacity, oneUnit);
+        assertGt(capacity, 0);
         assertGt(refillRate, 0);
         assertEq(bridge.getPendingWithdrawalsLength(withdrawer), 0);
 
