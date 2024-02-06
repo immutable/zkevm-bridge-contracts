@@ -31,9 +31,9 @@ jobs:
       - name: Run unit and integration tests
         run: |
           forge test --no-match-path "test/fork/**" -vvv
-        id: test
+        id: unit_integration_test
 
       - name: Run Fork Tests
         run: |
           forge test --match-path "test/fork/**" -vvv
-        id: test
+        id: fork_test
