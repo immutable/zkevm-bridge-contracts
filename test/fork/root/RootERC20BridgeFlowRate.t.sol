@@ -5,7 +5,6 @@ import {Test} from "forge-std/Test.sol";
 import {RootERC20BridgeFlowRate} from "../../../src/root/flowrate/RootERC20BridgeFlowRate.sol";
 import {IFlowRateWithdrawalQueueErrors} from "../../../src/root/flowrate/FlowRateWithdrawalQueue.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 import {Utils} from "../../utils.t.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -221,20 +220,20 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
         assertGt(refillRate, 0);
         assertEq(bridge.getPendingWithdrawalsLength(withdrawer), 0);
 
-        uint256 txValue = bridge.largeTransferThresholds(token) - 1;
-        uint256 numTxs = depth > txValue ? (depth / txValue) + 2 : 1;
-
-        _giveBridgeFunds(address(bridge), token, numTxs * txValue);
-
-        // withdraw until flow rate is exceeded
-        for (uint256 i = 0; i < numTxs; i++) {
+        uint256 largeTransferThreshold = bridge.largeTransferThresholds(token);
+        uint256 totalWithdrawals;
+        uint256 amount;
+        while (depth > 0) {
+            amount = depth > largeTransferThreshold ? largeTransferThreshold - 1 : depth + 1;
+            _giveBridgeFunds(address(bridge), token, amount);
+            _sendWithdrawalMessage(bridge, token, withdrawer, amount);
             (, depth,,) = bridge.flowRateBuckets(token);
-            _sendWithdrawalMessage(bridge, token, withdrawer, txValue);
+            totalWithdrawals += amount;
         }
 
         assertTrue(bridge.withdrawalQueueActivated());
-        _verifyWithdrawalWasQueued(bridge, token, withdrawer, txValue);
-        _verifyBalance(token, withdrawer, (numTxs - 1) * txValue);
+        _verifyWithdrawalWasQueued(bridge, token, withdrawer, amount);
+        _verifyBalance(token, withdrawer, totalWithdrawals - amount);
     }
 
     /// @dev sends an amount of a given token to the bridge.
@@ -265,9 +264,9 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
 
     function _verifyBalance(address token, address withdrawer, uint256 expectedAmount) private {
         if (token == ETH) {
-            assertEq(withdrawer.balance, expectedAmount);
+            assertEq(withdrawer.balance, expectedAmount, "Balance does not match expected");
         } else {
-            assertEq(ERC20(token).balanceOf(withdrawer), expectedAmount);
+            assertEq(ERC20(token).balanceOf(withdrawer), expectedAmount, "Balance does not match expected");
         }
     }
 
