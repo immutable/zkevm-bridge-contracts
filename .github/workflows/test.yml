@@ -17,7 +17,7 @@ jobs:
       TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
     strategy:
       fail-fast: true
-    name: Foundry project
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
