@@ -84,7 +84,7 @@ $ forge build
 
 ### Test
 ```shell
-$ forge test
+$ forge test --no-match-path "test/fork/**"
 ```
 
 ## Contract Deployment
