@@ -35,5 +35,5 @@ jobs:
 
       - name: Run Fork Tests
         run: |
-          forge test --match-path "test/fork/**" -vvv
+          forge test --match-path "test/fork/**" -vvvvv
         id: fork_test
