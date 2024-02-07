@@ -82,9 +82,26 @@ $ forge install
 $ forge build
 ```
 
-### Test
+### Testing
+To run all tests (unit, integration, and fork tests), run the following command:
+```shell
+$ forge test
+```
+This requires setting the relevant environment variables as described in the "Fork Test" section below.
+
+**Unit and Integration Tests Only**
 ```shell
 $ forge test --no-match-path "test/fork/**"
+```
+
+**Fork Tests Only**
+
+The fork tests run a suite of tests against one or more deployments of the bridge.
+To run these tests copy [`.env.example`](.env.example) file to a `.env` file and set the `MAINNET_RPC_URL` and `TESTNET_RPC_URL` environment variables. Set or update any other environment variables as required. 
+Then run the following command to run the fork tests. 
+
+```shell
+$ forge test --match-path "test/fork/**"
 ```
 
 ## Contract Deployment
