@@ -110,7 +110,7 @@ describe("Bridge e2e test", () => {
         })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
     }).timeout(2400000)
 
-    it.only("should not deposit IMX if balance is insufficient", async() => {
+    it("should not deposit IMX if balance is insufficient", async() => {
         let balance = await rootIMX.balanceOf(rootTestWallet.address);
 
         let amt = balance.add(1);
