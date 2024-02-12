@@ -82,9 +82,26 @@ $ forge install
 $ forge build
 ```
 
-### Test
+### Testing
+To run all tests (unit, integration, and fork tests), run the following command:
 ```shell
 $ forge test
+```
+This requires setting the relevant environment variables as described in the "Fork Test" section below.
+
+**Unit and Integration Tests Only**
+```shell
+$ forge test --no-match-path "test/fork/**"
+```
+
+**Fork Tests Only**
+
+The fork tests run a suite of tests against one or more deployments of the bridge.
+To run these tests copy [`.env.example`](.env.example) file to a `.env` file and set the `MAINNET_RPC_URL` and `TESTNET_RPC_URL` environment variables. Set or update any other environment variables as required. 
+Then run the following command to run the fork tests. 
+
+```shell
+$ forge test --match-path "test/fork/**"
 ```
 
 ## Contract Deployment
@@ -131,7 +148,7 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 |-------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | Wrapped ETH | [`0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2`](https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2) | [`0x7b79995e5f793a07bc00c21412e50ecae098e7f9`](https://sepolia.etherscan.io/address/0x7b79995e5f793a07bc00c21412e50ecae098e7f9) |
 | IMX         | [`0xf57e7e7c23978c3caec3c3548e3d615c346e79ff`](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79ff) | [`0xe2629e08f4125d14e446660028bd98ee60ee69f2`](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69f2) |
-| USDC         | [`0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) | [`0xe2629e08f4125d14e446660028bd98ee60ee69f2`](https://sepolia.etherscan.io/address/0x40b87d235A5B010a20A241F15797C9debf1ecd01) |
+| USDC         | [`0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) | [`0x40b87d235A5B010a20A241F15797C9debf1ecd01`](https://sepolia.etherscan.io/address/0x40b87d235A5B010a20A241F15797C9debf1ecd01) |
 
 ### Child Chain
 #### Core Contracts
@@ -143,26 +160,30 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | Adaptor Implementation | [`0x1d49c44dc4BbDE68D8D51a9C5732f3a24e48EFA6`](https://explorer.immutable.com/address/0x1d49c44dc4BbDE68D8D51a9C5732f3a24e48EFA6) | [`0xac88a57943b5BBa1ecd931F8494cAd0B7F717590`](https://explorer.testnet.immutable.com/address/0xac88a57943b5BBa1ecd931F8494cAd0B7F717590) |
 
 #### Token Addresses
-|                        | Mainnet                                                                                                                           | Testnet                                                                                                                                   |
-|------------------------|-----------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| Wrapped ETH            | [`0x52a6c53869ce09a731cd772f245b97a4401d3348`](https://explorer.immutable.com/address/0x52a6c53869ce09a731cd772f245b97a4401d3348) | [`0xe9E96d1aad82562b7588F03f49aD34186f996478`](https://explorer.testnet.immutable.com/address/0xe9E96d1aad82562b7588F03f49aD34186f996478) |
-| Wrapped IMX            | [`0x3a0c2ba54d6cbd3121f01b96dfd20e99d1696c9d`](https://explorer.immutable.com/address/0x3a0c2ba54d6cbd3121f01b96dfd20e99d1696c9d) | [`0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439`](https://explorer.testnet.immutable.com/address/0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439) | TBA    |
-| USDC                   | [`0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2`](https://explorer.immutable.com/address/0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2) | [`0x3B2d8A1931736Fc321C24864BceEe981B11c3c57`](https://explorer.testnet.immutable.com/address/0x3B2d8A1931736Fc321C24864BceEe981B11c3c57)                                                                                                                                       |
-| USDT                   | [`0x68bcc7F1190AF20e7b572BCfb431c3Ac10A936Ab`](https://explorer.immutable.com/address/0x68bcc7F1190AF20e7b572BCfb431c3Ac10A936Ab) | TBA                                                                                                                                       |
-| Wrapped BTC            | [`0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De`](https://explorer.immutable.com/address/0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De) | TBA                                                                                                                                       |
+|                          | Mainnet                                                                                                                           | Testnet                                                                                                                                   |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| Wrapped ETH              | [`0x52a6c53869ce09a731cd772f245b97a4401d3348`](https://explorer.immutable.com/address/0x52a6c53869ce09a731cd772f245b97a4401d3348) | [`0xe9E96d1aad82562b7588F03f49aD34186f996478`](https://explorer.testnet.immutable.com/address/0xe9E96d1aad82562b7588F03f49aD34186f996478) |
+| Wrapped IMX              | [`0x3a0c2ba54d6cbd3121f01b96dfd20e99d1696c9d`](https://explorer.immutable.com/address/0x3a0c2ba54d6cbd3121f01b96dfd20e99d1696c9d) | [`0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439`](https://explorer.testnet.immutable.com/address/0x1CcCa691501174B4A623CeDA58cC8f1a76dc3439) | TBA    |
+| USDC                     | [`0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2`](https://explorer.immutable.com/address/0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2) | [`0x3B2d8A1931736Fc321C24864BceEe981B11c3c57`](https://explorer.testnet.immutable.com/address/0x3B2d8A1931736Fc321C24864BceEe981B11c3c57) |
+| USDT                     | [`0x68bcc7F1190AF20e7b572BCfb431c3Ac10A936Ab`](https://explorer.immutable.com/address/0x68bcc7F1190AF20e7b572BCfb431c3Ac10A936Ab) | TBA                                                                                                                                       |
+| Wrapped BTC              | [`0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De`](https://explorer.immutable.com/address/0x235F9A2Dc29E51cE7D103bcC5Dfb4F5c9c3371De) | TBA                                                                                                                                       |
+| Gods Unchained (GODS)    | [`0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97`](https://explorer.immutable.com/address/0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97) | TBA                                                                                                                                       |
+| Guild of Guardians (GOG) | [`0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62`](https://explorer.immutable.com/address/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62) | TBA                                                                                                                                       |
 
 ## Flow Rate Parameters
 Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/blob/documentation/docs/HLA-and-Threat-Model.md#flow-rate-detection) parameters that have been configured on the L1 Mainnet and Testnet deployments.
 
 **Mainnet**
 
-| Token                                                                                               | Units | Capacity | Refill Rate | Large Transfer Threshold | 
-|-----------------------------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
-| ETH                                                                                                 | 10^18 | 10.08    | 0.0028      | 5.04                     |
-| [IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79f)                         | 10^18 | 10,008   | 2.78        | 5,004                    |
-| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)                       | 10^6  | 20,016   | 5.56        | 10,008                   |
-| [Gods Unchained (GODS)](https://etherscan.io/address/0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97)    | 10^18 | TBA      | TBA         | TBA                      |
-| [Guild of Guardians (GOG)](https://etherscan.io/address/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62) | 10^18 | TBA      | TBA         | TBA                      |
+| Token                                                                                               | Units | Capacity   | Refill Rate | Large Transfer Threshold | 
+|-----------------------------------------------------------------------------------------------------|:------|------------|-------------|--------------------------|
+| ETH                                                                                                 | 10^18 | 10.08      | 0.0028      | 5.04                     |
+| [IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79f)                         | 10^18 | 10,008     | 2.78        | 5,004                    |
+| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)                       | 10^6  | 20,016     | 5.56        | 10,008                   |
+| [USDT](https://etherscan.io/token/0xdAC17F958D2ee523a2206206994597C13D831ec7)                       | 10^6  | 20,000     | 5.56        | 10,000                   |
+| [wBTC](https://etherscan.io/token/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599)                       | 10^8  | 0.470      | 0.000131    | 0.235                    |
+| [Gods Unchained (GODS)](https://etherscan.io/address/0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97)    | 10^18 | 69,108.50  | 19.20       | 34,554.25                |
+| [Guild of Guardians (GOG)](https://etherscan.io/address/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62) | 10^18 | 119,118.52 | 33.09       | 59,559.26                |
 
 **Testnet**
 
@@ -170,9 +191,6 @@ Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/bl
 |----------------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
 | ETH                                                                                    | 10^18 | 10.08    | 0.0028      | 5.04                     |
 | [IMX](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69ff) | 10^18 | 68,976   | 19.16       | 34,488                   |
-| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)          | 10^6  | TBA      | TBA         | TBA                      |
-| [Gods Unchained (GODS)]()                                                              | 10^18 | TBA      | TBA         | TBA                      |
-| [Guild of Guardians (GOG)]()                                                           | 10^18 | TBA      | TBA         | TBA                      |
 
 
 
