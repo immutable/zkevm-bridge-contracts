@@ -53,8 +53,8 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
     }
 
     function testFuzz_MapToken(address rootToken, string memory name, string memory symbol, uint8 decimals) public {
-        vm.assume(rootToken != address(0) && bytes(name).length != 0 && bytes(symbol).length != 0 && decimals > 0);
-        vm.assume(rootToken != bridge.NATIVE_ETH() && rootToken != bridge.NATIVE_IMX());
+        vm.assume(rootToken > address(10) && bytes(name).length != 0 && bytes(symbol).length != 0 && decimals > 0);
+        vm.assume(rootToken != bridge.NATIVE_ETH() && rootToken != bridge.NATIVE_IMX() && rootToken != ROOT_IMX_TOKEN);
 
         // Map token on L1 triggers call on child bridge.
         bytes memory data = abi.encode(MAP_TOKEN_SIG, rootToken, name, symbol, decimals);
@@ -78,11 +78,12 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
     }
 
     function testFuzz_DepositIMX(address sender, address recipient, uint256 depositAmt) public {
-        vm.assume(sender != address(0) && recipient != address(0) && depositAmt > 0);
+        vm.assume(sender > address(10) && recipient > address(10) && depositAmt > 0);
+        vm.assume(sender.code.length == 0 && recipient.code.length == 0);
+        vm.assume(recipient.balance == 0);
         vm.deal(address(bridge), depositAmt);
 
         assertEq(address(bridge).balance, depositAmt, "Bridge should have depositAmt of IMX");
-        assertEq(recipient.balance, 0, "Recipient should have 0 IMX");
 
         // Deposit IMX on L1 triggers call on child bridge.
         bytes memory data = abi.encode(DEPOSIT_SIG, bridge.rootIMXToken(), sender, recipient, depositAmt);
@@ -97,7 +98,8 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
     }
 
     function testFuzz_WithdrawIMX(address user, uint256 balance, uint256 gasAmt, uint256 withdrawAmt) public {
-        vm.assume(user != address(0));
+        vm.assume(user > address(10));
+        vm.assume(user.code.length == 0);
         vm.assume(balance > 0 && withdrawAmt > 0 && gasAmt > 0);
         vm.assume(balance < type(uint256).max - gasAmt);
         vm.assume(balance > withdrawAmt && balance - withdrawAmt > gasAmt);
@@ -133,7 +135,8 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
     }
 
     function testFuzz_WithdrawWIMX(address user, uint256 balance, uint256 gasAmt, uint256 withdrawAmt) public {
-        vm.assume(user != address(0));
+        vm.assume(user > address(10));
+        vm.assume(user.code.length == 0);
         vm.assume(balance > 0 && withdrawAmt > 0 && gasAmt > 0);
         vm.assume(balance < type(uint256).max);
         vm.assume(balance > withdrawAmt && balance - withdrawAmt > gasAmt);
@@ -181,8 +184,8 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
     }
 
     function testFuzz_DepositETH(address sender, address recipient, uint256 depositAmt) public {
-        vm.assume(sender != address(0) && recipient != address(0) && depositAmt > 0);
-
+        vm.assume(sender > address(10) && recipient > address(10) && depositAmt > 0);
+        vm.assume(sender.code.length == 0 && recipient.code.length == 0);
         assertEq(IChildERC20(bridge.childETHToken()).balanceOf(recipient), 0, "Recipient should have 0 ETH");
 
         // Deposit ETH on L1 triggers call on child bridge.
@@ -201,7 +204,8 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
     }
 
     function testFuzz_WithdrawETH(address user, uint256 balance, uint256 gasAmt, uint256 withdrawAmt) public {
-        vm.assume(user != address(0));
+        vm.assume(user > address(10));
+        vm.assume(user.code.length == 0);
         vm.assume(balance > 0 && withdrawAmt > 0 && gasAmt > 0);
         vm.assume(balance < type(uint256).max);
         vm.assume(balance > withdrawAmt);
@@ -242,9 +246,11 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
     }
 
     function testFuzz_DepositERC20(address rootToken, address sender, address recipient, uint256 depositAmt) public {
-        vm.assume(rootToken != bridge.NATIVE_ETH() && rootToken != bridge.NATIVE_IMX());
-        vm.assume(rootToken != address(0) && rootToken != bridge.NATIVE_ETH() && rootToken != bridge.NATIVE_IMX());
-        vm.assume(sender != address(0) && recipient != address(0) && depositAmt > 0);
+        vm.assume(
+            rootToken > address(10) && rootToken != bridge.NATIVE_ETH() && rootToken != bridge.NATIVE_IMX()
+                && rootToken != ROOT_IMX_TOKEN
+        );
+        vm.assume(sender > address(10) && recipient > address(10) && depositAmt > 0);
 
         // Map
         bytes memory data = abi.encode(MAP_TOKEN_SIG, rootToken, "Test token", "Test", 18);
@@ -274,8 +280,8 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
         uint256 gasAmt,
         uint256 withdrawAmt
     ) public {
-        vm.assume(rootToken != bridge.NATIVE_ETH() && rootToken != bridge.NATIVE_IMX());
-        vm.assume(rootToken != address(0) && user != address(0));
+        vm.assume(rootToken != bridge.NATIVE_ETH() && rootToken != bridge.NATIVE_IMX() && rootToken != ROOT_IMX_TOKEN);
+        vm.assume(rootToken > address(10) && user > address(10));
         vm.assume(balance > 0 && withdrawAmt > 0 && gasAmt > 0);
         vm.assume(balance < type(uint256).max);
         vm.assume(balance > withdrawAmt);
