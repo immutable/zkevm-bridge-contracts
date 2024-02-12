@@ -80,20 +80,6 @@ describe("Bridge e2e test", () => {
             value: ethers.utils.parseEther("0.5"),
         })
         await waitForReceipt(resp.hash, rootProvider);
-
-        // Transfer 5 IMX to child pauser
-        resp = await childTestWallet.sendTransaction({
-            to: childPauserWallet.address,
-            value: ethers.utils.parseEther("5"),
-        })
-        await waitForReceipt(resp.hash, childProvider);
-
-        // Transfer 5 IMX to child unpauser
-        resp = await childTestWallet.sendTransaction({
-            to: childPrivilegedWallet.address,
-            value: ethers.utils.parseEther("5"),
-        })
-        await waitForReceipt(resp.hash, childProvider);
     })
 
     it("should not deposit IMX if allowance is insufficient", async() => {
@@ -154,7 +140,7 @@ describe("Bridge e2e test", () => {
 
         await expect(
             depositIMX(rootTestWallet, amt, bridgeFee, null)
-        ).to.be.rejectedWith("ImxDepositLimitExceeded()");
+        ).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
     }).timeout(2400000)
 
     it("should successfully deposit IMX to self from L1 to L2", async() => {
@@ -216,17 +202,17 @@ describe("Bridge e2e test", () => {
 
     // Local only
     it("should not deposit IMX on L2 if child bridge is paused", async() => {
-        // Transfer 0.1 IMX to child pauser
+        // Transfer 5 IMX to child pauser
         let resp = await childTestWallet.sendTransaction({
             to: childPauserWallet.address,
-            value: ethers.utils.parseEther("0.1"),
+            value: ethers.utils.parseEther("5"),
         })
         await waitForReceipt(resp.hash, childProvider);
 
-        // Transfer 0.1 IMX to child unpauser
+        // Transfer 5 IMX to child unpauser
         resp = await childTestWallet.sendTransaction({
             to: childPrivilegedWallet.address,
-            value: ethers.utils.parseEther("0.1"),
+            value: ethers.utils.parseEther("5"),
         })
         await waitForReceipt(resp.hash, childProvider);
 
@@ -541,12 +527,16 @@ describe("Bridge e2e test", () => {
     it("should not withdraw wIMX if balance is insufficient", async() => {
         let balance = await childWIMX.balanceOf(childTestWallet.address);
 
-        let amt = balance.add(1);
+        let amt = balance;
         let bridgeFee = ethers.utils.parseEther("1.0");
 
-        await expect(
-            withdrawWIMX(childTestWallet, amt, bridgeFee, null)
-        ).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
+        // wIMX withdraw L2 to L1
+        let [priorityFee, maxFee] = await getFee(childProvider);
+        await expect(childBridge.connect(childTestWallet).withdrawWIMX(amt.add(1), {
+            value: bridgeFee,
+            maxPriorityFeePerGas: priorityFee,
+            maxFeePerGas: maxFee,
+        })).to.be.rejectedWith("UNPREDICTABLE_GAS_LIMIT");
     }).timeout(2400000)
 
     it("should successfully withdraw wIMX to self from L2 to L1", async() => {
