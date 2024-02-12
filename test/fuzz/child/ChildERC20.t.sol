@@ -18,7 +18,7 @@ contract ChildERC20Test is Test {
     }
 
     function testFuzz_Mint(address user, uint256 amount) public {
-        vm.assume(user != address(0));
+        vm.assume(user != address(0) && user != address(this));
 
         assertEq(childToken.balanceOf(user), 0, "User should not have balance before mint");
 
@@ -32,7 +32,7 @@ contract ChildERC20Test is Test {
     }
 
     function testFuzz_Burn(address user, uint256 balance, uint256 burnAmt) public {
-        vm.assume(user != address(0));
+        vm.assume(user != address(0) && user != address(this));
         vm.assume(balance < type(uint256).max);
         vm.assume(burnAmt < balance);
 
