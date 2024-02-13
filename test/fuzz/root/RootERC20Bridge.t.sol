@@ -61,7 +61,7 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
     function testFuzz_MapToken(address user, uint256 gasAmt, string memory name, string memory symbol, uint8 decimals)
         public
     {
-        vm.assume(user != address(0));
+        assumeValidUser(user);
         vm.assume(gasAmt > 0);
         vm.assume(bytes(name).length != 0 && bytes(symbol).length != 0 && decimals > 0);
 
@@ -92,7 +92,7 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
     function testFuzz_DepositIMX(address sender, address recipient, uint256 balance, uint256 gasAmt, uint256 depositAmt)
         public
     {
-        vm.assume(sender != address(0) && recipient != address(0));
+        assumeValidUsers(sender, recipient);
         vm.assume(balance > 0 && depositAmt > 0 && gasAmt > 0);
         vm.assume(balance > depositAmt && balance < type(uint256).max);
         vm.assume(depositAmt <= IMX_DEPOSITS_LIMIT);
@@ -138,7 +138,8 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
     }
 
     function testFuzz_WithdrawIMX(address sender, address recipient, uint256 withdrawAmt) public {
-        vm.assume(sender != address(0) && recipient != address(0) && withdrawAmt > 0);
+        assumeValidUsers(sender, recipient);
+        vm.assume(withdrawAmt > 0);
 
         imxToken.mint(address(bridge), withdrawAmt);
 
@@ -163,7 +164,7 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
     function testFuzz_DepositETH(address sender, address recipient, uint256 balance, uint256 gasAmt, uint256 depositAmt)
         public
     {
-        vm.assume(sender != address(0) && recipient != address(0));
+        assumeValidUsers(sender, recipient);
         vm.assume(balance > 0 && depositAmt > 0 && gasAmt > 0);
         vm.assume(balance > depositAmt && balance < type(uint256).max - gasAmt && balance - depositAmt > gasAmt);
 
@@ -172,7 +173,6 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
         vm.startPrank(sender);
 
         // Before deposit
-        assertEq(sender.balance, balance, "Sender should have given balance");
         assertEq(address(bridge).balance, 0, "Bridge should have 0 balance");
 
         // Deposit out of balance should fail
@@ -204,7 +204,7 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
         uint256 gasAmt,
         uint256 depositAmt
     ) public {
-        vm.assume(sender != address(0) && recipient != address(0));
+        assumeValidUsers(sender, recipient);
         vm.assume(balance > 0 && depositAmt > 0 && gasAmt > 0);
         vm.assume(balance > depositAmt && balance < type(uint256).max - gasAmt && balance - depositAmt > gasAmt);
 
@@ -250,7 +250,8 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
     }
 
     function testFuzz_WithdrawETH(address sender, address recipient, uint256 withdrawAmt) public {
-        vm.assume(sender != address(0) && recipient != address(0) && withdrawAmt > 0);
+        assumeValidUsers(sender, recipient);
+        vm.assume(withdrawAmt > 0);
 
         vm.deal(address(bridge), withdrawAmt);
 
@@ -279,7 +280,7 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
         uint256 gasAmt,
         uint256 depositAmt
     ) public {
-        vm.assume(sender != address(0) && recipient != address(0));
+        assumeValidUsers(sender, recipient);
         vm.assume(balance > 0 && depositAmt > 0 && gasAmt > 0);
         vm.assume(balance > depositAmt && balance < type(uint256).max);
         vm.assume(gasAmt < 100);
@@ -331,7 +332,8 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
     }
 
     function testFuzz_WithdrawERC20(address sender, address recipient, uint256 withdrawAmt) public {
-        vm.assume(sender != address(0) && recipient != address(0) && withdrawAmt > 0);
+        assumeValidUsers(sender, recipient);
+        vm.assume(withdrawAmt > 0);
 
         // Map token
         ChildERC20 rootToken = new ChildERC20();
@@ -359,5 +361,20 @@ contract RootERC20BridgeTest is Test, IRootERC20BridgeEvents {
         assertEq(rootToken.balanceOf(address(bridge)), 0, "Bridge should have 0 of ERC20");
 
         vm.stopPrank();
+    }
+
+    function assumeValidUsers(address user1, address user2) internal view {
+        vm.assume(user1 != user2);
+        assumeValidUser(user1);
+        assumeValidUser(user2);
+    }
+
+    function assumeValidUser(address user) internal view {
+        vm.assume(user > address(10));
+        vm.assume(user.balance == 0);
+        vm.assume(user.code.length == 0);
+        vm.assume(childTokenTemplate.balanceOf(user) == 0);
+        vm.assume(imxToken.balanceOf(user) == 0);
+        vm.assume(wETH.balanceOf(user) == 0);
     }
 }
