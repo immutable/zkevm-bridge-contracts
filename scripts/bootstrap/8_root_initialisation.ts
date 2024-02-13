@@ -1,12 +1,10 @@
 // Initialise root contracts
-'use strict';
-require('dotenv').config();
-const init = require("../deploy/root_initialisation.js");
+import { initialiseRootContracts } from "../deploy/root_initialisation";
 
 async function run() {
     console.log("=======Start Root Initialisation=======");
 
-    await init.initialiseRootContracts();
+    await initialiseRootContracts();
 
     console.log("=======End Root Initialisation=======");
 }

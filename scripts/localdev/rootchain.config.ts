@@ -1,9 +1,10 @@
-/** @type import('hardhat/config').HardhatUserConfig */
-require("@nomicfoundation/hardhat-toolbox");
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
 
-module.exports = {
+const config: HardhatUserConfig = {
   networks: {
     hardhat: {
+      hardfork: "shanghai",
       mining: {
         auto: false,
         interval: 1200
@@ -17,3 +18,4 @@ module.exports = {
   },
   solidity: "0.8.19",
 };
+export default config;

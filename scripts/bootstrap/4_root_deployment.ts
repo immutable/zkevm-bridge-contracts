@@ -1,12 +1,10 @@
 // Deploy root contracts
-'use strict';
-require('dotenv').config();
-const deploy = require("../deploy/root_deployment.js");
+import { deployRootContracts } from "../deploy/root_deployment";
 
 async function run() {
     console.log("=======Start Root Deployment=======");
 
-    await deploy.deployRootContracts();
+    await deployRootContracts();
 
     console.log("=======End Root Deployment=======");
 }

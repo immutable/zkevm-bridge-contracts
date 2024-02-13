@@ -31,5 +31,5 @@ The addresses of deployed contracts will be saved in:
 
 To run end to end tests against local development network:
 ```
-npx mocha --require mocha-suppress-logs ../e2e/
+AXELAR_API_URL=skip npx mocha --require mocha-suppress-logs ../e2e/e2e.ts
 ```

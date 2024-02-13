@@ -1,10 +1,10 @@
 // IMX rebalancing
-'use strict';
-require('dotenv').config();
-const { ethers } = require("ethers");
-const helper = require("../helpers/helpers.js");
-const { LedgerSigner } = require('@ethersproject/hardware-wallets')
-const fs = require('fs');
+import * as dotenv from "dotenv";
+dotenv.config();
+import { ethers } from "ethers";
+import { requireEnv, waitForConfirmation, waitForReceipt, getFee, hasDuplicates, getChildContracts, getRootContracts } from "../helpers/helpers";
+import { LedgerSigner } from "../helpers/ledger_signer";
+import { RetryProvider } from "../helpers/retry";
 
 // The total supply of IMX
 const TOTAL_SUPPLY = "2000000000";
@@ -16,39 +16,39 @@ async function run() {
     console.log("=======Start IMX Rebalancing=======");
 
     // Check environment variables
-    let childRPCURL = helper.requireEnv("CHILD_RPC_URL");
-    let childChainID = helper.requireEnv("CHILD_CHAIN_ID");
-    let rootRPCURL = helper.requireEnv("ROOT_RPC_URL");
-    let rootChainID = helper.requireEnv("ROOT_CHAIN_ID");
-    let rootDeployerSecret = helper.requireEnv("ROOT_DEPLOYER_SECRET");
-    let multisigAddr = helper.requireEnv("MULTISIG_CONTRACT_ADDRESS");
-    let rootIMXAddr = helper.requireEnv("ROOT_IMX_ADDR");
+    let childRPCURL = requireEnv("CHILD_RPC_URL");
+    let childChainID = requireEnv("CHILD_CHAIN_ID");
+    let rootRPCURL = requireEnv("ROOT_RPC_URL");
+    let rootChainID = requireEnv("ROOT_CHAIN_ID");
+    let deployerSecret = requireEnv("DEPLOYER_SECRET");
+    let multisigAddr = requireEnv("MULTISIG_CONTRACT_ADDRESS");
+    let rootIMXAddr = requireEnv("ROOT_IMX_ADDR");
 
     // Read from contract file.
-    let data = fs.readFileSync(".child.bridge.contracts.json", 'utf-8');
-    let childContracts = JSON.parse(data);
+    let childContracts = getChildContracts();
     let childBridgeAddr = childContracts.CHILD_BRIDGE_ADDRESS;
-    data = fs.readFileSync(".root.bridge.contracts.json", 'utf-8');
-    let rootContracts = JSON.parse(data);
+    let rootContracts = getRootContracts();
     let rootBridgeAddr = rootContracts.ROOT_BRIDGE_ADDRESS;
 
-    // Get admin address
-    const childProvider = new ethers.providers.JsonRpcProvider(childRPCURL, Number(childChainID));
-    const rootProvider = new ethers.providers.JsonRpcProvider(rootRPCURL, Number(rootChainID));
-    let adminWallet;
-    if (rootDeployerSecret == "ledger") {
-        adminWallet = new LedgerSigner(rootProvider);
+    // Get deployer address
+    const childProvider = new RetryProvider(childRPCURL, Number(childChainID));
+    const rootProvider = new RetryProvider(rootRPCURL, Number(rootChainID));
+    let rootDeployerWallet;
+    if (deployerSecret == "ledger") {
+        let index = requireEnv("DEPLOYER_LEDGER_INDEX");
+        const derivationPath = `m/44'/60'/${parseInt(index)}'/0/0`;
+        rootDeployerWallet = new LedgerSigner(rootProvider, derivationPath);
     } else {
-        adminWallet = new ethers.Wallet(rootDeployerSecret, rootProvider);
+        rootDeployerWallet = new ethers.Wallet(deployerSecret, rootProvider);
     }
-    let adminAddr = await adminWallet.getAddress();
-    console.log("Deployer address is: ", adminAddr);
+    let deployerAddr = await rootDeployerWallet.getAddress();
+    console.log("Deployer address is: ", deployerAddr);
 
     // Check duplicates
-    if (helper.hasDuplicates([adminAddr, childBridgeAddr, multisigAddr])) {
+    if (hasDuplicates([deployerAddr, childBridgeAddr, multisigAddr])) {
         throw("Duplicate address detected!");
     }
-    if (helper.hasDuplicates([adminAddr, rootBridgeAddr, rootIMXAddr])) {
+    if (hasDuplicates([deployerAddr, rootBridgeAddr, rootIMXAddr])) {
         throw("Duplicate address detected!");
     }
 
@@ -60,29 +60,29 @@ async function run() {
 
     console.log("The amount to balance on L1 is: ", ethers.utils.formatEther(balanceAmt));
     let IMX = new ethers.Contract(rootIMXAddr, IMX_ABI, rootProvider);
-    let adminL1Balance = await IMX.balanceOf(adminAddr);
+    let deployerL1Balance = await IMX.balanceOf(deployerAddr);
     let rootBridgeBalance = await IMX.balanceOf(rootBridgeAddr);
 
-    console.log("Admin L1 IMX balance: ", ethers.utils.formatEther(adminL1Balance));
+    console.log("Deployer L1 IMX balance: ", ethers.utils.formatEther(deployerL1Balance));
     console.log("Root bridge L1 IMX balance: ", ethers.utils.formatEther(rootBridgeBalance));
-    
-    if (rootBridgeBalance.gt(ethers.utils.parseEther("1.0"))) {
-        console.log("IMX Rebalancing has already been done, skip.")
+
+    console.log("Rebalance in...");
+    await waitForConfirmation();
+
+    if (deployerL1Balance.lt(balanceAmt)) {
+        console.log("Insufficient balance to rebalance (already balanced?), skip.");
         return;
     }
 
-    console.log("Rebalance in...");
-    await helper.waitForConfirmation();
-
     // Rebalancing
-    console.log("Transfer...")
-    let resp = await IMX.connect(adminWallet).transfer(rootBridgeAddr, balanceAmt);
+    console.log("Rebalancing...")
+    let resp = await IMX.connect(rootDeployerWallet).transfer(rootBridgeAddr, balanceAmt);
     console.log("Transaction submitted: ", JSON.stringify(resp, null, 2))
-    await helper.waitForReceipt(resp.hash, rootProvider);
+    await waitForReceipt(resp.hash, rootProvider);
 
-    adminL1Balance = await IMX.balanceOf(adminAddr);
+    deployerL1Balance = await IMX.balanceOf(deployerAddr);
     rootBridgeBalance = await IMX.balanceOf(rootBridgeAddr);
-    console.log("Admin L1 IMX balance: ", ethers.utils.formatEther(adminL1Balance));
+    console.log("Deployer L1 IMX balance: ", ethers.utils.formatEther(deployerL1Balance));
     console.log("Root bridge L1 IMX balance: ", ethers.utils.formatEther(rootBridgeBalance));
 
     console.log("=======End IMX Rebalancing=======");
