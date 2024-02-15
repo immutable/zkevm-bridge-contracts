@@ -71,7 +71,7 @@ contract ChildERC20BridgeTest is Test, IChildERC20BridgeEvents {
         assertEq(
             bridge.rootTokenToChildToken(rootToken),
             childTokenAddress,
-            "Child actual token address should match predicated address"
+            "Child actual token address should match predicted address"
         );
 
         vm.stopPrank();
