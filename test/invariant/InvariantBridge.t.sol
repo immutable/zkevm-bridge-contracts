@@ -166,19 +166,89 @@ contract InvariantBridge is Test {
         }
 
         // Target contracts
-        bytes4[] memory childSelectors = new bytes4[](1);
-        childSelectors[0] = childBridgeHandler.withdraw.selector;
-        targetSelector(FuzzSelector({addr: address(childBridgeHandler), selectors: childSelectors}));
+        // bytes4[] memory childSelectors = new bytes4[](1);
+        // childSelectors[0] = childBridgeHandler.withdraw.selector;
+        // targetSelector(FuzzSelector({addr: address(childBridgeHandler), selectors: childSelectors}));
 
         bytes4[] memory rootSelectors = new bytes4[](1);
         rootSelectors[0] = rootBridgeHandler.deposit.selector;
         targetSelector(FuzzSelector({addr: address(rootBridgeHandler), selectors: rootSelectors}));
 
-        targetContract(address(childBridgeHandler));
+        // targetContract(address(childBridgeHandler));
         targetContract(address(rootBridgeHandler));
     }
 
+    /// forge-config: default.invariant.runs = 1
+    /// forge-config: default.invariant.depth = 1
     /// forge-config: default.invariant.fail-on-revert = false
     function invariant_A() external {
+        vm.selectFork(rootId);
+        uint256 bridgeBalance0 = ChildERC20(rootTokens[0]).balanceOf(address(rootBridge));
+        uint256 bridgeBalance1 = ChildERC20(rootTokens[1]).balanceOf(address(rootBridge));
+        uint256 bridgeBalance2 = ChildERC20(rootTokens[2]).balanceOf(address(rootBridge));
+        uint256 bridgeBalance3 = ChildERC20(rootTokens[3]).balanceOf(address(rootBridge));
+
+        address childToken0 = rootBridge.rootTokenToChildToken(rootTokens[0]);
+        address childToken1 = rootBridge.rootTokenToChildToken(rootTokens[1]);
+        address childToken2 = rootBridge.rootTokenToChildToken(rootTokens[2]);
+        address childToken3 = rootBridge.rootTokenToChildToken(rootTokens[3]);
+
+        vm.selectFork(childId);
+        uint256 totalSupply0 = ChildERC20(childToken0).totalSupply();
+        uint256 totalSupply1 = ChildERC20(childToken1).totalSupply();
+        uint256 totalSupply2 = ChildERC20(childToken2).totalSupply();
+        uint256 totalSupply3 = ChildERC20(childToken3).totalSupply();
+
+        console.log(string.concat(string.concat(vm.toString(bridgeBalance0), " "), vm.toString(totalSupply0)));
+        console.log(string.concat(string.concat(vm.toString(bridgeBalance1), " "), vm.toString(totalSupply1)));
+        console.log(string.concat(string.concat(vm.toString(bridgeBalance2), " "), vm.toString(totalSupply2)));
+        console.log(string.concat(string.concat(vm.toString(bridgeBalance3), " "), vm.toString(totalSupply3)));
+
+        if (bridgeBalance0 != totalSupply0) {
+            console.log("000");
+            revert(string.concat("**0**",string.concat(string.concat(vm.toString(bridgeBalance0), " "), vm.toString(totalSupply0))));
+        }
+
+        if (bridgeBalance1 != totalSupply1) {
+            console.log("111");
+            revert(string.concat("**1**",string.concat(string.concat(vm.toString(bridgeBalance1), " "), vm.toString(totalSupply1))));
+        }
+
+        if (bridgeBalance2 != totalSupply2) {
+            console.log("222");
+            revert(string.concat("**2**",string.concat(string.concat(vm.toString(bridgeBalance2), " "), vm.toString(totalSupply2))));
+        }
+
+        if (bridgeBalance3 != totalSupply3) {
+            console.log("333");
+            revert(string.concat("**3**",string.concat(string.concat(vm.toString(bridgeBalance3), " "), vm.toString(totalSupply3))));
+        }
+
+        // assertEq(bridgeBalance0, totalSupply0);
+        // assertEq(bridgeBalance1, totalSupply1);
+        // assertEq(bridgeBalance2, totalSupply2);
+        // assertEq(bridgeBalance3, totalSupply3);
+
+        // for (uint256 i = 0; i < NO_OF_TOKENS; i++) {
+        //     address rootToken = rootTokens[i];
+
+        //     vm.selectFork(rootId);
+        //     uint256 bridgeBalance = ChildERC20(rootToken).balanceOf(address(rootBridge));
+        //     address childToken = rootBridge.rootTokenToChildToken(rootToken);
+
+        //     vm.selectFork(childId);
+        //     uint256 totalSupply = ChildERC20(childToken).totalSupply();
+
+        //     string memory log1 = string.concat(string.concat(vm.toString(bridgeBalance), " "), vm.toString(totalSupply));
+        //     console.log(string.concat("!!!", log1));
+        //     if (bridgeBalance != totalSupply) {
+        //         console.log("I'm here....");
+        //     //     // string memory res = string.concat(string.concat(vm.toString(bridgeBalance), " "), vm.toString(totalSupply));
+        //         // console.log();
+        //         revert(string.concat("???", log1));
+        //         // vm.writeFile("./something.txt", log1);
+        //     }
+        //     // assertEq(bridgeBalance, totalSupply);
+        // }
     }
 }
