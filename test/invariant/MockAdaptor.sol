@@ -30,7 +30,7 @@ contract MockAdaptor is Test, IChildBridgeAdaptor, IRootBridgeAdaptor {
 
         // Switch to the other chain.
         vm.selectFork(otherChainId);
-        console.log(""); // <= Bug
+        console.log(""); // <= // Due to a foundry bug, remove this logging will very likely cause foundry to crash.
         onMessageReceive(payload);
         
         vm.selectFork(original);
