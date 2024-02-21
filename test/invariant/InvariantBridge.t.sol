@@ -238,7 +238,7 @@ contract InvariantBridge is Test {
                 vm.selectFork(rootId);
                 uint256 balanceL1 = ChildERC20(rootToken).balanceOf(user);
                 address childToken = rootBridge.rootTokenToChildToken(rootToken);
-                
+
                 vm.selectFork(childId);
                 uint256 balanceL2 = ChildERC20(childToken).balanceOf(user);
 
