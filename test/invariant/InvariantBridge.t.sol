@@ -215,7 +215,14 @@ contract InvariantBridge is Test {
             vm.selectFork(childId);
             uint256 totalSupply = ChildERC20(childToken).totalSupply();
 
+            uint256 userBalanceSum = 0;
+            for (uint256 j = 0; j < NO_OF_USERS; j++) {
+                address user = users[j];
+                userBalanceSum += ChildERC20(childToken).balanceOf(user);
+            }
+
             assertEq(bridgeBalance, totalSupply);
+            assertEq(bridgeBalance, userBalanceSum);
         }
     }
 }
