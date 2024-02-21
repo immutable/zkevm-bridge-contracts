@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {IChildBridgeAdaptor} from "../../src/interfaces/child/IChildBridgeAdaptor.sol";
 import {IRootBridgeAdaptor} from "../../src/interfaces/root/IRootBridgeAdaptor.sol";
-import "forge-std/console.sol";
 
 interface MessageReceiver {
     function onMessageReceive(bytes calldata data) external;
@@ -30,7 +29,6 @@ contract MockAdaptor is Test, IChildBridgeAdaptor, IRootBridgeAdaptor {
 
         // Switch to the other chain.
         vm.selectFork(otherChainId);
-        console.log(""); // <= // Due to a foundry bug, remove this logging will very likely cause foundry to crash.
         onMessageReceive(payload);
         
         vm.selectFork(original);
