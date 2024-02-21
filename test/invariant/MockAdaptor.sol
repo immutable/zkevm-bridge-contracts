@@ -30,7 +30,7 @@ contract MockAdaptor is Test, IChildBridgeAdaptor, IRootBridgeAdaptor {
         // Switch to the other chain.
         vm.selectFork(otherChainId);
         onMessageReceive(payload);
-        
+
         vm.selectFork(original);
     }
 

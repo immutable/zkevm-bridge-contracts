@@ -53,7 +53,7 @@ contract RootERC20BridgeFlowRateHandler is Test {
             // Get child token
             address childToken = rootHelper.rootBridge().rootTokenToChildToken(rootToken);
             uint256 previousLen = rootHelper.getQueueSize(user);
-            
+
             vm.selectFork(childId);
             childHelper.withdraw(user, childToken, amount - currentBalance, gasAmt);
             vm.selectFork(rootId);

@@ -147,8 +147,7 @@ contract InvariantBridge is Test {
         vm.startPrank(ADMIN);
         childHelper = new ChildHelper(payable(childBridge));
         address temp = address(new RootHelper(ADMIN, payable(rootBridge)));
-        childBridgeHandler =
-            new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), temp);
+        childBridgeHandler = new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), temp);
         new RootERC20BridgeFlowRateHandler(childId, rootId, users, rootTokens, address(childHelper), temp);
         vm.stopPrank();
 
@@ -157,8 +156,9 @@ contract InvariantBridge is Test {
         new ChildHelper(payable(childBridge));
         rootHelper = new RootHelper(ADMIN, payable(rootBridge));
         new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
-        rootBridgeHandler =
-            new RootERC20BridgeFlowRateHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
+        rootBridgeHandler = new RootERC20BridgeFlowRateHandler(
+            childId, rootId, users, rootTokens, address(childHelper), address(rootHelper)
+        );
         vm.stopPrank();
 
         vm.selectFork(resetId);
@@ -166,7 +166,9 @@ contract InvariantBridge is Test {
         new ChildHelper(payable(childBridge));
         new RootHelper(ADMIN, payable(rootBridge));
         new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
-        new RootERC20BridgeFlowRateHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
+        new RootERC20BridgeFlowRateHandler(
+            childId, rootId, users, rootTokens, address(childHelper), address(rootHelper)
+        );
         vm.stopPrank();
 
         // Map tokens
@@ -227,22 +229,38 @@ contract InvariantBridge is Test {
 
         if (bridgeBalance0 != totalSupply0) {
             console.log("000");
-            revert(string.concat("**0**",string.concat(string.concat(vm.toString(bridgeBalance0), " "), vm.toString(totalSupply0))));
+            revert(
+                string.concat(
+                    "**0**", string.concat(string.concat(vm.toString(bridgeBalance0), " "), vm.toString(totalSupply0))
+                )
+            );
         }
 
         if (bridgeBalance1 != totalSupply1) {
             console.log("111");
-            revert(string.concat("**1**",string.concat(string.concat(vm.toString(bridgeBalance1), " "), vm.toString(totalSupply1))));
+            revert(
+                string.concat(
+                    "**1**", string.concat(string.concat(vm.toString(bridgeBalance1), " "), vm.toString(totalSupply1))
+                )
+            );
         }
 
         if (bridgeBalance2 != totalSupply2) {
             console.log("222");
-            revert(string.concat("**2**",string.concat(string.concat(vm.toString(bridgeBalance2), " "), vm.toString(totalSupply2))));
+            revert(
+                string.concat(
+                    "**2**", string.concat(string.concat(vm.toString(bridgeBalance2), " "), vm.toString(totalSupply2))
+                )
+            );
         }
 
         if (bridgeBalance3 != totalSupply3) {
             console.log("333");
-            revert(string.concat("**3**",string.concat(string.concat(vm.toString(bridgeBalance3), " "), vm.toString(totalSupply3))));
+            revert(
+                string.concat(
+                    "**3**", string.concat(string.concat(vm.toString(bridgeBalance3), " "), vm.toString(totalSupply3))
+                )
+            );
         }
 
         // assertEq(bridgeBalance0, totalSupply0);

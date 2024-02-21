@@ -39,7 +39,7 @@ contract RootHelper is Test {
             vm.prank(user);
             rootBridge.finaliseQueuedWithdrawal(user, previousLen);
         }
- 
+
         if (rootBridge.withdrawalQueueActivated()) {
             vm.prank(admin);
             rootBridge.deactivateWithdrawalQueue();
