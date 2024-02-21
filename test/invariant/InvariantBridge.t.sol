@@ -225,4 +225,25 @@ contract InvariantBridge is Test {
             assertEq(bridgeBalance, userBalanceSum);
         }
     }
+
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_IndividualERC20Balanced() external {
+        for (uint256 i = 0; i < NO_OF_TOKENS; i++) {
+            address rootToken = rootTokens[i];
+            for (uint256 j = 0; j < NO_OF_USERS; j++) {
+                address user = users[j];
+
+                vm.selectFork(rootId);
+                uint256 balanceL1 = ChildERC20(rootToken).balanceOf(user);
+                address childToken = rootBridge.rootTokenToChildToken(rootToken);
+                
+                vm.selectFork(childId);
+                uint256 balanceL2 = ChildERC20(childToken).balanceOf(user);
+
+                assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
+            }
+        }
+    }
 }
