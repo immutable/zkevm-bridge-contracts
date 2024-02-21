@@ -68,13 +68,10 @@ contract ChildERC20BridgeHandler is Test {
         uint256 currentBalance = ChildERC20(childToken).balanceOf(user);
 
         if (currentBalance < amount) {
-            // // Deposit difference
-            // vm.selectFork(rootId);
-            // rootHelper.deposit(user, rootToken, amount - currentBalance, gasAmt);
-            // vm.selectFork(childId);
-            vm.selectFork(original);
-            // TODO: Issue when try to deposit in withdraw flow.
-            return;
+            // Deposit difference
+            vm.selectFork(rootId);
+            rootHelper.deposit(user, rootToken, amount - currentBalance, gasAmt);
+            vm.selectFork(childId);
         }
 
         vm.selectFork(rootId);

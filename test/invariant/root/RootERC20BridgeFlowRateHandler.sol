@@ -49,19 +49,16 @@ contract RootERC20BridgeFlowRateHandler is Test {
         uint256 currentBalance = ChildERC20(rootToken).balanceOf(user);
 
         if (currentBalance < amount) {
-            // // Withdraw difference
-            // // Get child token
-            // address childToken = rootHelper.rootBridge().rootTokenToChildToken(rootToken);
-            // uint256 previousLen = rootHelper.getQueueSize(user);
+            // Withdraw difference
+            // Get child token
+            address childToken = rootHelper.rootBridge().rootTokenToChildToken(rootToken);
+            uint256 previousLen = rootHelper.getQueueSize(user);
             
-            // vm.selectFork(childId);
-            // childHelper.withdraw(user, childToken, amount - currentBalance, gasAmt);
-            // vm.selectFork(rootId);
+            vm.selectFork(childId);
+            childHelper.withdraw(user, childToken, amount - currentBalance, gasAmt);
+            vm.selectFork(rootId);
 
-            // rootHelper.finaliseWithdrawal(user, previousLen);
-            vm.selectFork(original);
-            // TODO: Issue when try to withdraw in deposit flow.
-            return;
+            rootHelper.finaliseWithdrawal(user, previousLen);
         }
 
         rootHelper.deposit(user, rootToken, amount, gasAmt);
