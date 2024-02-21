@@ -17,6 +17,7 @@ import "forge-std/console.sol";
 contract InvariantBridge is Test {
     string public constant CHILD_CHAIN_URL = "http://127.0.0.1:8500";
     string public constant ROOT_CHAIN_URL = "http://127.0.0.1:8501";
+    string public constant RESET_CHAIN_URL = "http://127.0.0.1:8502";
     uint256 public constant IMX_DEPOSIT_LIMIT = 10000 ether;
     uint256 public constant MAX_AMOUNT = 10000;
     address public constant ADMIN = address(0x111);
@@ -28,6 +29,7 @@ contract InvariantBridge is Test {
 
     uint256 childId;
     uint256 rootId;
+    uint256 resetId;
     ChildERC20Bridge childBridge;
     RootERC20BridgeFlowRate rootBridge;
     MockAdaptor childAdaptor;
@@ -40,6 +42,7 @@ contract InvariantBridge is Test {
     function setUp() public {
         childId = vm.createFork(CHILD_CHAIN_URL);
         rootId = vm.createFork(ROOT_CHAIN_URL);
+        resetId = vm.createFork(RESET_CHAIN_URL);
 
         // Deploy contracts on child chain.
         vm.selectFork(childId);
@@ -64,6 +67,14 @@ contract InvariantBridge is Test {
         ChildERC20 rootIMXToken = new ChildERC20();
         rootIMXToken.initialize(address(123), "Immutable X", "IMX", 18);
         WIMX wETH = new WIMX();
+
+        // Deploy contracts on reset chain.
+        vm.selectFork(resetId);
+        vm.startPrank(ADMIN);
+        ChildERC20 resetTokenTemplate = new ChildERC20();
+        resetTokenTemplate.initialize(address(123), "Test", "TST", 18);
+        new MockAdaptor();
+        vm.stopPrank();
 
         // Configure contracts on child chain.
         vm.selectFork(childId);
@@ -131,7 +142,7 @@ contract InvariantBridge is Test {
             rootTokens.push(address(rootToken));
         }
 
-        // Deploy helpers and handlers on both chains.
+        // Deploy helpers and handlers on all chains.
         vm.selectFork(childId);
         vm.startPrank(ADMIN);
         childHelper = new ChildHelper(payable(childBridge));
@@ -150,6 +161,14 @@ contract InvariantBridge is Test {
             new RootERC20BridgeFlowRateHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
         vm.stopPrank();
 
+        vm.selectFork(resetId);
+        vm.startPrank(ADMIN);
+        new ChildHelper(payable(childBridge));
+        new RootHelper(ADMIN, payable(rootBridge));
+        new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
+        new RootERC20BridgeFlowRateHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
+        vm.stopPrank();
+
         // Map tokens
         vm.selectFork(rootId);
         for (uint256 i = 0; i < NO_OF_TOKENS; i++) {
@@ -166,21 +185,23 @@ contract InvariantBridge is Test {
         }
 
         // Target contracts
-        // bytes4[] memory childSelectors = new bytes4[](1);
-        // childSelectors[0] = childBridgeHandler.withdraw.selector;
-        // targetSelector(FuzzSelector({addr: address(childBridgeHandler), selectors: childSelectors}));
+        bytes4[] memory childSelectors = new bytes4[](1);
+        childSelectors[0] = childBridgeHandler.withdraw.selector;
+        targetSelector(FuzzSelector({addr: address(childBridgeHandler), selectors: childSelectors}));
 
         bytes4[] memory rootSelectors = new bytes4[](1);
         rootSelectors[0] = rootBridgeHandler.deposit.selector;
         targetSelector(FuzzSelector({addr: address(rootBridgeHandler), selectors: rootSelectors}));
 
-        // targetContract(address(childBridgeHandler));
+        targetContract(address(childBridgeHandler));
         targetContract(address(rootBridgeHandler));
+
+        vm.selectFork(resetId);
     }
 
-    /// forge-config: default.invariant.runs = 1
-    /// forge-config: default.invariant.depth = 1
-    /// forge-config: default.invariant.fail-on-revert = false
+    // forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
     function invariant_A() external {
         vm.selectFork(rootId);
         uint256 bridgeBalance0 = ChildERC20(rootTokens[0]).balanceOf(address(rootBridge));
