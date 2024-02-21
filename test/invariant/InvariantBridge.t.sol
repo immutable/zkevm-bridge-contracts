@@ -229,7 +229,7 @@ contract InvariantBridge is Test {
     /// forge-config: default.invariant.runs = 256
     /// forge-config: default.invariant.depth = 15
     /// forge-config: default.invariant.fail-on-revert = true
-    function invariant_IndividualERC20Balanced() external {
+    function invariant_IndividualERC20TokenBalanced() external {
         for (uint256 i = 0; i < NO_OF_TOKENS; i++) {
             address rootToken = rootTokens[i];
             for (uint256 j = 0; j < NO_OF_USERS; j++) {
