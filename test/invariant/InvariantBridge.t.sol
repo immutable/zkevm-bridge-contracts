@@ -227,4 +227,12 @@ contract InvariantBridge is Test {
             assertEq(bridgeBalance, userBalanceSum);
         }
     }
+
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_GasBalanced() external {
+        assertEq(address(rootAdaptor).balance, rootHelper.totalGas());
+        assertEq(address(childAdaptor).balance, childHelper.totalGas());
+    }
 }
