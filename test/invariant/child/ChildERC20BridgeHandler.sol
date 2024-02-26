@@ -70,7 +70,7 @@ contract ChildERC20BridgeHandler is Test {
         if (currentBalance < amount) {
             // Deposit difference
             vm.selectFork(rootId);
-            rootHelper.deposit(user, rootToken, amount - currentBalance, gasAmt);
+            rootHelper.deposit(user, rootToken, amount - currentBalance, 1);
             vm.selectFork(childId);
         }
 
@@ -85,5 +85,70 @@ contract ChildERC20BridgeHandler is Test {
         vm.selectFork(childId);
 
         vm.selectFork(original);
+    }
+
+    function withdrawTo(
+        uint256 userIndexSeed,
+        uint256 recipientIndexSeed,
+        uint256 tokenIndexSeed,
+        uint256 amount,
+        uint256 gasAmt
+    ) public {
+        uint256 original = vm.activeFork();
+
+        // Switch to child chain
+        vm.selectFork(childId);
+
+        // Bound
+        address user = users[bound(userIndexSeed, 0, users.length - 1)];
+        address recipient = users[bound(recipientIndexSeed, 0, users.length - 1)];
+        address rootToken = rootTokens[bound(tokenIndexSeed, 0, rootTokens.length - 1)];
+        amount = bound(amount, 1, MAX_AMOUNT);
+        gasAmt = bound(gasAmt, 1, MAX_GAS);
+
+        // Get child token
+        address childToken = childHelper.childBridge().rootTokenToChildToken(rootToken);
+
+        // Get current balance
+        uint256 currentBalance = ChildERC20(childToken).balanceOf(user);
+
+        if (currentBalance < amount) {
+            // Deposit difference
+            vm.selectFork(rootId);
+            uint256 offset = bound(userIndexSeed, 0, users.length - 1);
+            uint256 diff = amount - currentBalance;
+            address from = findDepositFrom(offset, rootToken, diff);
+            rootHelper.depositTo(from, user, rootToken, diff, 1);
+            vm.selectFork(childId);
+        }
+
+        vm.selectFork(rootId);
+        uint256 previousLen = rootHelper.getQueueSize(recipient);
+        vm.selectFork(childId);
+
+        childHelper.withdrawTo(user, recipient, childToken, amount, gasAmt);
+
+        vm.selectFork(rootId);
+        rootHelper.finaliseWithdrawal(recipient, previousLen);
+        vm.selectFork(childId);
+
+        vm.selectFork(original);
+    }
+
+    function findDepositFrom(uint256 offset, address rootToken, uint256 requiredAmt)
+        public
+        view
+        returns (address from)
+    {
+        for (uint256 i = 0; i < users.length; i++) {
+            uint256 index = i + offset;
+            if (index >= users.length) {
+                index -= users.length;
+            }
+            if (ChildERC20(rootToken).balanceOf(users[index]) >= requiredAmt) {
+                from = users[index];
+                break;
+            }
+        }
     }
 }

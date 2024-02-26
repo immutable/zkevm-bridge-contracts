@@ -28,6 +28,17 @@ contract RootHelper is Test {
         rootBridge.deposit{value: gasAmt}(IERC20Metadata(rootToken), amount);
     }
 
+    function depositTo(address user, address recipient, address rootToken, uint256 amount, uint256 gasAmt) public {
+        vm.prank(user);
+        ChildERC20(rootToken).approve(address(rootBridge), amount);
+
+        vm.deal(user, gasAmt);
+        totalGas += gasAmt;
+
+        vm.prank(user);
+        rootBridge.depositTo{value: gasAmt}(IERC20Metadata(rootToken), recipient, amount);
+    }
+
     function getQueueSize(address user) public view returns (uint256) {
         return rootBridge.getPendingWithdrawalsLength(user);
     }

@@ -22,4 +22,12 @@ contract ChildHelper is Test {
         vm.prank(user);
         childBridge.withdraw{value: gasAmt}(IChildERC20(childToken), amount);
     }
+
+    function withdrawTo(address user, address recipient, address childToken, uint256 amount, uint256 gasAmt) public {
+        vm.deal(user, gasAmt);
+        totalGas += gasAmt;
+
+        vm.prank(user);
+        childBridge.withdrawTo{value: gasAmt}(IChildERC20(childToken), recipient, amount);
+    }
 }
