@@ -190,10 +190,15 @@ contract InvariantBridge is Test {
         }
 
         // Target contracts
-        bytes4[] memory childSelectors = new bytes4[](3);
+        bytes4[] memory childSelectors = new bytes4[](8);
         childSelectors[0] = childBridgeHandler.withdraw.selector;
         childSelectors[1] = childBridgeHandler.withdrawTo.selector;
         childSelectors[2] = childBridgeHandler.withdrawIMX.selector;
+        childSelectors[3] = childBridgeHandler.withdrawIMXTo.selector;
+        childSelectors[4] = childBridgeHandler.withdrawWIMX.selector;
+        childSelectors[5] = childBridgeHandler.withdrawWIMXTo.selector;
+        childSelectors[6] = childBridgeHandler.withdrawETH.selector;
+        childSelectors[7] = childBridgeHandler.withdrawETHTo.selector;
         targetSelector(FuzzSelector({addr: address(childBridgeHandler), selectors: childSelectors}));
 
         bytes4[] memory rootSelectors = new bytes4[](2);
@@ -252,17 +257,6 @@ contract InvariantBridge is Test {
                 assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
             }
         }
-        vm.selectFork(resetId);
-    }
-
-    /// forge-config: default.invariant.runs = 256
-    /// forge-config: default.invariant.depth = 15
-    /// forge-config: default.invariant.fail-on-revert = true
-    function invariant_GasBalanced() external {
-        vm.selectFork(rootId);
-        assertEq(address(rootAdaptor).balance - mappingGas, rootHelper.totalGas());
-        vm.selectFork(childId);
-        assertEq(address(childAdaptor).balance, childHelper.totalGas());
         vm.selectFork(resetId);
     }
 
@@ -359,6 +353,17 @@ contract InvariantBridge is Test {
     function invariant_NoRemainingWIMX() external {
         vm.selectFork(childId);
         assertEq(childBridge.wIMXToken().balance, 0);
+        vm.selectFork(resetId);
+    }
+
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_GasBalanced() external {
+        vm.selectFork(rootId);
+        assertEq(address(rootAdaptor).balance - mappingGas, rootHelper.totalGas());
+        vm.selectFork(childId);
+        assertEq(address(childAdaptor).balance, childHelper.totalGas());
         vm.selectFork(resetId);
     }
 }
