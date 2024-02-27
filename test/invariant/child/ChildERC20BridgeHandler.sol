@@ -68,10 +68,8 @@ contract ChildERC20BridgeHandler is Test {
         uint256 currentBalance = ChildERC20(childToken).balanceOf(user);
 
         if (currentBalance < amount) {
-            // Deposit difference
-            vm.selectFork(rootId);
-            rootHelper.deposit(user, rootToken, amount - currentBalance, 1);
-            vm.selectFork(childId);
+            // Fund difference
+            fund(userIndexSeed, rootToken, childToken, amount - currentBalance);
         }
 
         vm.selectFork(rootId);
@@ -113,13 +111,8 @@ contract ChildERC20BridgeHandler is Test {
         uint256 currentBalance = ChildERC20(childToken).balanceOf(user);
 
         if (currentBalance < amount) {
-            // Deposit difference
-            vm.selectFork(rootId);
-            uint256 offset = bound(userIndexSeed, 0, users.length - 1);
-            uint256 diff = amount - currentBalance;
-            address from = findDepositFrom(offset, rootToken, diff);
-            rootHelper.depositTo(from, user, rootToken, diff, 1);
-            vm.selectFork(childId);
+            // Fund difference
+            fund(userIndexSeed, rootToken, childToken, amount - currentBalance);
         }
 
         vm.selectFork(rootId);
@@ -135,17 +128,28 @@ contract ChildERC20BridgeHandler is Test {
         vm.selectFork(original);
     }
 
-    function findDepositFrom(uint256 offset, address rootToken, uint256 requiredAmt)
-        public
-        view
-        returns (address from)
-    {
+    function fund(uint256 userIndexSeed, address rootToken, address childToken, uint256 diff) public {
+        uint256 offset = bound(userIndexSeed, 0, users.length - 1);
+        address user = users[offset];
+        address from = findFrom(offset, childToken, diff);
+        if (from != address(0)) {
+            vm.prank(from);
+            ChildERC20(childToken).transfer(user, diff);
+        } else {
+            vm.selectFork(rootId);
+            from = findFrom(offset, rootToken, diff);
+            rootHelper.depositTo(from, user, rootToken, diff, 1);
+            vm.selectFork(childId);
+        }
+    }
+
+    function findFrom(uint256 offset, address token, uint256 requiredAmt) public view returns (address from) {
         for (uint256 i = 0; i < users.length; i++) {
             uint256 index = i + offset;
             if (index >= users.length) {
                 index -= users.length;
             }
-            if (ChildERC20(rootToken).balanceOf(users[index]) >= requiredAmt) {
+            if (ChildERC20(token).balanceOf(users[index]) >= requiredAmt) {
                 from = users[index];
                 break;
             }

@@ -45,20 +45,15 @@ contract RootERC20BridgeFlowRateHandler is Test {
         amount = bound(amount, 1, MAX_AMOUNT);
         gasAmt = bound(gasAmt, 1, MAX_GAS);
 
+        // Get child token
+        address childToken = rootHelper.rootBridge().rootTokenToChildToken(rootToken);
+
         // Get current balance
         uint256 currentBalance = ChildERC20(rootToken).balanceOf(user);
 
         if (currentBalance < amount) {
-            // Withdraw difference
-            // Get child token
-            address childToken = rootHelper.rootBridge().rootTokenToChildToken(rootToken);
-            uint256 previousLen = rootHelper.getQueueSize(user);
-
-            vm.selectFork(childId);
-            childHelper.withdraw(user, childToken, amount - currentBalance, 1);
-            vm.selectFork(rootId);
-
-            rootHelper.finaliseWithdrawal(user, previousLen);
+            // Fund difference
+            fund(userIndexSeed, rootToken, childToken, amount - currentBalance);
         }
 
         rootHelper.deposit(user, rootToken, amount, gasAmt);
@@ -85,23 +80,15 @@ contract RootERC20BridgeFlowRateHandler is Test {
         amount = bound(amount, 1, MAX_AMOUNT);
         gasAmt = bound(gasAmt, 1, MAX_GAS);
 
+        // Get child token
+        address childToken = rootHelper.rootBridge().rootTokenToChildToken(rootToken);
+
         // Get current balance
         uint256 currentBalance = ChildERC20(rootToken).balanceOf(user);
 
         if (currentBalance < amount) {
-            // Withdraw difference
-            // Get child token
-            address childToken = rootHelper.rootBridge().rootTokenToChildToken(rootToken);
-            uint256 previousLen = rootHelper.getQueueSize(user);
-
-            vm.selectFork(childId);
-            uint256 offset = bound(userIndexSeed, 0, users.length - 1);
-            uint256 diff = amount - currentBalance;
-            address from = findWithdrawFrom(offset, childToken, diff);
-            childHelper.withdrawTo(from, user, childToken, diff, 1);
-            vm.selectFork(rootId);
-
-            rootHelper.finaliseWithdrawal(user, previousLen);
+            // Fund difference
+            fund(userIndexSeed, rootToken, childToken, amount - currentBalance);
         }
 
         rootHelper.depositTo(user, recipient, rootToken, amount, gasAmt);
@@ -109,7 +96,24 @@ contract RootERC20BridgeFlowRateHandler is Test {
         vm.selectFork(original);
     }
 
-    function findWithdrawFrom(uint256 offset, address childToken, uint256 requiredAmt)
+    function fund(uint256 userIndexSeed, address rootToken, address childToken, uint256 diff) public {
+        uint256 offset = bound(userIndexSeed, 0, users.length - 1);
+        address user = users[offset];
+        address from = findFrom(offset, rootToken, diff);
+        if (from != address(0)) {
+            vm.prank(from);
+            ChildERC20(rootToken).transfer(user, diff);
+        } else {
+            uint256 previousLen = rootHelper.getQueueSize(user);
+            vm.selectFork(childId);
+            from = findFrom(offset, childToken, diff);
+            childHelper.withdrawTo(from, user, childToken, diff, 1);
+            vm.selectFork(rootId);
+            rootHelper.finaliseWithdrawal(user, previousLen);
+        }
+    }
+
+    function findFrom(uint256 offset, address token, uint256 requiredAmt)
         public
         view
         returns (address from)
@@ -119,7 +123,7 @@ contract RootERC20BridgeFlowRateHandler is Test {
             if (index >= users.length) {
                 index -= users.length;
             }
-            if (ChildERC20(childToken).balanceOf(users[index]) >= requiredAmt) {
+            if (ChildERC20(token).balanceOf(users[index]) >= requiredAmt) {
                 from = users[index];
                 break;
             }
