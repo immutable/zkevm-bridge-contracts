@@ -53,7 +53,11 @@ contract RootERC20BridgeFlowRateHandler is Test {
 
         if (currentBalance < amount) {
             // Fund difference
-            fund(userIndexSeed, rootToken, childToken, amount - currentBalance);
+            uint256 previousLen = rootHelper.getQueueSize(user);
+            vm.selectFork(childId);
+            childHelper.withdraw(user, childToken, amount - currentBalance, gasAmt);
+            vm.selectFork(rootId);
+            rootHelper.finaliseWithdrawal(user, previousLen);
         }
 
         rootHelper.deposit(user, rootToken, amount, gasAmt);
@@ -88,41 +92,23 @@ contract RootERC20BridgeFlowRateHandler is Test {
 
         if (currentBalance < amount) {
             // Fund difference
-            fund(userIndexSeed, rootToken, childToken, amount - currentBalance);
+            uint256 previousLen = rootHelper.getQueueSize(user);
+            vm.selectFork(childId);
+            childHelper.withdraw(user, childToken, amount - currentBalance, gasAmt);
+            vm.selectFork(rootId);
+            rootHelper.finaliseWithdrawal(user, previousLen);
         }
 
         rootHelper.depositTo(user, recipient, rootToken, amount, gasAmt);
 
-        vm.selectFork(original);
-    }
-
-    function fund(uint256 userIndexSeed, address rootToken, address childToken, uint256 diff) public {
-        uint256 offset = bound(userIndexSeed, 0, users.length - 1);
-        address user = users[offset];
-        address from = findFrom(offset, rootToken, diff);
-        if (from != address(0)) {
-            vm.prank(from);
-            ChildERC20(rootToken).transfer(user, diff);
-        } else {
-            uint256 previousLen = rootHelper.getQueueSize(user);
+        // If recipient is different, transfer back
+        if (user != recipient) {
             vm.selectFork(childId);
-            from = findFrom(offset, childToken, diff);
-            childHelper.withdrawTo(from, user, childToken, diff, 1);
+            vm.prank(recipient);
+            ChildERC20(childToken).transfer(user, amount);
             vm.selectFork(rootId);
-            rootHelper.finaliseWithdrawal(user, previousLen);
         }
-    }
 
-    function findFrom(uint256 offset, address token, uint256 requiredAmt) public view returns (address from) {
-        for (uint256 i = 0; i < users.length; i++) {
-            uint256 index = i + offset;
-            if (index >= users.length) {
-                index -= users.length;
-            }
-            if (ChildERC20(token).balanceOf(users[index]) >= requiredAmt) {
-                from = users[index];
-                break;
-            }
-        }
+        vm.selectFork(original);
     }
 }

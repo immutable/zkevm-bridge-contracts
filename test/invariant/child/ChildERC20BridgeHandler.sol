@@ -69,7 +69,9 @@ contract ChildERC20BridgeHandler is Test {
 
         if (currentBalance < amount) {
             // Fund difference
-            fund(userIndexSeed, rootToken, childToken, amount - currentBalance);
+            vm.selectFork(rootId);
+            rootHelper.deposit(user, rootToken, amount - currentBalance, gasAmt);
+            vm.selectFork(childId);
         }
 
         vm.selectFork(rootId);
@@ -112,7 +114,9 @@ contract ChildERC20BridgeHandler is Test {
 
         if (currentBalance < amount) {
             // Fund difference
-            fund(userIndexSeed, rootToken, childToken, amount - currentBalance);
+            vm.selectFork(rootId);
+            rootHelper.deposit(user, rootToken, amount - currentBalance, gasAmt);
+            vm.selectFork(childId);
         }
 
         vm.selectFork(rootId);
@@ -123,36 +127,13 @@ contract ChildERC20BridgeHandler is Test {
 
         vm.selectFork(rootId);
         rootHelper.finaliseWithdrawal(recipient, previousLen);
+        // If recipient is different, transfer back
+        if (user != recipient) {
+            vm.prank(recipient);
+            ChildERC20(rootToken).transfer(user, amount);
+        }
         vm.selectFork(childId);
 
         vm.selectFork(original);
-    }
-
-    function fund(uint256 userIndexSeed, address rootToken, address childToken, uint256 diff) public {
-        uint256 offset = bound(userIndexSeed, 0, users.length - 1);
-        address user = users[offset];
-        address from = findFrom(offset, childToken, diff);
-        if (from != address(0)) {
-            vm.prank(from);
-            ChildERC20(childToken).transfer(user, diff);
-        } else {
-            vm.selectFork(rootId);
-            from = findFrom(offset, rootToken, diff);
-            rootHelper.depositTo(from, user, rootToken, diff, 1);
-            vm.selectFork(childId);
-        }
-    }
-
-    function findFrom(uint256 offset, address token, uint256 requiredAmt) public view returns (address from) {
-        for (uint256 i = 0; i < users.length; i++) {
-            uint256 index = i + offset;
-            if (index >= users.length) {
-                index -= users.length;
-            }
-            if (ChildERC20(token).balanceOf(users[index]) >= requiredAmt) {
-                from = users[index];
-                break;
-            }
-        }
     }
 }
