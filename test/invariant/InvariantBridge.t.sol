@@ -190,9 +190,10 @@ contract InvariantBridge is Test {
         }
 
         // Target contracts
-        bytes4[] memory childSelectors = new bytes4[](2);
+        bytes4[] memory childSelectors = new bytes4[](3);
         childSelectors[0] = childBridgeHandler.withdraw.selector;
         childSelectors[1] = childBridgeHandler.withdrawTo.selector;
+        childSelectors[2] = childBridgeHandler.withdrawIMX.selector;
         targetSelector(FuzzSelector({addr: address(childBridgeHandler), selectors: childSelectors}));
 
         bytes4[] memory rootSelectors = new bytes4[](2);
@@ -232,25 +233,25 @@ contract InvariantBridge is Test {
         vm.selectFork(resetId);
     }
 
-    /// forge-config: default.invariant.runs = 256	
-    /// forge-config: default.invariant.depth = 15	
-    /// forge-config: default.invariant.fail-on-revert = true	
-    function invariant_IndividualERC20TokenBalanced() external {	
-        for (uint256 i = 0; i < NO_OF_TOKENS; i++) {	
-            address rootToken = rootTokens[i];	
-            for (uint256 j = 0; j < NO_OF_USERS; j++) {	
-                address user = users[j];	
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_IndividualERC20TokenBalanced() external {
+        for (uint256 i = 0; i < NO_OF_TOKENS; i++) {
+            address rootToken = rootTokens[i];
+            for (uint256 j = 0; j < NO_OF_USERS; j++) {
+                address user = users[j];
 
-                vm.selectFork(rootId);	
-                uint256 balanceL1 = ChildERC20(rootToken).balanceOf(user);	
-                address childToken = rootBridge.rootTokenToChildToken(rootToken);	
+                vm.selectFork(rootId);
+                uint256 balanceL1 = ChildERC20(rootToken).balanceOf(user);
+                address childToken = rootBridge.rootTokenToChildToken(rootToken);
 
-                vm.selectFork(childId);	
-                uint256 balanceL2 = ChildERC20(childToken).balanceOf(user);	
+                vm.selectFork(childId);
+                uint256 balanceL2 = ChildERC20(childToken).balanceOf(user);
 
-                assertEq(balanceL1 + balanceL2, MAX_AMOUNT);	
-            }	
-        }	
+                assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
+            }
+        }
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -261,6 +262,25 @@ contract InvariantBridge is Test {
         assertEq(address(rootAdaptor).balance - mappingGas, rootHelper.totalGas());
         vm.selectFork(childId);
         assertEq(address(childAdaptor).balance, childHelper.totalGas());
+        vm.selectFork(resetId);
+    }
+
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_IMXBalanced() external {
+        vm.selectFork(rootId);
+        uint256 bridgeBalance = ChildERC20(rootBridge.rootIMXToken()).balanceOf(address(rootBridge));
+
+        vm.selectFork(childId);
+        uint256 userBalanceSum = 0;
+        for (uint256 j = 0; j < NO_OF_USERS; j++) {
+            address user = users[j];
+            userBalanceSum += user.balance;
+        }
+
+        assertEq(bridgeBalance, userBalanceSum);
+
         vm.selectFork(resetId);
     }
 }

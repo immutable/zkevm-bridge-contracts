@@ -22,7 +22,7 @@ contract RootHelper is Test {
         vm.prank(user);
         ChildERC20(rootToken).approve(address(rootBridge), amount);
 
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -33,7 +33,7 @@ contract RootHelper is Test {
         vm.prank(user);
         ChildERC20(rootToken).approve(address(rootBridge), amount);
 
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -46,7 +46,7 @@ contract RootHelper is Test {
         vm.prank(user);
         ChildERC20(IMX).approve(address(rootBridge), amount);
 
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -59,7 +59,7 @@ contract RootHelper is Test {
         vm.prank(user);
         ChildERC20(IMX).approve(address(rootBridge), amount);
 
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -67,7 +67,7 @@ contract RootHelper is Test {
     }
 
     function depositETH(address user, uint256 amount, uint256 gasAmt) public {
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -75,7 +75,7 @@ contract RootHelper is Test {
     }
 
     function depositETHTo(address user, address recipient, uint256 amount, uint256 gasAmt) public {
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -88,7 +88,7 @@ contract RootHelper is Test {
         vm.prank(user);
         WETH(wETH).approve(address(rootBridge), amount);
 
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -101,7 +101,7 @@ contract RootHelper is Test {
         vm.prank(user);
         WETH(wETH).approve(address(rootBridge), amount);
 
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);

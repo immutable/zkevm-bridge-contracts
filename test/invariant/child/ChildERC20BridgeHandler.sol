@@ -136,4 +136,38 @@ contract ChildERC20BridgeHandler is Test {
 
         vm.selectFork(original);
     }
+
+    function withdrawIMX(uint256 userIndexSeed, uint256 amount, uint256 gasAmt) public {
+        uint256 original = vm.activeFork();
+
+        // Switch to child chain
+        vm.selectFork(childId);
+
+        // Bound
+        address user = users[bound(userIndexSeed, 0, users.length - 1)];
+        amount = bound(amount, 1, MAX_AMOUNT);
+        gasAmt = bound(gasAmt, 1, MAX_GAS);
+
+        // Get current balance
+        uint256 currentBalance = user.balance;
+
+        if (currentBalance < amount) {
+            // Fund difference
+            vm.selectFork(rootId);
+            rootHelper.depositIMX(user, amount - currentBalance, gasAmt);
+            vm.selectFork(childId);
+        }
+
+        vm.selectFork(rootId);
+        uint256 previousLen = rootHelper.getQueueSize(user);
+        vm.selectFork(childId);
+
+        childHelper.withdrawIMX(user, amount, gasAmt);
+
+        vm.selectFork(rootId);
+        rootHelper.finaliseWithdrawal(user, previousLen);
+        vm.selectFork(childId);
+
+        vm.selectFork(original);
+    }
 }

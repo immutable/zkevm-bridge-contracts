@@ -17,7 +17,7 @@ contract ChildHelper is Test {
     }
 
     function withdraw(address user, address childToken, uint256 amount, uint256 gasAmt) public {
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -25,7 +25,7 @@ contract ChildHelper is Test {
     }
 
     function withdrawTo(address user, address recipient, address childToken, uint256 amount, uint256 gasAmt) public {
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -33,7 +33,7 @@ contract ChildHelper is Test {
     }
 
     function withdrawIMX(address user, uint256 amount, uint256 gasAmt) public {
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -41,7 +41,7 @@ contract ChildHelper is Test {
     }
 
     function withdrawIMXTo(address user, address recipient, uint256 amount, uint256 gasAmt) public {
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -54,7 +54,7 @@ contract ChildHelper is Test {
         vm.prank(user);
         WIMX(wIMX).approve(address(childBridge), amount);
 
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -67,7 +67,7 @@ contract ChildHelper is Test {
         vm.prank(user);
         WIMX(wIMX).approve(address(childBridge), amount);
 
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -75,7 +75,7 @@ contract ChildHelper is Test {
     }
 
     function withdrawETH(address user, uint256 amount, uint256 gasAmt) public {
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
@@ -83,7 +83,7 @@ contract ChildHelper is Test {
     }
 
     function withdrawETHTo(address user, address recipient, uint256 amount, uint256 gasAmt) public {
-        vm.deal(user, gasAmt);
+        vm.deal(user, gasAmt + user.balance);
         totalGas += gasAmt;
 
         vm.prank(user);
