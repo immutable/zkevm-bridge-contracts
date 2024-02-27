@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {ChildERC20} from "../../../src/child/ChildERC20.sol";
+import {WIMX as WETH} from "../../../src/child/WIMX.sol";
 import {RootERC20BridgeFlowRate} from "../../../src/root/flowrate/RootERC20BridgeFlowRate.sol";
 import {IERC20Metadata} from "../../../src/root/RootERC20Bridge.sol";
 
@@ -37,6 +38,74 @@ contract RootHelper is Test {
 
         vm.prank(user);
         rootBridge.depositTo{value: gasAmt}(IERC20Metadata(rootToken), recipient, amount);
+    }
+
+    function depositIMX(address user, uint256 amount, uint256 gasAmt) public {
+        address IMX = rootBridge.rootIMXToken();
+
+        vm.prank(user);
+        ChildERC20(IMX).approve(address(rootBridge), amount);
+
+        vm.deal(user, gasAmt);
+        totalGas += gasAmt;
+
+        vm.prank(user);
+        rootBridge.deposit{value: gasAmt}(IERC20Metadata(IMX), amount);
+    }
+
+    function depositIMXTo(address user, address recipient, uint256 amount, uint256 gasAmt) public {
+        address IMX = rootBridge.rootIMXToken();
+
+        vm.prank(user);
+        ChildERC20(IMX).approve(address(rootBridge), amount);
+
+        vm.deal(user, gasAmt);
+        totalGas += gasAmt;
+
+        vm.prank(user);
+        rootBridge.depositTo{value: gasAmt}(IERC20Metadata(IMX), recipient, amount);
+    }
+
+    function depositETH(address user, uint256 amount, uint256 gasAmt) public {
+        vm.deal(user, gasAmt);
+        totalGas += gasAmt;
+
+        vm.prank(user);
+        rootBridge.depositETH{value: gasAmt + amount}(amount);
+    }
+
+    function depositETHTo(address user, address recipient, uint256 amount, uint256 gasAmt) public {
+        vm.deal(user, gasAmt);
+        totalGas += gasAmt;
+
+        vm.prank(user);
+        rootBridge.depositToETH{value: gasAmt + amount}(recipient, amount);
+    }
+
+    function depositWETH(address user, uint256 amount, uint256 gasAmt) public {
+        address payable wETH = payable(rootBridge.rootWETHToken());
+
+        vm.prank(user);
+        WETH(wETH).approve(address(rootBridge), amount);
+
+        vm.deal(user, gasAmt);
+        totalGas += gasAmt;
+
+        vm.prank(user);
+        rootBridge.deposit{value: gasAmt}(IERC20Metadata(wETH), amount);
+    }
+
+    function depositWETHTo(address user, address recipient, uint256 amount, uint256 gasAmt) public {
+        address payable wETH = payable(rootBridge.rootWETHToken());
+
+        vm.prank(user);
+        WETH(wETH).approve(address(rootBridge), amount);
+
+        vm.deal(user, gasAmt);
+        totalGas += gasAmt;
+
+        vm.prank(user);
+        rootBridge.depositTo{value: gasAmt}(IERC20Metadata(wETH), recipient, amount);
     }
 
     function getQueueSize(address user) public view returns (uint256) {
