@@ -252,6 +252,7 @@ contract InvariantBridge is Test {
                 assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
             }
         }
+        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -273,14 +274,73 @@ contract InvariantBridge is Test {
         uint256 bridgeBalance = ChildERC20(rootBridge.rootIMXToken()).balanceOf(address(rootBridge));
 
         vm.selectFork(childId);
+        uint256 totalSupply = IMX_DEPOSIT_LIMIT - address(childBridge).balance;
+
         uint256 userBalanceSum = 0;
         for (uint256 j = 0; j < NO_OF_USERS; j++) {
             address user = users[j];
             userBalanceSum += user.balance;
         }
 
+        assertEq(bridgeBalance, totalSupply);
         assertEq(bridgeBalance, userBalanceSum);
+        vm.selectFork(resetId);
+    }
 
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_IndividualIMXBalanced() external {
+        for (uint256 j = 0; j < NO_OF_USERS; j++) {
+            address user = users[j];
+
+            vm.selectFork(rootId);
+            uint256 balanceL1 = ChildERC20(rootBridge.rootIMXToken()).balanceOf(user);
+
+            vm.selectFork(childId);
+            uint256 balanceL2 = user.balance;
+
+            assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
+        }
+        vm.selectFork(resetId);
+    }
+
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_ETHBalanced() external {
+        vm.selectFork(rootId);
+        uint256 bridgeBalance = address(rootBridge).balance;
+
+        vm.selectFork(childId);
+        uint256 totalSupply = ChildERC20(childBridge.childETHToken()).totalSupply();
+
+        uint256 userBalanceSum = 0;
+        for (uint256 j = 0; j < NO_OF_USERS; j++) {
+            address user = users[j];
+            userBalanceSum += ChildERC20(childBridge.childETHToken()).balanceOf(user);
+        }
+
+        assertEq(bridgeBalance, totalSupply);
+        assertEq(bridgeBalance, userBalanceSum);
+        vm.selectFork(resetId);
+    }
+
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_IndividualETHBalanced() external {
+        for (uint256 j = 0; j < NO_OF_USERS; j++) {
+            address user = users[j];
+
+            vm.selectFork(rootId);
+            uint256 balanceL1 = user.balance;
+
+            vm.selectFork(childId);
+            uint256 balanceL2 = ChildERC20(childBridge.childETHToken()).balanceOf(user);
+
+            assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
+        }
         vm.selectFork(resetId);
     }
 }
