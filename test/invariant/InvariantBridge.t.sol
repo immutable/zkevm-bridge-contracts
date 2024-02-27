@@ -201,9 +201,15 @@ contract InvariantBridge is Test {
         childSelectors[7] = childBridgeHandler.withdrawETHTo.selector;
         targetSelector(FuzzSelector({addr: address(childBridgeHandler), selectors: childSelectors}));
 
-        bytes4[] memory rootSelectors = new bytes4[](2);
+        bytes4[] memory rootSelectors = new bytes4[](8);
         rootSelectors[0] = rootBridgeHandler.deposit.selector;
         rootSelectors[1] = rootBridgeHandler.depositTo.selector;
+        rootSelectors[2] = rootBridgeHandler.depositIMX.selector;
+        rootSelectors[3] = rootBridgeHandler.depositIMXTo.selector;
+        rootSelectors[4] = rootBridgeHandler.depositETH.selector;
+        rootSelectors[5] = rootBridgeHandler.depositETHTo.selector;
+        rootSelectors[6] = rootBridgeHandler.depositWETH.selector;
+        rootSelectors[7] = rootBridgeHandler.depositWETHTo.selector;
         targetSelector(FuzzSelector({addr: address(rootBridgeHandler), selectors: rootSelectors}));
 
         targetContract(address(childBridgeHandler));
