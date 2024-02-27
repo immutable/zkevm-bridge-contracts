@@ -39,6 +39,8 @@ contract InvariantBridge is Test {
     ChildERC20BridgeHandler childBridgeHandler;
     RootERC20BridgeFlowRateHandler rootBridgeHandler;
 
+    uint256 mappingGas;
+
     function setUp() public {
         childId = vm.createFork(CHILD_CHAIN_URL);
         rootId = vm.createFork(ROOT_CHAIN_URL);
@@ -176,6 +178,7 @@ contract InvariantBridge is Test {
         for (uint256 i = 0; i < NO_OF_TOKENS; i++) {
             address rootToken = rootTokens[i];
             rootBridge.mapToken{value: 1}(IERC20Metadata(rootToken));
+            mappingGas += 1;
             // Verify
             address childTokenL1 = rootBridge.rootTokenToChildToken(address(rootToken));
 
@@ -226,13 +229,17 @@ contract InvariantBridge is Test {
             assertEq(bridgeBalance, totalSupply);
             assertEq(bridgeBalance, userBalanceSum);
         }
+        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
     /// forge-config: default.invariant.depth = 15
     /// forge-config: default.invariant.fail-on-revert = true
     function invariant_GasBalanced() external {
-        assertEq(address(rootAdaptor).balance, rootHelper.totalGas());
+        vm.selectFork(rootId);
+        assertEq(address(rootAdaptor).balance - mappingGas, rootHelper.totalGas());
+        vm.selectFork(childId);
         assertEq(address(childAdaptor).balance, childHelper.totalGas());
+        vm.selectFork(resetId);
     }
 }
