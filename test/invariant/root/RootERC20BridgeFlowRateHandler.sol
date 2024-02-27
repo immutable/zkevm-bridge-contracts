@@ -113,11 +113,7 @@ contract RootERC20BridgeFlowRateHandler is Test {
         }
     }
 
-    function findFrom(uint256 offset, address token, uint256 requiredAmt)
-        public
-        view
-        returns (address from)
-    {
+    function findFrom(uint256 offset, address token, uint256 requiredAmt) public view returns (address from) {
         for (uint256 i = 0; i < users.length; i++) {
             uint256 index = i + offset;
             if (index >= users.length) {
