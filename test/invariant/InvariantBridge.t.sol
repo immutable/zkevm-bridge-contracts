@@ -343,4 +343,22 @@ contract InvariantBridge is Test {
         }
         vm.selectFork(resetId);
     }
+
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_NoRemainingWETH() external {
+        vm.selectFork(rootId);
+        assertEq(rootBridge.rootWETHToken().balance, 0);
+        vm.selectFork(resetId);
+    }
+
+    /// forge-config: default.invariant.runs = 256
+    /// forge-config: default.invariant.depth = 15
+    /// forge-config: default.invariant.fail-on-revert = true
+    function invariant_NoRemainingWIMX() external {
+        vm.selectFork(childId);
+        assertEq(childBridge.wIMXToken().balance, 0);
+        vm.selectFork(resetId);
+    }
 }
