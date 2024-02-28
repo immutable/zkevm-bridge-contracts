@@ -17,6 +17,12 @@ import "forge-std/console.sol";
 contract InvariantBridge is Test {
     string public constant CHILD_CHAIN_URL = "http://127.0.0.1:8500";
     string public constant ROOT_CHAIN_URL = "http://127.0.0.1:8501";
+    // Forge has an issue that fails to reset state at the end of each run.
+    // For example, we found out that if the context stays at child chain at the end of setUp(),
+    // the state on child chain will not be reset or if the context stays at root chain, the state
+    // on the root chain will not be reset, which causes subsequent runs to fail.
+    // We introduced a third chain called reset chain and we make the context to stay on the reset chain
+    // in order to reset state on both child chain and root chain.
     string public constant RESET_CHAIN_URL = "http://127.0.0.1:8502";
     uint256 public constant IMX_DEPOSIT_LIMIT = 10000 ether;
     uint256 public constant MAX_AMOUNT = 10000;
@@ -127,15 +133,14 @@ contract InvariantBridge is Test {
         }
         // Create tokens.
         for (uint256 i = 0; i < NO_OF_TOKENS; i++) {
-            vm.prank(address(0x234));
+            vm.startPrank(address(0x234));
             ChildERC20 rootToken = new ChildERC20();
-            vm.prank(address(0x234));
             rootToken.initialize(address(123), "Test", "TST", 18);
             // Mint token to user
             for (uint256 j = 0; j < NO_OF_USERS; j++) {
-                vm.prank(address(0x234));
                 rootToken.mint(users[j], MAX_AMOUNT);
             }
+            vm.stopPrank();
             // Configure rate for half tokens
             if (i % 2 == 0) {
                 vm.prank(ADMIN);
@@ -250,12 +255,13 @@ contract InvariantBridge is Test {
     function invariant_IndividualERC20TokenBalanced() external {
         for (uint256 i = 0; i < NO_OF_TOKENS; i++) {
             address rootToken = rootTokens[i];
+            vm.selectFork(rootId);
+            address childToken = rootBridge.rootTokenToChildToken(rootToken);
             for (uint256 j = 0; j < NO_OF_USERS; j++) {
                 address user = users[j];
 
                 vm.selectFork(rootId);
                 uint256 balanceL1 = ChildERC20(rootToken).balanceOf(user);
-                address childToken = rootBridge.rootTokenToChildToken(rootToken);
 
                 vm.selectFork(childId);
                 uint256 balanceL2 = ChildERC20(childToken).balanceOf(user);
