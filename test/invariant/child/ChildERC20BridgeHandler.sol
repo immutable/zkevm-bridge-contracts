@@ -83,7 +83,6 @@ contract ChildERC20BridgeHandler is Test {
 
         vm.selectFork(rootId);
         rootHelper.finaliseWithdrawal(user, previousLen);
-        vm.selectFork(childId);
 
         vm.selectFork(original);
     }
@@ -133,7 +132,6 @@ contract ChildERC20BridgeHandler is Test {
             vm.prank(recipient);
             ChildERC20(rootToken).transfer(user, amount);
         }
-        vm.selectFork(childId);
 
         vm.selectFork(original);
     }
@@ -167,7 +165,6 @@ contract ChildERC20BridgeHandler is Test {
 
         vm.selectFork(rootId);
         rootHelper.finaliseWithdrawal(user, previousLen);
-        vm.selectFork(childId);
 
         vm.selectFork(original);
     }
@@ -208,7 +205,6 @@ contract ChildERC20BridgeHandler is Test {
             vm.prank(recipient);
             ChildERC20(imx).transfer(user, amount);
         }
-        vm.selectFork(childId);
 
         vm.selectFork(original);
     }
@@ -247,7 +243,6 @@ contract ChildERC20BridgeHandler is Test {
 
         vm.selectFork(rootId);
         rootHelper.finaliseWithdrawal(user, previousLen);
-        vm.selectFork(childId);
 
         vm.selectFork(original);
     }
@@ -293,7 +288,6 @@ contract ChildERC20BridgeHandler is Test {
             vm.prank(recipient);
             ChildERC20(imx).transfer(user, amount);
         }
-        vm.selectFork(childId);
 
         vm.selectFork(original);
     }
@@ -327,7 +321,6 @@ contract ChildERC20BridgeHandler is Test {
 
         vm.selectFork(rootId);
         rootHelper.finaliseWithdrawal(user, previousLen);
-        vm.selectFork(childId);
 
         vm.selectFork(original);
     }
@@ -367,7 +360,6 @@ contract ChildERC20BridgeHandler is Test {
             vm.prank(recipient);
             user.call{value: amount}("");
         }
-        vm.selectFork(childId);
 
         vm.selectFork(original);
     }

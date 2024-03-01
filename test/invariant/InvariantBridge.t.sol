@@ -246,7 +246,6 @@ contract InvariantBridge is Test {
             assertEq(bridgeBalance, totalSupply);
             assertEq(bridgeBalance, userBalanceSum);
         }
-        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -269,7 +268,6 @@ contract InvariantBridge is Test {
                 assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
             }
         }
-        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -290,7 +288,6 @@ contract InvariantBridge is Test {
 
         assertEq(bridgeBalance, totalSupply);
         assertEq(bridgeBalance, userBalanceSum);
-        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -308,7 +305,6 @@ contract InvariantBridge is Test {
 
             assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
         }
-        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -329,7 +325,6 @@ contract InvariantBridge is Test {
 
         assertEq(bridgeBalance, totalSupply);
         assertEq(bridgeBalance, userBalanceSum);
-        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -356,7 +351,6 @@ contract InvariantBridge is Test {
     function invariant_NoRemainingWETH() external {
         vm.selectFork(rootId);
         assertEq(rootBridge.rootWETHToken().balance, 0);
-        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -365,7 +359,6 @@ contract InvariantBridge is Test {
     function invariant_NoRemainingWIMX() external {
         vm.selectFork(childId);
         assertEq(childBridge.wIMXToken().balance, 0);
-        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
@@ -376,6 +369,5 @@ contract InvariantBridge is Test {
         assertEq(address(rootAdaptor).balance - mappingGas, rootHelper.totalGas());
         vm.selectFork(childId);
         assertEq(address(childAdaptor).balance, childHelper.totalGas());
-        vm.selectFork(resetId);
     }
 }
