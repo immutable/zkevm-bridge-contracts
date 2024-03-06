@@ -15,6 +15,7 @@
         "local:ci": "cd scripts/localdev; rm -rf .child.bridge.contracts.json .root.bridge.contracts.json; ./ci.sh && ./deploy.sh && AXELAR_API_URL=skip npx mocha --require mocha-suppress-logs ../e2e/e2e.ts && ./stop.sh",
         "local:chainonly": "cd scripts/localdev; LOCAL_CHAIN_ONLY=true ./start.sh",
         "local:axelaronly": "cd scripts/localdev; npx ts-node axelar_setup.ts",
+        "local:testchain": "cd scripts/localdev; ./chains.sh",
         "stop": "cd scripts/localdev; ./stop.sh"
     },
     "author": "",

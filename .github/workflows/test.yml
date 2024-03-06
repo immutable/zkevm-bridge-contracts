@@ -24,6 +24,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Set Node.js 18.18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.18.x
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
@@ -35,12 +40,38 @@ jobs:
           forge build --sizes
         id: build
 
-      - name: Run unit and integration tests
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+
+      - name: Run build
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: build
+
+      - name: Run Unit Tests
         run: |
-          forge test --no-match-path "test/fork/**" -vvv
-        id: unit_integration_test
+          forge test --match-path "test/unit/**" -vvv
+        id: unit_test
+
+      - name: Run Integration Tests
+        run: |
+          forge test --match-path "test/integration/**" -vvv
+        id: integration_test
+
+      - name: Run Fuzz Tests
+        run: |
+          forge test --match-path "test/fuzz/**" -vvv
+        id: fuzz_test
 
       - name: Run Fork Tests
         run: |
           forge test --match-path "test/fork/**" -vvvvv
         id: fork_test
+
+      - name: Run Invariant Tests
+        run: |
+          yarn local:testchain
+          forge test --match-path "test/invariant/**" -vvvvv
+        id: invariant_test
