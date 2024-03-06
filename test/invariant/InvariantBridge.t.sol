@@ -16,15 +16,7 @@ import {RootERC20BridgeFlowRateHandler} from "./root/RootERC20BridgeFlowRateHand
 import "forge-std/console.sol";
 
 contract InvariantBridge is Test {
-    string public constant CHILD_CHAIN_URL = "http://127.0.0.1:8500";
-    string public constant ROOT_CHAIN_URL = "http://127.0.0.1:8501";
-    // Forge has an issue that fails to reset state at the end of each run.
-    // For example, we found out that if the context stays at child chain at the end of setUp(),
-    // the state on child chain will not be reset or if the context stays at root chain, the state
-    // on the root chain will not be reset, which causes subsequent runs to fail.
-    // We introduced a third chain called reset chain and we make the context to stay on the reset chain
-    // in order to reset state on both child chain and root chain.
-    string public constant RESET_CHAIN_URL = "http://127.0.0.1:8502";
+    string public constant CHAIN_URL = "http://127.0.0.1:8500";
     uint256 public constant IMX_DEPOSIT_LIMIT = 10000 ether;
     uint256 public constant MAX_AMOUNT = 10000;
     address public constant ADMIN = address(0x111);
@@ -49,9 +41,15 @@ contract InvariantBridge is Test {
     uint256 mappingGas;
 
     function setUp() public {
-        childId = vm.createFork(CHILD_CHAIN_URL);
-        rootId = vm.createFork(ROOT_CHAIN_URL);
-        resetId = vm.createFork(RESET_CHAIN_URL);
+        childId = vm.createFork(CHAIN_URL);
+        rootId = vm.createFork(CHAIN_URL);
+        // Forge has an issue that fails to reset state at the end of each run.
+        // For example, we found out that if the context stays at child chain at the end of setUp(),
+        // the state on child chain will not be reset or if the context stays at root chain, the state
+        // on the root chain will not be reset, which causes subsequent runs to fail.
+        // We introduced a third chain called reset chain and we make the context to stay on the reset chain
+        // in order to reset state on both child chain and root chain.
+        resetId = vm.createFork(CHAIN_URL);
 
         // Deploy contracts on child chain.
         vm.selectFork(childId);

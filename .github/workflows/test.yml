@@ -72,6 +72,6 @@ jobs:
 
       - name: Run Invariant Tests
         run: |
-          yarn local:threechains
+          yarn local:testchain
           forge test --match-path "test/invariant/**" -vvvvv
         id: invariant_test
