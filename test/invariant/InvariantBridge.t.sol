@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {ChildERC20} from "../../src/child/ChildERC20.sol";
 import {WIMX} from "../../src/child/WIMX.sol";
+import {WETH} from "../../src/lib/WETH.sol";
 import {IChildERC20Bridge, ChildERC20Bridge} from "../../src/child/ChildERC20Bridge.sol";
 import {IRootERC20Bridge, IERC20Metadata} from "../../src/root/RootERC20Bridge.sol";
 import {RootERC20BridgeFlowRate} from "../../src/root/flowrate/RootERC20BridgeFlowRate.sol";
@@ -74,7 +75,7 @@ contract InvariantBridge is Test {
         rootBridge = new RootERC20BridgeFlowRate(address(this));
         ChildERC20 rootIMXToken = new ChildERC20();
         rootIMXToken.initialize(address(123), "Immutable X", "IMX", 18);
-        WIMX wETH = new WIMX();
+        WETH wETH = new WETH();
 
         // Deploy contracts on reset chain.
         vm.selectFork(resetId);
