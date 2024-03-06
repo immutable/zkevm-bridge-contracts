@@ -77,14 +77,6 @@ contract InvariantBridge is Test {
         rootIMXToken.initialize(address(123), "Immutable X", "IMX", 18);
         WETH wETH = new WETH();
 
-        // Deploy contracts on reset chain.
-        vm.selectFork(resetId);
-        vm.startPrank(ADMIN);
-        ChildERC20 resetTokenTemplate = new ChildERC20();
-        resetTokenTemplate.initialize(address(123), "Test", "TST", 18);
-        new MockAdaptor();
-        vm.stopPrank();
-
         // Configure contracts on child chain.
         vm.selectFork(childId);
         childAdaptor.initialize(rootId, address(childBridge));
@@ -165,16 +157,6 @@ contract InvariantBridge is Test {
         rootHelper = new RootHelper(ADMIN, payable(rootBridge));
         new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
         rootBridgeHandler = new RootERC20BridgeFlowRateHandler(
-            childId, rootId, users, rootTokens, address(childHelper), address(rootHelper)
-        );
-        vm.stopPrank();
-
-        vm.selectFork(resetId);
-        vm.startPrank(ADMIN);
-        new ChildHelper(payable(childBridge));
-        new RootHelper(ADMIN, payable(rootBridge));
-        new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
-        new RootERC20BridgeFlowRateHandler(
             childId, rootId, users, rootTokens, address(childHelper), address(rootHelper)
         );
         vm.stopPrank();
@@ -343,7 +325,6 @@ contract InvariantBridge is Test {
 
             assertEq(balanceL1 + balanceL2, MAX_AMOUNT);
         }
-        vm.selectFork(resetId);
     }
 
     /// forge-config: default.invariant.runs = 256
