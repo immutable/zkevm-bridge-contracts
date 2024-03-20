@@ -223,13 +223,16 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
         uint256 largeTransferThreshold = bridge.largeTransferThresholds(token);
         uint256 totalWithdrawals;
         uint256 amount;
-        while (depth > 0) {
+        // There could be scenarios where depth is already 0 but the withdrawal queue is not activated.
+        // For instance, when the global queue was activated in the past and then manually deactivated.
+        // Hence, a do-while loop is used to ensure that at least one withdrawal transaction is sent before checking the depth.
+        do {
             amount = depth > largeTransferThreshold ? largeTransferThreshold - 1 : depth + 1;
             _giveBridgeFunds(address(bridge), token, amount);
             _sendWithdrawalMessage(bridge, token, withdrawer, amount);
             (, depth,,) = bridge.flowRateBuckets(token);
             totalWithdrawals += amount;
-        }
+        } while (depth > 0);
 
         assertTrue(bridge.withdrawalQueueActivated());
         _verifyWithdrawalWasQueued(bridge, token, withdrawer, amount);
