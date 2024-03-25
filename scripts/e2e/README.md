@@ -45,11 +45,12 @@ TEST_ACCOUNT_SECRET=
 {
   "ROOT_BRIDGE_ADDRESS": "",
   "ROOT_ADAPTOR_ADDRESS": "",
-  "ROOT_TOKEN_TEMPLATE": ""
+  "ROOT_TOKEN_TEMPLATE": "",
+  "ROOT_TEST_CUSTOM_TOKEN": ""
 }
 ```
 
 3. Run end to end tests
 ```
-npx mocha --require mocha-suppress-logs .
+AXELAR_API_URL=${Axelar API URL or "skip" if run on local} npx mocha --require mocha-suppress-logs ./e2e.ts
 ```

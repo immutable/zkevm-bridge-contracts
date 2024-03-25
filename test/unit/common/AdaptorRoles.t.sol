@@ -21,8 +21,8 @@ contract Setup is Test {
 contract AdaptorRoles is Setup {
     function grantRoles() internal {
         vm.startPrank(admin);
-        mockAdaptorRoles.grantBridgeManager(bridgeManager);
-        mockAdaptorRoles.grantGasServiceManager(gasServiceManager);
+        mockAdaptorRoles.grantBridgeManagerRole(bridgeManager);
+        mockAdaptorRoles.grantGasServiceManagerRole(gasServiceManager);
         mockAdaptorRoles.grantTargetManagerRole(targetManager);
         vm.stopPrank();
     }

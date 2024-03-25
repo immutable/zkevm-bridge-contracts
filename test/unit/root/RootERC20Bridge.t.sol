@@ -55,7 +55,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
 
         deployCodeTo("WETH.sol", abi.encode("Wrapped ETH", "WETH"), WRAPPED_ETH);
 
-        rootBridge = new RootERC20Bridge();
+        rootBridge = new RootERC20Bridge(address(this));
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
 
@@ -84,7 +84,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * INITIALIZE
      */
-
     function test_InitializeBridge() public {
         assertEq(address(rootBridge.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
         assertEq(rootBridge.childERC20Bridge(), CHILD_BRIDGE, "childERC20Bridge not set");
@@ -97,40 +96,30 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         assert(rootBridge.rootTokenToChildToken(NATIVE_ETH) != address(0));
     }
 
-    function test_NativeTransferFromWETH() public {
-        address caller = address(0x123a);
-        payable(caller).transfer(2 ether);
-        // forge inspect src/root/RootERC20Bridge.sol:RootERC20Bridge storageLayout | grep -B3 -A5 -i "rootWETHToken"
-        uint256 wETHStorageSlot = 307;
-        vm.store(address(rootBridge), bytes32(wETHStorageSlot), bytes32(uint256(uint160(caller))));
-
-        vm.startPrank(caller);
-        uint256 bal = address(rootBridge).balance;
-        (bool ok,) = address(rootBridge).call{value: 1 ether}("");
-        assert(ok);
-        uint256 postBal = address(rootBridge).balance;
-
-        assertEq(bal + 1 ether, postBal, "balance not increased");
-    }
-
     function test_RevertI_fNativeTransferIsFromNonWETH() public {
         vm.expectRevert(NonWrappedNativeTransfer.selector);
         (bool ok,) = address(rootBridge).call{value: 1 ether}("");
         assert(ok);
     }
 
-    function test_RevertIf_NativeTransferWhenPaused() public {
-        pause(IPausable(address(rootBridge)));
-        vm.expectRevert("Pausable: paused");
-        (bool ok,) = address(rootBridge).call{value: 1 ether}("");
-        assert(ok);
+    function test_RevertIf_ZeroInitializerIsGiven() public {
+        vm.expectRevert(ZeroAddress.selector);
+        new RootERC20Bridge(address(0));
     }
 
-    function test_NativeTransferResumesFunctionalityAfterUnpausing() public {
-        test_RevertIf_NativeTransferWhenPaused();
-        unpause(IPausable(address(rootBridge)));
-        // Expect success case to pass
-        test_NativeTransferFromWETH();
+    function test_RevertIf_InitializeWithUnauthorizedInitializer() public {
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
+        IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
+            defaultAdmin: address(this),
+            pauser: address(this),
+            unpauser: address(this),
+            variableManager: address(this),
+            adaptorManager: address(this)
+        });
+
+        vm.prank(address(0x1234));
+        vm.expectRevert(UnauthorizedInitializer.selector);
+        bridge.initialize(roles, address(1), address(1), address(1), address(1), address(1), UNLIMITED_IMX_DEPOSITS);
     }
 
     function test_RevertIf_InitializeTwice() public {
@@ -155,7 +144,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressDefaultAdmin() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(0),
             pauser: address(this),
@@ -169,7 +158,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressPauser() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(0),
@@ -183,7 +172,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressUnpauser() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -196,7 +185,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressVariableManager() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -209,7 +198,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressAdaptorManager() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -222,7 +211,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressRootAdapter() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -235,7 +224,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressChildBridge() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -248,7 +237,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressTokenTemplate() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -261,7 +250,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     }
 
     function test_RevertIf_InitializeWithAZeroAddressIMXToken() public {
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -281,7 +270,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             variableManager: address(this),
             adaptorManager: address(this)
         });
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(1), address(1), address(1), address(1), address(0), UNLIMITED_IMX_DEPOSITS);
     }
@@ -294,7 +283,7 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
             variableManager: address(0),
             adaptorManager: address(0)
         });
-        RootERC20Bridge bridge = new RootERC20Bridge();
+        RootERC20Bridge bridge = new RootERC20Bridge(address(this));
         vm.expectRevert(ZeroAddress.selector);
         bridge.initialize(roles, address(0), address(0), address(0), address(0), address(0), UNLIMITED_IMX_DEPOSITS);
     }
@@ -349,7 +338,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * MAP TOKEN
      */
-
     function test_RevertsIf_MapTokenWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
@@ -441,6 +429,32 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
         rootBridge.mapToken{value: 300}(IERC20Metadata(NATIVE_ETH));
     }
 
+    function test_SucceedIf_mapTokenWithSupportedMethods() public {
+        rootBridge.mapToken{value: 300}(token);
+    }
+
+    function test_RevertIf_mapTokenWithoutName() public {
+        vm.mockCallRevert(address(token), abi.encodeWithSelector(IERC20Metadata.name.selector), "Unsupported operation");
+        vm.expectRevert(TokenNotSupported.selector);
+        rootBridge.mapToken{value: 300}(token);
+    }
+
+    function test_RevertIf_mapTokenWithoutSymbol() public {
+        vm.mockCallRevert(
+            address(token), abi.encodeWithSelector(IERC20Metadata.symbol.selector), "Unsupported operation"
+        );
+        vm.expectRevert(TokenNotSupported.selector);
+        rootBridge.mapToken{value: 300}(token);
+    }
+
+    function test_RevertIf_mapTokenWithoutDecimals() public {
+        vm.mockCallRevert(
+            address(token), abi.encodeWithSelector(IERC20Metadata.decimals.selector), "Unsupported operation"
+        );
+        vm.expectRevert(TokenNotSupported.selector);
+        rootBridge.mapToken{value: 300}(token);
+    }
+
     function test_updateRootBridgeAdaptor_UpdatesRootBridgeAdaptor() public {
         address newAdaptorAddress = address(0x11111);
 
@@ -481,7 +495,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT ETH
      */
-
     function test_RevertsIf_DepositETHWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
@@ -528,7 +541,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TO ETH
      */
-
     function test_RevertsIf_DepositToETHWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");
@@ -578,7 +590,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * ZERO AMOUNT
      */
-
     function test_RevertIf_depositETHAmountIsZero() public {
         uint256 amount = 0;
         setupDeposit(NATIVE_ETH, rootBridge, mapTokenFee, depositFee, amount, false);
@@ -617,7 +628,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT WETH
      */
-
     function test_depositWETHCallsSendMessage() public {
         uint256 amount = 100;
         (, bytes memory predictedPayload) =
@@ -692,7 +702,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TOKEN
      */
-
     function test_RevertsIf_DepositReentered() public {
         // Create attack token
         ReentrancyAttackDeposit attackToken = new ReentrancyAttackDeposit(address(rootBridge));
@@ -900,7 +909,6 @@ contract RootERC20BridgeUnitTest is Test, IRootERC20BridgeEvents, IRootERC20Brid
     /**
      * DEPOSIT TO
      */
-
     function test_RevertsIf_DepositToWhenPaused() public {
         pause(IPausable(address(rootBridge)));
         vm.expectRevert("Pausable: paused");

@@ -75,6 +75,10 @@ interface IRootAxelarBridgeAdaptorErrors {
     error InvalidSourceAddress();
     /// @notice Error when a message received has invalid source chain.
     error InvalidSourceChain();
+    /// @notice Error when the an unauthorized initializer tries to initialize the contract.
+    error UnauthorizedInitializer();
+    /// @notice Error when a function that isn't supported by the adaptor is called.
+    error UnsupportedOperation();
 }
 
 /**

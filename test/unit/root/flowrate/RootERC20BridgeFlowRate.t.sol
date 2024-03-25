@@ -136,7 +136,7 @@ contract RootERC20BridgeFlowRateUnitTest is
         bob = makeAddr("bob");
         charlie = makeAddr("charlie");
 
-        rootBridgeFlowRate = new RootERC20BridgeFlowRate();
+        rootBridgeFlowRate = new RootERC20BridgeFlowRate(address(this));
         mockAxelarGateway = new MockAxelarGateway();
         axelarGasService = new MockAxelarGasService();
 
@@ -203,7 +203,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     /**
      * INITIALIZE
      */
-
     function test_InitializeBridgeFlowRate() public {
         assertEq(address(rootBridgeFlowRate.rootBridgeAdaptor()), address(mockAxelarAdaptor), "bridgeAdaptor not set");
         assertEq(rootBridgeFlowRate.childERC20Bridge(), CHILD_BRIDGE, "childERC20Bridge not set");
@@ -257,7 +256,7 @@ contract RootERC20BridgeFlowRateUnitTest is
     }
 
     function test_RevertIf_InitializeWithAZeroAddressRateAdmin() public {
-        RootERC20BridgeFlowRate newRootBridgeFlowRate = new RootERC20BridgeFlowRate();
+        RootERC20BridgeFlowRate newRootBridgeFlowRate = new RootERC20BridgeFlowRate(address(this));
         IRootERC20Bridge.InitializationRoles memory roles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -281,7 +280,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     /**
      * RATE ROLE ACTIONS
      */
-
     function testActivateWithdrawalQueue() public {
         vm.prank(rateAdmin);
         rootBridgeFlowRate.activateWithdrawalQueue();
@@ -504,7 +502,6 @@ contract RootERC20BridgeFlowRateUnitTest is
     /**
      * FLOW RATE WITHDRAW
      */
-
     function testWithdrawalUnconfiguredToken() public {
         transferTokensToChild();
 

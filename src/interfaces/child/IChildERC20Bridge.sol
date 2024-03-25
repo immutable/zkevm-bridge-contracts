@@ -196,4 +196,6 @@ interface IChildERC20BridgeErrors {
     error NonWrappedNativeTransfer();
     /// @notice Error when the bridge doesn't have enough native IMX to support the deposit.
     error InsufficientIMX();
+    /// @notice Error when the an unauthorized initializer tries to initialize the contract.
+    error UnauthorizedInitializer();
 }

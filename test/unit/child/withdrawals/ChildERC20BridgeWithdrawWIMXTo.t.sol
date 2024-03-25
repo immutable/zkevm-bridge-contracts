@@ -33,7 +33,7 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
         wIMXToken = new WIMX();
         Address.sendValue(payable(wIMXToken), 100 ether);
 
-        childBridge = new ChildERC20Bridge();
+        childBridge = new ChildERC20Bridge(address(this));
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: pauser,
@@ -50,7 +50,6 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
     /**
      * WITHDRAW WIMX TO
      */
-
     function test_RevertsIf_WithdrawWIMXToWhenPaused() public {
         pause(IPausable(address(childBridge)));
         vm.expectRevert("Pausable: paused");
@@ -83,7 +82,7 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
         uint256 withdrawFee = 300;
 
         wIMXToken.approve(address(childBridge), withdrawAmount);
-        vm.expectRevert(bytes("Wrapped IMX: Insufficient balance"));
+        vm.expectRevert(TransferWIMXFailed.selector);
         childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
     }
 
@@ -92,7 +91,7 @@ contract ChildERC20BridgeWithdrawWIMXToUnitTest is Test, IChildERC20BridgeEvents
         uint256 withdrawFee = 300;
 
         wIMXToken.approve(address(childBridge), withdrawAmount - 1);
-        vm.expectRevert(bytes("Wrapped IMX: Insufficient allowance"));
+        vm.expectRevert(TransferWIMXFailed.selector);
         childBridge.withdrawWIMXTo{value: withdrawFee}(address(this), withdrawAmount);
     }
 

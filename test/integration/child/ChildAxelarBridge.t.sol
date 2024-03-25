@@ -39,10 +39,10 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
         childERC20 = new ChildERC20();
         childERC20.initialize(address(123), "Test", "TST", 18);
 
-        childERC20Bridge = new ChildERC20Bridge();
+        childERC20Bridge = new ChildERC20Bridge(address(this));
         mockChildAxelarGateway = new MockChildAxelarGateway();
         mockChildAxelarGasService = new MockChildAxelarGasService();
-        childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway));
+        childAxelarBridgeAdaptor = new ChildAxelarBridgeAdaptor(address(mockChildAxelarGateway), address(this));
 
         IChildERC20Bridge.InitializationRoles memory roles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
