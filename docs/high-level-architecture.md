@@ -1,54 +1,49 @@
-# High-Level Architecture and Threat Model
+# High-level Architecture
 
 ---
 
 <!-- TOC -->
-* [Introduction](#introduction)
-  * [Purpose](#purpose)
-  * [Scope](#scope)
-* [Background](#background)
-    * [Cross-chain Messaging Stack](#cross-chain-messaging-stack)
-    * [Axelar GMP Bridge](#axelar-gmp-bridge)
-    * [Immutable zkEVM](#immutable-zkevm)
-* [Immutable Token Bridge](#immutable-token-bridge)
-  * [Core Features](#core-features)
-  * [Security Features](#security-features) 
-* [Architecture](#architecture)
-  * [Stakeholders](#stakeholders)
-  * [Core Components](#core-components)
-  * [Transaction Lifecycle](#transaction-lifecycle)
-  * [Withdrawal Delay Mechanism](#transaction-lifecycle)
-    * [Withdrawal Queue](#withdrawal-queue)
+  * [Introduction](#introduction)
+    * [Purpose](#purpose)
+    * [Scope](#scope)
+  * [Background](#background)
+    * [Cross-chain Messaging](#cross-chain-messaging)
+    * [Axelar: General-purpose Messaging Protocol](#axelar-general-purpose-messaging-protocol)
+    * [Immutable zkEVM Chain](#immutable-zkevm-chain)
+  * [Immutable zkEVM Token Bridge](#immutable-zkevm-token-bridge)
+    * [Core Features](#core-features)
+      * [Deposit Assets (Root Chain → Child Chain)](#deposit-assets-root-chain--child-chain)
+      * [Withdraw Assets (Child Chain → Root Chain)](#withdraw-assets-child-chain--root-chain)
+    * [Security Features](#security-features)
+      * [IMX Deposit Limit](#imx-deposit-limit)
+      * [Withdrawal Delays](#withdrawal-delays)
+      * [Emergency Pause](#emergency-pause)
+      * [Role-Based-Access-Control](#role-based-access-control)
+  * [Architecture](#architecture)
+    * [Stakeholders](#stakeholders)
+    * [Core Components](#core-components)
+    * [Transaction Lifecycle](#transaction-lifecycle)
+      * [Deposit Transaction Flow](#deposit-transaction-flow)
+      * [Withdrawal Transaction Flow](#withdrawal-transaction-flow)
+    * [Withdrawal Delay Mechanism](#withdrawal-delay-mechanism)
+      * [Withdrawal Queue](#withdrawal-queue)
     * [Flow Rate Detection](#flow-rate-detection)
-* [Deployment and Operations](#)
-  * [Bootstrap Process](#)
-  * [Deployment and Initialisation](#)
-  * [Contract Upgrades](#)
-  * [Cryptographic Key Management](#key-management)
-  * [Monitoring and Alerting](#)
-  * [Incident Response](#)
-* [Threat Model](#)
-  * [Threat Identification](#threat-identification)
-  * [Threat Analysis](#threat-identification)
-  * [Mitigation Strategies](#mitigation-strategies)
-* [Glossary](#glossary)
+  * [Glossary](#glossary)
+  * [Appendix A: Smart Contract State Mutation Functions](#appendix-a-smart-contract-state-mutation-functions)
 <!-- TOC -->
 
 ---
 
 ## Introduction
 ### Purpose
-This document outlines a high-level architecture and threat model for the token bridge between Ethereum ("Root" chain) and the Immutable zkEVM ("Child" chain) chains. The bridge facilitates the transfer of ETH, IMX, and standard ERC20 tokens between these chains, using an underlying General Message Passing (GMP) bridge, Axelar, for message transmission. This bridge is a critical piece of infrastructure for the Immutable chain, that will potentially custody significant amount of user assets.
+This document outlines a high-level architecture and threat model for the token bridge between Ethereum ("Root" chain) and the Immutable zkEVM ("Child" chain) chains. The bridge facilitates the transfer of ETH, IMX, and standard ERC20 tokens between these chains, using an underlying General Message Passing (GMP) bridge, Axelar, for message transmission. This bridge is a critical piece of infrastructure for the Immutable zkEVM chain, that will potentially custody significant amount of user assets.
 
 The purpose of this document is to two-fold:
-1. Provide a high-level view of the Immutable bridge's architecture, in terms of its core functionalities and use-cases, major components and their interactions, dependencies and architectural characteristics.
-2. Provide a threat-model that systematically identifies, analyzes, and addresses potential security risks related to the token bridge. This includes: 
-   1. Risk Identification: To enumerate and describe potential threats that could compromise the integrity, security, and functionality of the token bridge.
-   2. Impact Analysis: To assess the potential impact of these threats on stakeholders.
-   3. Mitigation Strategy Development: To outline strategies to mitigate these risks.
+1. Provide a high-level view of the Immutable zkEVM bridge's architecture, in terms of its core functionalities and use-cases, major components and their interactions, dependencies and architectural characteristics.
+2. Identify key security risks related to the token bridge and detail the security features and controls implemented to mitigate them.
 
 ### Scope
-This document primarily focuses on the on-chain part of the Immutable token bridge infrastructure, covering its design, implementation, and operational aspects. Although various off-chain components and services will support this infrastructure, they are not included in the scope of this document. Furthermore, key dependencies like the GMP and underlying chains are only discussed at a high level, to the extent they influence the bridge's security model.
+This document primarily focuses on the on-chain components of the Immutable zkEVM token bridge infrastructure, covering its design, implementation, and operational aspects. Although various off-chain components and services will support this infrastructure, they are not included in the scope of this document. Furthermore, key dependencies like the GMP and underlying chains are only discussed at a high level, to the extent they influence the bridge's security model.
 
 ---
 
@@ -61,7 +56,7 @@ At the lowest level is the messaging protocol, also known as the General Messagi
 
 Token bridges rely on underlying messaging bridges to enable the transfer of assets from a source to a destination network. Token bridges mimic this transfer of an asset by locking the original asset in the source network and issuing a synthetic representation on the destination. The original asset remains encumbered for as long as the synthetic token exists on the destination. When a user wants to redeem the original asset on the source network, the synthetic assets are burnt on the destination network and the original assets unlocked on the source network. Locked assets in a token bridge create a honey-pot for attackers, which has thus made them the primary targets of bridge-related hacks to date. This method is widely used as it is the only way to transfer assets to a network where they were not initially issued.
 
-The Immutable bridge, is a token bridge. It relies on an underlying messaging protocol provided by Axelar.
+The Immutable zkEVM bridge, is a token bridge. It relies on an underlying messaging protocol provided by [Axelar](https://axelar.network/).
 
 <p align="center">
 <img src="diagrams/cross-chain-stack.png" alt="drawing" width="490"/>
@@ -71,9 +66,9 @@ Cross-chain Messaging Stack
 </p>
 
 ### Axelar: General-purpose Messaging Protocol
-Axelar is a general-purpose cross-chain messaging protocol that uses cryptoeconomic guarantees for security. The protocol employs a delegated [proof-of-stake](https://cross-chainriskframework.github.io/framework/20categories/20architecture/architecture/#proof-of-stake) mechanism and a permissionless set of validators coordinated through a [Tendermint](https://tendermint.com/)-based blockchain network. Validators are incentivized with block rewards, and penalised if they deviate from the protocol or experience extended downtimes. This incentivizes validators to operate performant and secure validator nodes and behave honestly. The protocol's safety and liveness guarantees stem directly from the financial stake of the validator set and the in-protocol mechanism that governs their behavior.
+[Axelar](https://axelar.network/) is a general-purpose cross-chain messaging protocol that uses cryptoeconomic guarantees for security. The protocol employs a delegated [proof-of-stake](https://cross-chainriskframework.github.io/framework/20categories/20architecture/architecture/#proof-of-stake) mechanism and a permissionless set of validators coordinated through a [Tendermint](https://tendermint.com/)-based blockchain network. Validators are incentivized with block rewards, and penalised if they deviate from the protocol or experience extended downtimes. This incentivizes validators to operate performant and secure validator nodes and behave honestly. The protocol's safety and liveness guarantees stem directly from the financial stake of the validator set and the in-protocol mechanism that governs their behavior.
 
-Axelar's validator network comprise 75 active validators, and employs a quadratic voting mechanism to achieve consensus. This approach helps to distribute voting power more evenly across validators and mitigate risks associated with the concentration of stake distribution and centralization. The protocol sets a 60% safety threshold by quadratic share of voting power, which, with the current distribution of stake, requires at least 30 out of 70 validators to sign a message for it to be considered valid.
+Axelar's validator network comprise [75 active validators](https://axelarscan.io/validators), and employs a quadratic voting mechanism to achieve consensus. This approach helps to distribute voting power more evenly across validators and mitigate risks associated with the concentration of stake distribution and centralization. The protocol sets a 60% safety threshold by quadratic share of voting power, which, with the current distribution of stake, requires at least 30 out of 70 validators to sign a message for it to be considered valid.
 
 If a quorum of validators is compromised or colludes, fraudulent messages could be submitted and executed. Similarly, if a bug or vulnerability in the protocol enabled spoofing a quorum, then safety could be compromised. Furthermore, under the current distribution of stake, the protocol’s liveness would be impacted if roughly 19 validators failed simultaneously. This same threshold of validators could censor messages if they choose to do so.
 
@@ -84,33 +79,33 @@ If a quorum of validators is compromised or colludes, fraudulent messages could 
 Axelar General-purpose Messaging Bridge
 </p>
 
-### Immutable Chain
-The Immutable chain is an EVM-based single sequencer chain, derived from a fork of the Geth client and operating on the Clique consensus protocol. As a permissioned chain, it has a fixed set of validators. The chain utilizes a native token, IMX, for transaction gas payments. An ERC20 version of IMX also exists on Ethereum. Upon the launch of the Immutable chain, native IMX will be pre-mined to support the floating supply of IMX on Ethereum. Users bridging IMX from Ethereum to Immutable will receive native IMX on the Immutable chain. The Immutable bridge will maintain a supply of IMX to service this bridging process.
+### Immutable zkEVM Chain
+The Immutable zkEVM chain is an EVM-based single sequencer chain, derived from a fork of the [Geth client](https://github.com/ethereum/go-ethereum) and operating on the [Clique consensus protocol](https://geth.ethereum.org/docs/tools/clef/clique-signing). As a permissioned chain, it has a fixed set of validators. The chain utilizes a native token, IMX, for transaction gas payments. An [ERC20 version of IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79ff) also exists on Ethereum. Upon the launch of the Immutable zkEVM chain, native IMX was pre-mined to support the floating supply of IMX on Ethereum. Users bridging IMX from Ethereum will receive native IMX on the Immutable zkEVM. The Immutable zkEVM bridge maintains a supply of IMX to service this bridging.
 
 ---
 
-## Immutable Token Bridge
-The Immutable token bridge facilitates the transfer of assets between two chains, namely Ethereum (the Root chain) and the Immutable chain (the Child chain). At present, the bridge only supports the transfer of standard ERC20 tokens originating from Ethereum, as well as native assets (ETH and IMX). Other types of assets (such as ERC721) and assets originating from the Child chain are not currently supported.
+## Immutable zkEVM Token Bridge
+The Immutable zkEVM token bridge facilitates the transfer of assets between two chains, namely Ethereum (the Root chain) and the Immutable zkEVM (the Child chain). At present, the bridge only supports the transfer of standard ERC20 tokens originating from Ethereum, as well as native assets (ETH and IMX). Other types of assets (such as ERC721) and assets originating from the Child chain are not currently supported.
 
 ### Core Features
 The bridge provides two key functions, **deposits** and **withdrawals**. 
 
 #### Deposit Assets (Root Chain → Child Chain)
-When a user wishes to transfer assets from Ethereum to Immutable, they initiate a deposit. This deposit moves an asset from the Root chain to the Child chain. It does so by first transferring the user's asset to the bridge (Root chain), then minting and transferring corresponding representation tokens of that asset to the user, on the Child chain. The following types of asset deposits flows are supported:
+When a user wishes to transfer assets from Ethereum to Immutable zkEVM, they initiate a deposit. This deposit moves an asset from the Root chain to the Child chain. It does so by first transferring the user's asset to the bridge (Root chain) where they are locked, then minting and transferring corresponding representation tokens of that asset to the user, on the Child chain. The following types of asset deposits flows are supported:
 1. Native ETH on Ethereum  → Wrapped ETH on Immutable zkEVM (ERC20 token)
 2. Wrapped ETH on Ethereum → Wrapped ETH on Immutable zkEVM (ERC20 token)
 3. ERC20 IMX on Ethereum   → Native IMX on Immutable zkEVM. IMX is represented on Immutable zkEVM as the native gas token, see [here](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79ff)
 4. Standard ERC20 tokens   → Wrapped equivalents on Immutable zkEVM (ERC20 token)
 
 #### Withdraw Assets (Child Chain → Root Chain)
-When a user wants to transfer bridged assets from Immutable back to Ethereum, they start a withdrawal. This process moves an asset from the Child chain to the Root chain. It includes burning the user's bridged tokens on the child chain and unlocking the corresponding asset on the Root chain. Only assets that were bridged using the deposit flow described above can be withdrawn. Therefore, the available withdrawal flows are as follows:
+When a user wants to transfer bridged assets from Immutable zkEVM back to Ethereum, they start a withdrawal. This process moves an asset from the Child chain to the Root chain. It includes burning the user's bridged tokens on the child chain and unlocking the corresponding asset on the Root chain. Only assets that were bridged using the deposit flow described above can be withdrawn. Therefore, the available withdrawal flows are as follows:
 1. Native IMX on Immutable zkEVM →  for ERC20 IMX on Ethereum.
 2. Wrapped ETH on Immutable zkEVM →  Native ETH on Ethereum
 3. Wrapped IMX on Immutable zkEVM →  for ERC20 IMX on Ethereum
 4. Wrapped ERC20 on Immutable zkEVM →  Original ERC20 on Ethereum
 
 **Not supported:**
-The following capabilities are not currently supported by the Immutable bridge:
+The following capabilities are not currently supported by the Immutable zkEVM bridge:
 - Bridging of tokens that were originally deployed on the Child chain (i.e. ones that do not originate from the Root chain).
 - Bridging of non-standard ERC20 tokens
 - Bridging of ERC721 or other tokens standards
@@ -155,10 +150,10 @@ The bridge employs fine-grained Role-Based-Access-Controls (RBAC), for privilege
 The following stakeholders are involved in the bridge's design, implementation, and operation:
 1. **Users:** Users are the primary stakeholders of the bridge. They are the ones who deposit and withdraw assets from the bridge. They are also the ones who are impacted by any potential exploits.
 2. **Token holders:** Token holders are the stakeholders who hold the tokens that are bridged. They are impacted by any potential exploits that affect the bridge, as this could significantly impact the value of their tokens.
-3. **Bridge Operators:** Bridge operators are the entities that operate the bridge. They are responsible for the bridge's security, maintenance, and upgrades. They are also responsible for the bridge's operational aspects, such as key management, deployment, and configuration.In the context of Immutable Bridge, this role is undertaken exclusively by Immutable.
+3. **Bridge Operators:** Bridge operators are the entities that operate the bridge. They are responsible for the bridge's security, maintenance, and upgrades. They are also responsible for the bridge's operational aspects, such as key management, deployment, and configuration. In the context of Immutable zkEVM bridge, this role is undertaken exclusively by Immutable.
 
 ### Core Components
-The Immutable Bridge consists of a set of solidity smart contracts deployed on both the Root and Child chains. These contracts enable capabilities such as deposits, withdrawals, and token mapping between the Root and Child chains, as discussed in the [core features](#core-features*) section.
+The Immutable zkEVM bridge consists of a set of solidity smart contracts deployed on both the Root and Child chains. These contracts enable capabilities such as deposits, withdrawals, and token mapping between the Root and Child chains, as discussed in the [core features](#core-features*) section.
 
 The design of the contracts follows an adaptor pattern, in order to abstract away GMP specific functionality from the core bridge functionality. This allows the bridge to be easily replace the underlying GMP if required. 
 
@@ -197,18 +192,18 @@ The example below illustrates the lifecycle of transaction where a user deposits
 The deposit of ERC20 tokens follows a similar flow with two subtle differences: 1) A prerequisite step where the user grants approval to the ERC20 token, enabling the bridge to transfer the deposit amount, and 2) As part of the deposit initiation step (step 1 in the process above), the bridge transfers the tokens from the user to the bridge itself.
 
 #### Withdrawal Transaction Flow
-The example below illustrates the lifecycle of transaction where a user withdraws wETH from the Immutable chain. The example is illustrative of the lifecycle of a typical token withdrawal transaction. A prerequisite step to this withdrawal process is that a user approves the bridge's transfer of the required amount of the ERC20 token from the user's account.
+The example below illustrates the lifecycle of transaction where a user withdraws wETH from the Immutable zkEVM chain. The example is illustrative of the lifecycle of a typical token withdrawal transaction. A prerequisite step to this withdrawal process is that a user approves the bridge's transfer of the required amount of the ERC20 token from the user's account.
 
 <img src="diagrams/withdraw-transaction-flow.png" alt="drawing"/>
 
-1. Alice initiates a call to `withdrawETH()` on the `ChildERC20Bridge` contract, sending her desired amount of wETH to withdraw and a bridging fee in IMX, the native currency of the Immutable chain. The bridge fee covers the Axelar protocol services, which include validator attestation, relaying, and executing the cross-chain message on the destination chain.
+1. Alice initiates a call to `withdrawETH()` on the `ChildERC20Bridge` contract, sending her desired amount of wETH to withdraw and a bridging fee in IMX, the native currency of the Immutable zkEVM chain. The bridge fee covers the Axelar protocol services, which include validator attestation, relaying, and executing the cross-chain message on the destination chain.
 2. The corresponding amount of wETH is burnt from Alice's balance, on the Wrapped ETH ERC20 contract.
 3. The bridge sends a cross-chain message payload to the `ChildAxelarBridgeAdaptor`.
 4. This bridge adaptor forwards the message payload to the `AxelarGateway` contract and sends the bridge fee to the `AxelarGasService` contract.
 5. The `AxelarGateway` emits events associated with the request to send the cross-chain message. These events are observed by Axelar validators who then attest to the cross-chain message.
 6. Once a quorum of Axelar validators attests to a message, an Axelar validator sends the approval information to the `AxelarGateway` contract on the destination chain.
 7. Subsequently, the Axelar executor service triggers the execution of the cross-chain message to complete the deposit process on the destination chain. This is done by calling the `execute()` method on `RootAxelarBridgeAdaptor`. While the Axelar executor service is compensated as part of the bridging fee, the process is permissionless and can be executed by any entity.
-8. The bridge adaptor validates the cross-chain message, ensuring it has been attested by the Axelar validator set and originated from the `ChildAxelarBridgeAdaptor` on Immutable.
+8. The bridge adaptor validates the cross-chain message, ensuring it has been attested by the Axelar validator set and originated from the `ChildAxelarBridgeAdaptor` on Immutable zkEVM.
 9. The bridge adaptor forwards the message to the `RootERC20BridgeFlowRate` contract.
 10. The `RootERC20BridgeFlowRate` performs various validations. These checks include determining if the withdrawal exceeds the configured flow rate for ETH. If it does, the transaction is placed in a withdrawal queue. Requiring Alice to manually finalise the withdrawal, after the withdrawal delay (default of 1 day) has elapsed. If it doesn't, the bridge transfers a corresponding amount of native ETH from the bridge to Alice, thus completing the withdrawal flow.
 
@@ -240,7 +235,7 @@ The default withdrawal delay is 24 hours. The rationale for this length of delay
 
 #### Withdrawal Queue
 
-When a user initiates a withdrawal transaction from the Immutable chain to Ethereum, as discussed in the [withdrawal transaction flow section](#withdrawal-transaction-flow)), the request eventually triggers the `_withdraw` function in `RootERC20BridgeFlowRate` contract on the root chain. As described above, the withdrawal may then be enqueued into the withdrawal queue. Each `receiver` account has their own withdrawal queue, where the `receiver` is the recipient of the withdrawal. After the withdrawal delay, anyone can call the `RootERC20BridgeFlowRate` contract’s `finaliseQueuedWithdrawal` function or `finaliseQueuedWithdrawalsAggregated` function to complete the withdrawal.
+When a user initiates a withdrawal transaction from the Immutable zkEVM to Ethereum, as discussed in the [withdrawal transaction flow section](#withdrawal-transaction-flow)), the request eventually triggers the `_withdraw` function in `RootERC20BridgeFlowRate` contract on the root chain. As described above, the withdrawal may then be enqueued into the withdrawal queue. Each `receiver` account has their own withdrawal queue, where the `receiver` is the recipient of the withdrawal. After the withdrawal delay, anyone can call the `RootERC20BridgeFlowRate` contract’s `finaliseQueuedWithdrawal` function or `finaliseQueuedWithdrawalsAggregated` function to complete the withdrawal.
 
 The withdrawal queue is implemented as a map of arrays:
 
@@ -289,35 +284,6 @@ A possible issue with this methodology is that the calculations are quantized, b
 The `_updateFlowRateBucket` function in [`FlowRateDetection.sol`](../src/root/flowrate/FlowRateDetection.sol) implements the bucket update calculations.
 
 ---
-## Threat Model
-### Attack Surfaces
-#### Bridge Smart Contracts
-The smart contracts are the primary attack surface for the bridge. 
-They are the components that handle the core bridge functionality that users interact with, and custody significant amount of user-funds.
-Detail listing of the state mutating functions in each of the core functions, any access controls they employ are listed in the [appendix](#appendix-a-smart-contract-state-mutation-functions).
-The contracts are deployed on both the Root and Child chains. The contracts are written in Solidity, and are compiled using the Solidity compiler (v0.8.19).
-Vulnerabilities in the smart contracts can be exploited in a number of ways, to lead to a range of potential impacts, such as loss of user funds, double-spends, and denial of service.
-- execution of invalid messages
-- unauthorised access to privileged functions
-- loss of user funds
-- 
-
-#### Bridge Operators
-
-#### User Interfaces and Supporting Services
-
-#### Axelar GMP
-- validators, smart contracts other infrastructure and operational risk
-
-#### Cryptographic Keys
-
-#### 
-
-#### Immutable Chain
-
-#### Ethereum Chain
-
-
 
 ## Glossary
 - **General Message Passing (GMP) bridge**: A bridge that enables the transfer of arbitrary messages between two chains. The GMP bridge used by the Immutable zkEVM token bridge is [Axelar](https://axelar.network/).
