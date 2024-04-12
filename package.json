@@ -30,7 +30,7 @@
         "@ethersproject/hardware-wallets": "^5.7.0",
         "@ledgerhq/hw-app-eth": "^6.35.0",
         "@ledgerhq/hw-transport-node-hid": "^6.28.0",
-        "@openzeppelin/contracts": "^4.5.0",
+        "@openzeppelin/contracts": "^4.9.6",
         "@types/chai-as-promised": "^7.1.8",
         "axios": "^0.28.0",
         "bip39": "^3.0.4",
