@@ -83,9 +83,9 @@ $ forge build
 ```
 
 ### Testing
-To run unit and integration tests execute the following command:
+To run unit, integration and fuzz tests execute the following command:
 ```shell
-$ forge test --no-match-path "test/{fork,invariant,fuzz}/**"
+$ forge test --no-match-path "test/{fork,invariant}/**"
 ```
 
 **Fork Tests**
