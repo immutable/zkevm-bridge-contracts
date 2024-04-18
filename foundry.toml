@@ -6,4 +6,3 @@ solc-version = "0.8.19"
 # Reason for why this flag is required can be found here: https://github.com/foundry-rs/foundry/issues/7607
 unchecked_cheatcode_artifacts = true
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
-fs_permissions = [{ access = "read", path = "./"}]
