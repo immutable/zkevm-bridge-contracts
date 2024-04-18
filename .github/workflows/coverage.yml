@@ -5,7 +5,7 @@ on:
 
 env:
   FOUNDRY_PROFILE: ci
-  GITHUB_TOKEN: ${{ secrets.PLATFORM_SA_GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.ZKEVM_BRIDGE_CONTRACTS_GITHUB_TOKEN }}
 
 jobs:
   check:
