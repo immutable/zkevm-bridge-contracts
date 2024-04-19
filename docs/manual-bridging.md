@@ -77,7 +77,7 @@ Note: The bridge only supports standard ERC-20 tokens, so make sure your token a
     - **Note:** The `depositETH()` function will transfer funds to the same address on L2 as the sender executing this transaction on L1. If however, you’d like to deposit to a different address use the `depositToETH`function, which will take an additional parameter `receiver` which is the address of the receiver on L2.
 - The transaction will first transfer the specified amount of ERC-20 from the user to the bridge and perform a cross-chain call to the L2 to mint a corresponding amount of tokens to the intended receiver address.
 - This process can take ~20minutes to be completed on the destination chain.  You can track the progress of this cross-chain call by going to Axelarscan ([mainnet](https://axelarscan.io/), [testnet](https://testnet.axelarscan.io/)) and providing the transaction hash in the search field at the top right.
-- Once completed, the funds will be available in the recipient's address on L2.
+- Once completed, the funds will be available in the recipient's address on L2. Note that whether you deposit native ETH using this method or wrapped ETH via the ERC-20 token deposit method, the wrapped ETH token received on Layer 2 will be the same.
 
 ## Estimating Bridge Fee
 Estimates for bridge fees are obtained through Axelar's API. These fees encompass the costs for Axelar validators to validate transactions, as well as the gas costs incurred when executing a transaction on the destination chain.
