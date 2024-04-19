@@ -9,6 +9,7 @@ The Immutable token bridge facilitates the transfer of assets between two chains
 * [Contract Deployment](#contract-deployment)
 * [Deployed Contract Addresses](#deployed-contract-addresses)
 * [Flow Rate Parameters](#flow-rate-parameters)
+* [Manual Bridging Guide](#manual-bridging-guide)
 * [Audits](#audits)
 <!-- TOC -->
 
@@ -186,6 +187,8 @@ Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/bl
 | ETH                                                                                    | 10^18 | 10.08    | 0.0028      | 5.04                     |
 | [IMX](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69ff) | 10^18 | 68,976   | 19.16       | 34,488                   |
 
+## Manual Bridging Guide
+The process to manually bridge funds from Ethereum to Immutable zkEVM by directly interacting with the bridge contracts is documented [here](docs/manual-bridging.md). However, the recommended method for bridging to and from the Immutable zkEVM is to use the [Immutable Toolkit](https://toolkit.immutable.com/bridge/) user interface.
 
 ## Audits
 The Immutable token bridge has been audited by [Trail of Bits](https://www.trailofbits.com/). The audit report can be found [here](./audits/Trail-of-Bits-2023-12-14.pdf).
