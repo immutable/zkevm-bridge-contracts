@@ -6,8 +6,8 @@ import { getContract, requireEnv } from "../helpers/helpers";
 
 // 7 days of blocks
 const DURATION = 40320;
-// 1 hr of blocks
-const SAMPLE_WINDOW = 240;
+// 0.5 hr of blocks, needs to sample faster than per hr
+const SAMPLE_WINDOW = 120;
 // All tokens to check
 const TOKENS = {
     "IMX": "0xf57e7e7c23978c3caec3c3548e3d615c346e79ff",
