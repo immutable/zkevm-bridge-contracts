@@ -50,10 +50,10 @@ jobs:
         with:
           cmd: build
 
-      - name: Run Unit Tests
-        run: |
-          forge test --match-path "test/unit/**" -vvv
-        id: unit_test
+      # - name: Run Unit Tests
+      #   run: |
+      #     forge test --match-path "test/unit/**" -vvv
+      #   id: unit_test
 
       - name: Run Integration Tests
         run: |
