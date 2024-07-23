@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {IChildBridgeAdaptor} from "../../src/interfaces/child/IChildBridgeAdaptor.sol";
 import {IRootBridgeAdaptor} from "../../src/interfaces/root/IRootBridgeAdaptor.sol";
+import {IChainManager} from "./IChainManager.sol";
 
 interface MessageReceiver {
     function onMessageReceive(bytes calldata data) external;
@@ -12,12 +13,14 @@ interface MessageReceiver {
 contract MockAdaptor is Test, IChildBridgeAdaptor, IRootBridgeAdaptor {
     uint256 otherChainId;
     MessageReceiver messageReceiver;
+    IChainManager chainManager;
 
     constructor() {}
 
-    function initialize(uint256 _otherChainId, address _messageReceiver) public {
+    function initialize(uint256 _otherChainId, address _messageReceiver, address _chainManager) public {
         otherChainId = _otherChainId;
         messageReceiver = MessageReceiver(_messageReceiver);
+        chainManager = IChainManager(_chainManager);
     }
 
     function sendMessage(bytes calldata payload, address /*refundRecipient*/ )
@@ -28,10 +31,10 @@ contract MockAdaptor is Test, IChildBridgeAdaptor, IRootBridgeAdaptor {
         uint256 original = vm.activeFork();
 
         // Switch to the other chain.
-        vm.selectFork(otherChainId);
+        chainManager.switchToChain(otherChainId);
         onMessageReceive(payload);
 
-        vm.selectFork(original);
+        chainManager.switchToChain(original);
     }
 
     function onMessageReceive(bytes calldata data) public {

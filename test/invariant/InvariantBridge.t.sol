@@ -11,11 +11,12 @@ import {RootERC20BridgeFlowRate} from "../../src/root/flowrate/RootERC20BridgeFl
 import {MockAdaptor} from "./MockAdaptor.sol";
 import {ChildHelper} from "./child/ChildHelper.sol";
 import {RootHelper} from "./root/RootHelper.sol";
+import {IChainManager} from "./IChainManager.sol";
 import {ChildERC20BridgeHandler} from "./child/ChildERC20BridgeHandler.sol";
 import {RootERC20BridgeFlowRateHandler} from "./root/RootERC20BridgeFlowRateHandler.sol";
 import "forge-std/console.sol";
 
-contract InvariantBridge is Test {
+contract InvariantBridge is Test, IChainManager {
     string public constant CHAIN_URL = "http://127.0.0.1:8500";
     uint256 public constant IMX_DEPOSIT_LIMIT = 10000 ether;
     uint256 public constant MAX_AMOUNT = 10000;
@@ -39,6 +40,10 @@ contract InvariantBridge is Test {
     RootERC20BridgeFlowRateHandler rootBridgeHandler;
 
     uint256 mappingGas;
+
+    function switchToChain(uint256 chainId) external {
+        vm.selectFork(chainId);
+    }
 
     function setUp() public {
         childId = vm.createFork(CHAIN_URL);
@@ -77,7 +82,7 @@ contract InvariantBridge is Test {
 
         // Configure contracts on child chain.
         vm.selectFork(childId);
-        childAdaptor.initialize(rootId, address(childBridge));
+        childAdaptor.initialize(rootId, address(childBridge), address(this));
         IChildERC20Bridge.InitializationRoles memory childRoles = IChildERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
@@ -93,7 +98,7 @@ contract InvariantBridge is Test {
 
         // Configure contracts on root chain.
         vm.selectFork(rootId);
-        rootAdaptor.initialize(childId, address(rootBridge));
+        rootAdaptor.initialize(childId, address(rootBridge), address(this));
         IRootERC20Bridge.InitializationRoles memory rootRoles = IRootERC20Bridge.InitializationRoles({
             defaultAdmin: address(this),
             pauser: address(this),
