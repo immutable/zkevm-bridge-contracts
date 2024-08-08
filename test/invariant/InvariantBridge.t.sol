@@ -168,7 +168,7 @@ contract InvariantBridge is Test, IChainManager {
             childId, rootId, users, rootTokens, address(childHelper), address(rootHelper)
         );
         vm.stopPrank();
-        
+
         vm.selectFork(resetId);
         vm.startPrank(RESERVER);
         new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(0), address(0));
