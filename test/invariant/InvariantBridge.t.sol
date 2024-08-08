@@ -21,6 +21,7 @@ contract InvariantBridge is Test, IChainManager {
     uint256 public constant IMX_DEPOSIT_LIMIT = 10000 ether;
     uint256 public constant MAX_AMOUNT = 10000;
     address public constant ADMIN = address(0x111);
+    address public constant RESERVER = address(0x222);
     uint256 public constant NO_OF_USERS = 20;
     uint256 public constant NO_OF_TOKENS = 10;
 
@@ -150,6 +151,8 @@ contract InvariantBridge is Test, IChainManager {
         vm.startPrank(ADMIN);
         childHelper = new ChildHelper(payable(childBridge));
         address temp = address(new RootHelper(ADMIN, payable(rootBridge)));
+        vm.stopPrank();
+        vm.startPrank(RESERVER);
         childBridgeHandler = new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), temp);
         new RootERC20BridgeFlowRateHandler(childId, rootId, users, rootTokens, address(childHelper), temp);
         vm.stopPrank();
@@ -158,10 +161,18 @@ contract InvariantBridge is Test, IChainManager {
         vm.startPrank(ADMIN);
         new ChildHelper(payable(childBridge));
         rootHelper = new RootHelper(ADMIN, payable(rootBridge));
+        vm.stopPrank();
+        vm.startPrank(RESERVER);
         new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(childHelper), address(rootHelper));
         rootBridgeHandler = new RootERC20BridgeFlowRateHandler(
             childId, rootId, users, rootTokens, address(childHelper), address(rootHelper)
         );
+        vm.stopPrank();
+        
+        vm.selectFork(resetId);
+        vm.startPrank(RESERVER);
+        new ChildERC20BridgeHandler(childId, rootId, users, rootTokens, address(0), address(0));
+        new RootERC20BridgeFlowRateHandler(childId, rootId, users, rootTokens, address(0), address(0));
         vm.stopPrank();
 
         // Map tokens
@@ -178,6 +189,13 @@ contract InvariantBridge is Test, IChainManager {
             vm.selectFork(rootId);
 
             assertEq(childTokenL1, childTokenL2, "Child token address mismatch between L1 and L2");
+        }
+
+        vm.selectFork(childId);
+        for (uint256 j = 0; j < NO_OF_USERS; j++) {
+            address user = users[j];
+            // Note: Foundry has issue resetting user balance without the next line.
+            assertEq(user.balance, 0);
         }
 
         // Target contracts
