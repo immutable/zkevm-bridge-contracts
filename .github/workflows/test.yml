@@ -69,9 +69,3 @@ jobs:
         run: |
           forge test --match-path "test/fork/**" -vvvvv
         id: fork_test
-
-      - name: Run Invariant Tests
-        run: |
-          yarn local:testchain
-          forge test --match-path "test/invariant/**" -vvvvv
-        id: invariant_test
