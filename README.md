@@ -166,29 +166,10 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | Guild of Guardians (GOG) | [`0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62`](https://explorer.immutable.com/address/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62) | TBA                                                                                                                                       |
 
 ## Flow Rate Parameters
-Below are the [flow rate](https://github.com/immutable/zkevm-bridge-contracts/blob/documentation/docs/HLA-and-Threat-Model.md#flow-rate-detection) parameters that have been configured on the L1 Mainnet and Testnet deployments.
-
-**Mainnet**
-
-| Token                                                                                               | Units | Capacity | Refill Rate | Large Transfer Threshold | 
-|-----------------------------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
-| ETH                                                                                                 | 10^18 | 57.98    | 0.0081      | 23.07                    |
-| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)                       | 10^6  | 186,000  | 25.83       | 74,000                   |
-| [USDT](https://etherscan.io/token/0xdAC17F958D2ee523a2206206994597C13D831ec7)                       | 10^6  | 186,000  | 25.83       | 74,000                   |
-| [IMX](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79ff)                        | 10^18 | 89,855   | 12.48       | 35,748                   |
-| [wBTC](https://etherscan.io/token/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599)                       | 10^8  | 2.92     | 0.0004      | 1.16                     |
-| [Gods Unchained (GODS)](https://etherscan.io/address/0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97)    | 10^18 | 832,960  | 115.69      | 331,392                  |
-| [Guild of Guardians (GOG)](https://etherscan.io/address/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62) | 10^18 | 737,802  | 102.47      | 293,534                  |
-
-**Testnet**
-
-| Token                                                                                                       | Units | Capacity | Refill Rate | Large Transfer Threshold | 
-|-------------------------------------------------------------------------------------------------------------|:------|----------|-------------|--------------------------|
-| ETH                                                                                                         | 10^18 | 10.08    | 0.0028      | 5.04                     |
-| [USDC](https://sepolia.etherscan.io/address/0x40b87d235A5B010a20A241F15797C9debf1ecd01)                     | 10^6  | 186,000  | 25.83       | 74,000                   |
-| [IMX](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69ff)                      | 10^18 | 68,976   | 19.16       | 34,488                   |
-| [Guild of Guardians (GOG)](https://sepolia.etherscan.io/address/0xFe9dF9eBe5FBd94B00247613B6Cf7629891954E2) | 10^18 | 737,802  | 102.47      | 293,534                  |
-| [NetMarble MarbleX (MBX)](https://sepolia.etherscan.io/address/0x6328ac88ba8d466a0f551fc7c42c61d1ac7f92ab)  | 10^18 | 213,793  | 29.69       | 85,057                   |
+The [flow rate parameters](./docs/high-level-architecture.md#flow-rate-detection) configured for assets can be queried from the L1 bridge contract using a block explorer ([mainnet](https://etherscan.io/address/0xBa5E35E26Ae59c7aea6F029B68c6460De2d13eB6#readProxyContract), [testnet](https://sepolia.etherscan.io/address/0x0d3c59c779fd552c27b23f723e80246c840100f5#readProxyContract)). 
+The `flowRateBuckets()` function provides the bucket capacity and refill rate, while the `largeTransferThreshold()` function provides the withdrawal size threshold configured for a token.
+The L1 address of the token to query parameters for needs to be provided as input to both functions.
+If flow rate parameters have not been configured for a token, these functions will return zero values.
 
 ## Manual Bridging Guide
 The process to manually bridge funds from Ethereum to Immutable zkEVM by directly interacting with the bridge contracts is documented [here](docs/manual-bridging.md). However, the recommended method for bridging to and from the Immutable zkEVM is to use the [Immutable Toolkit](https://toolkit.immutable.com/bridge/) user interface.
