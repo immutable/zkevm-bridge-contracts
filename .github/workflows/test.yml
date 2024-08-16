@@ -32,7 +32,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: nightly-af97b2c75cbcfaba23462998ae75ca082bcca1f2
 
       - name: Run Forge build
         run: |
@@ -69,3 +69,9 @@ jobs:
         run: |
           forge test --match-path "test/fork/**" -vvvvv
         id: fork_test
+
+      - name: Run Invariant Tests
+        run: |
+          yarn local:testchain
+          forge test --match-path "test/invariant/**" -vvvvv
+        id: invariant_test
