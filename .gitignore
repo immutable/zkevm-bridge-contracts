@@ -35,3 +35,9 @@ bootstrap.out
 
 # MacOS
 .DS_Store
+
+# Fuzz
+crytic-export
+echidna-corpus
+medusa-corpus
+med-logs

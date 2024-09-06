@@ -1,0 +1,54 @@
+workers: 1
+
+testMode: assertion
+
+prefix: echidna_
+corpusDir: echidna-corpus
+
+testLimit: 100000000000
+# testLimit: 1000000
+codeSize: 100000
+
+shrinkLimit: 1000
+
+seqLen: 100
+
+deployer: "0xfffff"
+sender: ["0x10000", "0x20000", "0x30000"]
+
+filterBlacklist: true
+filterFunctions:
+  [
+    "Fuzz.handler_activateWithdrawalQueue()",
+    "Fuzz.handler_deactivateWithdrawalQueue()",
+    "Fuzz.handler_deposit(uint8,uint256,uint256)",
+    "Fuzz.handler_depositETH(uint256,uint256)",
+    "Fuzz.handler_depositTo(uint8,uint8,uint256,uint256)",
+    "Fuzz.handler_depositToETH(uint8,uint256,uint256)",
+    "Fuzz.handler_finaliseQueuedWithdrawal(uint8,uint256)",
+    "Fuzz.handler_finaliseQueuedWithdrawalsAggregated(uint8,uint8,uint256,uint256)",
+    "Fuzz.handler_onMessageReceiveChild(bool,uint8,uint8,uint8,uint256)",
+    "Fuzz.handler_onMessageReceiveRoot(bool,uint8,uint8,uint8,uint256)",
+    "Fuzz.handler_pauseChild()",
+    "Fuzz.handler_pauseRoot()",
+    "Fuzz.handler_setRateControlThreshold(uint8,uint256,uint256,uint256)",
+    "Fuzz.handler_setWithdrawalDelay(uint256)",
+    "Fuzz.handler_unpauseChild()",
+    "Fuzz.handler_unpauseRoot()",
+    "Fuzz.handler_updateImxCumulativeDepositLimit(uint256)",
+    "Fuzz.handler_withdraw(uint8,uint256,uint256)",
+    "Fuzz.handler_withdrawETH(uint256,uint256)",
+    "Fuzz.handler_withdrawETHTo(uint8,uint256,uint256)",
+    "Fuzz.handler_withdrawIMX(uint256,uint256)",
+    "Fuzz.handler_withdrawIMXTo(uint8,uint256,uint256)",
+    "Fuzz.handler_withdrawTo(uint8,uint8,uint256,uint256)",
+    "Fuzz.handler_withdrawWIMX(uint256,uint256)",
+    "Fuzz.handler_withdrawWIMXTo(uint8,uint256,uint256)",
+  ]
+
+cryticArgs: ["--foundry-compile-all"]
+
+# Initial Ether balance of contractAddr
+balanceContract: 0xffffffffffffffffffffffffffffffffffffffffffffffff
+# maximum value to send to payable functions
+maxValue: 100000000000000000000000000000 # 100000000000 eth

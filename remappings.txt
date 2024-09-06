@@ -3,3 +3,4 @@
 @axelar-cgp-solidity=lib/axelar-cgp-solidity
 @axelar-gmp-sdk-solidity=lib/axelar-gmp-sdk-solidity
 @axelar-network/axelar-gmp-sdk-solidity/=lib/axelar-gmp-sdk-solidity/
+@perimetersec/fuzzlib/src/=node_modules/@perimetersec/fuzzlib/src/
