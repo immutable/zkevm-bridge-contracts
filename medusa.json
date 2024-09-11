@@ -1,0 +1,116 @@
+{
+	"fuzzing": {
+		"workers": 1,
+		"workerResetLimit": 50,
+		"timeout": 0,
+		"testLimit": 1000000,
+		"callSequenceLength": 100,
+		"corpusDirectory": "medusa-corpus",
+		"coverageEnabled": true,
+		"deploymentOrder": [
+			"Fuzz"
+		],
+		"targetContracts": [
+			"Fuzz"
+		],
+		"targetContractsBalances": [
+			"0xffffffffffffffffffffffffffffffffffffffffffffffff"
+		],
+		"constructorArgs": {},
+		"deployerAddress": "0xfffff",
+		"senderAddresses": [
+			"0x10000",
+			"0x20000",
+			"0x30000"
+		],
+		"blockNumberDelayMax": 60480,
+		"blockTimestampDelayMax": 604800,
+		"blockGasLimit": 125000000,
+		"transactionGasLimit": 12500000,
+		"testing": {
+			"stopOnFailedTest": false,
+			"stopOnFailedContractMatching": true,
+			"stopOnNoTests": true,
+			"testAllContracts": false,
+			"traceAll": false,
+			"excludeFunctionSignatures": [
+				"Fuzz.handler_activateWithdrawalQueue()",
+				"Fuzz.handler_deactivateWithdrawalQueue()",
+				"Fuzz.handler_deposit(uint8,uint256,uint256)",
+				"Fuzz.handler_depositETH(uint256,uint256)",
+				"Fuzz.handler_depositTo(uint8,uint8,uint256,uint256)",
+				"Fuzz.handler_depositToETH(uint8,uint256,uint256)",
+				"Fuzz.handler_finaliseQueuedWithdrawal(uint8,uint256)",
+				"Fuzz.handler_finaliseQueuedWithdrawalsAggregated(uint8,uint8,uint256,uint256)",
+				"Fuzz.handler_onMessageReceiveChild(bool,uint8,uint8,uint8,uint256)",
+				"Fuzz.handler_onMessageReceiveRoot(bool,uint8,uint8,uint8,uint256)",
+				"Fuzz.handler_pauseChild()",
+				"Fuzz.handler_pauseRoot()",
+				"Fuzz.handler_setRateControlThreshold(uint8,uint256,uint256,uint256)",
+				"Fuzz.handler_setWithdrawalDelay(uint256)",
+				"Fuzz.handler_unpauseChild()",
+				"Fuzz.handler_unpauseRoot()",
+				"Fuzz.handler_updateImxCumulativeDepositLimit(uint256)",
+				"Fuzz.handler_withdraw(uint8,uint256,uint256)",
+				"Fuzz.handler_withdrawETH(uint256,uint256)",
+				"Fuzz.handler_withdrawETHTo(uint8,uint256,uint256)",
+				"Fuzz.handler_withdrawIMX(uint256,uint256)",
+				"Fuzz.handler_withdrawIMXTo(uint8,uint256,uint256)",
+				"Fuzz.handler_withdrawTo(uint8,uint8,uint256,uint256)",
+				"Fuzz.handler_withdrawWIMX(uint256,uint256)",
+				"Fuzz.handler_withdrawWIMXTo(uint8,uint256,uint256)"
+			],
+			"assertionTesting": {
+				"enabled": true,
+				"testViewMethods": true,
+				"panicCodeConfig": {
+					"failOnCompilerInsertedPanic": false,
+					"failOnAssertion": true,
+					"failOnArithmeticUnderflow": false,
+					"failOnDivideByZero": false,
+					"failOnEnumTypeConversionOutOfBounds": false,
+					"failOnIncorrectStorageAccess": false,
+					"failOnPopEmptyArray": false,
+					"failOnOutOfBoundsArrayAccess": false,
+					"failOnAllocateTooMuchMemory": false,
+					"failOnCallUninitializedVariable": false
+				}
+			},
+			"propertyTesting": {
+				"enabled": false,
+				"testPrefixes": [
+					"property_"
+				]
+			},
+			"optimizationTesting": {
+				"enabled": false,
+				"testPrefixes": [
+					"optimize_"
+				]
+			}
+		},
+		"chainConfig": {
+			"codeSizeCheckDisabled": true,
+			"cheatCodes": {
+				"cheatCodesEnabled": true,
+				"enableFFI": false
+			}
+		}
+	},
+	"compilation": {
+		"platform": "crytic-compile",
+		"platformConfig": {
+			"target": ".",
+			"solcVersion": "",
+			"exportDirectory": "",
+			"args": [
+				"--foundry-compile-all"
+			]
+		}
+	},
+	"logging": {
+		"level": "info",
+		"logDirectory": "med-logs",
+		"noColor": true
+	}
+}
