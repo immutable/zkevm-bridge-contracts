@@ -34,12 +34,6 @@ jobs:
         with:
           version: nightly
 
-      - name: Run Forge build
-        run: |
-          forge --version
-          forge build --sizes
-        id: build
-
       - name: Run install
         uses: borales/actions-yarn@v4
         with:
@@ -49,6 +43,12 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: build
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
+        id: build
 
       - name: Run Unit Tests
         run: |
