@@ -7,3 +7,6 @@ solc-version = "0.8.19"
 unchecked_cheatcode_artifacts = true
 # Reasons for why this flag is required can be found here: https://book.getfoundry.sh/cheatcodes/expect-revert#description
 allow_internal_expect_revert = true
+# Required because of a breaking change in Foundry v1, which disabled optimizer by default: https://book.getfoundry.sh/guides/v1.0-migration#solc-optimizer-disabled-by-default
+optimizer = true
+optimizer_runs = 200
