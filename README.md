@@ -173,8 +173,8 @@ The [flow rate parameters](./docs/high-level-architecture.md#flow-rate-detection
 | Token Name                                                                            | Flow-Rate Capacity (4-Hour Window) | Large Withdrawal Threshold |
 |---------------------------------------------------------------------------------------|------------------------------------|----------------------------|
 | Ethereum                                                                              | 148                                | 29.60                      |
-| [IMX](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)          | 539,052                            | 107,230                    |
-| [USDC](https://etherscan.io/token/0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2)         | 372,000                            | 74,000                     |
+| [IMX](https://etherscan.io/token/0xF57e7e7C23978C3cAEC3C3548E3D615c346e79fF)          | 539,052                            | 107,230                    |
+| [USDC](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)         | 372,000                            | 74,000                     |
 | [USDT](https://etherscan.io/token/0xdAC17F958D2ee523a2206206994597C13D831ec7)         | 372,000                            | 74,000                     |
 | [wBTC](https://etherscan.io/token/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599)         | 3.37                               | 0.67                       |
 | [GODS](https://etherscan.io/token/0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97)         | 2,310,559                          | 459,627                    |
