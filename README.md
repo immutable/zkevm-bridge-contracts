@@ -166,8 +166,22 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 | Guild of Guardians (GOG) | [`0xb00ed913aAFf8280C17BfF33CcE82fE6D79e85e8`](https://explorer.immutable.com/address/0xb00ed913aAFf8280C17BfF33CcE82fE6D79e85e8) | TBA                                                                                                                                       |
 
 ## Flow Rate Parameters
-The [flow rate parameters](./docs/high-level-architecture.md#flow-rate-detection) configured for assets can be queried from the L1 bridge contract using a block explorer ([mainnet](https://etherscan.io/address/0xBa5E35E26Ae59c7aea6F029B68c6460De2d13eB6#readProxyContract), [testnet](https://sepolia.etherscan.io/address/0x0d3c59c779fd552c27b23f723e80246c840100f5#readProxyContract)). 
-The `flowRateBuckets()` function provides the bucket capacity and refill rate, while the `largeTransferThreshold()` function provides the withdrawal size threshold configured for a token.
+The [flow rate parameters](./docs/high-level-architecture.md#flow-rate-detection) configured for assets on the Immutable zkEVM mainnet bridge are listed below.
+- The *Flow Rate Capacity* is the maximum cumulative amount of a token that can be withdrawn within a 4-hour window. If the total amount of tokens withdrawn within this time window exceeds this threshold, the global withdrawal queue is activated. Consequently, all subsequent withdrawals for all tokens will be queued for 24 hours until the queue is manually deactivated.
+- The *Large Withdrawal Threshold* is the size threshold for any single withdrawal of a token. If a withdrawal exceeds this amount, that particular withdrawal is queued for 24 hours on the bridge before it can be redeemed. This queuing does not affect other withdrawals by the same user or other users.
+
+| Token Name                                                                            | Flow-Rate Capacity (4-Hour Window) | Large Withdrawal Threshold |
+|---------------------------------------------------------------------------------------|------------------------------------|----------------------------|
+| Ethereum                                                                              | 148                                | 29.60                      |
+| [IMX](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)          | 539,052                            | 107,230                    |
+| [USDC](https://etherscan.io/token/0x6de8aCC0D406837030CE4dd28e7c08C5a96a30d2)         | 372,000                            | 74,000                     |
+| [USDT](https://etherscan.io/token/0xdAC17F958D2ee523a2206206994597C13D831ec7)         | 372,000                            | 74,000                     |
+| [wBTC](https://etherscan.io/token/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599)         | 3.37                               | 0.67                       |
+| [GODS](https://etherscan.io/token/0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97)         | 2,310,559                          | 459,627                    |
+| [GOG](https://etherscan.io/token/0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62)          | 9,386,828                          | 1,867,272                  |
+| [Space Nation](https://etherscan.io/token/0x6e7f11641c1ec71591828e531334192d622703f7) | 15,000,000                         | 220,000                    |
+
+These parameters can also be queried from the L1 bridge contract using a block explorer ([mainnet](https://etherscan.io/address/0xBa5E35E26Ae59c7aea6F029B68c6460De2d13eB6#readProxyContract), [testnet](https://sepolia.etherscan.io/address/0x0d3c59c779fd552c27b23f723e80246c840100f5#readProxyContract)). The `flowRateBuckets()` function provides the bucket capacity and refill rate, while the `largeTransferThreshold()` function provides the withdrawal size threshold configured for a token.
 The L1 address of the token to query parameters for needs to be provided as input to both functions.
 If flow rate parameters have not been configured for a token, these functions will return zero values.
 
