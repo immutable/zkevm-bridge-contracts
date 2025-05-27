@@ -143,7 +143,7 @@ ABIs for contracts can be obtained from the blockchain explorer links for each c
 |-------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | Wrapped ETH | [`0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2`](https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2) | [`0x7b79995e5f793a07bc00c21412e50ecae098e7f9`](https://sepolia.etherscan.io/address/0x7b79995e5f793a07bc00c21412e50ecae098e7f9) |
 | IMX         | [`0xf57e7e7c23978c3caec3c3548e3d615c346e79ff`](https://etherscan.io/token/0xf57e7e7c23978c3caec3c3548e3d615c346e79ff) | [`0xe2629e08f4125d14e446660028bd98ee60ee69f2`](https://sepolia.etherscan.io/address/0xe2629e08f4125d14e446660028bd98ee60ee69f2) |
-| USDC         | [`0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) | [`0x40b87d235A5B010a20A241F15797C9debf1ecd01`](https://sepolia.etherscan.io/address/0x40b87d235A5B010a20A241F15797C9debf1ecd01) |
+| USDC        | [`0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) | [`0x40b87d235A5B010a20A241F15797C9debf1ecd01`](https://sepolia.etherscan.io/address/0x40b87d235A5B010a20A241F15797C9debf1ecd01) |
 
 ### Child Chain
 #### Core Contracts
@@ -190,3 +190,4 @@ The process to manually bridge funds from Ethereum to Immutable zkEVM by directl
 
 ## Audits
 The Immutable token bridge has been audited by [Trail of Bits](https://www.trailofbits.com/). The audit report can be found [here](./audits/Trail-of-Bits-2023-12-14.pdf).
+Additionally, the bridge has undergone comprehensive fuzzing and invariant testing conducted by [Perimeter](https://www.perimetersec.io/). The report can be found [here](./audits/Perimeter-Fuzzing-2024-09-10.pdf).
