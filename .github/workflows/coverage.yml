@@ -9,9 +9,16 @@ env:
 
 jobs:
   check:
+    env:
+      DEPLOYMENTS: ${{ vars.DEPLOYMENTS }}
+      MAINNET_BRIDGE_ADDRESS: ${{ vars.MAINNET_BRIDGE_ADDRESS }}
+      MAINNET_FLOW_RATED_TOKENS: ${{ vars.MAINNET_FLOW_RATED_TOKENS }}
+      TESTNET_BRIDGE_ADDRESS: ${{ vars.TESTNET_BRIDGE_ADDRESS }}
+      TESTNET_FLOW_RATED_TOKENS: ${{ vars.TESTNET_FLOW_RATED_TOKENS }}
+      MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+      TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
     strategy:
       fail-fast: true
-
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
