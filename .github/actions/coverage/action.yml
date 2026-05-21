@@ -1,12 +1,14 @@
----
-name: 'Publish coverage report'
-description: 'Create or update PR comment with coverage report'
+name: "Publish coverage report"
+description: "Create or update PR comment with coverage report"
 
 inputs:
-  coverage: 
+  coverage:
     description: The coverage report to publish
+    required: true
+  github-token:
+    description: "GitHub token for PR comment access"
     required: true
 
 runs:
-  using: 'node16'
-  main: 'index.js'
+  using: "node20"
+  main: "dist/index.js"
