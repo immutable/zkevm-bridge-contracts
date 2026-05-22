@@ -33,17 +33,24 @@
   resolved "https://registry.yarnpkg.com/@axelar-network/axelar-cgp-aptos/-/axelar-cgp-aptos-1.0.5.tgz#6dbc4b867ff63786c44f1eb375c462913215b7fc"
   integrity sha512-C6ItxuSaADE7dDfEFOaijnc/Dx3JxfGhE5eXw2SrMx7N0MYG2NB0S4H4aQ+U5P9CVBh6AQet6c8prE/dTUu0ow==
 
+"@axelar-network/axelar-cgp-solidity@6.2.1":
+  version "6.2.1"
+  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-cgp-solidity/-/axelar-cgp-solidity-6.2.1.tgz#770d6763802a3233c519860f3301154f1ef99170"
+  integrity sha512-0RaxLYmsp3elXBytn7+eZUil1KFS6jjHR/ECrN/3IC7TeTDPUYunyy6JDxCdNYNtiD6EKgUAfQ7G4DrBb6hRxg==
+  dependencies:
+    "@axelar-network/axelar-gmp-sdk-solidity" "5.6.4"
+
 "@axelar-network/axelar-cgp-solidity@^4.5.0":
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/@axelar-network/axelar-cgp-solidity/-/axelar-cgp-solidity-4.5.0.tgz#f0456a2a6665302613a4d5243282ce1b18842348"
   integrity sha512-4F4rmHei0cmzeUR7/mW4Bap5rc/KlPV2crD9HA7HTRfl15mVcN6/3z8p+pAm9We6bOrQplNW9KBZ3HJFP3C1Gw==
 
-"@axelar-network/axelar-cgp-solidity@^6.1.0":
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-cgp-solidity/-/axelar-cgp-solidity-6.2.0.tgz#c78fad1de9bc09abf50d14b854e3099da9703236"
-  integrity sha512-/X1RBFu5dzbffPEKK5wXTF66tpHtQwaz+oRpeLJOUVhvIHNkEslkUCOdj7FmePFlvTpvlwViziA4bny+nIcmrQ==
+"@axelar-network/axelar-cgp-solidity@^6.3.0":
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-cgp-solidity/-/axelar-cgp-solidity-6.4.0.tgz#75619d775a46f9dfae9fc90be78db1bd0ae77c46"
+  integrity sha512-Xnw5xi234B1cmTCzgudV8zq+DDjJ1d1U362CM0vKH1FWmZprKIdqgmOYkiRyu+QiVhnznKiBURiSEHVrNjtYpw==
   dependencies:
-    "@axelar-network/axelar-gmp-sdk-solidity" "5.5.2"
+    "@axelar-network/axelar-gmp-sdk-solidity" "5.10.0"
 
 "@axelar-network/axelar-chains-config@^0.1.0":
   version "0.1.2"
@@ -53,33 +60,47 @@
     "@ethersproject/keccak256" "^5.7.0"
     fs-extra "^11.1.1"
 
-"@axelar-network/axelar-gmp-sdk-solidity@5.5.2":
-  version "5.5.2"
-  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-gmp-sdk-solidity/-/axelar-gmp-sdk-solidity-5.5.2.tgz#438fa8be34b8d4516533f5ce9de10e11c2cbe793"
-  integrity sha512-M7XTLE1Db40VjMYA37ZZyycU+75MygoUST5sAi/8QYweqQqkaLK3xpyzX24zbGaEpgHsdEk4L7CJiyG9WBqVCA==
+"@axelar-network/axelar-chains-config@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-chains-config/-/axelar-chains-config-1.3.0.tgz#987a9d59a943f151c9f162c65e1eadc2f1ecba7b"
+  integrity sha512-k633v2pJF8qPM3pDSawSqm7K4AgqmGicj2fUk0O0HwWB1jS2l/oFm+x5jB58HT64xhf8x7VB4BhdJQtMdKcOPA==
+  dependencies:
+    "@ethersproject/keccak256" "^5.7.0"
+    fs-extra "^11.1.1"
 
-"@axelar-network/axelar-gmp-sdk-solidity@^5.3.0", "@axelar-network/axelar-gmp-sdk-solidity@^5.3.1":
+"@axelar-network/axelar-gmp-sdk-solidity@5.10.0", "@axelar-network/axelar-gmp-sdk-solidity@^5.7.0":
+  version "5.10.0"
+  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-gmp-sdk-solidity/-/axelar-gmp-sdk-solidity-5.10.0.tgz#9679b0634e4db6eb345aac800df6dd3a38d2e242"
+  integrity sha512-s8SImALvYB+5AeiT3tbfWNBI2Mhqw1x91i/zM3DNpVUCnAR2HKtsB9T84KnUn/OJjOVgb4h0lv7q9smeYniRPw==
+
+"@axelar-network/axelar-gmp-sdk-solidity@5.6.4":
+  version "5.6.4"
+  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-gmp-sdk-solidity/-/axelar-gmp-sdk-solidity-5.6.4.tgz#fe224ff039f86f1cbf72d9b53339a8354f531b65"
+  integrity sha512-PQjV+HeJynmSRMhyM3SexwnbFNruSaiRUeNCWjV8/7CkdPsDqypoqIXVRVU8Zk92DUUHeqZZzL/3qP2LYuvlnA==
+
+"@axelar-network/axelar-gmp-sdk-solidity@^5.3.1":
   version "5.6.2"
   resolved "https://registry.yarnpkg.com/@axelar-network/axelar-gmp-sdk-solidity/-/axelar-gmp-sdk-solidity-5.6.2.tgz#9a48a5ef7f00490898d8d33e0756b35416069fd2"
   integrity sha512-lJT1Sily/to5jZHkE3rGtkb8qnurNTFnlz4HwbQec+MtqVgPkY3/SsiPTw7967hmZavAw02eiE1jFSW7XKksZQ==
 
 "@axelar-network/axelar-local-dev-aptos@^2.1.1-alpha.4":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-local-dev-aptos/-/axelar-local-dev-aptos-2.1.1.tgz#a709c140b58d40ae24d5a5d9a408eaa124bc2355"
-  integrity sha512-Cd84KFVZEwIo+w/uNRaldE+K0v0FVhyPMsHw7GRGwK7p/K2Mbpgzk0d1ym42gxQCUEiYLO2ub6RMtI1tSpG+9w==
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-local-dev-aptos/-/axelar-local-dev-aptos-2.3.2.tgz#c6f8b09c1245614bdcede672d1d9590cc10d1b26"
+  integrity sha512-mR+HZNRQN/5++HV0KTjyQNT44C3hRGy/zd1JDV3SrlB3Sun+HDC9IOqCmeuMEVJESW4nBhVHir5O0ZvNIY+/nA==
   dependencies:
     "@axelar-network/axelar-cgp-aptos" "^1.0.5"
-    "@axelar-network/axelar-local-dev" "2.1.1"
+    "@axelar-network/axelar-local-dev" "^2.3.2"
     aptos "1.3.16"
 
-"@axelar-network/axelar-local-dev@2.1.1", "@axelar-network/axelar-local-dev@^2.1.1-alpha.2":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-local-dev/-/axelar-local-dev-2.1.1.tgz#8473ea59722de00097ef2731948d54fc093669a8"
-  integrity sha512-sSZZktcT5+Uk59PX7d7jm3mwhqyHYnjH88rC8RVb264/8yoUoksxRJZ8lWQW2sjNpfvcD9CBNYqu7KrbCmKHdQ==
+"@axelar-network/axelar-local-dev@^2.1.1-alpha.2", "@axelar-network/axelar-local-dev@^2.3.2":
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/@axelar-network/axelar-local-dev/-/axelar-local-dev-2.3.3.tgz#f5ed65b851ebd519ef1e446da8ad0ef752329b6a"
+  integrity sha512-gRzGWJBOMxUnNJRe3zHDBha95g5EPkQo6FfXirJW0h/zmtiIKGhkBbNqtm3yQHWn05KgS4bzOp+EILj8OJOsQQ==
   dependencies:
-    "@axelar-network/axelar-cgp-solidity" "^6.1.0"
-    "@axelar-network/axelar-chains-config" "^0.1.0"
-    "@axelar-network/axelar-gmp-sdk-solidity" "^5.3.0"
+    "@axelar-network/axelar-cgp-solidity" "^6.3.0"
+    "@axelar-network/axelar-chains-config" "^1.3.0"
+    "@axelar-network/axelar-gmp-sdk-solidity" "^5.7.0"
+    "@axelar-network/interchain-token-service" "^1.2.4"
     ethers "^5.6.5"
     fs-extra "^10.1.0"
     ganache "^7.1.0"
@@ -117,6 +138,14 @@
   dependencies:
     long "^4.0.0"
     protobufjs "~6.11.2"
+
+"@axelar-network/interchain-token-service@^1.2.4":
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/@axelar-network/interchain-token-service/-/interchain-token-service-1.2.4.tgz#99435fbf9a3f95d7a2c2b943b05c507838afc72f"
+  integrity sha512-Sgw2M4VzW5hjL9TBe2ljL5wo+paYqlL2XNQlq1dyaDAD6E7PG1MQ+0U44QnfJfhhAwcqZtKQmb92ZNwV+BEdVw==
+  dependencies:
+    "@axelar-network/axelar-cgp-solidity" "6.2.1"
+    "@axelar-network/axelar-gmp-sdk-solidity" "5.6.4"
 
 "@babel/code-frame@^7.0.0":
   version "7.22.13"
