@@ -15,15 +15,15 @@ import {ChildERC20} from "../../../src/child/ChildERC20.sol";
 import {Utils, IPausable} from "../../utils.t.sol";
 
 contract ReentrancyAttackWithdraw is ChildERC20 {
-    IChildERC20Bridge bridge;
+    IChildERC20Bridge bridgeContract;
 
     constructor(address _bridge) {
-        bridge = IChildERC20Bridge(_bridge);
+        bridgeContract = IChildERC20Bridge(_bridge);
     }
 
     function burn(address from, uint256 value) public override returns (bool) {
-        if (msg.sender == address(bridge)) {
-            bridge.withdraw(ChildERC20(address(this)), value);
+        if (msg.sender == address(bridgeContract)) {
+            bridgeContract.withdraw(ChildERC20(address(this)), value);
         }
         _burn(from, value);
         return true;
