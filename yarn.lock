@@ -1365,10 +1365,10 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.3.tgz#00d7a8cf35a475b160b3f0293a6403c511099364"
   integrity sha512-He3LieZ1pP2TNt5JbkPA4PNT9WC3gOTOlDcFGJW4Le4QKqwmiNJCRt44APfxMxvq7OugU/cqYuPcSBzOw38DAg==
 
-"@perimetersec/fuzzlib@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@perimetersec/fuzzlib/-/fuzzlib-0.3.0.tgz#4475b3fd8d0ece81c8617e3e82a58686c7c8677c"
-  integrity sha512-lrjaC5M+ImezTXZhdLOYhc6AFIyCP6neA9OOCGpIunOUmFNOaBbT80R9sfPSElLwDkMzBMbpUvdPt2uFvrPEAA==
+"@perimetersec/fuzzlib@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@perimetersec/fuzzlib/-/fuzzlib-1.1.0.tgz#ef7a348c3ee6a3232beb18f8e0c78d8dc62c9f45"
+  integrity sha512-Utud05o2kjfmBc7JTAE5ZZg+Shmrlwxg8ag3dWybLYLl3QnkCwRFVy4zmzJQ48yXoqwx+Lu4L47rguJ0URBb5A==
 
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   version "1.1.2"
