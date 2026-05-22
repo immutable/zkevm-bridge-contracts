@@ -37,15 +37,18 @@ jobs:
           forge --version
           forge build
 
-        # `forge coverage` doesn't have an `exclude-path` flag.
-        # See open issue: https://github.com/foundry-rs/foundry/issues/2988
-        # We manually exclude output for the test/ directory, as well as
-        # the 'Total' row which would be askew without the full data set.
+        # `test/invariant/InvariantBridge.t.sol` requires a localhost RPC
+        # (vm.createFork against http://127.0.0.1:8500) that isn't running
+        # in this workflow; it's excluded so coverage doesn't fail in setUp.
+        # `forge coverage` also doesn't have an `exclude-path` flag for the
+        # report itself (see https://github.com/foundry-rs/foundry/issues/2988),
+        # so we strip the test/ rows and the 'Total' row from the table.
       - name: Run Forge coverage
         id: coverage
-        shell: bash 
+        shell: bash
         run: |
-          forge coverage --report summary | grep -v "test/" | grep -v "| Total" > ${{ runner.temp }}/coverage.out
+          forge coverage --report summary --no-match-path "test/invariant/**" \
+            | grep -v "test/" | grep -v "| Total" > ${{ runner.temp }}/coverage.out
           echo "coverage-report-path=${{ runner.temp }}/coverage.out" >> $GITHUB_OUTPUT
 
       - name: Debug coverage report
