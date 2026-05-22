@@ -168,8 +168,9 @@ contract RootERC20Bridge is
         }
         if (
             newRootBridgeAdaptor == address(0) || newChildERC20Bridge == address(0)
-                || newChildTokenTemplate == address(0) || newRootIMXToken == address(0) || newRootWETHToken == address(0)
-                || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
+                || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
+                || newRootWETHToken == address(0) || newRoles.defaultAdmin == address(0)
+                || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
                 || newRoles.variableManager == address(0) || newRoles.adaptorManager == address(0)
         ) {
             revert ZeroAddress();

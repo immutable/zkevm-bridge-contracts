@@ -1,0 +1,122 @@
+name: CI
+
+on: [push]
+
+permissions: {}
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  lint:
+    name: Forge Lint
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-foundry
+
+      - name: Run Forge fmt --check
+        shell: bash
+        run: |
+          forge fmt --check
+
+  static-analysis:
+    name: Slither Analysis
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: crytic/slither-action@b52cc1cbfee9ca3e8722dd5224299d16c9a6b80f # v0.4.2
+        with:
+          fail-on: high
+          slither-args: --filter-paths "./lib|./test"
+          node-version: 18
+
+  test:
+    name: Build and Test
+    permissions:
+      contents: read
+    env:
+      DEPLOYMENTS: ${{ vars.DEPLOYMENTS }}
+      MAINNET_BRIDGE_ADDRESS: ${{ vars.MAINNET_BRIDGE_ADDRESS }}
+      MAINNET_FLOW_RATED_TOKENS: ${{ vars.MAINNET_FLOW_RATED_TOKENS }}
+      TESTNET_BRIDGE_ADDRESS: ${{ vars.TESTNET_BRIDGE_ADDRESS }}
+      TESTNET_FLOW_RATED_TOKENS: ${{ vars.TESTNET_FLOW_RATED_TOKENS }}
+      MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+      TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-node
+
+      - uses: ./.github/actions/setup-foundry
+
+      - name: Run build
+        shell: bash
+        run: yarn build
+
+      - name: Run Forge build
+        shell: bash
+        run: |
+          forge --version
+          forge build
+
+      - name: Run Unit Tests
+        shell: bash
+        run: |
+          forge test --match-path "test/unit/**" -vvv
+
+      - name: Run Integration Tests
+        shell: bash
+        run: |
+          forge test --match-path "test/integration/**" -vvv
+
+      - name: Run Fuzz Tests
+        shell: bash
+        run: |
+          forge test --match-path "test/fuzz/**" -vvv
+
+      - name: Run Fork Tests
+        shell: bash
+        run: |
+          forge test --match-path "test/fork/**" -vvvvv
+
+  e2e:
+    name: End to End Test
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-node
+
+      - uses: ./.github/actions/setup-foundry
+
+      - name: Run build
+        shell: bash
+        run: yarn build
+
+      - name: Run Test
+        shell: bash
+        run: |
+          yarn local:start &
+          yarn local:ci

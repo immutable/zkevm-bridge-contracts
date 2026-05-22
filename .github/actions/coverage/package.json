@@ -1,0 +1,35 @@
+{
+  "name": "coverage-action",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ci:install": "pnpm install --frozen-lockfile --ignore-scripts --config.node-linker=hoisted --prefer-offline --config.minimumReleaseAge=4320 --force",
+    "build": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "all": "pnpm run lint && pnpm run build && pnpm run format:fix"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^25.9.1",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "eslint": "^10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-security": "^4.0.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.8.1",
+    "rollup": "^4.57.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.0"
+  }
+}

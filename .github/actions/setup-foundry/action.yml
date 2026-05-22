@@ -1,0 +1,14 @@
+name: "Setup Foundry"
+description: "Install Foundry toolchain"
+
+inputs:
+  version:
+    description: "Foundry version to install"
+    default: "stable"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: foundry-rs/foundry-toolchain@c7450ba673e133f5ee30098b3b54f444d3a2ca2d # v1.8.0
+      with:
+        version: ${{ inputs.version }}

@@ -29,8 +29,9 @@ contract HandlerChildERC20Bridge is PreconditionsChildERC20Bridge, Postcondition
         uint8 receiverSelector,
         uint256 amount
     ) public setCurrentActor {
-        OnMessageReceiveChildParams memory params =
-            onMessageReceiveChildPreconditions(isDeposit, rootTokenSelector, senderSelector, receiverSelector, amount);
+        OnMessageReceiveChildParams memory params = onMessageReceiveChildPreconditions(
+            isDeposit, rootTokenSelector, senderSelector, receiverSelector, amount
+        );
 
         address[] memory actorsToUpdate = new address[](1);
         actorsToUpdate[0] = params.receiver;

@@ -73,8 +73,9 @@ contract FuzzChildERC20BridgeIntegrity is HandlerChildERC20Bridge, FuzzIntegrity
      * @notice Checks the integrity of handler_withdraw
      */
     function fuzz_withdraw(uint8 childTokenSelector, uint256 amount, uint256 value) public {
-        bytes memory callData =
-            abi.encodeWithSelector(HandlerChildERC20Bridge.handler_withdraw.selector, childTokenSelector, amount, value);
+        bytes memory callData = abi.encodeWithSelector(
+            HandlerChildERC20Bridge.handler_withdraw.selector, childTokenSelector, amount, value
+        );
 
         (bool success, bytes4 errorSelector) = _testSelf(callData);
         if (!success) {

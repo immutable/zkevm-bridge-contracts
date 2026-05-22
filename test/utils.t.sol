@@ -78,8 +78,7 @@ contract Utils is Test {
         });
         childBridge.initialize(roles, address(childBridgeAdaptor), address(childTokenTemplate), rootIMX, childWIMX);
 
-        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor
-            .InitializationRoles({
+        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor.InitializationRoles({
             defaultAdmin: address(this),
             bridgeManager: address(this),
             gasServiceManager: address(this),
@@ -139,16 +138,17 @@ contract Utils is Test {
             adaptorManager: address(this)
         });
 
-        integrationTest.rootBridgeFlowRate.initialize(
-            roles,
-            address(integrationTest.axelarAdaptor),
-            childBridge,
-            address(integrationTest.token),
-            imxTokenAddress,
-            wethTokenAddress,
-            imxCumulativeDepositLimit,
-            address(this)
-        );
+        integrationTest.rootBridgeFlowRate
+            .initialize(
+                roles,
+                address(integrationTest.axelarAdaptor),
+                childBridge,
+                address(integrationTest.token),
+                imxTokenAddress,
+                wethTokenAddress,
+                imxCumulativeDepositLimit,
+                address(this)
+            );
 
         IRootAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IRootAxelarBridgeAdaptor.InitializationRoles({
             defaultAdmin: address(this),
@@ -157,13 +157,14 @@ contract Utils is Test {
             targetManager: address(this)
         });
 
-        integrationTest.axelarAdaptor.initialize(
-            adaptorRoles,
-            address(integrationTest.rootBridgeFlowRate),
-            childBridgeName,
-            Strings.toHexString(childBridgeAdaptor),
-            address(integrationTest.axelarGasService)
-        );
+        integrationTest.axelarAdaptor
+            .initialize(
+                adaptorRoles,
+                address(integrationTest.rootBridgeFlowRate),
+                childBridgeName,
+                Strings.toHexString(childBridgeAdaptor),
+                address(integrationTest.axelarGasService)
+            );
     }
 
     function setupDeposit(
