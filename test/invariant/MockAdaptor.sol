@@ -23,7 +23,10 @@ contract MockAdaptor is Test, IChildBridgeAdaptor, IRootBridgeAdaptor {
         chainManager = IChainManager(_chainManager);
     }
 
-    function sendMessage(bytes calldata payload, address /*refundRecipient*/ )
+    function sendMessage(
+        bytes calldata payload,
+        address /*refundRecipient*/
+    )
         external
         payable
         override(IChildBridgeAdaptor, IRootBridgeAdaptor)

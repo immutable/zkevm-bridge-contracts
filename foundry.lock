@@ -1,0 +1,17 @@
+{
+  "lib/axelar-cgp-solidity": {
+    "rev": "97df254f2307797dd4810ec0e8a549b337840976"
+  },
+  "lib/axelar-gmp-sdk-solidity": {
+    "rev": "5092666b1a9213722ebf3769a42ca7148e8fd3ff"
+  },
+  "lib/forge-std": {
+    "rev": "1d9650e951204a0ddce9ff89c32f1997984cef4d"
+  },
+  "lib/openzeppelin-contracts": {
+    "rev": "fd81a96f01cc42ef1c9a5399364968d0e07e9e90"
+  },
+  "lib/openzeppelin-contracts-upgradeable": {
+    "rev": "3d4c0d5741b131c231e558d7a6213392ab3672a5"
+  }
+}
