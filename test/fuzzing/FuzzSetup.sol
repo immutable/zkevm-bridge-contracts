@@ -117,9 +117,8 @@ contract FuzzSetup is FuzzBase, FuzzStorageVariables {
             initialDepositor: address(this),
             treasuryManager: address(this)
         });
-        ChildERC20Bridge(payable(childERC20Bridge)).initialize(
-            childRoles, mockAdaptorChild, tokenTemplate, rootIMXToken, wIMX
-        );
+        ChildERC20Bridge(payable(childERC20Bridge))
+            .initialize(childRoles, mockAdaptorChild, tokenTemplate, rootIMXToken, wIMX);
     }
 
     function createRootBridge() private {
@@ -131,16 +130,17 @@ contract FuzzSetup is FuzzBase, FuzzStorageVariables {
             variableManager: address(this),
             adaptorManager: address(this)
         });
-        RootERC20BridgeFlowRate(payable(rootERC20BridgeFlowRate)).initialize(
-            rootRoles,
-            mockAdaptorRoot,
-            childERC20Bridge,
-            tokenTemplate,
-            address(rootIMXToken),
-            address(wETH),
-            IMX_DEPOSIT_LIMIT,
-            address(this)
-        );
+        RootERC20BridgeFlowRate(payable(rootERC20BridgeFlowRate))
+            .initialize(
+                rootRoles,
+                mockAdaptorRoot,
+                childERC20Bridge,
+                tokenTemplate,
+                address(rootIMXToken),
+                address(wETH),
+                IMX_DEPOSIT_LIMIT,
+                address(this)
+            );
     }
 
     function initializeMockAdaptors() private {
@@ -160,15 +160,16 @@ contract FuzzSetup is FuzzBase, FuzzStorageVariables {
     }
 
     function generateMapTokens() private {
-        MockAdaptor(mockAdaptorChild).onMessageReceive(
-            abi.encode(
-                ChildERC20Bridge(payable(childERC20Bridge)).MAP_TOKEN_SIG(),
-                rootSixDecimalInitial,
-                "Six Child Generated",
-                "6CG",
-                ChildERC20(rootSixDecimalInitial).decimals()
-            )
-        );
+        MockAdaptor(mockAdaptorChild)
+            .onMessageReceive(
+                abi.encode(
+                    ChildERC20Bridge(payable(childERC20Bridge)).MAP_TOKEN_SIG(),
+                    rootSixDecimalInitial,
+                    "Six Child Generated",
+                    "6CG",
+                    ChildERC20(rootSixDecimalInitial).decimals()
+                )
+            );
         childSixDecimalGenerated =
             RootERC20Bridge(payable(rootERC20BridgeFlowRate)).mapToken{value: 1}(IERC20Metadata(rootSixDecimalInitial));
 
@@ -178,15 +179,16 @@ contract FuzzSetup is FuzzBase, FuzzStorageVariables {
                 == ChildERC20Bridge(payable(childERC20Bridge)).rootTokenToChildToken(rootSixDecimalInitial)
         );
 
-        MockAdaptor(mockAdaptorChild).onMessageReceive(
-            abi.encode(
-                ChildERC20Bridge(payable(childERC20Bridge)).MAP_TOKEN_SIG(),
-                rootEightDecimalInitial,
-                "Eight Child Generated",
-                "8CG",
-                ChildERC20(rootEightDecimalInitial).decimals()
-            )
-        );
+        MockAdaptor(mockAdaptorChild)
+            .onMessageReceive(
+                abi.encode(
+                    ChildERC20Bridge(payable(childERC20Bridge)).MAP_TOKEN_SIG(),
+                    rootEightDecimalInitial,
+                    "Eight Child Generated",
+                    "8CG",
+                    ChildERC20(rootEightDecimalInitial).decimals()
+                )
+            );
         childEightDecimalGenerated = RootERC20Bridge(payable(rootERC20BridgeFlowRate)).mapToken{value: 1}(
             IERC20Metadata(rootEightDecimalInitial)
         );
@@ -197,15 +199,16 @@ contract FuzzSetup is FuzzBase, FuzzStorageVariables {
                 == ChildERC20Bridge(payable(childERC20Bridge)).rootTokenToChildToken(rootEightDecimalInitial)
         );
 
-        MockAdaptor(mockAdaptorChild).onMessageReceive(
-            abi.encode(
-                ChildERC20Bridge(payable(childERC20Bridge)).MAP_TOKEN_SIG(),
-                rootEighteenDecimalInitial,
-                "Eighteen Child Generated",
-                "18CG",
-                ChildERC20(rootEighteenDecimalInitial).decimals()
-            )
-        );
+        MockAdaptor(mockAdaptorChild)
+            .onMessageReceive(
+                abi.encode(
+                    ChildERC20Bridge(payable(childERC20Bridge)).MAP_TOKEN_SIG(),
+                    rootEighteenDecimalInitial,
+                    "Eighteen Child Generated",
+                    "18CG",
+                    ChildERC20(rootEighteenDecimalInitial).decimals()
+                )
+            );
         childEighteenDecimalGenerated = RootERC20Bridge(payable(rootERC20BridgeFlowRate)).mapToken{value: 1}(
             IERC20Metadata(rootEighteenDecimalInitial)
         );

@@ -9,10 +9,7 @@ import "../postconditions/PostconditionsRootERC20BridgeFlowRate.sol";
  * @author 0xScourgedev
  * @notice Fuzz handlers for RootERC20BridgeFlowRate
  */
-contract HandlerRootERC20BridgeFlowRate is
-    PreconditionsRootERC20BridgeFlowRate,
-    PostconditionsRootERC20BridgeFlowRate
-{
+contract HandlerRootERC20BridgeFlowRate is PreconditionsRootERC20BridgeFlowRate, PostconditionsRootERC20BridgeFlowRate {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         HANDLERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -239,8 +236,9 @@ contract HandlerRootERC20BridgeFlowRate is
         uint256 refillRate,
         uint256 largeTransferThreshold
     ) public setCurrentActor {
-        SetRateControlThresholdParams memory params =
-            setRateControlThresholdPreconditions(tokenSelector, capacity, refillRate, largeTransferThreshold);
+        SetRateControlThresholdParams memory params = setRateControlThresholdPreconditions(
+            tokenSelector, capacity, refillRate, largeTransferThreshold
+        );
 
         address[] memory actorsToUpdate = new address[](0);
 

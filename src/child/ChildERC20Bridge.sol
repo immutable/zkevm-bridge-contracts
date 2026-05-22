@@ -121,9 +121,9 @@ contract ChildERC20Bridge is
         }
         if (
             newBridgeAdaptor == address(0) || newChildTokenTemplate == address(0) || newRootIMXToken == address(0)
-                || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0) || newRoles.unpauser == address(0)
-                || newRoles.adaptorManager == address(0) || newRoles.treasuryManager == address(0)
-                || newWIMXToken == address(0)
+                || newRoles.defaultAdmin == address(0) || newRoles.pauser == address(0)
+                || newRoles.unpauser == address(0) || newRoles.adaptorManager == address(0)
+                || newRoles.treasuryManager == address(0) || newWIMXToken == address(0)
         ) {
             revert ZeroAddress();
         }

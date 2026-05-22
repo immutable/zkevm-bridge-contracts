@@ -243,9 +243,7 @@ abstract contract PreconditionsRootERC20BridgeFlowRate is PreconditionsBase {
             FlowRateWithdrawalQueue(payable(rootERC20BridgeFlowRate)).getPendingWithdrawalsLength(receiver) + 1;
         length = fl.clamp(length, 0, maxLength);
         return FinaliseQueuedWithdrawalsAggregatedParams({
-            receiver: receiver,
-            token: token,
-            indices: getIndicesFromEntropy(entropy, length, maxLength)
+            receiver: receiver, token: token, indices: getIndicesFromEntropy(entropy, length, maxLength)
         });
     }
 
@@ -297,8 +295,8 @@ abstract contract PreconditionsRootERC20BridgeFlowRate is PreconditionsBase {
                 }
 
                 FlowRateWithdrawalQueue.FindPendingWithdrawal[] memory pending = FlowRateWithdrawalQueue(
-                    payable(rootERC20BridgeFlowRate)
-                ).findPendingWithdrawals(USERS[i], rootToken, 0, pendingLength, MAX_IN_QUEUE);
+                        payable(rootERC20BridgeFlowRate)
+                    ).findPendingWithdrawals(USERS[i], rootToken, 0, pendingLength, MAX_IN_QUEUE);
                 for (uint256 j = 0; j < pending.length; j++) {
                     rootBridgeQueuedAmounts += pending[j].amount;
                 }
@@ -349,10 +347,7 @@ abstract contract PreconditionsRootERC20BridgeFlowRate is PreconditionsBase {
         largeTransferThreshold =
             fl.clamp(largeTransferThreshold, 0, ChildERC20(token).totalSupply() + MAX_REFILL_RATE_GAP);
         return SetRateControlThresholdParams({
-            token: token,
-            capacity: capacity,
-            refillRate: refillRate,
-            largeTransferThreshold: largeTransferThreshold
+            token: token, capacity: capacity, refillRate: refillRate, largeTransferThreshold: largeTransferThreshold
         });
     }
 

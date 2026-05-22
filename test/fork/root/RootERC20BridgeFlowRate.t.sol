@@ -284,8 +284,9 @@ contract RootERC20BridgeFlowRateForkTest is Test, Utils {
     }
 
     function createAddress(uint256 index) private view returns (address) {
-        return address(
-            uint160(uint256(keccak256(abi.encodePacked("root-bridge-fork-test", index, blockhash(block.number)))))
-        );
+        return
+            address(
+                uint160(uint256(keccak256(abi.encodePacked("root-bridge-fork-test", index, blockhash(block.number)))))
+            );
     }
 }

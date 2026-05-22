@@ -56,8 +56,7 @@ contract ChildERC20BridgeIntegrationTest is Test, IChildERC20BridgeEvents, IChil
             roles, address(childAxelarBridgeAdaptor), address(childERC20), IMX_TOKEN_ADDRESS, WIMX_TOKEN_ADDRESS
         );
 
-        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor
-            .InitializationRoles({
+        IChildAxelarBridgeAdaptor.InitializationRoles memory adaptorRoles = IChildAxelarBridgeAdaptor.InitializationRoles({
             defaultAdmin: address(this),
             bridgeManager: address(this),
             gasServiceManager: address(this),

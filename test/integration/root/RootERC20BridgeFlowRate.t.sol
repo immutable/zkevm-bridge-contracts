@@ -12,12 +12,7 @@ import {RootERC20BridgeFlowRate} from "../../../src/root/flowrate/RootERC20Bridg
 import {RootAxelarBridgeAdaptor, IRootAxelarBridgeAdaptorEvents} from "../../../src/root/RootAxelarBridgeAdaptor.sol";
 import {Utils} from "../../utils.t.sol";
 
-contract RootERC20BridgeFlowRateIntegrationTest is
-    Test,
-    IRootERC20BridgeEvents,
-    IRootAxelarBridgeAdaptorEvents,
-    Utils
-{
+contract RootERC20BridgeFlowRateIntegrationTest is Test, IRootERC20BridgeEvents, IRootAxelarBridgeAdaptorEvents, Utils {
     address constant CHILD_BRIDGE = address(3);
     address constant CHILD_BRIDGE_ADAPTOR = address(4);
     string constant CHILD_CHAIN_NAME = "test";

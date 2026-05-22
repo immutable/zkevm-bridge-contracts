@@ -93,7 +93,8 @@ abstract contract Properties_FLRT is PropertiesBase {
         if (
             amount
                 >= fl.min(
-                    states[0].tokenStates[token].refillRate * (block.timestamp - states[0].tokenStates[token].refillTime),
+                    states[0].tokenStates[token].refillRate
+                        * (block.timestamp - states[0].tokenStates[token].refillTime),
                     states[0].tokenStates[token].capacity - realDepth
                 )
         ) return;
@@ -145,8 +146,8 @@ abstract contract Properties_FLRT is PropertiesBase {
         if (
             amount
                 < fl.min(
-                    states[0].tokenStates[token].refillRate * (block.timestamp - states[0].tokenStates[token].refillTime)
-                        + realDepth,
+                    states[0].tokenStates[token].refillRate
+                        * (block.timestamp - states[0].tokenStates[token].refillTime) + realDepth,
                     states[0].tokenStates[token].capacity
                 )
         ) return;

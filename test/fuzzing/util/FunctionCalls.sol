@@ -149,10 +149,7 @@ abstract contract FunctionCalls is FuzzBase, FuzzStorageVariables {
         );
     }
 
-    function _withdrawWIMXCall(uint256 amount, uint256 value)
-        internal
-        returns (bool success, bytes memory returnData)
-    {
+    function _withdrawWIMXCall(uint256 amount, uint256 value) internal returns (bool success, bytes memory returnData) {
         emit WithdrawWIMXCall(amount);
 
         vm.prank(currentActor);

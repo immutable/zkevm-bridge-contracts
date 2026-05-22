@@ -101,11 +101,7 @@ abstract contract PreconditionsChildERC20Bridge is PreconditionsBase {
         address receiver = USERS[receiverSelector % USERS.length];
         bytes memory data = abi.encode(selector, rootToken, sender, receiver, amount);
         return OnMessageReceiveChildParams({
-            data: data,
-            rootToken: rootToken,
-            amount: amount,
-            sender: sender,
-            receiver: receiver
+            data: data, rootToken: rootToken, amount: amount, sender: sender, receiver: receiver
         });
     }
 
