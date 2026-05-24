@@ -39,7 +39,7 @@
         "ethers": "5.7.2",
         "kill-port": "^2.0.1",
         "mocha-suppress-logs": "^0.4.1",
-        "uuid": "^8.3.2"
+        "uuid": "^14.0.0"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
