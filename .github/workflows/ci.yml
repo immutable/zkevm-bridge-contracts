@@ -76,6 +76,9 @@ jobs:
           forge --version
           forge build
 
+      - name: Gas Report
+        uses: saifyoussuf/foundry-gas-reporter-action@v1
+        if: always()
       - name: Run Unit Tests
         shell: bash
         run: |
